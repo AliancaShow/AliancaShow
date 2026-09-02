@@ -16,6 +16,7 @@ import { actionData } from "../actions/actionData"
 import { addSlideAction, getActionTriggerId } from "../actions/actions"
 import { getActiveScripturesContent, getReferenceText, getScriptureShow, getScriptureSlidesNew } from "../drawer/bible/scripture"
 import { getVimeoData, getYouTubeData, trimPlayerId } from "../drawer/player/playerHelper"
+import { openProject } from "../show/project"
 import { addItem, DEFAULT_ITEM_STYLE } from "../edit/scripts/itemHelpers"
 import { clone, removeDuplicates } from "./array"
 import { projectDropFolders } from "./drop"
@@ -76,7 +77,16 @@ export const dropActions = {
         return history
     },
     projects: ({ drag, drop }: Data, h: History) => {
-        if (drag.id !== "folder" && drag.id !== "project") return
+        // AliancaShow: soltar show/musica/imagem sobre a linha de um projeto abre
+        // esse projeto e adiciona o item no final dele. No upstream era preciso
+        // abrir o projeto antes e soltar dentro da lista de conteudo, o que nao
+        // era descobrivel. index/trigger sao zerados porque ali eles se referem a
+        // posicao da linha na lista de projetos, nao a posicao dentro do projeto.
+        if (drag.id !== "folder" && drag.id !== "project") {
+            if (drop.data?.type !== "project" || !drop.data?.id) return
+            openProject(drop.data.id, false)
+            return dropActions.project({ drag, drop: { ...drop, id: "project", index: undefined, trigger: undefined, center: false } }, h)
+        }
         if (drop.data.type && drop.data.type !== "folder" && drop.data.type !== "project") return
 
         h.location!.page = "show"

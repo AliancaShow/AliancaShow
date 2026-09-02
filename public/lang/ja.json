@@ -248,7 +248,9 @@
         "_title_settings": "設定",
         "_title_display": "プレゼン",
         "_title_display_stop": "プレゼンを停止",
-        "again_confirm": "確認のためもう一度クリックしてください"
+        "again_confirm": "確認のためもう一度クリックしてください",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "何もありません",
@@ -381,7 +383,8 @@
         "triggers": "トリガー",
         "templates": "テンプレート",
         "web": "Web",
-        "search_tip": "ドロワー内容を検索"
+        "search_tip": "ドロワー内容を検索",
+        "library": "Library"
     },
     "category": {
         "all": "すべて",
@@ -399,7 +402,8 @@
         "offers": "献金",
         "notice": "お知らせ",
         "visuals": "ビジュアル",
-        "action_tip": "このカテゴリのショーが提示されるたびに実行されるアクションです。"
+        "action_tip": "このカテゴリのショーが提示されるたびに実行されるアクションです。",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "現在",
@@ -1422,7 +1426,16 @@
         "first_slide_reference": "最初のスライドに参照を表示",
         "reference_at_bottom": "下部へ移動",
         "red_jesus": "イエスの言葉を赤字で",
-        "search": "聖書を検索"
+        "search": "聖書を検索",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "ぼかし",
@@ -1585,7 +1598,8 @@
         "photoUrl": "写真URL",
         "likes": "いいね",
         "artist": "アーティスト",
-        "artistUrl": "アーティストページ"
+        "artistUrl": "アーティストページ",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "プロジェクト",

@@ -1,8 +1,5 @@
 <script lang="ts">
-    import { activeShow, focusMode, forceClock } from "../../../stores"
-    import Icon from "../../helpers/Icon.svelte"
-    import FloatingInputs from "../../input/FloatingInputs.svelte"
-    import MaterialButton from "../../inputs/MaterialButton.svelte"
+    import { activeShow, forceClock } from "../../../stores"
     import Center from "../../system/Center.svelte"
     import Clock from "../../system/Clock.svelte"
     import Date from "../../system/Date.svelte"
@@ -15,10 +12,10 @@
     import TemplateInfo from "./TemplateInfo.svelte"
 
     export let id: string
+    // Layout D: optionsOpen virou prop para o Drawer decidir se este painel tem
+    // conteudo (e portanto se merece largura) sem duplicar estado.
+    export let optionsOpen = false
 
-    const hasOptions = ["shows", "media", "templates", "scripture", "calendar"]
-    let optionsOpen = false
-    $: if (id) optionsOpen = false
 </script>
 
 <div class="main {id !== 'shows' || $activeShow !== null ? 'context #drawer_info' : ''}">
@@ -38,20 +35,15 @@
         <CalendarInfo {optionsOpen} />
     {:else if !$forceClock && id === "functions"}
         <FunctionsInfo />
-    {:else}
+    {:else if $forceClock}
+        <!-- Layout D: relogio grande so quando o usuario liga essa opcao no menu de
+             contexto. O relogio normal agora e fixo no rodape da coluna direita. -->
         <Center>
             <Clock />
             <Date />
         </Center>
     {/if}
 
-    {#if !$forceClock && hasOptions.includes(id) && !$focusMode}
-        <FloatingInputs round>
-            <MaterialButton isActive={optionsOpen} title="edit.options" on:click={() => (optionsOpen = !optionsOpen)}>
-                <Icon size={1.1} id="options" white={!optionsOpen} />
-            </MaterialButton>
-        </FloatingInputs>
-    {/if}
 </div>
 
 <style>

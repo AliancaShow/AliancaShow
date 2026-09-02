@@ -297,7 +297,9 @@
         "_title_settings": "Paramètres",
         "_title_display": "Présenter",
         "_title_display_stop": "Arrêter la présentation",
-        "again_confirm": "Cliquer à nouveau pour confirmer"
+        "again_confirm": "Cliquer à nouveau pour confirmer",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Rien ici",
@@ -431,7 +433,8 @@
         "triggers": "Déclencheurs",
         "templates": "Modèles",
         "web": "Web",
-        "search_tip": "Recherche du contenu du tiroir"
+        "search_tip": "Recherche du contenu du tiroir",
+        "library": "Library"
     },
     "category": {
         "all": "Tout",
@@ -450,7 +453,8 @@
         "notice": "Informations",
         "visuals": "Visuels",
         "action_tip": "Une action qui se déclenche à chaque projection d'une présentation de cette catégorie.",
-        "create_nonexistent": "Créer des catégories inexistantes"
+        "create_nonexistent": "Créer des catégories inexistantes",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Selectionné",
@@ -1540,7 +1544,16 @@
         "reference_at_bottom": "Déplacer vers le bas",
         "red_jesus": "Paroles de Jésus en rouge",
         "show_all": "Tout afficher",
-        "search": "Chercher dans la Bible"
+        "search": "Chercher dans la Bible",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Flou",
@@ -1735,7 +1748,8 @@
         "photoUrl": "URL de photo",
         "likes": "J'aime",
         "artist": "Artiste",
-        "artistUrl": "Page de l'artiste"
+        "artistUrl": "Page de l'artiste",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projets",

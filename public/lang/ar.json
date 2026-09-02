@@ -227,7 +227,9 @@
         "_title_settings": "الإعدادات",
         "_title_display": "عرض",
         "_title_display_stop": "إيقاف العرض",
-        "again_confirm": "اضغط مرة أخرى للتأكيد"
+        "again_confirm": "اضغط مرة أخرى للتأكيد",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "لا يوجد شيء هنا",
@@ -360,7 +362,8 @@
         "triggers": "مشغلات",
         "templates": "قوالب",
         "web": "ويب",
-        "search_tip": "بحث داخل المحتوى الجانبي"
+        "search_tip": "بحث داخل المحتوى الجانبي",
+        "library": "Library"
     },
     "category": {
         "all": "الكل",
@@ -377,7 +380,8 @@
         "offers": "عروض",
         "notice": "إشعار",
         "visuals": "مرئيات",
-        "action_tip": "إجراء يتم تشغيله في كل مرة يتم فيها تقديم عرض بهذه الفئة."
+        "action_tip": "إجراء يتم تشغيله في كل مرة يتم فيها تقديم عرض بهذه الفئة.",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "الحالي",
@@ -1265,7 +1269,16 @@
         "first_slide_reference": "عرض الشاهد في الشريحة الأولى",
         "reference_at_bottom": "عرض الشاهد في الأسفل",
         "red_jesus": "كلمات يسوع باللون الأحمر",
-        "search": "بحث في الكتاب المقدس"
+        "search": "بحث في الكتاب المقدس",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "ضبابية",
@@ -1380,7 +1393,8 @@
         "photoUrl": "رابط الصورة",
         "likes": "الإعجابات",
         "artist": "الفنان",
-        "artistUrl": "صفحة الفنان"
+        "artistUrl": "صفحة الفنان",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "المشاريع",

@@ -1,11 +1,9 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
-    import type { DrawerTabIds } from "../../../types/Tabs"
-    import { activeDrawerTab, activeEdit, activePage, activePopup, activeProject, activeShow, activeTriggerFunction, dictionary, drawer, drawerOpenedInEdit, drawerTabsData, focusMode, labelsDisabled, mediaOptions, os, previousShow, projects, quickTextCache, scriptureSettings, selected, showsCache } from "../../stores"
+    import { activeDrawerTab, activeEdit, activePage, activePopup, activeProject, activeShow, activeTriggerFunction, dictionary, drawer, drawerOpenedInEdit, drawerTabsData, focusMode, forceClock, labelsDisabled, mediaOptions, os, previousShow, projects, quickTextCache, scriptureSettings, selected, showsCache } from "../../stores"
     import { DEFAULT_DRAWER_HEIGHT, DEFAULT_WIDTH, MENU_BAR_HEIGHT } from "../../utils/common"
     import { startResizing, stopResizing } from "../../utils/cursor"
     import { translateText } from "../../utils/language"
-    import { getAccess } from "../../utils/profile"
     import { shouldOpenReplace } from "../../utils/shortcuts"
     import { drawerTabs } from "../../values/tabs"
     import Content from "../drawer/Content.svelte"
@@ -20,7 +18,6 @@
     import { updateOut } from "../helpers/showActions"
     import T from "../helpers/T.svelte"
     import Button from "../inputs/Button.svelte"
-    import MaterialButton from "../inputs/MaterialButton.svelte"
     import Resizeable from "../system/Resizeable.svelte"
     import Info from "./info/Info.svelte"
 
@@ -129,21 +126,17 @@
     })
 
     $: activeTab = $activeDrawerTab
-    function openDrawerTab(tab: { id: string; name: string; icon: string }) {
-        const newId = tab.id as DrawerTabIds
-        if ($activeDrawerTab === newId) return
 
-        // open visually immediately
-        activeTab = newId
-
-        // allow click event first
-        setTimeout(() => {
-            activeDrawerTab.set(newId)
-
-            // remove focus for search function to work
-            setTimeout(() => (document.activeElement as any)?.blur(), 10)
-        }, 10)
-    }
+    // Layout D: o painel Info so ganha largura quando tem conteudo. "overlays" nao
+    // tem componente de info, e "shows" so mostra algo com um show selecionado.
+    // mesmas abas que o Info.svelte considerava em "hasOptions"
+    const TABS_WITH_OPTIONS = ["shows", "media", "templates", "scripture", "calendar"]
+    let infoOptionsOpen = false
+    // painel de informacoes agora e manual: so abre pelo botao ao lado do Pesquisar.
+    // Antes abria sozinho quando um item era selecionado, roubando largura da lista.
+    let infoPanelOpen = false
+    $: if ($activeDrawerTab) infoOptionsOpen = false
+    $: infoHasContent = $forceClock || infoOptionsOpen || infoPanelOpen
 
     let searchValue = ""
     $: searchValue = searchValue.endsWith(" ") ? removeWhitespace(searchValue) + " " : removeWhitespace(searchValue)
@@ -224,6 +217,8 @@
     $: if ($activeShow?.type === undefined || $activeShow?.type === "show") previousShow.set(JSON.stringify($activeShow))
 
     $: tabs = keysToID(drawerTabs)
+    // Layout D: titulo da aba ativa, ja que a barra de abas foi para o painel esquerdo
+    $: activeTabInfo = tabs.find((tab) => tab.id === activeTab)
 
     let searchActive = false
     $: if (searchActive) {
@@ -237,7 +232,6 @@
         setTimeout(() => (searchActive = true))
     }
 
-    const hiddenInFocusMode = ["templates", "calendar"]
 </script>
 
 <svelte:window on:mouseup={mouseup} on:mousemove={mousemove} on:keydown={keydown} />
@@ -258,19 +252,37 @@
     >
         <!-- role="button"
         tabindex="0" -->
+        <!-- Layout D: as 8 abas migraram para o painel esquerdo (LibraryTabs.svelte).
+             Aqui sobra apenas o titulo da aba ativa, e a barra segue servindo de
+             alca de redimensionamento (on:mousedown) e de menu de contexto. -->
         <span class="tabs">
-            {#each tabs as tab, i}
-                {#if $drawerTabsData[tab.id]?.enabled !== false && getAccess(tab.id).global !== "none" && (!$focusMode || !hiddenInFocusMode.includes(tab.id))}
-                    <!-- overflow: unset; -->
-                    <MaterialButton id={tab.id} style="border-radius: 0;border-bottom: 2px solid var(--primary);padding: 0.2em 0.8em;" class="context #drawer_top" title="<b>{tab.name.split('.')[0]}.{tab.name.split('.')[1]}</b>{tab.title ? `\n${tab.title}` : ''} [Ctrl+{i + 1}]" isActive={activeTab === tab.id} on:click={() => openDrawerTab(tab)} on:dblclick={closeDrawer}>
-                        <Icon id={tab.icon} size={1.3} white={activeTab === tab.id} />
-                        {#if !$labelsDisabled && !$focusMode}
-                            <span><T id={tab.name} /></span>
-                        {/if}
-                    </MaterialButton>
-                {/if}
-            {/each}
+            {#if activeTabInfo}
+                <span class="activeTitle">
+                    <Icon id={activeTabInfo.icon} size={1.2} white />
+                    {#if !$labelsDisabled && !$focusMode}
+                        <span><T id={activeTabInfo.name} /></span>
+                    {/if}
+                </span>
+            {/if}
         </span>
+
+        <!-- Layout D: opcoes da aba vieram do painel Info para ca, ao lado do Pesquisar.
+             stopPropagation porque a barra inteira e alca de redimensionamento. -->
+        {#if !$focusMode}
+            <div class="topOptions" on:mousedown|stopPropagation on:mouseup|stopPropagation>
+                <Button style="height: 100%;" title={translateText("info.details")} on:click={() => (infoPanelOpen = !infoPanelOpen)}>
+                    <Icon id="info" size={1.2} white={!infoPanelOpen} />
+                </Button>
+            </div>
+        {/if}
+
+        {#if !$forceClock && TABS_WITH_OPTIONS.includes($activeDrawerTab) && !$focusMode}
+            <div class="topOptions" on:mousedown|stopPropagation on:mouseup|stopPropagation>
+                <Button style="height: 100%;" title={translateText("edit.options")} on:click={() => (infoOptionsOpen = !infoOptionsOpen)}>
+                    <Icon id="options" size={1.2} white={!infoOptionsOpen} />
+                </Button>
+            </div>
+        {/if}
 
         <input bind:this={searchElem} class:hidden={!searchActive && !searchValue.length} class="search edit drawer_search" type="text" placeholder={translateText("main.search...", $dictionary)} bind:value={searchValue} on:input={search} use:selectTextOnFocus />
         {#if !searchActive && !searchValue.length}
@@ -309,23 +321,32 @@
             <Navigation id={$activeDrawerTab} />
         </Resizeable>
         <Content id={$activeDrawerTab} bind:searchValue bind:firstMatch />
-        <Resizeable id="rightPanelDrawer" let:width side="right">
-            <div class="right" class:row={width > DEFAULT_WIDTH * 1.8}>
-                <Info id={$activeDrawerTab} />
-            </div>
-        </Resizeable>
+        <!-- Layout D: o painel Info so recebe largura quando tem algo para mostrar.
+             Antes ficava com ~365px em branco, apertando a lista do meio. Quando
+             vazio, colapsa numa faixa estreita que preserva o botao de opcoes. -->
+        {#if infoHasContent}
+            <Resizeable id="rightPanelDrawer" let:width side="right">
+                <div class="right" class:row={width > DEFAULT_WIDTH * 1.8}>
+                    <Info id={$activeDrawerTab} bind:optionsOpen={infoOptionsOpen} />
+                </div>
+            </Resizeable>
+        {/if}
+        <!-- Layout D: sem conteudo, o painel Info nao renderiza nada — a lista do
+             meio ocupa a largura inteira. O botao de opcoes vive na barra do topo. -->
     </div>
 </section>
 
 <style>
     section {
         display: flex;
+        flex: 0 0 auto; /* Layout D: dentro do .center em flex-column, nao pode encolher */
         flex-direction: column;
         width: 100%;
         height: 100px;
         z-index: 20;
 
         background-color: var(--primary);
+        border-top: 2px solid var(--secondary);
 
         /* box-shadow: 0 -2px 14px rgb(0 0 0 / 0.12); */
     }
@@ -350,10 +371,29 @@
         cursor: ns-resize;
     }
 
+    /* Layout D: faixa estreita quando o Info nao tem conteudo — preserva o botao
+       de opcoes e devolve o resto da largura para a lista do meio */
+    .topOptions {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: stretch;
+    }
+
     .top .tabs {
         display: flex;
+        flex: 1; /* Layout D: absorve o espaco e empurra opcoes+busca para a direita */
         overflow-x: auto;
         overflow-y: hidden;
+    }
+
+    /* Layout D: titulo da aba ativa no lugar da barra de abas */
+    .activeTitle {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 14px;
+
+        font-weight: 600;
     }
 
     .search {

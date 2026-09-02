@@ -297,7 +297,9 @@
         "_title_settings": "Beállítások",
         "_title_display": "Prezentálás",
         "_title_display_stop": "Prezentáció leállítása",
-        "again_confirm": "Kattintás a megerősítéshez"
+        "again_confirm": "Kattintás a megerősítéshez",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Itt nincs semmi",
@@ -431,7 +433,8 @@
         "triggers": "Kiváltók",
         "templates": "Sablonok",
         "web": "Web",
-        "search_tip": "Tartalmak keresése a szerkesztőben"
+        "search_tip": "Tartalmak keresése a szerkesztőben",
+        "library": "Library"
     },
     "category": {
         "all": "Minden",
@@ -450,7 +453,8 @@
         "notice": "Figyelem",
         "visuals": "Látványok",
         "action_tip": "Egy művelet, mely kiváltódik minden olyan esetben, amikor ilyen kategóriájú bemutató vetítésre kerül.",
-        "create_nonexistent": "Nem létező kategóriák létrehozása"
+        "create_nonexistent": "Nem létező kategóriák létrehozása",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Jelenlegi",
@@ -1540,7 +1544,16 @@
         "reference_at_bottom": "Mozgatás alulra",
         "red_jesus": "Jézus szavai pirossal",
         "show_all": "Összes megjelenítése",
-        "search": "Keresés a Bibliában"
+        "search": "Keresés a Bibliában",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Elmosás",
@@ -1735,7 +1748,8 @@
         "photoUrl": "Fotó URL",
         "likes": "Kedvelések",
         "artist": "Művész",
-        "artistUrl": "Művész oldala"
+        "artistUrl": "Művész oldala",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projektek",

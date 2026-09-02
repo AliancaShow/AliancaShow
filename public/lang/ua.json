@@ -162,7 +162,9 @@
         "settings": "Налаштування",
         "_title_settings": "Налаштування",
         "_title_display": "Показати",
-        "_title_display_stop": "Зупинити презентацію"
+        "_title_display_stop": "Зупинити презентацію",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Тут нічого немає",
@@ -279,7 +281,8 @@
         "timers": "Таймери",
         "variables": "Змінні",
         "templates": "Шаблони",
-        "web": "Веб"
+        "web": "Веб",
+        "library": "Library"
     },
     "category": {
         "all": "Усі",
@@ -295,7 +298,8 @@
         "music": "Музика",
         "offers": "Пропозиції",
         "notice": "Повідомлення",
-        "visuals": "Візуальні елементи"
+        "visuals": "Візуальні елементи",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Поточний",
@@ -916,7 +920,16 @@
         "verse_numbers": "Номери віршів",
         "version": "Показати версію",
         "reference": "Показати посилання",
-        "red_jesus": "Слова Ісуса червоними"
+        "red_jesus": "Слова Ісуса червоними",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Розмиття",
@@ -1001,6 +1014,7 @@
         "slides": "Слайди",
         "words": "Слова",
         "template": "Шаблон",
-        "category": "Категорія"
+        "category": "Категорія",
+        "details": "Details"
     }
 }

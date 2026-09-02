@@ -41,54 +41,12 @@ import { convertSongbeamerFiles } from "../converters/songbeamer"
 import { convertTexts } from "../converters/txt"
 import { convertVerseVIEW } from "../converters/verseview"
 import { convertVideopsalm } from "../converters/videopsalm"
-import {
-    activeEdit,
-    activePage,
-    activePopup,
-    activeProject,
-    activeShow,
-    activeTimers,
-    alertMessage,
-    audioData,
-    contentProviderData,
-    currentOutputSettings,
-    dataPath,
-    driveKeys,
-    events,
-    folders,
-    lessonsLoaded,
-    media,
-    mediaDownloads,
-    outputs,
-    overlays,
-    pdfImports,
-    popupData,
-    presentationData,
-    projects,
-    projectTemplates,
-    projectView,
-    providerConnections,
-    recentFiles,
-    redoHistory,
-    rtmpStatus,
-    shows,
-    showsCache,
-    spellcheck,
-    stageShows,
-    templates,
-    textCache,
-    theme,
-    themes,
-    timers,
-    undoHistory,
-    usageLog,
-    variables,
-    windowState
-} from "../stores"
+import { activeEdit, activePage, activePopup, activeProject, activeShow, activeTimers, alertMessage, audioData, categories, contentProviderData, currentOutputSettings, dataPath, driveKeys, events, folders, lessonsLoaded, media, mediaDownloads, outputs, overlays, pdfImports, popupData, presentationData, projects, projectTemplates, projectView, providerConnections, recentFiles, redoHistory, rtmpStatus, shows, showsCache, spellcheck, stageShows, templates, textCache, theme, themes, timers, undoHistory, usageLog, variables, windowState } from "../stores"
+import { createImpulsoShows } from "../utils/impulsoSongs"
 import { setupCloudSync } from "../utils/cloudSync"
 import { newToast } from "../utils/common"
 import { confirmCustom } from "../utils/popup"
-import { initializeClosing, saveComplete } from "../utils/save"
+import { initializeClosing, save, saveComplete } from "../utils/save"
 import { invalidateSearchIndex } from "../utils/searchFast"
 import { updateSettings, updateSyncedSettings, updateThemeValues } from "../utils/updateSettings"
 import type { MainReturnPayloads } from "./../../types/IPC/Main"
@@ -115,6 +73,24 @@ export const mainResponses: MainResponses = {
         }
 
         shows.set(a)
+
+        // AliancaShow: as 12 musicas do Impulso vem sempre com o projeto. Aqui e o
+        // ponto certo — roda em toda abertura, entao cobre instalacao nova E
+        // existente (o createData so roda no primeiro uso). O guard impede recriar,
+        // preservando qualquer edicao feita nas letras.
+        // A categoria tem que existir antes dos shows, senao eles ficam com
+        // "Categoria: Nao encontrado". Nao da para confiar no default: a chave
+        // "categories" pode estar ausente do settings salvo, e nesse caso o
+        // receiver de updateSettings nunca e chamado. Aqui roda sempre.
+        categories.update((c) => (c.impulso ? c : { ...c, impulso: { name: "category.impulso", icon: "song", default: true } }))
+
+        if (!a.impulso_aos_teus_pes) {
+            createImpulsoShows()
+            // precisa persistir: sem isso as musicas ficam so em memoria, o guard
+            // acima dispara em toda abertura e recriaria por cima de edicoes.
+            // O atraso deixa a inicializacao terminar antes de escrever em disco.
+            setTimeout(() => save(), 4000)
+        }
     },
     [Main.STAGE]: (a) => stageShows.set(a),
     [Main.PROJECTS]: (a) => {

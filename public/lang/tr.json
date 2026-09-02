@@ -266,7 +266,9 @@
         "_title_settings": "Ayarlar",
         "_title_display": "Sunum",
         "_title_display_stop": "Sunumu durdur",
-        "again_confirm": "Onaylamak için tekrar tıklayın"
+        "again_confirm": "Onaylamak için tekrar tıklayın",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Burada hiçbir şey",
@@ -399,7 +401,8 @@
         "triggers": "Tetikleyiciler",
         "templates": "Şablonlar",
         "web": "Web",
-        "search_tip": "Çekmece içeriği araması"
+        "search_tip": "Çekmece içeriği araması",
+        "library": "Library"
     },
     "category": {
         "all": "Tümü",
@@ -418,7 +421,8 @@
         "notice": "Bildiri",
         "visuals": "Görseller",
         "action_tip": "Bu kategoriye ait bir gösteri her sunulduğunda tetiklenen bir eylem.",
-        "create_nonexistent": "Var olmayan kategoriler oluşturun"
+        "create_nonexistent": "Var olmayan kategoriler oluşturun",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Akım",
@@ -1468,7 +1472,16 @@
         "reference_at_bottom": "En alta taşı",
         "red_jesus": "Kırmızı ile yazılmış İsa'nın sözleri",
         "show_all": "Tümünü göster",
-        "search": "Kutsal Kitap'ta Ara"
+        "search": "Kutsal Kitap'ta Ara",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Bulanık",
@@ -1632,7 +1645,8 @@
         "photoUrl": "Fotoğraf URL'si",
         "likes": "Beğeniler",
         "artist": "Sanatçı",
-        "artistUrl": "Sanatçı sayfası"
+        "artistUrl": "Sanatçı sayfası",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projeler",

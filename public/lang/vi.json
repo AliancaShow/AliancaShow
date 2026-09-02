@@ -173,7 +173,9 @@
         "settings": "Cài đặt",
         "_title_settings": "Cài đặt",
         "_title_display": "Trình bày",
-        "_title_display_stop": "Dừng trình bày"
+        "_title_display_stop": "Dừng trình bày",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Không có gì ở đây",
@@ -292,7 +294,8 @@
         "variables": "Biến",
         "triggers": "Kích hoạt",
         "templates": "Mẫu",
-        "web": "Web"
+        "web": "Web",
+        "library": "Library"
     },
     "category": {
         "all": "Tất cả",
@@ -308,7 +311,8 @@
         "music": "Âm nhạc",
         "offers": "Cung cấp",
         "notice": "Thông báo",
-        "visuals": "Hình ảnh trực quan"
+        "visuals": "Hình ảnh trực quan",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Hiện tại",
@@ -991,7 +995,16 @@
         "combine_with_text": "Kết hợp với văn bản",
         "reference_at_bottom": "Chuyển xuống dưới cùng",
         "red_jesus": "Lời Chúa Giê-su màu đỏ",
-        "search": "Tìm kiếm trong Kinh thánh"
+        "search": "Tìm kiếm trong Kinh thánh",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Làm mờ",
@@ -1077,6 +1090,7 @@
         "slides": "Số Slide",
         "words": "Số từ",
         "template": "Mẫu",
-        "category": "Danh mục"
+        "category": "Danh mục",
+        "details": "Details"
     }
 }

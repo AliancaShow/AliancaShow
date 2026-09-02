@@ -260,7 +260,9 @@
         "_title_settings": "設定",
         "_title_display": "播放",
         "_title_display_stop": "停止播放",
-        "again_confirm": "再次點擊以確認"
+        "again_confirm": "再次點擊以確認",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "空白",
@@ -394,7 +396,8 @@
         "triggers": "觸發器",
         "templates": "範本",
         "web": "網頁",
-        "search_tip": "搜尋側選單內容"
+        "search_tip": "搜尋側選單內容",
+        "library": "Library"
     },
     "category": {
         "all": "全部",
@@ -413,7 +416,8 @@
         "notice": "公告",
         "visuals": "視覺效果",
         "action_tip": "呈現此類別曲目時觸發的動作。",
-        "create_nonexistent": "建立不存在的類別"
+        "create_nonexistent": "建立不存在的類別",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "目前",
@@ -1450,7 +1454,16 @@
         "reference_at_bottom": "移至底部",
         "red_jesus": "耶穌的話顯示為紅色",
         "show_all": "顯示全部",
-        "search": "搜尋聖經"
+        "search": "搜尋聖經",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "模糊",
@@ -1613,7 +1626,8 @@
         "photoUrl": "圖片 URL",
         "likes": "按讚數",
         "artist": "藝術家/歌手",
-        "artistUrl": "藝術家首頁"
+        "artistUrl": "藝術家首頁",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "專案",

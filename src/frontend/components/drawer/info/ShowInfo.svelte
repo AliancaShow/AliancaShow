@@ -12,9 +12,6 @@
     import Button from "../../inputs/Button.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialToggleSwitch from "../../inputs/MaterialToggleSwitch.svelte"
-    import Center from "../../system/Center.svelte"
-    import Clock from "../../system/Clock.svelte"
-    import Date from "../../system/Date.svelte"
     import InfoMetadata from "./InfoMetadata.svelte"
 
     export let optionsOpen: boolean
@@ -129,12 +126,9 @@
         </main>
     {:else if $activeShow !== null && ($activeShow.type || "show") === "show"}
         <InfoMetadata title={show?.name} {info} />
-    {:else}
-        <Center>
-            <Clock />
-            <Date />
-        </Center>
     {/if}
+    <!-- Layout D: o relogio de reserva saiu daqui. Agora fica fixo no rodape da
+         coluna direita, sempre visivel, e este painel nao gasta largura com ele. -->
 </div>
 
 <style>

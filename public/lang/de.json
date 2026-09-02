@@ -266,7 +266,9 @@
         "_title_settings": "Einstellungen",
         "_title_display": "Anzeigen",
         "_title_display_stop": "Ausgabe deaktivieren",
-        "again_confirm": "Zum Bestätigen erneut klicken"
+        "again_confirm": "Zum Bestätigen erneut klicken",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Nichts hier",
@@ -399,7 +401,8 @@
         "triggers": "Trigger",
         "templates": "Vorlagen",
         "web": "Web",
-        "search_tip": "Inhaltssuche in der Übersicht"
+        "search_tip": "Inhaltssuche in der Übersicht",
+        "library": "Library"
     },
     "category": {
         "all": "Alle",
@@ -418,7 +421,8 @@
         "notice": "Hinweis",
         "visuals": "Visuals",
         "action_tip": "Eine Aktion, die jedes Mal ausgelöst wird, wenn eine Show dieser Kategorie präsentiert wird",
-        "create_nonexistent": "nicht vorhandene Kategorien erstellen"
+        "create_nonexistent": "nicht vorhandene Kategorien erstellen",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Aktuell",
@@ -1468,7 +1472,16 @@
         "reference_at_bottom": "Nach unten",
         "red_jesus": "Jesuworte in rot",
         "show_all": "Alles anzeigen",
-        "search": "In der Bibel suchen"
+        "search": "In der Bibel suchen",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Unschärfe",
@@ -1632,7 +1645,8 @@
         "photoUrl": "Link zum Foto",
         "likes": "Gefällt mir",
         "artist": "Künstler",
-        "artistUrl": "Künstlerseite"
+        "artistUrl": "Künstlerseite",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projekte",

@@ -55,5 +55,23 @@ function getPdfWorkerFile() {
     }
 }
 
+// AliancaShow: o postBuild deixa public/index.html apontando para
+// ./build/bundle.js, que e o que o electron-builder empacota (files: public/**).
+// So que o modo dev precisa da entrada /src/frontend/main.ts, entao depois de
+// qualquer build o npm start abria numa tela presa. Restaurar isso na mao entre
+// um build e outro era erro garantido nas duas direcoes: esquecer de voltar
+// quebrava o dev, e voltar antes de empacotar quebrava o instalador. Agora cada
+// modo prepara o proprio arquivo na inicializacao.
+const devScriptPath = '<script type="module" src="/src/frontend/main.ts"></script>'
+const prodHTMLPaths = '<script type="module" crossorigin src="./build/bundle.js"></script><link rel="stylesheet" href="./build/bundle.css">'
+function setDevelopmentHTML() {
+    const sourceIndexPath = join(__dirname, "..", "public", "index.html")
+    const htmlContent = readFileSync(sourceIndexPath, "utf8")
+    if (!htmlContent.includes(prodHTMLPaths)) return
+    writeFileSync(sourceIndexPath, htmlContent.replace(prodHTMLPaths, devScriptPath))
+    console.log("index.html restaurado para a entrada de desenvolvimento")
+}
+
 if (process.env.NODE_ENV === "production") generateProdConfigs()
+else setDevelopmentHTML()
 getPdfWorkerFile()

@@ -29,7 +29,7 @@ import { hideDisplay, isOutputWindow, togglePanels, triggerFunction } from "./co
 import { send } from "./request"
 import { save } from "./save"
 
-const menus: TopViews[] = ["show", "edit", "stage", "draw", "settings"]
+const menus: TopViews[] = ["show", "edit", "stage", "draw", "settings", "scripture"]
 
 const ctrlKeys = {
     a: () => selectAll(),

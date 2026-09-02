@@ -232,7 +232,9 @@
         "_title_settings": "Nastavenia",
         "_title_display": "Prezentovať",
         "_title_display_stop": "Zastaví prezentáciu",
-        "again_confirm": "Kliknutím znova potvrdíte"
+        "again_confirm": "Kliknutím znova potvrdíte",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Prázdne",
@@ -365,7 +367,8 @@
         "triggers": "Spúšťače",
         "templates": "Šablóny",
         "web": "Web",
-        "search_tip": "Vyhľadávanie v zásuvke"
+        "search_tip": "Vyhľadávanie v zásuvke",
+        "library": "Library"
     },
     "category": {
         "all": "Všetko",
@@ -383,7 +386,8 @@
         "offers": "Ponuky",
         "notice": "Oznamy",
         "visuals": "Vizuály",
-        "action_tip": "Akcia, ktorá sa spustí pri každej prezentácii s touto kategóriou."
+        "action_tip": "Akcia, ktorá sa spustí pri každej prezentácii s touto kategóriou.",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Aktuálne",
@@ -1306,7 +1310,16 @@
         "first_slide_reference": "Adresy na prvom snímku",
         "reference_at_bottom": "Presunúť na spodok",
         "red_jesus": "Ježišove slová červeným",
-        "search": "Hľadať v Biblii"
+        "search": "Hľadať v Biblii",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Rozostrenie",
@@ -1427,7 +1440,8 @@
         "photoUrl": "Foto URL",
         "likes": "Páči sa",
         "artist": "Umelec",
-        "artistUrl": "Stránka umelca"
+        "artistUrl": "Stránka umelca",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projekty",

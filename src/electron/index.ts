@@ -86,12 +86,27 @@ protocol.registerSchemesAsPrivileged([
     }
 ])
 
-// start when ready
-if (RECORD_STARTUP_TIME) console.time("Full startup")
-app.on("ready", async () => {
-    await startApp()
-    requestHeaders()
-})
+// AliancaShow: uma instancia so. Duas copias abertas escrevem nos mesmos
+// arquivos de Shows/Config e a ultima a salvar sobrescreve a outra. Se ja houver
+// uma rodando, esta sai e a existente e trazida para a frente.
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+    app.quit()
+} else {
+    app.on("second-instance", () => {
+        if (!mainWindow || mainWindow.isDestroyed()) return
+        if (mainWindow.isMinimized()) mainWindow.restore()
+        mainWindow.show()
+        mainWindow.focus()
+    })
+
+    // start when ready
+    if (RECORD_STARTUP_TIME) console.time("Full startup")
+    app.on("ready", async () => {
+        await startApp()
+        requestHeaders()
+    })
+}
 
 export let powerSaveBlockerId: number | null = null
 async function startApp() {

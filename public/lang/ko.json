@@ -294,7 +294,9 @@
         "_title_settings": "설정",
         "_title_display": "발표",
         "_title_display_stop": "발표 중지",
-        "again_confirm": "한 번 더 눌러 수락"
+        "again_confirm": "한 번 더 눌러 수락",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "아무 것도 없음",
@@ -427,7 +429,8 @@
         "triggers": "트리거",
         "templates": "템플릿",
         "web": "웹",
-        "search_tip": "보관함 내용 검색"
+        "search_tip": "보관함 내용 검색",
+        "library": "Library"
     },
     "category": {
         "all": "모두",
@@ -446,7 +449,8 @@
         "notice": "공지",
         "visuals": "시각적인",
         "action_tip": "이 분류에 속한 쇼가 나올 때마다 실행할 동작입니다.",
-        "create_nonexistent": "존재하지 않는 분류 생성"
+        "create_nonexistent": "존재하지 않는 분류 생성",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "현재",
@@ -1514,7 +1518,16 @@
         "reference_at_bottom": "하단으로 이동",
         "red_jesus": "예수님 말씀 강조",
         "show_all": "모두 보기",
-        "search": "성경에서 검색"
+        "search": "성경에서 검색",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "흐리게",
@@ -1678,7 +1691,8 @@
         "photoUrl": "사진 URL",
         "likes": "좋아요",
         "artist": "예술가",
-        "artistUrl": "예술가 페이지"
+        "artistUrl": "예술가 페이지",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "프로젝트",

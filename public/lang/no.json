@@ -299,7 +299,9 @@
         "_title_settings": "Innstillinger",
         "_title_display": "Presenter",
         "_title_display_stop": "Stopp presentatsjon",
-        "again_confirm": "Klikk igjen for å bekrefte"
+        "again_confirm": "Klikk igjen for å bekrefte",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Ingenting her",
@@ -431,7 +433,8 @@
         "triggers": "Utløsere",
         "templates": "Maler",
         "web": "Nett",
-        "search_tip": "Innholdssøk i skuffen"
+        "search_tip": "Innholdssøk i skuffen",
+        "library": "Library"
     },
     "category": {
         "all": "Alt",
@@ -450,7 +453,8 @@
         "notice": "Merk",
         "visuals": "Visuelt",
         "action_tip": "En handling som utføres hver gang et show med denne kategorien blir presentert.",
-        "create_nonexistent": "Opprett ikke-eksisterende kategorier"
+        "create_nonexistent": "Opprett ikke-eksisterende kategorier",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Gjeldende",
@@ -1554,7 +1558,16 @@
         "reference_at_bottom": "Flytt til bunn",
         "red_jesus": "Jesus ord i rødt",
         "show_all": "Vis alle",
-        "search": "Søk i Bibelen"
+        "search": "Søk i Bibelen",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Uklarhet",
@@ -1749,7 +1762,8 @@
         "photoUrl": "URL for bilde",
         "likes": "Likes",
         "artist": "Fotograf",
-        "artistUrl": "Skaperside"
+        "artistUrl": "Skaperside",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Prosjekter",

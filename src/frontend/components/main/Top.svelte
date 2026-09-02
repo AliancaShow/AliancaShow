@@ -110,6 +110,8 @@
         <TopButton id="show" />
         <TopButton id="edit" disabled={editDisabled} />
         <TopButton id="stage" />
+        <!-- AliancaShow: modo Biblia em tela cheia, ao lado de Palco -->
+        <TopButton id="scripture" />
     </span>
     <span style="width: var(--navigation-width);justify-content: flex-end;">
         <TopButton id="draw" red={$drawTool === "fill" || ($drawTool === "zoom" && $drawSettings.zoom?.size !== 100) || !!($drawTool === "paint" && $paintCache?.length)} hideLabel />

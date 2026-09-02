@@ -297,7 +297,9 @@
         "_title_settings": "设置",
         "_title_display": "演示",
         "_title_display_stop": "停止演示文稿",
-        "again_confirm": "再次点击确认"
+        "again_confirm": "再次点击确认",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "这里空空如也",
@@ -431,7 +433,8 @@
         "triggers": "触发器",
         "templates": "模板",
         "web": "网页",
-        "search_tip": "抽屉内容搜索"
+        "search_tip": "抽屉内容搜索",
+        "library": "Library"
     },
     "category": {
         "all": "全部",
@@ -450,7 +453,8 @@
         "notice": "通知",
         "visuals": "视觉",
         "action_tip": "每次演示该类别的节目时触发的操作。",
-        "create_nonexistent": "创建不存在的分类"
+        "create_nonexistent": "创建不存在的分类",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "当前",
@@ -1540,7 +1544,16 @@
         "reference_at_bottom": "移到底部",
         "red_jesus": "耶稣的话用红色显示",
         "show_all": "显示全部",
-        "search": "在圣经中搜索"
+        "search": "在圣经中搜索",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "模糊",
@@ -1735,7 +1748,8 @@
         "photoUrl": "图片地址",
         "likes": "喜欢",
         "artist": "艺术家",
-        "artistUrl": "艺术家主页"
+        "artistUrl": "艺术家主页",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "项目",

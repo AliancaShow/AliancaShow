@@ -266,7 +266,9 @@
         "_title_settings": "Inställningar",
         "_title_display": "Nuvarande",
         "_title_display_stop": "Stanna presentationen",
-        "again_confirm": "Klicka igen för att bekräfta"
+        "again_confirm": "Klicka igen för att bekräfta",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Ingenting här",
@@ -399,7 +401,8 @@
         "triggers": "Utlösare",
         "templates": "Mallar",
         "web": "Web",
-        "search_tip": "Sökning av innehåll i lådor"
+        "search_tip": "Sökning av innehåll i lådor",
+        "library": "Library"
     },
     "category": {
         "all": "Alla",
@@ -418,7 +421,8 @@
         "notice": "Meddelande",
         "visuals": "Visuellt",
         "action_tip": "En åtgärd som utlöses varje gång en visning med den här kategorin presenteras.",
-        "create_nonexistent": "Skapa icke existerande kategorier"
+        "create_nonexistent": "Skapa icke existerande kategorier",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Nuvarande",
@@ -1468,7 +1472,16 @@
         "reference_at_bottom": "Flytta längst ner",
         "red_jesus": "Jesus ord är rödfärgade",
         "show_all": "Visa allt",
-        "search": "Sök i bibeln"
+        "search": "Sök i bibeln",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Suddigt",
@@ -1632,7 +1645,8 @@
         "photoUrl": "Foto-ULR",
         "likes": "Sympatier",
         "artist": "Artist",
-        "artistUrl": "Artistsida"
+        "artistUrl": "Artistsida",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projekt",

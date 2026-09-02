@@ -297,7 +297,9 @@
         "_title_settings": "Instellingen",
         "_title_display": "Presenteren",
         "_title_display_stop": "Presentatie stoppen",
-        "again_confirm": "Klik nogmaals om te bevestigen"
+        "again_confirm": "Klik nogmaals om te bevestigen",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Niets hier",
@@ -431,7 +433,8 @@
         "triggers": "Triggers",
         "templates": "Sjablonen",
         "web": "Web",
-        "search_tip": "Zoeken in lade-inhoud"
+        "search_tip": "Zoeken in lade-inhoud",
+        "library": "Library"
     },
     "category": {
         "all": "Alles",
@@ -450,7 +453,8 @@
         "notice": "Mededelingen",
         "visuals": "Beeldmaterialen",
         "action_tip": "Een actie die wordt geactiveerd, telkens wanneer een show met deze categorie wordt gepresenteerd.",
-        "create_nonexistent": "Niet-bestaande categorieën maken"
+        "create_nonexistent": "Niet-bestaande categorieën maken",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Huidig",
@@ -1540,7 +1544,16 @@
         "reference_at_bottom": "Verplaats naar beneden",
         "red_jesus": "Jezus woorden in rood",
         "show_all": "Toon alles",
-        "search": "Zoek in de Bijbel"
+        "search": "Zoek in de Bijbel",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Vervagen",
@@ -1735,7 +1748,8 @@
         "photoUrl": "Foto-URL",
         "likes": "Likes",
         "artist": "Artiest",
-        "artistUrl": "Artiestpagina"
+        "artistUrl": "Artiestpagina",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projecten",

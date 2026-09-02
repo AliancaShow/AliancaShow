@@ -266,7 +266,9 @@
         "_title_settings": "Impostazioni",
         "_title_display": "Presentazione",
         "_title_display_stop": "Ferma presentazione",
-        "again_confirm": "Clicca di nuovo per confermare"
+        "again_confirm": "Clicca di nuovo per confermare",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Non c'è niente qui",
@@ -399,7 +401,8 @@
         "triggers": "Trigger",
         "templates": "Modelli",
         "web": "Web",
-        "search_tip": "Cerca nei contenuti del cassetto"
+        "search_tip": "Cerca nei contenuti del cassetto",
+        "library": "Library"
     },
     "category": {
         "all": "Tutto",
@@ -418,7 +421,8 @@
         "notice": "Avviso",
         "visuals": "Elementi visivi",
         "action_tip": "Un'azione che si attiva ogni volta che viene presentata una scena con questa categoria.",
-        "create_nonexistent": "Crea categorie non esistenti"
+        "create_nonexistent": "Crea categorie non esistenti",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Corrente",
@@ -1468,7 +1472,16 @@
         "reference_at_bottom": "Sposta in basso",
         "red_jesus": "Parole di Gesù in rosso",
         "show_all": "Mostra tutto",
-        "search": "Cerca nella Bibbia"
+        "search": "Cerca nella Bibbia",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Sfocatura",
@@ -1632,7 +1645,8 @@
         "photoUrl": "URL della foto",
         "likes": "Like",
         "artist": "Artista",
-        "artistUrl": "Pagina dell'artista"
+        "artistUrl": "Pagina dell'artista",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Progetti",

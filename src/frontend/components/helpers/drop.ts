@@ -25,7 +25,9 @@ const areas = {
     // media_drawer: ["file"],
 }
 const areaChildren = {
-    projects: ["folder", "project"],
+    // AliancaShow: alem de mover pasta/projeto, a lista aceita soltar um item
+    // sobre a linha de um projeto para adiciona-lo aquele projeto.
+    projects: ["folder", "project", "show", "show_drawer", "media", "audio", "audio_effect", "player", "overlay", "scripture", "effect", "screen", "ndi", "camera", "action"],
     project: ["show", "media", "audio", "audio_effect", "show_drawer", "player", "action"],
     slides: ["slide", "group", "global_group", "effect", "screen", "ndi", "camera", "microphone", "media", "player", "urls", "audio", "audio_effect", "show"],
     all_slides: [],

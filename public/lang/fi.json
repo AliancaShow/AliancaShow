@@ -266,7 +266,9 @@
         "_title_settings": "Asetukset",
         "_title_display": "Esitä",
         "_title_display_stop": "Lopeta esitys",
-        "again_confirm": "Napsauta uudestaan vahvistaaksesi"
+        "again_confirm": "Napsauta uudestaan vahvistaaksesi",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Täällä ei ole mitään",
@@ -399,7 +401,8 @@
         "triggers": "Käynnistimet",
         "templates": "Mallit",
         "web": "Netti",
-        "search_tip": "Haku alavalikosta"
+        "search_tip": "Haku alavalikosta",
+        "library": "Library"
     },
     "category": {
         "all": "Kaikki",
@@ -418,7 +421,8 @@
         "notice": "Ilmoitus",
         "visuals": "Visuaaliset elementit",
         "action_tip": "Toiminto, joka käynnistetään aina, kun tämän kategorian esitys näytetään.",
-        "create_nonexistent": "Luo olemattomia luokkia"
+        "create_nonexistent": "Luo olemattomia luokkia",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Nykyinen",
@@ -1468,7 +1472,16 @@
         "reference_at_bottom": "Siirrä alareunaan",
         "red_jesus": "Jeesuksen sanat punaisella",
         "show_all": "Näytä kaikki",
-        "search": "Etsi Raamatussa"
+        "search": "Etsi Raamatussa",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Sumennus",
@@ -1632,7 +1645,8 @@
         "photoUrl": "Kuvan URL",
         "likes": "Kuten",
         "artist": "Artisti",
-        "artistUrl": "Artistin sivu"
+        "artistUrl": "Artistin sivu",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projektit",

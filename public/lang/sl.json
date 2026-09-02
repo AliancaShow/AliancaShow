@@ -297,7 +297,9 @@
         "_title_settings": "Nastavitve",
         "_title_display": "Prikaži",
         "_title_display_stop": "Ustavi prikazovanje",
-        "again_confirm": "Za potrditev ponovno kliknite"
+        "again_confirm": "Za potrditev ponovno kliknite",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Tukaj ni nič",
@@ -431,7 +433,8 @@
         "triggers": "Prožilci",
         "templates": "Predloge",
         "web": "Splet",
-        "search_tip": "Iskanje po vsebini predala"
+        "search_tip": "Iskanje po vsebini predala",
+        "library": "Library"
     },
     "category": {
         "all": "All",
@@ -450,7 +453,8 @@
         "notice": "Opomba",
         "visuals": "Slikovno gradivo",
         "action_tip": "Dejanje, ki se sproži ob vsakem prikazovanju predmeta te zvrsti.",
-        "create_nonexistent": "Ustvari neobstoječe zvrsti"
+        "create_nonexistent": "Ustvari neobstoječe zvrsti",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Trenutna",
@@ -1540,7 +1544,16 @@
         "reference_at_bottom": "Premakni na dno",
         "red_jesus": "Jezusove besede z rdečo",
         "show_all": "Prikaži vse",
-        "search": "Poišči v Svetem pismu"
+        "search": "Poišči v Svetem pismu",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Zameglitev",
@@ -1735,7 +1748,8 @@
         "photoUrl": "Spletni naslov fotografije",
         "likes": "Všečki",
         "artist": "Izvajalec",
-        "artistUrl": "Izvajalčeva stran"
+        "artistUrl": "Izvajalčeva stran",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projekti",

@@ -294,7 +294,9 @@
         "_title_settings": "Definições",
         "_title_display": "Apresentar",
         "_title_display_stop": "Parar apresentação",
-        "again_confirm": "Clique novamente para confirmar"
+        "again_confirm": "Clique novamente para confirmar",
+        "scripture": "Bíblia",
+        "_title_scripture": "Bíblia"
     },
     "empty": {
         "general": "Nada aqui",
@@ -428,7 +430,8 @@
         "triggers": "Triggers",
         "templates": "Templates",
         "web": "Internet",
-        "search_tip": "Pesquisa de conteúdo do drawer"
+        "search_tip": "Pesquisa de conteúdo do drawer",
+        "library": "Biblioteca"
     },
     "category": {
         "all": "Tudo",
@@ -447,7 +450,8 @@
         "notice": "Aviso",
         "visuals": "Visuais",
         "action_tip": "Uma ação que é ativada cada vez que um show desta categoria é apresentado.",
-        "create_nonexistent": "Criar categorias inexistentes"
+        "create_nonexistent": "Criar categorias inexistentes",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Atual",
@@ -1518,7 +1522,16 @@
         "reference_at_bottom": "Mover para o rodapé",
         "red_jesus": "Palavras de Jesus a vermelho",
         "show_all": "Mostrar tudo",
-        "search": "Procurar na Bíblia"
+        "search": "Procurar na Bíblia",
+        "display": "Exibir",
+        "convert_to_show": "Converter em Show",
+        "book": "Livro",
+        "chapter": "Capítulo",
+        "verse": "Versículos",
+        "select_all": "Selecionar tudo",
+        "select_book": "Escolha um livro e um capítulo",
+        "multiselect_tip": "Clique para selecionar · Shift para intervalo · Ctrl para vários",
+        "new_testament": "Novo Testamento"
     },
     "filter": {
         "blur": "Desfocar",
@@ -1712,7 +1725,8 @@
         "photoUrl": "URL da foto",
         "likes": "Likes",
         "artist": "Artista",
-        "artistUrl": "Página do artista"
+        "artistUrl": "Página do artista",
+        "details": "Informações"
     },
     "guide_title": {
         "projects": "Projetos",

@@ -216,7 +216,9 @@
         "_title_settings": "Setări",
         "_title_display": "Prezent",
         "_title_display_stop": "Oprește prezentarea",
-        "again_confirm": "Apasă din nou pentru a confirma"
+        "again_confirm": "Apasă din nou pentru a confirma",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Nimic aici",
@@ -346,7 +348,8 @@
         "triggers": "Declanșatoare",
         "templates": "Șabloane",
         "web": "Web",
-        "search_tip": "Căutare conținut"
+        "search_tip": "Căutare conținut",
+        "library": "Library"
     },
     "category": {
         "all": "Toate",
@@ -362,7 +365,8 @@
         "music": "Muzică",
         "offers": "Oferte",
         "notice": "Observa",
-        "visuals": "Vizual"
+        "visuals": "Vizual",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Curent",
@@ -1174,7 +1178,16 @@
         "combine_with_text": "Combină cu text",
         "reference_at_bottom": "Mutați în jos",
         "red_jesus": "Cuvintele lui Isus în roșu",
-        "search": "Căutați în Biblie"
+        "search": "Căutați în Biblie",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Blur",
@@ -1289,7 +1302,8 @@
         "photoUrl": "URL poză",
         "likes": "Aprecieri",
         "artist": "Artist",
-        "artistUrl": "Pagina artistului"
+        "artistUrl": "Pagina artistului",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Proiecte",

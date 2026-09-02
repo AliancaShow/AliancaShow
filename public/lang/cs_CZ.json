@@ -297,7 +297,9 @@
         "_title_settings": "Nastavení",
         "_title_display": "Spusť prezentaci",
         "_title_display_stop": "Ukončit prezentování",
-        "again_confirm": "Pro potvrzení klikni znovu"
+        "again_confirm": "Pro potvrzení klikni znovu",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Prázdné",
@@ -431,7 +433,8 @@
         "triggers": "Spouštěče",
         "templates": "Šablony",
         "web": "Web",
-        "search_tip": "Hledat obsah přehrádky"
+        "search_tip": "Hledat obsah přehrádky",
+        "library": "Library"
     },
     "category": {
         "all": "Vše",
@@ -450,7 +453,8 @@
         "notice": "Poznámka",
         "visuals": "Visuály",
         "action_tip": "Akce, která se spustí pokaždé, když je prezentace této kategorie uvedena.",
-        "create_nonexistent": "Vytvořit neexistující kategorie"
+        "create_nonexistent": "Vytvořit neexistující kategorie",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Aktuální",
@@ -1540,7 +1544,16 @@
         "reference_at_bottom": "Posunout dolů",
         "red_jesus": "Ježíšova slova červenou barvou",
         "show_all": "Zobrazit vše",
-        "search": "Vyhledat v Bibli"
+        "search": "Vyhledat v Bibli",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Rozmazání",
@@ -1735,7 +1748,8 @@
         "photoUrl": "URL fotky",
         "likes": "Lajky",
         "artist": "Umělec",
-        "artistUrl": "Stránka umělce"
+        "artistUrl": "Stránka umělce",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projekty",

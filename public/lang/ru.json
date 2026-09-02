@@ -294,7 +294,9 @@
         "_title_settings": "Настройки",
         "_title_display": "Презентация",
         "_title_display_stop": "Остановить презентацию",
-        "again_confirm": "Нажмите ещё раз, чтобы подтвердить"
+        "again_confirm": "Нажмите ещё раз, чтобы подтвердить",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Здесь ничего нет",
@@ -428,7 +430,8 @@
         "triggers": "Триггеры",
         "templates": "Шаблоны",
         "web": "Сеть",
-        "search_tip": "Поиск в панели"
+        "search_tip": "Поиск в панели",
+        "library": "Library"
     },
     "category": {
         "all": "Все",
@@ -447,7 +450,8 @@
         "notice": "Уведомление",
         "visuals": "Визуал",
         "action_tip": "Выполнять действие при показе шоу этой категории.",
-        "create_nonexistent": "Добавить новые категории"
+        "create_nonexistent": "Добавить новые категории",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Текущий",
@@ -1518,7 +1522,16 @@
         "reference_at_bottom": "Переместить в нижнюю часть",
         "red_jesus": "Слова Иисуса красным цветом",
         "show_all": "Показать все",
-        "search": "Поиск в Библии"
+        "search": "Поиск в Библии",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Пятно",
@@ -1712,7 +1725,8 @@
         "photoUrl": "Фото URL ",
         "likes": "Лайки",
         "artist": "Исполнитель",
-        "artistUrl": "Страница исполнителя"
+        "artistUrl": "Страница исполнителя",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Проекты",

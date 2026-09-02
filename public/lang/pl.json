@@ -297,7 +297,9 @@
         "_title_settings": "Ustawienia",
         "_title_display": "Prezentuj",
         "_title_display_stop": "Zatrzymaj prezentację",
-        "again_confirm": "Kliknij ponownie, aby potwierdzić"
+        "again_confirm": "Kliknij ponownie, aby potwierdzić",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Nic tu nie ma",
@@ -431,7 +433,8 @@
         "triggers": "Wyzwalacze",
         "templates": "Szablony",
         "web": "Internet",
-        "search_tip": "Wyszukiwanie w zakładce"
+        "search_tip": "Wyszukiwanie w zakładce",
+        "library": "Library"
     },
     "category": {
         "all": "Wszystkie",
@@ -450,7 +453,8 @@
         "notice": "Ogłoszenia",
         "visuals": "Animacje",
         "action_tip": "Akcja uruchamiana za każdym razem, gdy prezentowany jest pokaz z tej kategorii.",
-        "create_nonexistent": "Utwórz nieistniejące kategorie"
+        "create_nonexistent": "Utwórz nieistniejące kategorie",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Bieżące",
@@ -1540,7 +1544,16 @@
         "reference_at_bottom": "Przenieś w dół",
         "red_jesus": "Słowa Jezusa na czerwono",
         "show_all": "Pokaż wszystko",
-        "search": "Wyszukaj w Piśmie"
+        "search": "Wyszukaj w Piśmie",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Rozmycie",
@@ -1735,7 +1748,8 @@
         "photoUrl": "URL obrazka",
         "likes": "Polubienia",
         "artist": "Artysta",
-        "artistUrl": "Strona artysty"
+        "artistUrl": "Strona artysty",
+        "details": "Details"
     },
     "guide_title": {
         "projects": "Projekty",

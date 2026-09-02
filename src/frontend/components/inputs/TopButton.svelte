@@ -12,7 +12,7 @@
     export let hideLabel: null | boolean = null
     $: label = hideLabel === null ? !$labelsDisabled : !hideLabel
 
-    const keys = { show: 1, edit: 2, stage: 3, draw: 4, settings: 5 }
+    const keys = { show: 1, edit: 2, stage: 3, draw: 4, settings: 5, scripture: 6 }
 
     function openPage() {
         activePage.set(id)

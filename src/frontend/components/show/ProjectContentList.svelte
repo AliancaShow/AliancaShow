@@ -3,8 +3,8 @@
     import { fade } from "svelte/transition"
     import type { ProjectShowRef, Tree } from "../../../types/Projects"
     import type { ShowType } from "../../../types/Show"
-    import { addProjectItem, addToProject, updateRecentlyAddedFiles } from "../../converters/project"
-    import { actions, activeFocus, activePopup, activeProject, activeShow, contextActive, drawer, drawerTabsData, editingProjectTemplate, focusMode, fullColors, playerVideos, popupData, projects, projectTemplates, projectView, recentFiles, selected, shows, special } from "../../stores"
+    import { addProjectItem } from "../../converters/project"
+    import { actions, activeFocus, activePopup, activeProject, activeShow, contextActive, drawer, drawerTabsData, editingProjectTemplate, focusMode, fullColors, playerVideos, popupData, projects, projectTemplates, projectView, selected, shows, special } from "../../stores"
     import { triggerFunction } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
     import { getActionIcon } from "../actions/actions"
@@ -14,7 +14,7 @@
     import { brightenDarkColor, fadeColor, getContrast } from "../helpers/color"
     import { history } from "../helpers/history"
     import Icon from "../helpers/Icon.svelte"
-    import { getExtension, getFileName, getMediaType, removeExtension } from "../helpers/media"
+    import { getFileName, getMediaType, removeExtension } from "../helpers/media"
     import T from "../helpers/T.svelte"
     import { joinTimeBig } from "../helpers/time"
     import FloatingInputs from "../input/FloatingInputs.svelte"
@@ -201,12 +201,6 @@
         })
     }
 
-    // remove files already in project - max 5
-    $: recommended = $recentFiles.projectMedia
-        .filter((a) => !projectItemsList.find((b) => b.id === a || b.name === removeExtension(getFileName(a))))
-        .sort((a, b) => a.localeCompare(b))
-        .slice(0, 5)
-
     // "Add to project" button
 
     let canAddToProject = false
@@ -337,59 +331,6 @@
                     </div>
                 {/each}
 
-                <!-- suggestions -->
-                {#if recommended.length}
-                    <div class="section" style="margin-top: 80px;border-top: 1px solid var(--primary-lighter);background-color: var(--primary-darkest);padding: 2px 18px;display: flex;justify-content: space-between;align-items: center;">
-                        <T id="media.recommended" />
-
-                        <MaterialButton
-                            class="show"
-                            style="padding: 0.2em;border-radius: 2px;border-left: none;min-height: unset;"
-                            on:click={() => {
-                                recentFiles.update((a) => {
-                                    a.cleared = [...a.cleared, ...recommended]
-                                    return a
-                                })
-                                updateRecentlyAddedFiles()
-                            }}
-                            title="clear.general"
-                            tab
-                        >
-                            <Icon id="clear" size={0.9} white />
-                        </MaterialButton>
-                    </div>
-
-                    <div class="recommended">
-                        <div class="listSection">
-                            {#each recommended as path, i}
-                                {@const name = getFileName(path)}
-                                {@const type = getMediaType(getExtension(name))}
-                                {@const isFirst = i === 0}
-                                {@const isLast = i === recommended.length - 1}
-                                {@const borderRadiusStyle = `${isFirst ? "border-top-right-radius: 10px;" : ""}${isLast ? "border-bottom-right-radius: 10px;" : ""}`}
-                                {@const icon = type === "audio" ? "music" : type}
-
-                                <MaterialButton
-                                    class="show context #recent_file__project"
-                                    style="justify-content: space-between;padding: 0.35em 0.8em;font-weight: normal;{borderRadiusStyle}"
-                                    on:click={() => {
-                                        // convert to image? - probably better not to, this can be done via import
-                                        // if (type === "pdf") sendMain(Main.PDF_TO_IMAGE, { filePath: path })
-                                        addToProject(null, [path])
-                                    }}
-                                    title="context.addToProject: <b>{name}</b>"
-                                    tab
-                                >
-                                    <span style="display: flex;align-items: center;gap: 8px;">
-                                        <Icon id={icon} size={0.9} white right />
-                                        <p style="min-height: 10px;">{removeExtension(name)}</p>
-                                    </span>
-                                    <Icon id="add" size={0.9} white right />
-                                </MaterialButton>
-                            {/each}
-                        </div>
-                    </div>
-                {/if}
             {:else}
                 <Center absolute>
                     <span style="opacity: 0.5;"><T id="empty.general" /></span>
@@ -671,10 +612,4 @@
         transition: transform 0.2s ease !important;
     }
 
-    .recommended {
-        display: flex;
-        flex-direction: column;
-
-        background-color: var(--primary-darker);
-    }
 </style>

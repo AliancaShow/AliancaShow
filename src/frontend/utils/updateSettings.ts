@@ -11,6 +11,7 @@ import { clone, keysToID } from "../components/helpers/array"
 import { checkFFmpeg, checkWindowCapture, setOutput, toggleOutputs } from "../components/helpers/output"
 import { migrateOutputsRtmp } from "../components/helpers/rtmpDestinations"
 import { defaultThemes } from "../components/settings/tabs/defaultThemes"
+import { ensureImpulsoCategory } from "./impulsoSongs"
 import { sendMain } from "../IPC/main"
 import {
     actionTags,
@@ -155,8 +156,9 @@ export function updateSettings(data: any) {
 
     // remote
     const disabled = data.disabledServers || {}
-    if (disabled.remote === undefined) disabled.remote = false
-    if (disabled.stage === undefined) disabled.stage = false
+    // rede restrita: sem config salva, mantem desligado (nao abre porta, nao pede firewall)
+    if (disabled.remote === undefined) disabled.remote = true
+    if (disabled.stage === undefined) disabled.stage = true
     const customPorts: { [key: string]: number } = data.ports || { remote: 5510, stage: 5511 }
     sendMain(Main.START, { ports: customPorts, max: data.maxConnections === undefined ? 10 : data.maxConnections, disabled, data: get(serverData) })
 
@@ -332,7 +334,7 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     profiles: (v: any) => profiles.set(v),
     remotePassword: (v: any) => remotePassword.set(v),
     audioFolders: (v: any) => audioFolders.set(v),
-    categories: (v: any) => categories.set(v),
+    categories: (v: any) => categories.set(ensureImpulsoCategory(v) as any),
     drawer: (v: any) => drawer.set(v),
     drawerTabsData: (v: any) => drawerTabsData.set(v),
     drawSettings: (v: any) => drawSettings.set(v),
@@ -348,7 +350,11 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     overlayCategories: (v: any) => overlayCategories.set(v),
     playerVideos: (v: any) => playerVideos.set(v),
     resized: (v: any) => resized.set(v),
-    scriptures: (v: any) => scriptures.set(v),
+    // AliancaShow: descarta as traducoes vindas da API do churchapps. Elas usam a
+    // chave do projeto original, que nao podemos usar, e sao todas em ingles. Tirar
+    // dos padroes nao bastava: quem ja abriu o app tem as 5 gravadas em
+    // settings_synced.json, e valor salvo vence padrao.
+    scriptures: (v: any) => scriptures.set(Object.fromEntries(Object.entries((v || {}) as Record<string, any>).filter(([, b]) => !b?.api))),
     scriptureSettings: (v: any) => scriptureSettings.set(v),
     slidesOptions: (v: any) => slidesOptions.set(v),
     splitLines: (v: any) => splitLines.set(v),

@@ -91,7 +91,9 @@ export const defaultSettings: { [key in SaveListSettings]: any } = {
 export const defaultSyncedSettings: { [key in SaveListSyncedSettings]: any } = {
     categories: {
         song: { name: "category.song", icon: "song", default: true },
-        presentation: { name: "category.presentation", icon: "presentation", default: true }
+        presentation: { name: "category.presentation", icon: "presentation", default: true },
+        // AliancaShow: categoria fixa com as 12 musicas base do Impulso
+        impulso: { name: "category.impulso", icon: "song", default: true }
     },
     drawSettings: {},
     overlayCategories: {
@@ -115,22 +117,13 @@ export const defaultSyncedSettings: { [key in SaveListSyncedSettings]: any } = {
     interactions: {},
     audioStreams: {},
     audioPlaylists: {},
+    // AliancaShow Teste: apenas a NVI. As 5 traducoes de API do FreeShow
+    // (KJV, ASV, WEB, WMB, BSB) foram removidas — todas em ingles e todas
+    // dependentes da chave de API do projeto original.
+    // "name" tem que casar com o arquivo Bibles/<name>.fsb (loadScripture
+    // monta o caminho a partir dele). Sem "api: true" = Biblia local.
     scriptures: {
-        kjv: {
-            name: "King James (Authorised) Version",
-            api: true,
-            id: "de4e12af7f28f599-02",
-            copyright: "PUBLIC DOMAIN except in the United Kingdom, where a Crown Copyright applies to printing the KJV. See http://www.cambridge.org/about-us/who-we-are/queens-printers-patent"
-        },
-        asv: { name: "The Holy Bible, American Standard Version", api: true, id: "06125adad2d5898a-01", copyright: "PUBLIC DOMAIN" },
-        web: { name: "World English Bible", api: true, id: "9879dbb7cfe39e4d-04", copyright: "PUBLIC DOMAIN" },
-        wmb: { name: "World Messianic Bible", api: true, id: "f72b840c855f362c-04", copyright: "PUBLIC DOMAIN" },
-        bsb: {
-            name: "Berean Study Bible",
-            api: true,
-            id: "bba9f40183526463-01",
-            copyright: "The Holy Bible, Berean Standard Bible, BSB is produced in cooperation with Bible Hub, Discovery Bible, OpenBible.com, and the Berean Bible Translation Committee. This text of God's Word has been dedicated to the public domain"
-        }
+        nvi: { name: "NVI", id: "nvi", copyright: "Nova Versão Internacional © Biblica, Inc." }
     },
     scriptureSettings: {
         template: "scripture",

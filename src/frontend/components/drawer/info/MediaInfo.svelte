@@ -9,9 +9,6 @@
     import InputRow from "../../input/InputRow.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialToggleSwitch from "../../inputs/MaterialToggleSwitch.svelte"
-    import Center from "../../system/Center.svelte"
-    import Clock from "../../system/Clock.svelte"
-    import Date from "../../system/Date.svelte"
     import LiveInfo from "../live/LiveInfo.svelte"
     import InfoMetadata from "./InfoMetadata.svelte"
     import PlayerInfo from "./PlayerInfo.svelte"
@@ -99,11 +96,6 @@
             </main>
         {:else if $activeShow?.type === "video" || $activeShow?.type === "image"}
             <InfoMetadata title={name} {info} />
-        {:else}
-            <Center>
-                <Clock />
-                <Date />
-            </Center>
         {/if}
     </div>
 {/if}

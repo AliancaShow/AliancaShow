@@ -2,9 +2,6 @@
     import { special } from "../../../stores"
     import MaterialTextInput from "../../inputs/MaterialTextInput.svelte"
     import MaterialToggleSwitch from "../../inputs/MaterialToggleSwitch.svelte"
-    import Center from "../../system/Center.svelte"
-    import Clock from "../../system/Clock.svelte"
-    import Date from "../../system/Date.svelte"
 
     export let optionsOpen: boolean
 
@@ -27,11 +24,6 @@
 
             <MaterialToggleSwitch label="settings.style_template_preview" checked={$special.styleTemplatePreview !== false} defaultValue={true} on:change={(e) => updateSpecial(e.detail, "styleTemplatePreview", true)} />
         </main>
-    {:else}
-        <Center>
-            <Clock />
-            <Date />
-        </Center>
     {/if}
 </div>
 

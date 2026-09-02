@@ -162,7 +162,9 @@
         "settings": "Podešavanja",
         "_title_settings": "Podešavanja",
         "_title_display": "Prezentuj",
-        "_title_display_stop": "Zaustavi prezentaciju"
+        "_title_display_stop": "Zaustavi prezentaciju",
+        "scripture": "Bible",
+        "_title_scripture": "Bible"
     },
     "empty": {
         "general": "Nema ničeg ovde",
@@ -279,7 +281,8 @@
         "timers": "Tajmeri",
         "variables": "Variables",
         "templates": "Šabloni",
-        "web": "Web"
+        "web": "Web",
+        "library": "Library"
     },
     "category": {
         "all": "Sve",
@@ -295,7 +298,8 @@
         "music": "Muzika",
         "offers": "Ponude",
         "notice": "Obaveštenja",
-        "visuals": "vizuali"
+        "visuals": "vizuali",
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Trenutna",
@@ -916,7 +920,16 @@
         "verse_numbers": "Brojevi stihova",
         "version": "Prikaži verziju",
         "reference": "Prikaži referencu",
-        "red_jesus": "Reč Jesus podvuci crvenom"
+        "red_jesus": "Reč Jesus podvuci crvenom",
+        "display": "Display",
+        "convert_to_show": "Convert to show",
+        "book": "Book",
+        "chapter": "Chapter",
+        "verse": "Verses",
+        "select_all": "Select all",
+        "select_book": "Pick a book and a chapter",
+        "multiselect_tip": "Click to select · Shift for a range · Ctrl for multiple",
+        "new_testament": "New Testament"
     },
     "filter": {
         "blur": "Zamućenost",
@@ -1001,6 +1014,7 @@
         "slides": "Slajdovi",
         "words": "Reči",
         "template": "Šablon",
-        "category": "Kategorija"
+        "category": "Kategorija",
+        "details": "Details"
     }
 }

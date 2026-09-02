@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import type { Tree } from "../../../types/Projects"
-    import { activeProfile, activeProject, folders, labelsDisabled, openedFolders, projects } from "../../stores"
+    import { activeProfile, activeProject, folders, labelsDisabled, openedFolders, projects, projectView } from "../../stores"
     import { history } from "../helpers/history"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -12,6 +12,7 @@
     import Center from "../system/Center.svelte"
     import SelectElem from "../system/SelectElem.svelte"
     import { openProject } from "./project"
+    import ProjectContentList from "./ProjectContentList.svelte"
 
     export let tree: Tree[]
     export let readOnly = false
@@ -104,6 +105,14 @@
         if (e.detail.target.closest(".edit") || e.detail.target.querySelector(".edit") || editActive) return
         if (e.detail.ctrl) return
 
+        // AliancaShow: a arvore nao troca mais de tela, entao clicar na linha do
+        // projeto ja expandido recolhe. projectView e o mesmo estado que o botao
+        // "voltar" do cabecalho usa.
+        if ($activeProject === id && !$projectView) {
+            projectView.set(true)
+            return
+        }
+
         openProject(id, !e.detail.alt)
     }
 
@@ -175,10 +184,21 @@
                                         <MaterialButton style="width: 100%;padding: 0.08rem 0.65rem;font-weight: normal;" title="actions.id_select_project: <b>{project.name}</b>" on:click={(e) => open(e, project.id)} class="context #project_button{isReadOnly ? '_readonly' : ''}" isActive={$activeProject === project.id} tab>
                                             <Icon id={$projects[project.id]?.archived ? "archive" : "project"} white={$projects[project.id]?.archived} />
                                             <HiddenInput value={project.name} id={"project_" + project.id} on:edit={(e) => rename(project.id, e.detail.value)} bind:edit={editActive} allowEdit={!isReadOnly} />
+                                            <Icon id={$activeProject === project.id && !$projectView ? "arrow_down" : "arrow_right"} size={0.8} style="margin-inline-start: auto;opacity: 0.35;" white />
                                         </MaterialButton>
                                     {/if}
                                 </SelectElem>
                             </div>
+
+                            <!-- AliancaShow: o projeto ativo expande aqui, dentro da arvore, em vez
+                                 de substituir a lista inteira (comportamento do upstream). Reusa
+                                 ProjectContentList para nao perder reordenacao, secoes, menu de
+                                 contexto, arrastar-e-soltar e o botao de adicionar item. -->
+                            {#if shown && project.type !== "folder" && $activeProject === project.id && !$projectView}
+                                <div class="projectContent" style="margin-inline-start: {8 * (project.index || 0)}px;">
+                                    <ProjectContentList {tree} on:scrollElem />
+                                </div>
+                            {/if}
 
                             {#if shown && project.archived && !visibleArchives.includes(project.parent) && project.id === archivedCount[project.parent].id}
                                 <div class:indented={project.parent !== "/"} style="margin-inline-start: {8 * (project.index || 0)}px;display: flex;align-items: center;flex-direction: column;">
@@ -222,6 +242,41 @@
 {/if}
 
 <style>
+    /* AliancaShow: caixa da expansao do projeto ativo. Altura acompanha o
+       conteudo e para de crescer em 60vh, quando a propria lista rola. */
+    /* A lista de itens ja traz fundo, borda e cantos proprios (.listSection),
+       entao esta caixa nao desenha nada: qualquer fundo aqui viraria um box
+       vazio em volta do cartao, que era o que afastava a lista da linha. */
+    .projectContent {
+        display: flex;
+        flex-direction: column;
+        max-height: 60vh;
+        overflow: hidden;
+    }
+    .projectContent :global(#projectArea) {
+        min-height: 0;
+    }
+    /* cola o primeiro cartao na linha do projeto */
+    .projectContent :global(.listSection:first-child) {
+        margin-top: 0;
+    }
+    /* Projects.svelte reserva 30px no topo de todo .scroll .droparea para o
+       cabecalho, que e position:absolute. Antes so existia uma dessas areas por
+       vez (arvore OU conteudo); aninhada, a lista do projeto herdava um recuo
+       que nao e dela. O #projectArea da especificidade suficiente para vencer. */
+    .projectContent :global(#projectArea .scroll .droparea) {
+        padding-top: 0;
+        /* ProjectContentList reserva 57px no rodape para o "+" flutuante, que fica
+           fora do #projectArea e e ancorado no painel. Em tela cheia isso deixava
+           rolar por baixo do botao; aninhado, o botao nao esta ali e a reserva
+           virava so cinza sobrando abaixo do ultimo item. */
+        padding-bottom: 0;
+    }
+    /* fecha o cartao logo depois do ultimo item */
+    .projectContent :global(.listSection:last-child) {
+        margin-bottom: 0;
+    }
+
     .fullTree {
         display: flex;
         flex-direction: column;

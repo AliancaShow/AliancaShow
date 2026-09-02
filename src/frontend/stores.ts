@@ -369,7 +369,10 @@ export const timecode: Writable<{ type?: "send" | "receive"; mode?: TimecodeMode
 
 // CONNECTIONS
 export const ports: Writable<{ [key: string]: number }> = writable({ remote: 5510, stage: 5511, controller: 5512, output_stream: 5513 }) // {default}
-export const disabledServers: Writable<any> = writable({ remote: false, stage: false, controller: true, output_stream: true }) // {}
+// Layout D / rede restrita: todos os servidores desligados por padrao, para o app
+// nao abrir portas nem disparar o prompt do Windows Defender Firewall na 1a execucao.
+// Ligue em Configuracoes > Conexao quando houver permissao para aceitar o prompt.
+export const disabledServers: Writable<any> = writable({ remote: true, stage: true, controller: true, output_stream: true }) // {}
 export const serverData: Writable<{ [key: string]: ServerData }> = writable({}) // {}
 export const maxConnections: Writable<number> = writable(10) // 10
 export const remotePassword: Writable<string> = writable("1234") // generate 4 numbers

@@ -345,22 +345,23 @@
         {#if projectActive || recentlyUsedList.length}
             {#if !$focusMode}
                 <div class="header {recentlyUsedList.length ? '' : 'context #projectTab'}" class:shadow={listScrollY > 0} class:isScrollbarVisible class:passThrough={isDragging} data-title={translateText("remote.project: ", $dictionary) + `<b>${currentProject?.name || ""}</b>`}>
-                    <div class="left context">
-                        <MaterialButton style="width: 42px;height: 100%;padding: 0.3em 0.5em;" icon="back" iconSize={1.1} title="remote.projects" on:click={back} />
-                    </div>
-                    <!-- {recentlyUsedList.length ? '' : 'border-bottom: 1px solid var(--secondary);'} -->
+                    <!-- AliancaShow: a arvore nao sai mais de cena ao abrir um projeto, entao
+                         nao ha de onde "voltar": recolher e clicar na propria linha. A seta
+                         fica so no modo "usados recentemente", onde e a unica saida. -->
+                    {#if recentlyUsedList.length}
+                        <div class="left context">
+                            <MaterialButton style="width: 42px;height: 100%;padding: 0.3em 0.5em;" icon="back" iconSize={1.1} title="remote.projects" on:click={back} />
+                        </div>
+                    {/if}
 
                     <!-- <Icon id="project" white right /> -->
                     {#if recentlyUsedList.length}
                         <p style="margin-left: 42px;font-style: italic;opacity: 0.7;font-size: 1.08em;"><T id="info.recently_used" /></p>
                     {:else}
-                        <p style="max-width: 80%;font-size: 1.08em;">
-                            {#if currentProject?.name}
-                                {currentProject.name}
-                            {:else}
-                                <span style="opacity: 0.5;font-style: italic;"><T id="main.unnamed" /></span>
-                            {/if}
-                        </p>
+                        <!-- AliancaShow: titulo do painel fica fixo. O nome do projeto ja
+                             aparece na propria arvore, e trocar o titulo dava a impressao
+                             de que o painel tinha mudado de tela. Continua na tooltip. -->
+                        <p style="font-size: 1.08em;margin-right: 20px;"><T id="remote.projects" /></p>
 
                         <div class="right context">
                             <MaterialButton style="width: 32px;height: 100%;padding: 0.3em 0.5em;border-bottom-right-radius: 10px;{showProjectDropdown ? '' : 'opacity: 0.8;'}" title="create_show.more_options" icon="more" on:click={() => (showProjectDropdown = !showProjectDropdown)} white={!showProjectDropdown}>
@@ -418,6 +419,14 @@
                                             <T id="actions.lock_sections" />
                                         </MaterialButton>
                                     {/if}
+                                    <div class="DIVIDER"></div>
+
+                                    <!-- AliancaShow: o titulo do painel ficou fixo em "Projetos", entao o
+                                         dropdown da lista nao aparece mais enquanto um projeto esta aberto.
+                                         As opcoes da lista passam a viver aqui para nao ficarem inacessiveis. -->
+                                    <MaterialButton title="edit.options" icon="options" on:click={() => (showProjectsOptions = !showProjectsOptions)} white>
+                                        <T id="edit.options" />
+                                    </MaterialButton>
                                 </div>
                             {/if}
                         </div>
@@ -487,11 +496,11 @@
             <MaterialTextInput label="settings.default_project_name<span style='opacity: 0.5;padding-left: 8px;font-size: 0.8em;color: var(--text);'>{getProjectName($special)}</span>" title={projectReplacerTitle} value={projectName} defaultValue={getDefaultProjectName()} on:change={(e) => updateSpecial(e.detail, "default_project_name", true)} />
             <MaterialToggleSwitch label="settings.startup_projects_list" checked={$special.startupProjectsList} defaultValue={false} on:change={(e) => updateSpecial(e.detail, "startupProjectsList")} />
         </div>
-    {:else if !projectActive}
+    {:else}
         <div id="projectsArea" class:float={!templates.length} class="list projects {readOnly ? '' : 'context #projects'}">
             <Autoscroll offset={listOffset} bind:scrollElem={listScrollElem} timeout={150} smoothTimeout={0}>
                 <DropArea id="projects">
-                    <ProjectList {tree} {readOnly} />
+                    <ProjectList {tree} {readOnly} on:scrollElem={(e) => (contentScrollElem = e.detail)} />
                 </DropArea>
             </Autoscroll>
 
@@ -536,11 +545,17 @@
                 </div>
             {/if}
 
-            <FloatingInputs gradient style="width: 50px;height: 50px;border: none;">
-                <MaterialButton class="addButton" title={addMenuOpen ? "actions.close" : "context.addToProject"} style="width: 50px;height: 50px;" on:click={() => (addMenuOpen = !addMenuOpen)} on:dblclick={() => (addMenuOpen ? null : createProject())}>
-                    <Icon id="add" size={1.5} style={addMenuOpen ? "transform: rotate(135deg);" : ""} white />
-                </MaterialButton>
-            </FloatingInputs>
+            <!-- AliancaShow: com a arvore e a expansao na mesma tela havia dois "+"
+                 sobrepostos. Este ("novo projeto") sai de cena enquanto um projeto
+                 esta expandido, deixando so o "+" de adicionar item ao projeto. O
+                 upstream ja fechava o menu deste botao quando projectActive. -->
+            {#if !projectActive}
+                <FloatingInputs gradient style="width: 50px;height: 50px;border: none;">
+                    <MaterialButton class="addButton" title={addMenuOpen ? "actions.close" : "context.addToProject"} style="width: 50px;height: 50px;" on:click={() => (addMenuOpen = !addMenuOpen)} on:dblclick={() => (addMenuOpen ? null : createProject())}>
+                        <Icon id="add" size={1.5} style={addMenuOpen ? "transform: rotate(135deg);" : ""} white />
+                    </MaterialButton>
+                </FloatingInputs>
+            {/if}
         </div>
 
         {#if templates.length}
@@ -556,8 +571,6 @@
                 </div>
             </div>
         {/if}
-    {:else}
-        <ProjectContentList {tree} {recentlyUsedList} on:scrollElem={(e) => (contentScrollElem = e.detail)} />
     {/if}
 </div>
 
