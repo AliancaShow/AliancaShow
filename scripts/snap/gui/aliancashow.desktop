@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=AliançaShow
+Exec=aliancashow %U
+Terminal=false
+Type=Application
+Icon=${SNAP}/meta/gui/icon.png
+StartupWMClass=AliançaShow
+Comment=Projeção de letras, vídeos e Bíblia para a Aliança
+Categories=AudioVideo;

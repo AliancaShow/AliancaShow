@@ -1,0 +1,106 @@
+appId: app.aliancashow
+productName: AliançaShow
+artifactName: AliancaShow-${version}-${arch}.${ext}
+
+# WIDEVINE
+# Use castlabs electron builds to get widevine support
+# electronDownload:
+#     mirror: https://github.com/castlabs/electron-releases/releases/download/
+
+files:
+    - build/electron/**
+    - build/types/**
+    - public/**
+    - "!node_modules/@napi-rs"
+    - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,test,tests}"
+    - "!**/node_modules/*/{*.d.ts,*.ts,*.map}"
+    - "!**/node_modules/{@types,typescript}/**"
+    - "!**/node_modules/**/*.pdb"
+    - "!**/node_modules/**/obj/**"
+
+extraResources:
+    - from: node_modules/slideshow/
+      to: slideshow
+      filter:
+          - connector-*
+
+# windows
+
+win:
+    target: NSIS
+    icon: build/public/icon.ico
+    asarUnpack:
+        - "**/node_modules/macadam/**/*.node"
+        - "**/node_modules/libspotifyctl/**/*"
+    # ASSINATURA DE CODIGO - DESATIVADA NO REBRAND
+    # O bloco abaixo era a conta Azure Code Signing do projeto original
+    # (Live Church Solutions / FreeShow). Nao temos acesso a ela, e deixa-lo
+    # ativo faz o build do Windows falhar. Preencha com a conta da Alianca
+    # para voltar a assinar; sem isso o instalador sai sem assinatura e o
+    # Windows SmartScreen vai avisar na primeira execucao.
+    # azureSignOptions:
+    #     publisherName: <razao social da Alianca>
+    #     endpoint: https://wus2.codesigning.azure.net/
+    #     certificateProfileName: <perfil>
+    #     codeSigningAccountName: <conta>
+
+# linux
+
+linux:
+    executableName: aliancashow
+    asarUnpack:
+        - "**/node_modules/grandiose/**"
+        - "**/node_modules/macadam/**/*.node"
+        - "**/node_modules/libltc-wrapper/**/*"
+    category: AudioVideo
+    target:
+        - AppImage
+        - deb
+        - rpm
+    icon: build/public
+
+deb:
+    depends:
+        - libfontconfig1
+        - uuid-runtime
+        - libltc11
+
+# macos
+
+mac:
+    icon: build/public/icon.icns
+    asarUnpack:
+        - "**/node_modules/macadam/**/*.node"
+    target:
+        - target: dmg
+          arch:
+              - x64
+              - arm64
+        - target: zip
+          arch:
+              - x64
+              - arm64
+    category: public.app-category.utilities
+    hardenedRuntime: true
+    gatekeeperAssess: false
+    notarize: false
+    entitlements: scripts/macos/entitlements.mac.plist
+    entitlementsInherit: scripts/macos/entitlements.mac.plist
+    extendInfo:
+        NSMicrophoneUsageDescription: Please give access to your microphone if you want to use it for input.
+        NSCameraUsageDescription: Please give access to your camera if you want to use it for input.
+        com.apple.security.device.audio-input: true
+        com.apple.security.device.camera: true
+
+afterSign: scripts/macos/notarize.js
+
+dmg:
+    background: build/public/dmg.png
+    sign: false
+    contents:
+        - x: 140
+          y: 150
+        - x: 400
+          y: 150
+          type: link
+          path: /Applications
