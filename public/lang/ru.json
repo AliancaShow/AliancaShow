@@ -451,7 +451,8 @@
         "visuals": "Визуал",
         "action_tip": "Выполнять действие при показе шоу этой категории.",
         "create_nonexistent": "Добавить новые категории",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Текущий",

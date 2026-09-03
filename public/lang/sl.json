@@ -454,7 +454,8 @@
         "visuals": "Slikovno gradivo",
         "action_tip": "Dejanje, ki se sproži ob vsakem prikazovanju predmeta te zvrsti.",
         "create_nonexistent": "Ustvari neobstoječe zvrsti",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Trenutna",

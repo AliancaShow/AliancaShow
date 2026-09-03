@@ -454,7 +454,8 @@
         "visuals": "Visuels",
         "action_tip": "Une action qui se déclenche à chaque projection d'une présentation de cette catégorie.",
         "create_nonexistent": "Créer des catégories inexistantes",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Selectionné",

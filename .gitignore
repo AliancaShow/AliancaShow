@@ -27,3 +27,6 @@ config/typescript/tsconfig.*.prod.json
 
 # biblias embutidas: texto licenciado, fora do historico
 bundled-bibles/*.fsb
+
+# musicas embutidas: conteudo, fora do historico
+bundled-shows/*.show

@@ -37,6 +37,11 @@ extraResources:
       to: bibles
       filter:
           - "*.fsb"
+    # musicas que viajam dentro do instalador, instaladas na primeira execucao
+    - from: bundled-shows/
+      to: shows
+      filter:
+          - "*.show"
 
 # windows
 

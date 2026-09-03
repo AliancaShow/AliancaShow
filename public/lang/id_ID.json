@@ -422,7 +422,8 @@
         "visuals": "Visual",
         "action_tip": "Suatu tindakan yang memicu setiap kali pertunjukan dengan kategori ini disajikan.",
         "create_nonexistent": "Membuat kategori yang tidak ada",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Sekarang",

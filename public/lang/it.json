@@ -422,7 +422,8 @@
         "visuals": "Elementi visivi",
         "action_tip": "Un'azione che si attiva ogni volta che viene presentata una scena con questa categoria.",
         "create_nonexistent": "Crea categorie non esistenti",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Corrente",

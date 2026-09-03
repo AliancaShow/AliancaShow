@@ -82,7 +82,15 @@ export const mainResponses: MainResponses = {
         // "Categoria: Nao encontrado". Nao da para confiar no default: a chave
         // "categories" pode estar ausente do settings salvo, e nesse caso o
         // receiver de updateSettings nunca e chamado. Aqui roda sempre.
-        categories.update((c) => (c.impulso ? c : { ...c, impulso: { name: "category.impulso", icon: "song", default: true } }))
+        categories.update((c) => {
+            // garantidas aqui porque a chave "categories" pode estar ausente das
+            // configuracoes salvas, e nesse caso o receptor de updateSettings
+            // nunca dispara -- valor salvo vence padrao
+            const faltando: any = {}
+            if (!c.impulso) faltando.impulso = { name: "category.impulso", icon: "song", default: true }
+            if (!c.propresenter) faltando.propresenter = { name: "category.propresenter", icon: "song", default: true }
+            return Object.keys(faltando).length ? { ...c, ...faltando } : c
+        })
 
         if (!a.impulso_aos_teus_pes) {
             createImpulsoShows()

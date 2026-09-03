@@ -93,7 +93,8 @@ export const defaultSyncedSettings: { [key in SaveListSyncedSettings]: any } = {
         song: { name: "category.song", icon: "song", default: true },
         presentation: { name: "category.presentation", icon: "presentation", default: true },
         // AliancaShow: categoria fixa com as 12 musicas base do Impulso
-        impulso: { name: "category.impulso", icon: "song", default: true }
+        impulso: { name: "category.impulso", icon: "song", default: true },
+        propresenter: { name: "category.propresenter", icon: "song", default: true }
     },
     drawSettings: {},
     overlayCategories: {

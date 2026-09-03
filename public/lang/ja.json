@@ -403,7 +403,8 @@
         "notice": "お知らせ",
         "visuals": "ビジュアル",
         "action_tip": "このカテゴリのショーが提示されるたびに実行されるアクションです。",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "現在",

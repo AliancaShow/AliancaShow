@@ -454,7 +454,8 @@
         "visuals": "Látványok",
         "action_tip": "Egy művelet, mely kiváltódik minden olyan esetben, amikor ilyen kategóriájú bemutató vetítésre kerül.",
         "create_nonexistent": "Nem létező kategóriák létrehozása",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Jelenlegi",

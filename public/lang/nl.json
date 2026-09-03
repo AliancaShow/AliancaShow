@@ -454,7 +454,8 @@
         "visuals": "Beeldmaterialen",
         "action_tip": "Een actie die wordt geactiveerd, telkens wanneer een show met deze categorie wordt gepresenteerd.",
         "create_nonexistent": "Niet-bestaande categorieën maken",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Huidig",

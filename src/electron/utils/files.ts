@@ -361,6 +361,34 @@ export function getDataFolderRoot() {
 // primeira execucao. Sem isto, um .exe enviado para outro computador registraria
 // a NVI nas configuracoes padrao mas nao encontraria o arquivo, e o app marcaria
 // a traducao como "nao encontrada".
+// AliancaShow: mesma ideia das Biblias embutidas, para os shows. Sao copiados
+// para a pasta do usuario na primeira execucao, de modo que um .exe levado para
+// outro computador ja chegue com a biblioteca de musicas pronta.
+export function installBundledShows() {
+    try {
+        const origem = app.isPackaged ? path.join(process.resourcesPath, "shows") : path.join(__dirname, "..", "..", "..", "bundled-shows")
+        if (!doesPathExist(origem)) return
+
+        const destino = getDataFolderPath("shows")
+        let copiados = 0
+
+        for (const nome of fs.readdirSync(origem)) {
+            if (!nome.toLowerCase().endsWith(".show")) continue
+
+            const alvo = path.join(destino, nome)
+            // nunca sobrescreve: a copia do usuario pode ter sido editada
+            if (doesPathExist(alvo)) continue
+
+            fs.copyFileSync(path.join(origem, nome), alvo)
+            copiados++
+        }
+
+        if (copiados) console.info(`Shows embutidos instalados: ${copiados}`)
+    } catch (err) {
+        console.error("Could not install bundled shows:", err)
+    }
+}
+
 export function installBundledBibles() {
     try {
         // app.isPackaged em vez de isProd para nao importar de ".." e criar ciclo

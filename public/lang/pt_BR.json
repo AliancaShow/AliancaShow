@@ -454,7 +454,8 @@
         "visuals": "Visuais",
         "action_tip": "Uma ação que será ativada toda vez que um Show desta categoria for apresentado.",
         "create_nonexistent": "Criar categorias não-existentes",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Atual",

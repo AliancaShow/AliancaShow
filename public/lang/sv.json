@@ -422,7 +422,8 @@
         "visuals": "Visuellt",
         "action_tip": "En åtgärd som utlöses varje gång en visning med den här kategorin presenteras.",
         "create_nonexistent": "Skapa icke existerande kategorier",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Nuvarande",

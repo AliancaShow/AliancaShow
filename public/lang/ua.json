@@ -299,7 +299,8 @@
         "offers": "Пропозиції",
         "notice": "Повідомлення",
         "visuals": "Візуальні елементи",
-        "impulso": "Impulso"
+        "impulso": "Impulso",
+        "propresenter": "ProPresenter"
     },
     "groups": {
         "current": "Поточний",

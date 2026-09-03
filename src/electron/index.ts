@@ -18,7 +18,7 @@ import { receiveNDI } from "./ndi/talk"
 import { OutputHelper } from "./output/OutputHelper"
 import { setRtmpNoticeListener, setRtmpStatusListener } from "./streaming/RtmpStreamer"
 import { callClose, exitApp, saveAndClose } from "./utils/close"
-import { installBundledBibles } from "./utils/files"
+import { installBundledBibles, installBundledShows } from "./utils/files"
 import { isDraggableAreaVisible, isWithinDisplayBounds, mainWindowInitialize, openDevTools, parseCommandLineArgs } from "./utils/init"
 import { template } from "./utils/menuTemplate"
 import { spellcheck } from "./utils/spellcheck"
@@ -129,6 +129,7 @@ async function startApp() {
     // as Biblias que vao dentro do instalador entram na pasta de dados aqui,
     // depois de setupStores porque so agora o caminho dos dados e conhecido
     installBundledBibles()
+    installBundledShows()
 
     registerProtectedProtocol()
     cleanupProtectedCache().catch((err) => console.error("Protected cache cleanup failed:", err))
