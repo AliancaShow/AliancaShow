@@ -52,9 +52,7 @@
                             {#key popupId}
                                 <!-- margin-top: -5px; -->
                                 <h2 style="font-size: 1.3em;margin-top: -2px;">
-                                    {#if popupId === "new_update"}
-                                        <T id="about.new_update" />: <span style="color: var(--secondary);">v{$popupData.latestVersion}</span>
-                                    {:else if popupId === "pco_picker"}
+                                    {#if popupId === "pco_picker"}
                                         Planning Center
                                     {:else if popupId === "audio_effect" && $popupData?.effect}
                                         <T id={EFFECTS_LIST.find((a) => a.id === $popupData.effect)?.label || "popup.audio_effect"} />

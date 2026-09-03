@@ -2,6 +2,13 @@ appId: app.aliancashow
 productName: AliançaShow
 artifactName: AliancaShow-${version}-${arch}.${ext}
 
+# AliancaShow: sem canal de atualizacao. Sem isto o electron-builder deduz o
+# destino a partir do campo "repository" do package.json e gera um
+# app-update.yml apontando para ChurchApps/FreeShow -- o app baixaria e
+# instalaria o FreeShow original por cima deste. O campo repository fica como
+# esta, porque registra a origem do codigo, exigencia saudavel sob GPL-3.0.
+publish: null
+
 # WIDEVINE
 # Use castlabs electron builds to get widevine support
 # electronDownload:
