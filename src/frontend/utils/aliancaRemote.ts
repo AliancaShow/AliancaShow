@@ -116,13 +116,46 @@ export async function entrarSalvo() {
 
 // ---------------------------------------------------------------- sincronizacao
 
+/**
+ * Uma sincronizacao por vez.
+ *
+ * Cada escrita no Firebase dispara o ouvinte, e antes as execucoes se
+ * atropelavam no meio de um download: uma comecava, a outra pulava o item que
+ * ja estava baixando e terminava com a lista pela metade. Isso passou a ser
+ * grave depois da remocao, porque lista pela metade vira "sumiu" -- entao a
+ * ultima foto enviada podia apagar a anterior. Aqui a nova espera a atual
+ * acabar, e so a fotografia mais recente e processada.
+ */
+let sincronizando = false
+let proximaFoto: { [id: string]: any } | null = null
+
+function enfileirar(cultos: { [id: string]: any }) {
+    proximaFoto = cultos
+    if (sincronizando) return
+    sincronizando = true
+
+    ;(async () => {
+        try {
+            while (proximaFoto) {
+                const atual = proximaFoto
+                proximaFoto = null
+                await sincronizar(atual)
+            }
+        } catch (e) {
+            console.error("Falha ao sincronizar:", e)
+        } finally {
+            sincronizando = false
+        }
+    })()
+}
+
 function ouvirCultos() {
     if (!db || pararOuvinte) return
 
     pararOuvinte = onValue(
         ref(db, "cultos"),
         (snap) => {
-            sincronizar(snap.val() || {}).catch((e) => console.error("Falha ao sincronizar:", e))
+            enfileirar(snap.val() || {})
         },
         (erro) => {
             console.error("Falha ao ler os cultos:", erro)
@@ -268,11 +301,74 @@ function garantirEstruturaCompleta() {
     return mudou
 }
 
-const jaBaixando = new Set<string>()
+/**
+ * O que cada culto trouxe do Remote, guardado entre sessoes.
+ *
+ * Sem isso nao da para desfazer uma remocao com seguranca: o projeto mistura o
+ * que chegou do celular com o que o operador arrastou para la, e os dois ficam
+ * iguais depois de salvos. So sai do projeto o que ESTE registro diz que entrou
+ * por aqui.
+ */
+let vindosDoRemote: { [culto: string]: string[] } = {}
+let registroCarregado = false
+
+async function carregarRegistro() {
+    if (registroCarregado) return
+    registroCarregado = true
+    vindosDoRemote = (await requestMain(Main.GET_STORE_VALUE, { file: "config", key: "aliancaVindosDoRemote" })) || {}
+}
+
+function guardarRegistro() {
+    sendMain(Main.SET_STORE_VALUE, { file: "config", key: "aliancaVindosDoRemote", value: vindosDoRemote })
+}
+
+/** o arquivo so sai do disco se nenhum outro projeto ainda apontar para ele */
+function ninguemMaisUsa(caminho: string) {
+    return !Object.values(get(projects)).some((p: any) => (p.shows || []).some((s: any) => s.id === caminho))
+}
+
+function tirarDoProjeto(cultoId: string, sumiram: string[]) {
+    const partes = caminhoDoculto(cultoId)
+    if (!partes || !sumiram.length) return false
+
+    const pastaId = garantirPastas(partes.pastas).id
+    const projetoId = garantirProjeto(partes.projeto, pastaId).id
+    const projeto: any = get(projects)[projetoId]
+    if (!projeto) return false
+
+    const fora = new Set(sumiram)
+    const restantes = (projeto.shows || []).filter((s: any) => !fora.has(s.id))
+    if (restantes.length === (projeto.shows || []).length) return false
+
+    projects.update((a) => {
+        a[projetoId].shows = restantes
+        return a
+    })
+
+    for (const id of sumiram) {
+        // musica e referencia ao show, que continua na biblioteca; arquivo e copia
+        if (!String(id).includes("\\") && !String(id).includes("/")) continue
+        if (!ninguemMaisUsa(id)) continue
+        media.update((a) => {
+            delete a[id]
+            return a
+        })
+        sendMain(Main.ALIANCA_APAGAR, { caminho: id })
+    }
+
+    return true
+}
 
 async function sincronizar(cultos: { [id: string]: any }) {
+    await carregarRegistro()
+
     let mudou = await garantirPastasDeMidia()
     mudou = garantirEstruturaCompleta() || mudou
+
+    // o que o Remote pede AGORA, culto a culto -- a diferenca para o registro
+    // anterior e exatamente o que alguem removeu pelo celular
+    const pedidos: { [culto: string]: string[] } = {}
+    const incompletos = new Set<string>()
 
     for (const [cultoId, culto] of Object.entries(cultos)) {
         const itens = Object.values((culto as any)?.itens || {}) as any[]
@@ -288,29 +384,34 @@ async function sincronizar(cultos: { [id: string]: any }) {
         // ordena pela hora de envio, para o projeto seguir a ordem em que a equipe montou
         itens.sort((a, b) => (a.enviadoEm || 0) - (b.enviadoEm || 0))
 
+        const daqui: string[] = []
+        pedidos[cultoId] = daqui
+
         for (const item of itens) {
             if (item.tipo === "musica") {
+                daqui.push(item.showId)
                 if (adicionarAoProjeto(projetoId, { id: item.showId, type: "show" }, item.showId)) mudou = true
                 continue
             }
 
-            const chave = `${cultoId}/${item.arquivo}/${item.enviadoEm}`
-            if (jaBaixando.has(chave)) continue
-
             const pasta = [...partes.pastas, partes.projeto].join("/")
             const arquivo = nomeDoArquivo(item)
 
-            jaBaixando.add(chave)
             estado.baixando++
             avisar()
 
             const caminhoLocal: string | null = await requestMain(Main.ALIANCA_BAIXAR, { url: item.url, pasta, arquivo })
 
             estado.baixando--
-            jaBaixando.delete(chave)
             avisar()
 
-            if (!caminhoLocal) continue
+            // download falho deixa a lista incompleta; sem esta marca o item
+            // seria lido como removido e sairia do projeto na volta seguinte
+            if (!caminhoLocal) {
+                incompletos.add(cultoId)
+                continue
+            }
+            daqui.push(caminhoLocal)
 
             const tipoProjeto = item.tipo === "image" ? "image" : item.tipo === "video" ? "video" : "audio"
             if (adicionarAoProjeto(projetoId, { id: caminhoLocal, type: tipoProjeto, name: item.nome }, caminhoLocal)) {
@@ -322,6 +423,25 @@ async function sincronizar(cultos: { [id: string]: any }) {
             }
         }
     }
+
+    // um culto esvaziado some do banco, entao a volta e pelo registro, e nao
+    // pela lista que chegou
+    for (const cultoId of Object.keys(vindosDoRemote)) {
+        if (incompletos.has(cultoId)) {
+            // na duvida, nao tira nada: guarda a uniao e tenta de novo depois
+            const juntos = new Set([...(pedidos[cultoId] || []), ...vindosDoRemote[cultoId]])
+            pedidos[cultoId] = [...juntos]
+            continue
+        }
+
+        const agora = new Set(pedidos[cultoId] || [])
+        const sumiram = vindosDoRemote[cultoId].filter((id) => !agora.has(id))
+        if (tirarDoProjeto(cultoId, sumiram)) mudou = true
+    }
+
+    const antes = JSON.stringify(vindosDoRemote)
+    vindosDoRemote = pedidos
+    if (JSON.stringify(pedidos) !== antes) guardarRegistro()
 
     if (mudou) {
         estado.ultimaSync = Date.now()

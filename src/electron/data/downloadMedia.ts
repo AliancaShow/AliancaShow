@@ -244,6 +244,33 @@ export function criarPastasOnline(pastas: string[]) {
     return raiz
 }
 
+/**
+ * Apaga um arquivo que veio do Remote.
+ *
+ * So mexe DENTRO da pasta Online, que e inteiramente gerida pelo app. Qualquer
+ * caminho fora dela e recusado: o pedido vem da tela, e a tela nao decide
+ * apagar nada do computador do operador.
+ */
+export function apagarDaPastaOnline(caminho: string) {
+    if (!caminho) return false
+
+    const raiz = path.resolve(getDataFolderPath("onlineMedia"))
+    const alvo = path.resolve(caminho)
+    if (alvo !== raiz && !alvo.startsWith(raiz + path.sep)) {
+        console.error("Recusado: fora da pasta Online ->", caminho)
+        return false
+    }
+
+    try {
+        if (doesPathExist(alvo)) fs.unlinkSync(alvo)
+        console.info("Removido junto com o Remote:", path.relative(raiz, alvo))
+        return true
+    } catch (err) {
+        console.error("Falha ao remover:", caminho, err)
+        return false
+    }
+}
+
 export async function baixarParaPasta({ url, pasta, arquivo }: { url: string; pasta: string; arquivo: string }) {
     if (!url?.startsWith("http")) return null
 

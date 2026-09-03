@@ -15,7 +15,7 @@ import { ContentProviderRegistry } from "../contentProviders"
 import { ChurchAppsChat } from "../contentProviders/churchApps/ChurchAppsChat"
 import { deleteBackup, getBackups, restoreFiles } from "../data/backup"
 import { getLocalIPs } from "../data/bonjour"
-import { baixarParaPasta, checkIfMediaDownloaded, criarPastasOnline, downloadLessonsMedia, downloadMedia } from "../data/downloadMedia"
+import { apagarDaPastaOnline, baixarParaPasta, checkIfMediaDownloaded, criarPastasOnline, downloadLessonsMedia, downloadMedia } from "../data/downloadMedia"
 import { importShow } from "../data/import"
 import { save } from "../data/save"
 import { _store, appDataPath, config, createStores, getStore, getStoreValue, setStoreValue } from "../data/store"
@@ -122,6 +122,7 @@ export const mainResponses: MainResponses = {
     [Main.ALIANCA_BAIXAR]: (data) => baixarParaPasta(data),
     [Main.ALIANCA_PASTA_ONLINE]: () => getDataFolderPath("onlineMedia"),
     [Main.ALIANCA_CRIAR_PASTAS]: (data) => criarPastasOnline(data),
+    [Main.ALIANCA_APAGAR]: (data) => apagarDaPastaOnline(data.caminho),
     [Main.MEDIA_IS_DOWNLOADED]: async (data) => await checkIfMediaDownloaded(data),
     [Main.NOW_PLAYING]: (data) => setPlayingState(data),
     [Main.NOW_PLAYING_UNSET]: () => unsetPlayingAudio(),

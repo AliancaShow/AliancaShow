@@ -100,6 +100,7 @@ export enum Main {
     ALIANCA_BAIXAR = "ALIANCA_BAIXAR",
     ALIANCA_PASTA_ONLINE = "ALIANCA_PASTA_ONLINE",
     ALIANCA_CRIAR_PASTAS = "ALIANCA_CRIAR_PASTAS",
+    ALIANCA_APAGAR = "ALIANCA_APAGAR",
     MEDIA_IS_DOWNLOADED = "MEDIA_IS_DOWNLOADED",
     NOW_PLAYING = "NOW_PLAYING",
     NOW_PLAYING_UNSET = "NOW_PLAYING_UNSET",
@@ -217,6 +218,7 @@ export interface MainSendPayloads {
     [Main.ALIANCA_BAIXAR]: { url: string; pasta: string; arquivo: string }
     [Main.ALIANCA_PASTA_ONLINE]: undefined
     [Main.ALIANCA_CRIAR_PASTAS]: string[]
+    [Main.ALIANCA_APAGAR]: { caminho: string }
     [Main.MEDIA_IS_DOWNLOADED]: { url: string; contentFile?: any }
     [Main.NOW_PLAYING]: { filePath: string; name: string; unknownLang: string[]; format: string; duration: number }
     // [Main.MEDIA_BASE64]: { id: string; path: string }[]
