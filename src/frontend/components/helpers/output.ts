@@ -9,7 +9,6 @@ import type { Item, Layout, LayoutRef, Media, OutSlide, Show, Slide, SlideData, 
 import { AudioAnalyser } from "../../audio/audioAnalyser"
 import { requestMain, sendMain } from "../../IPC/main"
 import { actions, activeFocus, activeProject, activeRename, activeShow, activeTimers, allOutputs, categories, connections, currentOutputSettings, customMessageCredits, disabledServers, effects, focusMode, lockedOverlays, media, outputDisplay, outputs, outputSlideCache, outputState, overlays, overlayTimers, projects, scriptures, scriptureSettings, serverData, showsCache, special, stageShows, styles, templates, theme, themes, transitionData, usageLog } from "../../stores"
-import { trackScriptureUsage } from "../../utils/analytics"
 import { isMainWindow, isOutputWindow, newToast } from "../../utils/common"
 import { translateText } from "../../utils/language"
 import { confirmCustom } from "../../utils/popup"
@@ -77,12 +76,6 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
 
             const scripture = get(scriptures)[translation.collection] || {}
             const versions = scripture.collection?.versions || [scripture.id || ""]
-            versions.forEach((id) => {
-                const name = get(scriptures)[id]?.name || translation.version || ""
-                const scriptureId = get(scriptures)[id]?.id || id
-                const apiId = translation.api ? scriptureId : null
-                if (name || apiId) trackScriptureUsage(name, apiId, slide.group)
-            })
 
             // set attributionString
             if (translation.attributionString) data.attributionString = translation.attributionString

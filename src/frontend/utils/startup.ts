@@ -7,7 +7,6 @@ import { getTimeFromInterval } from "../components/helpers/time"
 import { requestMain, requestMainMultiple, sendMain, sendMainMultiple } from "../IPC/main"
 import { cameraManager } from "../media/cameraManager"
 import { activePopup, activeProfile, alertMessage, cachePath, cloudSyncData, contentProviderData, currentWindow, dataPath, deviceId, driveKeys, isDev, loaded, loadedState, os, profiles, providerConnections, shows, special, version, windowState } from "../stores"
-import { startTracking } from "./analytics"
 import { wait, waitUntilValueIsDefined } from "./common"
 import { getDefaultElements } from "./createData"
 import { setLanguage } from "./language"
@@ -73,7 +72,6 @@ async function startupMain() {
     const hasProfiles = Object.keys(get(profiles)).filter((a) => a !== "admin").length > 0
     if (!hasProfiles || get(activeProfile) !== null) checkStartupActions()
 
-    startTracking()
     contentProviderSync(true)
 
     // custom alert

@@ -14,7 +14,6 @@ import { startExport } from "./data/export"
 import { cleanupProtectedCache, registerProtectedProtocol } from "./data/protected"
 import { config, setupStores } from "./data/store"
 import { receiveMain, sendMain, sendToMain } from "./IPC/main"
-import { autoErrorReport } from "./IPC/responsesMain"
 import { receiveNDI } from "./ndi/talk"
 import { OutputHelper } from "./output/OutputHelper"
 import { setRtmpNoticeListener, setRtmpStatusListener } from "./streaming/RtmpStreamer"
@@ -59,9 +58,6 @@ if (!isProd) console.info("Building app! (This may take 5-40 seconds)")
 
 // set application menu
 setGlobalMenu()
-
-// error reporting
-autoErrorReport()
 
 // hardware acceleration
 const disableHWA = config.get("disableHardwareAcceleration")

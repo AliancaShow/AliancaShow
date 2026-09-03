@@ -11,7 +11,6 @@ import { createCategory } from "../../../converters/importHelpers"
 import { requestMain, sendMain } from "../../../IPC/main"
 import { findBestBreak, splitTextContentInHalf } from "../../../show/slides"
 import { activeProject, activeScripture, activeShow, drawerTabsData, media, notFound, outLocked, overlays, scriptureHistory, scriptures, scripturesCache, scriptureSettings, styles, templates } from "../../../stores"
-import { trackScriptureUsage } from "../../../utils/analytics"
 import { TemplateHelper } from "../../../utils/templates"
 import { customActionActivation } from "../../actions/actions"
 import { getItemText } from "../../edit/scripts/textStyle"
@@ -312,12 +311,6 @@ export async function playScripture() {
 
     // track
     const reference = `${biblesContent[0].book} ${fullReferenceRange || biblesContent[0].chapters[0]}`.trim()
-    biblesContent.forEach((translation) => {
-        if (!translation) return
-        const name = translation.version || ""
-        const apiId = translation.isApi ? get(scriptures)[translation.id]?.id || translation.id || "" : null
-        if (name || apiId) trackScriptureUsage(name, apiId, reference)
-    })
 
     const templateBackground = _template.getSetting("backgroundPath")
 
