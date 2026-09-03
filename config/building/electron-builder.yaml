@@ -30,6 +30,13 @@ extraResources:
       to: slideshow
       filter:
           - connector-*
+    # Biblias que viajam dentro do instalador. Sao copiadas para a pasta de
+    # dados na primeira execucao, para que um unico .exe leve a Biblia pronta
+    # para outro computador. Ver bundled-bibles/README.md.
+    - from: bundled-bibles/
+      to: bibles
+      filter:
+          - "*.fsb"
 
 # windows
 

@@ -356,6 +356,37 @@ export function getDataFolderRoot() {
     return config.get("dataPath") || getDefaultDataFolderRoot()
 }
 
+// AliancaShow: as Biblias embutidas viajam dentro do instalador (extraResources
+// -> resources/bibles) e sao copiadas para a pasta de dados do usuario na
+// primeira execucao. Sem isto, um .exe enviado para outro computador registraria
+// a NVI nas configuracoes padrao mas nao encontraria o arquivo, e o app marcaria
+// a traducao como "nao encontrada".
+export function installBundledBibles() {
+    try {
+        // app.isPackaged em vez de isProd para nao importar de ".." e criar ciclo
+        const origem = app.isPackaged ? path.join(process.resourcesPath, "bibles") : path.join(__dirname, "..", "..", "..", "bundled-bibles")
+        if (!doesPathExist(origem)) return
+
+        const destino = getDataFolderPath("scriptures")
+        let copiadas = 0
+
+        for (const nome of fs.readdirSync(origem)) {
+            if (!nome.toLowerCase().endsWith(".fsb")) continue
+
+            const alvo = path.join(destino, nome)
+            // nunca sobrescreve: o usuario pode ter editado ou trocado a sua copia
+            if (doesPathExist(alvo)) continue
+
+            fs.copyFileSync(path.join(origem, nome), alvo)
+            copiadas++
+        }
+
+        if (copiadas) console.info(`Biblias embutidas instaladas: ${copiadas}`)
+    } catch (err) {
+        console.error("Could not install bundled Bibles:", err)
+    }
+}
+
 export function getDataFolderPath(id: keyof typeof dataFolderNames, subfolder?: string) {
     let folderPath = path.join(getDataFolderRoot(), dataFolderNames[id])
     if (subfolder) folderPath = path.join(folderPath, subfolder)

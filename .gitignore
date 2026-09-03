@@ -24,3 +24,6 @@ test-results/
 .serena
 # gerados pelo preBuild e apagados pelo postBuild
 config/typescript/tsconfig.*.prod.json
+
+# biblias embutidas: texto licenciado, fora do historico
+bundled-bibles/*.fsb
