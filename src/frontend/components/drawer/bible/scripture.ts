@@ -1,6 +1,4 @@
 ﻿import JsonBible from "json-bible"
-import { ApiBiblesList, ApiBible as JsonBibleApi } from "json-bible/lib/api"
-import type { CustomBibleListContent } from "json-bible/lib/api/ApiBible"
 import { stripMarkdown } from "json-bible/lib/markdown"
 import { get } from "svelte/store"
 import { uid } from "uid"
@@ -15,7 +13,6 @@ import { findBestBreak, splitTextContentInHalf } from "../../../show/slides"
 import { activeProject, activeScripture, activeShow, drawerTabsData, media, notFound, outLocked, overlays, scriptureHistory, scriptures, scripturesCache, scriptureSettings, styles, templates } from "../../../stores"
 import { trackScriptureUsage } from "../../../utils/analytics"
 import { TemplateHelper } from "../../../utils/templates"
-import { getKey } from "../../../values/keys"
 import { customActionActivation } from "../../actions/actions"
 import { getItemText } from "../../edit/scripts/textStyle"
 import { clone, removeDuplicates } from "../../helpers/array"
@@ -24,18 +21,7 @@ import { getMediaStyle } from "../../helpers/media"
 import { getAllNormalOutputs, getFirstActiveOutput, setOutput } from "../../helpers/output"
 import { checkName } from "../../helpers/show"
 
-const SCRIPTURE_API_URL = "https://api.churchapps.org/content/bibles"
-
-export async function getApiBiblesList() {
-    try {
-        return await ApiBiblesList("*", SCRIPTURE_API_URL)
-    } catch (err) {
-        console.error("Error loading API Bible:", err)
-        return await ApiBiblesList(getKey("bibleapi"))
-    }
-}
-
-export type BibleInstance = Awaited<ReturnType<typeof JsonBible>> | Awaited<ReturnType<typeof JsonBibleApi>>
+export type BibleInstance = Awaited<ReturnType<typeof JsonBible>>
 export type BookInstance = Awaited<ReturnType<BibleInstance["getBook"]>>
 export type ChapterInstance = Awaited<ReturnType<BookInstance["getChapter"]>>
 
@@ -44,22 +30,6 @@ export async function loadJsonBible(id: string): Promise<BibleInstance | null> {
     if (jsonBibleCache[id]) return jsonBibleCache[id]
 
     const scriptureData = get(scriptures)[id]
-    const isApi = !!scriptureData?.api
-
-    if (isApi) {
-        const key = getKey("bibleapi")
-        const apiId = scriptureData?.id || id
-        try {
-            const instance = await JsonBibleApi(key, apiId, SCRIPTURE_API_URL)
-            jsonBibleCache[id] = instance
-            return instance
-        } catch (err) {
-            console.error("Error loading API Bible:", err)
-            const instance = await JsonBibleApi(key, apiId)
-            jsonBibleCache[id] = instance
-            return instance
-        }
-    }
 
     if (scriptureData?.collection) {
         console.warn("Collections must load one at a time")
@@ -2005,18 +1975,6 @@ export function getShortBibleName(name: string) {
 }
 
 // hard coded custom Bible data
-const bibleData = {
-    "eea18ccd2ca05dde-01": {
-        nameLocal: "Bibel 2011 Bokmål" // med gammeltestamentlige apokryfer
-    },
-    "7bcaa2f2e77739d5-01": {
-        nameLocal: "Bibel 2011 Nynorsk"
-    }
-}
-export function customBibleData(data: CustomBibleListContent) {
-    return { ...data, ...(bibleData[data.sourceKey] || {}) } as CustomBibleListContent
-}
-
 export function swapPreviewBible(collectionId: string) {
     const collection = get(scriptures)[collectionId]?.collection
     const versions = collection?.versions || []
