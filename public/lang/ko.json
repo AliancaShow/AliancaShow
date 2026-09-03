@@ -450,8 +450,7 @@
         "visuals": "시각적인",
         "action_tip": "이 분류에 속한 쇼가 나올 때마다 실행할 동작입니다.",
         "create_nonexistent": "존재하지 않는 분류 생성",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "현재",

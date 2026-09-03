@@ -3,6 +3,8 @@ import { ToMain } from "../../types/IPC/ToMain"
 import type { Show, Shows, TrimmedShow, TrimmedShows } from "../../types/Show"
 import { sendToMain } from "../IPC/main"
 import { deleteFile, getDataFolderPath, parseShow, readFile, readFileAsync, readFolder, readFolderAsync, renameFileAsync } from "./files"
+import { OutputHelper } from "../output/OutputHelper"
+import fs from "fs"
 
 export function getAllShows() {
     const showsPath = getDataFolderPath("shows")
@@ -103,6 +105,67 @@ export function deleteShowsNotIndexed(data: { shows: TrimmedShows }) {
     }
 
     return { deleted }
+}
+
+/**
+ * AliancaShow: observa a pasta de shows e recarrega sozinho quando um arquivo
+ * muda por fora do app -- copia manual, sincronizacao de nuvem, ou o proprio
+ * instalador colocando as musicas embutidas.
+ *
+ * Antes disso o FreeShow so lia a pasta na inicializacao, assumindo que so ele
+ * mexia nos proprios arquivos. Quem editava por fora tinha que fechar e abrir.
+ *
+ * Tres cuidados:
+ * - o fs.watch dispara varias vezes por operacao, entao ha um atraso que junta
+ *   a rajada numa recarga so
+ * - nao recarrega enquanto ha saida ativa: no meio de um culto isso causaria um
+ *   piscar na tela da congregacao
+ * - o proprio app salvando tambem dispara o evento; ignoramos o que aconteceu
+ *   logo apos uma gravacao nossa
+ */
+let temporizador: NodeJS.Timeout | null = null
+let observador: fs.FSWatcher | null = null
+let ultimaGravacaoPropria = 0
+
+export function marcarGravacaoPropria() {
+    ultimaGravacaoPropria = Date.now()
+}
+
+export function watchShowsFolder() {
+    if (observador) return
+
+    try {
+        const showsPath = getDataFolderPath("shows")
+
+        observador = fs.watch(showsPath, { persistent: false }, (_evento, arquivo) => {
+            if (!arquivo || !arquivo.toLowerCase().endsWith(".show")) return
+
+            // o app acabou de salvar: o evento e nosso, nao de fora
+            if (Date.now() - ultimaGravacaoPropria < 3000) return
+
+            if (temporizador) clearTimeout(temporizador)
+            temporizador = setTimeout(() => {
+                temporizador = null
+
+                // so adia se ha projecao DE FATO na tela; as janelas de saida
+                // existem sempre, entao contar getKeys() adiaria para sempre
+                if (OutputHelper.hasVisibleOutput()) {
+                    console.info("Shows mudaram, mas ha projecao na tela -- recarga adiada")
+                    return
+                }
+
+                console.info("Pasta de shows mudou, recarregando")
+                refreshAllShows()
+            }, 1500)
+        })
+
+        observador.on("error", (err) => {
+            console.error("Erro ao observar a pasta de shows:", err)
+            observador = null
+        })
+    } catch (err) {
+        console.error("Nao foi possivel observar a pasta de shows:", err)
+    }
 }
 
 export function refreshAllShows() {

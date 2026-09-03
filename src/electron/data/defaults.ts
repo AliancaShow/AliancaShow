@@ -94,7 +94,10 @@ export const defaultSyncedSettings: { [key in SaveListSyncedSettings]: any } = {
         presentation: { name: "category.presentation", icon: "presentation", default: true },
         // AliancaShow: categoria fixa com as 12 musicas base do Impulso
         impulso: { name: "category.impulso", icon: "song", default: true },
-        propresenter: { name: "category.propresenter", icon: "song", default: true }
+        // nome literal: e nome proprio, igual em qualquer idioma. O translateText
+        // so troca padroes "palavra.palavra", entao isto passa intacto -- e evita
+        // 31 arquivos de traducao para uma palavra que nao se traduz
+        propresenter: { name: "ProPresenter", icon: "song", default: true }
     },
     drawSettings: {},
     overlayCategories: {

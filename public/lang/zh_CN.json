@@ -454,8 +454,7 @@
         "visuals": "视觉",
         "action_tip": "每次演示该类别的节目时触发的操作。",
         "create_nonexistent": "创建不存在的分类",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "当前",

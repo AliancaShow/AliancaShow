@@ -454,8 +454,7 @@
         "visuals": "Visuelt",
         "action_tip": "En handling som utføres hver gang et show med denne kategorien blir presentert.",
         "create_nonexistent": "Opprett ikke-eksisterende kategorier",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Gjeldende",

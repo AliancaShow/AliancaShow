@@ -88,7 +88,7 @@ export const mainResponses: MainResponses = {
             // nunca dispara -- valor salvo vence padrao
             const faltando: any = {}
             if (!c.impulso) faltando.impulso = { name: "category.impulso", icon: "song", default: true }
-            if (!c.propresenter) faltando.propresenter = { name: "category.propresenter", icon: "song", default: true }
+            if (!c.propresenter) faltando.propresenter = { name: "ProPresenter", icon: "song", default: true }
             return Object.keys(faltando).length ? { ...c, ...faltando } : c
         })
 

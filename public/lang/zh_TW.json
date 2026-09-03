@@ -417,8 +417,7 @@
         "visuals": "視覺效果",
         "action_tip": "呈現此類別曲目時觸發的動作。",
         "create_nonexistent": "建立不存在的類別",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "目前",

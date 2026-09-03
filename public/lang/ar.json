@@ -381,8 +381,7 @@
         "notice": "إشعار",
         "visuals": "مرئيات",
         "action_tip": "إجراء يتم تشغيله في كل مرة يتم فيها تقديم عرض بهذه الفئة.",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "الحالي",

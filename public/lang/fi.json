@@ -422,8 +422,7 @@
         "visuals": "Visuaaliset elementit",
         "action_tip": "Toiminto, joka käynnistetään aina, kun tämän kategorian esitys näytetään.",
         "create_nonexistent": "Luo olemattomia luokkia",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Nykyinen",

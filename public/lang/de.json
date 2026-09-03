@@ -422,8 +422,7 @@
         "visuals": "Visuals",
         "action_tip": "Eine Aktion, die jedes Mal ausgelöst wird, wenn eine Show dieser Kategorie präsentiert wird",
         "create_nonexistent": "nicht vorhandene Kategorien erstellen",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Aktuell",

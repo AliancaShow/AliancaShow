@@ -68,6 +68,22 @@ export class OutputHelper {
         return Object.keys(OutputHelper.outputs)
     }
 
+    /**
+     * Ha alguma saida realmente na tela? getKeys() nao serve para isso: as
+     * janelas de saida existem desde a inicializacao, mesmo escondidas. Quem
+     * precisa saber se ha projecao acontecendo -- para nao interromper um culto
+     * -- tem que olhar a visibilidade da janela.
+     */
+    static hasVisibleOutput() {
+        return Object.values(OutputHelper.outputs).some((output) => {
+            try {
+                return !!output?.window && !output.window.isDestroyed() && output.window.isVisible()
+            } catch {
+                return false
+            }
+        })
+    }
+
     static init() {
         OutputLifecycle.initListeners()
     }

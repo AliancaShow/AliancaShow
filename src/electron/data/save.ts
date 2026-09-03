@@ -11,7 +11,7 @@ import { _store, safeStoreSet } from "../data/store"
 import { sendMain, sendToMain } from "../IPC/main"
 import { deleteFile, doesPathExist, getDataFolderPath, parseShow, readFile, writeFile } from "../utils/files"
 import { checkIfMatching, clone, wait } from "../utils/helpers"
-import { renameShows } from "../utils/shows"
+import { marcarGravacaoPropria, renameShows } from "../utils/shows"
 
 // Full-file stores that use real edit timestamps instead of file mtime for cloud sync comparison.
 // Prevents sync writes from falsely flagging stores as newer.
@@ -72,6 +72,9 @@ export async function save(data: SaveData) {
     }
 
     const showsPath = getDataFolderPath("shows")
+
+    // avisa o observador da pasta: o que vier a seguir e gravacao nossa
+    marcarGravacaoPropria()
     // rename shows
     if (data.renamedShows) {
         const renamedShows = data.renamedShows.filter(({ id }: { id: string }) => !data.deletedShows?.find((a) => a.id === id))

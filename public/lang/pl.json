@@ -454,8 +454,7 @@
         "visuals": "Animacje",
         "action_tip": "Akcja uruchamiana za każdym razem, gdy prezentowany jest pokaz z tej kategorii.",
         "create_nonexistent": "Utwórz nieistniejące kategorie",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Bieżące",

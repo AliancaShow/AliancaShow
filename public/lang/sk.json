@@ -387,8 +387,7 @@
         "notice": "Oznamy",
         "visuals": "Vizuály",
         "action_tip": "Akcia, ktorá sa spustí pri každej prezentácii s touto kategóriou.",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Aktuálne",

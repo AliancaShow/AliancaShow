@@ -19,6 +19,7 @@ import { OutputHelper } from "./output/OutputHelper"
 import { setRtmpNoticeListener, setRtmpStatusListener } from "./streaming/RtmpStreamer"
 import { callClose, exitApp, saveAndClose } from "./utils/close"
 import { installBundledBibles, installBundledShows } from "./utils/files"
+import { watchShowsFolder } from "./utils/shows"
 import { isDraggableAreaVisible, isWithinDisplayBounds, mainWindowInitialize, openDevTools, parseCommandLineArgs } from "./utils/init"
 import { template } from "./utils/menuTemplate"
 import { spellcheck } from "./utils/spellcheck"
@@ -130,6 +131,9 @@ async function startApp() {
     // depois de setupStores porque so agora o caminho dos dados e conhecido
     installBundledBibles()
     installBundledShows()
+
+    // recarrega sozinho quando um .show muda por fora do app
+    watchShowsFolder()
 
     registerProtectedProtocol()
     cleanupProtectedCache().catch((err) => console.error("Protected cache cleanup failed:", err))

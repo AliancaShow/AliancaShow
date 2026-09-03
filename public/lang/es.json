@@ -454,8 +454,7 @@
         "visuals": "Ilustraciones",
         "action_tip": "Una acción que se activa cada vez que se proyecta una presentación con esta categoría.",
         "create_nonexistent": "Crear categorías inexistentes",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Actual",

@@ -454,8 +454,7 @@
         "visuals": "Visuály",
         "action_tip": "Akce, která se spustí pokaždé, když je prezentace této kategorie uvedena.",
         "create_nonexistent": "Vytvořit neexistující kategorie",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Aktuální",

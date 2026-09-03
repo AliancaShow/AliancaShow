@@ -422,8 +422,7 @@
         "visuals": "Görseller",
         "action_tip": "Bu kategoriye ait bir gösteri her sunulduğunda tetiklenen bir eylem.",
         "create_nonexistent": "Var olmayan kategoriler oluşturun",
-        "impulso": "Impulso",
-        "propresenter": "ProPresenter"
+        "impulso": "Impulso"
     },
     "groups": {
         "current": "Akım",
