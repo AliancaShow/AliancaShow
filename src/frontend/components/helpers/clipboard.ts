@@ -1363,7 +1363,7 @@ function mediaPaste(data: any) {
 
 // HELPER FUNCTIONS
 
-const exludedCategories = ["all", "unlabeled", "favourites", "effects_library", "pixabay"]
+const exludedCategories = ["all", "unlabeled", "favourites", "effects_library"]
 function historyDelete(id, data, { updater } = { updater: "" }) {
     data = data.filter((a) => !exludedCategories.includes(a.id || a))
 

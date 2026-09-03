@@ -30,8 +30,6 @@
     import Folder from "./Folder.svelte"
     import Media from "./MediaCard.svelte"
     import MediaGrid from "./MediaGrid.svelte"
-    import { loadFromPixabay } from "./pixabay"
-    import { loadFromUnsplash } from "./unsplash"
 
     export let active: string | null
     export let searchValue = ""
@@ -82,23 +80,6 @@
 
     $: folderName = active === "all" ? "category.all" : active === "favourites" ? "category.favourites" : rootPath === path ? (active !== null ? $mediaFolders[active]?.name || "" : "") : splitPath(path).name
 
-    async function loadFilesAsync() {
-        if ((onlineTab !== "pixabay" && onlineTab !== "unsplash") || activeView === "folder") return
-
-        let onlineFiles: any[] = []
-        if (onlineTab === "pixabay") {
-            onlineFiles = await loadFromPixabay(searchValue || "landscape", activeView === "video")
-        } else if (onlineTab === "unsplash") {
-            onlineFiles = await loadFromUnsplash(searchValue || "landscape")
-        }
-
-        hightlightActive()
-
-        filteredFiles = clone(onlineFiles)
-        if (searchValue.length < 2) searchedFiles = clone(filteredFiles)
-        else filterSearch()
-    }
-
     function setSubSubTab(id: string) {
         if (!active) return
 
@@ -134,8 +115,6 @@
 
     let inputsTab = $drawerTabsData.media?.openedSubSubTab?.cameras || "cameras"
     let onlineTab = $drawerTabsData.media?.openedSubSubTab?.online || "youtube"
-    $: if (active === "online" && onlineTab === "pixabay" && (searchValue !== null || activeView)) loadFilesAsync()
-    $: if (active === "online" && onlineTab === "unsplash" && (searchValue !== null || activeView)) loadFilesAsync()
 
     let prevActive: null | string = null
     let prevTab = ""
@@ -532,15 +511,6 @@
             <Icon style={onlineTab === "vimeo" ? "fill: #17d5ff" : ""} size={1.2} id="vimeo" white />
             <p>Vimeo</p>
         </MaterialButton>
-        <MaterialButton style="flex: 1;" isActive={onlineTab === "pixabay"} on:click={() => setSubSubTab("pixabay")}>
-            <Icon style={onlineTab === "pixabay" ? "fill: #00ab6b" : ""} size={1.2} id="pixabay" box={48} white />
-            <p>Pixabay</p>
-        </MaterialButton>
-        <MaterialButton style="flex: 1;" isActive={onlineTab === "unsplash"} on:click={() => setSubSubTab("unsplash")}>
-            <!-- #111111 -->
-            <Icon style={onlineTab === "unsplash" ? "fill: #bbbbbb" : ""} size={1.2} id="unsplash" white />
-            <p>Unsplash</p>
-        </MaterialButton>
         <MaterialButton style="flex: 1;" isActive={onlineTab === "canva"} on:click={() => setSubSubTab("canva")}>
             {#if onlineTab === "canva"}
                 <CLogo />
@@ -651,17 +621,6 @@
         </FloatingInputs>
     {:else if onlineTab !== "canva" || $providerConnections.canva}
         <FloatingInputs>
-            {#if onlineTab === "pixabay"}
-                <MaterialButton title="media.image" on:click={() => setView("image")}>
-                    <Icon size={1.2} id="image" white={activeView === "video"} />
-                </MaterialButton>
-                <MaterialButton title="media.video" on:click={() => setView("video")}>
-                    <Icon size={1.2} id="video" white={activeView !== "video"} />
-                </MaterialButton>
-
-                <div class="divider"></div>
-            {/if}
-
             <MaterialButton
                 on:click={() =>
                     mediaOptions.update((a) => {

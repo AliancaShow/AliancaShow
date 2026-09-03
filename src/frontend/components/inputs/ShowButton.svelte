@@ -263,7 +263,7 @@
         const media = await getMedia(id, mediaSize.small)
         if (media) thumbnailPath = media.thumbnail || media.altPath || media.path
 
-        // online videos (Pixabay) might not have a thumbnail ready
+        // online videos (YouTube/Vimeo) might not have a thumbnail ready
         if (getMediaType(getExtension(thumbnailPath)) === "video") thumbnailPath = ""
 
         if (type === "video") {

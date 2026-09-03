@@ -8,8 +8,6 @@
         { name: "CMG Sans (Custom font)", url: "https://www.churchmotiongraphics.com/cmg-sans/" },
         { name: "Google Fonts (Icons)", url: "https://fonts.google.com/icons/" },
         { name: "Icons8 (Icons)", url: "https://icons8.com/" },
-        { name: "Pixabay (Web Images)", url: "https://pixabay.com/" },
-        { name: "Unsplash (Web Images)", url: "https://unsplash.com/" },
         { name: "Electron (Cross-platform desktop apps)", url: "https://www.electronjs.org/" },
         { name: "Svelte (DOM framework)", url: "https://svelte.dev/" },
         { name: "Rollup (Module bundler)", url: "https://rollupjs.org/" },

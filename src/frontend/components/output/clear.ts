@@ -90,7 +90,7 @@ export function clearBackground(specificOutputId = "") {
         setOutput("background", null, false, outputId)
     })
 
-    customMessageCredits.set("") // unsplash
+    customMessageCredits.set("") // creditos vindos da API (CUSTOM_CREDITS)
     customActionActivation("background_cleared")
 }
 

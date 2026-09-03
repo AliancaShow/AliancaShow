@@ -6,7 +6,6 @@
     import { addProjectItem } from "../../../converters/project"
     import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
     import { translateText } from "../../../utils/language"
-    import { getKey } from "../../../values/keys"
     import Icon from "../../helpers/Icon.svelte"
     import { getMediaLayerType, getMediaStyle, getMediaType, loadThumbnail } from "../../helpers/media"
     import { findMatchingOut, getAllActiveOutputs, getFirstActiveOutput, setOutput } from "../../helpers/output"
@@ -137,13 +136,7 @@
             setOutput("background", { path, type, loop, muted, startAt: 0, ...currentMediaStyle, ignoreLayer: videoType === "foreground" }, false, output.id)
         })
 
-        // unsplash requires the download to be triggered when using their images
-        if (credits && credits.type === "unsplash" && credits.trigger_download) {
-            fetch(credits.trigger_download + "?client_id=" + getKey("unsplash"), { method: "GET" }).catch((err) => console.error("Could not trigger download:", err))
-            customMessageCredits.set(`Photo by ${credits.artist} on Unsplash`)
-        } else {
-            customMessageCredits.set("")
-        }
+        customMessageCredits.set("")
     }
 
     function dblclick(e: any) {
