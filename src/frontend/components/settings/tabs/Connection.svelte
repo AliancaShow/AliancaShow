@@ -19,6 +19,7 @@
     import MaterialToggleSwitch from "../../inputs/MaterialToggleSwitch.svelte"
     import Tip from "../../main/Tip.svelte"
     import { startRemoteController, stopRemoteController } from "../../../utils/remoteController"
+    import AliancaRemote from "../AliancaRemote.svelte"
 
     let ip = "localhost"
 
@@ -187,6 +188,8 @@
     let obsPort = $obsData.port || 4455
     $: if (obsIP || obsPort) obsData.update((d) => ({ ...d, ip: obsIP, port: obsPort }))
 </script>
+
+<AliancaRemote />
 
 {#each servers as server}
     {@const disabled = server.id === "companion" ? $companion?.enabled !== true : server.enabledByDefault ? $disabledServers[server.id] === true : $disabledServers[server.id] !== false}

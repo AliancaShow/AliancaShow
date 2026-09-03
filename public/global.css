@@ -1,3 +1,27 @@
+/* AliancaShow: Montserrat embutida no app, nao instalada no Windows.
+   As musicas do ProPresenter e as do Impulso convertidas pedem
+   font-family:'Montserrat' com peso 900. Declarando aqui, a fonte funciona em
+   qualquer computador que receba o instalador -- sem depender de instalacao no
+   sistema, que exigiria permissao de administrador.
+
+   E a fonte variavel: um arquivo cobre os pesos de 100 a 900, em vez de 18
+   arquivos separados. As janelas de saida carregam este mesmo index.html,
+   entao a projecao usa a mesma fonte. */
+@font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-VariableFont_wght.ttf") format("truetype-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: block;
+}
+@font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-Italic-VariableFont_wght.ttf") format("truetype-variations");
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: block;
+}
+
 /* custom CMG Sans */
 @font-face {
     font-family: "CMGSans";

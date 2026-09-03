@@ -211,6 +211,67 @@ async function startDownload(data: DownloadFile) {
 /// //
 
 const downloading = new Set<string>()
+/**
+ * AliancaShow: baixa um arquivo do Firebase para um caminho ESCOLHIDO dentro da
+ * pasta Online, espelhando a arvore do Storage:
+ *
+ *     Online/Alianca/2026/09-setembro/06/Celula.jpeg
+ *     Online/Acampa/1-sexta/1-culto-manha/Louvor.mp3
+ *
+ * O downloadMedia comum nao serve aqui: ele achata tudo numa pasta so, com o
+ * nome trocado por um hash da URL. Isso e otimo para cache de miniatura e
+ * pessimo para o operador, que precisa reconhecer o arquivo na aba de Midia.
+ *
+ * Devolve o caminho local, ou o que ja existia se o arquivo ja tiver sido
+ * baixado -- assim reabrir o app nao rebaixa tudo.
+ */
+/**
+ * Cria na pasta Online o mesmo esqueleto de pastas que existe nos Projetos.
+ *
+ * A aba Midia navega o disco, entao uma pasta so aparece la depois de existir
+ * de verdade. Sem isso o operador via a arvore completa em Projetos e uma
+ * pasta vazia em Midia -- as duas precisam bater.
+ */
+export function criarPastasOnline(pastas: string[]) {
+    const raiz = getDataFolderPath("onlineMedia")
+
+    for (const relativo of pastas) {
+        const partes = relativo.split("/").filter(Boolean)
+        if (!partes.length) continue
+        makeDir(path.join(raiz, ...partes))
+    }
+
+    return raiz
+}
+
+export async function baixarParaPasta({ url, pasta, arquivo }: { url: string; pasta: string; arquivo: string }) {
+    if (!url?.startsWith("http")) return null
+
+    const raiz = getDataFolderPath("onlineMedia")
+    const destinoPasta = path.join(raiz, ...pasta.split("/").filter(Boolean))
+    const destino = path.join(destinoPasta, arquivo)
+
+    if (doesPathExist(destino)) return destino
+    if (downloading.has(destino)) return null
+    downloading.add(destino)
+
+    try {
+        makeDir(destinoPasta)
+        await streamDownload(url, destino)
+        console.info("Baixado do Firebase:", path.join(pasta, arquivo))
+        return destino
+    } catch (err) {
+        console.error("Falha ao baixar do Firebase:", url, err)
+        // arquivo pela metade atrapalha mais que a ausencia dele
+        try {
+            if (doesPathExist(destino)) fs.unlinkSync(destino)
+        } catch {}
+        return null
+    } finally {
+        downloading.delete(destino)
+    }
+}
+
 export async function downloadMedia({ url, contentFile }: { url: string; contentFile?: any }) {
     if (!url?.startsWith("http") || url?.startsWith("blob:")) return
 

@@ -96,6 +96,10 @@ export enum Main {
     MEDIA_TRACKS = "MEDIA_TRACKS",
     DOWNLOAD_LESSONS_MEDIA = "DOWNLOAD_LESSONS_MEDIA",
     MEDIA_DOWNLOAD = "MEDIA_DOWNLOAD",
+    // AliancaShow: baixa do Firebase para uma pasta espelhando o Storage
+    ALIANCA_BAIXAR = "ALIANCA_BAIXAR",
+    ALIANCA_PASTA_ONLINE = "ALIANCA_PASTA_ONLINE",
+    ALIANCA_CRIAR_PASTAS = "ALIANCA_CRIAR_PASTAS",
     MEDIA_IS_DOWNLOADED = "MEDIA_IS_DOWNLOADED",
     NOW_PLAYING = "NOW_PLAYING",
     NOW_PLAYING_UNSET = "NOW_PLAYING_UNSET",
@@ -210,6 +214,9 @@ export interface MainSendPayloads {
     [Main.MEDIA_TRACKS]: { path: string }
     [Main.DOWNLOAD_LESSONS_MEDIA]: LessonsData[]
     [Main.MEDIA_DOWNLOAD]: { url: string; contentFile?: any }
+    [Main.ALIANCA_BAIXAR]: { url: string; pasta: string; arquivo: string }
+    [Main.ALIANCA_PASTA_ONLINE]: undefined
+    [Main.ALIANCA_CRIAR_PASTAS]: string[]
     [Main.MEDIA_IS_DOWNLOADED]: { url: string; contentFile?: any }
     [Main.NOW_PLAYING]: { filePath: string; name: string; unknownLang: string[]; format: string; duration: number }
     // [Main.MEDIA_BASE64]: { id: string; path: string }[]

@@ -16,6 +16,7 @@ import { autoOpenLastUsedProfile, openProfileByName } from "./profile"
 import { receiveOUTPUTasOUTPUT, remoteListen, setupMainReceivers } from "./receivers"
 import { destroy, receive, send } from "./request"
 import { save, unsavedUpdater } from "./save"
+import { entrarSalvo } from "./aliancaRemote"
 
 let initialized = false
 let startupProfile = ""
@@ -73,6 +74,9 @@ async function startupMain() {
     if (!hasProfiles || get(activeProfile) !== null) checkStartupActions()
 
     contentProviderSync(true)
+
+    // liga a ponte com o AliancaShow Remote, se ja houver conta guardada
+    entrarSalvo()
 
     // custom alert
     // if (Math.random() < 0.01) {
