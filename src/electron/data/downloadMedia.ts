@@ -216,7 +216,7 @@ const downloading = new Set<string>()
  * pasta Online, espelhando a arvore do Storage:
  *
  *     Online/Alianca/2026/09-setembro/06/Celula.jpeg
- *     Online/Acampa/1-sexta/1-culto-manha/Louvor.mp3
+ *     Online/Alianca/2026/09-setembro/13/Louvor.mp3
  *
  * O downloadMedia comum nao serve aqui: ele achata tudo numa pasta so, com o
  * nome trocado por um hash da URL. Isso e otimo para cache de miniatura e

@@ -15,7 +15,6 @@ import { save } from "./save"
  * arquivos no disco e projetos prontos, com a MESMA arvore do Firebase Storage:
  *
  *     Alianca/2026/09-setembro/06     -> pastas Alianca > 2026 > 09-setembro, projeto "06"
- *     Acampa/1-sexta/1-culto-manha    -> pastas Acampa > 1-sexta, projeto "1-culto-manha"
  *
  * A ligacao e so de saida: o app abre a conexao com o Firebase, nunca recebe
  * conexao. E o que permite funcionar atras do firewall da igreja, sem porta
@@ -33,7 +32,7 @@ const firebaseConfig = {
 }
 
 // as duas raizes, que viram pastas de projeto e tambem pastas de midia
-const RAIZES = ["Alianca", "Acampa"]
+const RAIZES = ["Alianca"]
 
 export type EstadoRemote = { ligado: boolean; entrando: boolean; email: string; erro: string; ultimaSync: number; baixando: number }
 
@@ -226,18 +225,7 @@ async function garantirPastasDeMidia() {
 
 /** "2026-09-06" -> pastas Alianca/2026/09-setembro + projeto "06" */
 const MESES = ["01-janeiro", "02-fevereiro", "03-marco", "04-abril", "05-maio", "06-junho", "07-julho", "08-agosto", "09-setembro", "10-outubro", "11-novembro", "12-dezembro"]
-const DIAS_ACAMPA: { [k: string]: string } = { sexta: "1-sexta", sabado: "2-sabado", domingo: "3-domingo", segunda: "4-segunda" }
-const MOMENTOS: { [k: string]: string } = { manha: "1-culto-manha", noite: "2-culto-noite", brincadeiras: "3-brincadeiras" }
-
 function caminhoDoculto(cultoId: string) {
-    const acampa = cultoId.match(/^acampa-(\w+)-(\w+)$/)
-    if (acampa) {
-        const dia = DIAS_ACAMPA[acampa[1]]
-        const momento = MOMENTOS[acampa[2]]
-        if (!dia || !momento) return null
-        return { pastas: ["Acampa", dia], projeto: momento }
-    }
-
     const data = cultoId.match(/^(\d{4})-(\d{2})-(\d{2})$/)
     if (!data) return null
     return { pastas: ["Alianca", data[1], MESES[Number(data[2]) - 1]], projeto: data[3] }
@@ -247,7 +235,6 @@ function caminhoDoculto(cultoId: string) {
  * Cria a arvore inteira de uma vez, mesmo sem conteudo:
  *
  *     Alianca/2026/01-janeiro/04, 11, 18, 25 ... ate 12-dezembro
- *     Acampa/1-sexta/1-culto-manha, 2-culto-noite, 3-brincadeiras ... 4 dias
  *
  * Antes as pastas nasciam quando o primeiro arquivo chegava, entao o painel
  * ficava cheio de buracos: so o domingo com foto aparecia. Com a arvore pronta
@@ -279,16 +266,6 @@ function garantirEstruturaCompleta() {
             const { mudou: m2 } = garantirProjeto(dia, pastaMes)
             mudou = mudou || m2
             caminhos.push(`Alianca/${ano}/${MESES[mes]}/${dia}`)
-        }
-    }
-
-    for (const dia of Object.values(DIAS_ACAMPA)) {
-        const { id: pastaDia, mudou: m1 } = garantirPastas(["Acampa", dia])
-        mudou = mudou || m1
-        for (const momento of Object.values(MOMENTOS)) {
-            const { mudou: m2 } = garantirProjeto(momento, pastaDia)
-            mudou = mudou || m2
-            caminhos.push(`Acampa/${dia}/${momento}`)
         }
     }
 
