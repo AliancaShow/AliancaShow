@@ -103,8 +103,9 @@
         opacity: 0;
     }
 
+    /* Apenas selecionado: destaque neutro. Marca nao significa "escolhido". */
     .main.preview {
-        outline: 2px solid var(--primary-lighter);
+        outline: 2px solid rgb(255 255 255 / 0.28);
         outline-offset: -1px;
         z-index: 1;
         /* outline: 3px solid var(--primary-lighter);
@@ -121,8 +122,10 @@
         width: 100%;
         z-index: 1;
     }
+    /* Em uso no ar: a mesma borda clara do card de slide, para as duas telas
+       falarem a mesma lingua. */
     .main.active {
-        outline: 2px solid var(--secondary);
+        outline: 2px solid rgb(255 120 130 / 0.75);
         outline-offset: -1px;
         z-index: 2;
         /* outline: 3px solid var(--secondary);
