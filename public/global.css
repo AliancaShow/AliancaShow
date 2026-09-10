@@ -20,6 +20,26 @@
     font-style: italic;
 }
 
+/* Montserrat -- a fonte do template Impulso.
+   Vai embutida de proposito: se depender de estar instalada no Windows, o
+   texto cai na fonte padrao quando a instalacao some da maquina, e as musicas
+   aparecem erradas no culto. Licenca OFL, em Montserrat-OFL.txt. */
+@font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-Regular.ttf") format("truetype");
+    font-weight: 400;
+}
+@font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-Bold.ttf") format("truetype");
+    font-weight: 700;
+}
+@font-face {
+    font-family: "Montserrat";
+    src: url("./fonts/Montserrat-Black.ttf") format("truetype");
+    font-weight: 900;
+}
+
 /* flag emojies */
 @font-face {
     font-family: NotoColorEmojiLimited;
