@@ -204,10 +204,20 @@
     .clear {
         display: flex;
         flex-direction: column;
+        gap: 10px;
+        padding: 12px;
     }
 
+    /* "Limpar tudo" e o unico botao solido vermelho da tela -- criterio de
+       aceite do handoff. A hierarquia inteira depende disso: e a acao que se
+       procura com pressa, e nada mais pode competir com ela. */
     :global(.clearAll) {
         width: 100%;
+        padding: 10px !important;
+        border-radius: 9px !important;
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
     }
 
     .faded {
@@ -223,19 +233,32 @@
         flex-wrap: wrap;
         align-items: center;
     }
+    /* Seletores de camada: pilulas separadas, nao uma barra de botoes colados.
+       A camada ativa usa wash de marca; as outras, superficie neutra. */
+    .group {
+        gap: 6px;
+    }
     .group :global(button) {
-        flex-grow: 1;
-        /* height: 40px; */
-
-        border-radius: 0;
+        flex: 1;
+        min-height: 38px;
+        border-radius: 9px;
+        background: rgb(255 255 255 / 0.06);
+        color: #a9aab0;
+        transition:
+            background-color 120ms ease,
+            color 120ms ease;
+    }
+    .group :global(button:hover) {
+        background: rgb(255 255 255 / 0.1);
     }
     .clear :global(button:disabled) {
         background-color: var(--primary) !important;
     }
     .group :global(button.isActive) {
         border: none !important;
-        border-right: 1px solid var(--primary-lighter) !important;
-        border-left: 1px solid var(--primary-lighter) !important;
+        background: rgb(242 26 39 / 0.16) !important;
+        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+        color: #ff8f97;
     }
 
     .combinedButton {

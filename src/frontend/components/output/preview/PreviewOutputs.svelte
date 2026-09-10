@@ -60,7 +60,7 @@
 {#if outs.length > 1}
     <div class="outputTitles">
         {#each outs as output (output.id)}
-            <MaterialButton id={output.id} title={output.stageOutput ? "" : "actions.toggle_output_lock"} active={output.active} style="width: 50%;font-weight: normal;border-radius: 0;padding: 0.2em 0.8em;{output.active ? 'border-bottom: 2px solid ' + output.color + ' !important;' : ''}" class="output_button context #output_active_button" on:click={(e) => toggleOutput(e, output.id)}>
+            <MaterialButton id={output.id} title={output.stageOutput ? "" : "actions.toggle_output_lock"} active={output.active} style="flex: 1;font-weight: {output.active ? 700 : 400};border-radius: 16px;padding: 6px 8px;" class="output_button context #output_active_button" on:click={(e) => toggleOutput(e, output.id)}>
                 <div class="indicator" class:locked={!output.active} class:invisible={output.invisible} class:ndi={$ndiData[output?.id || ""]?.connections > 0} class:active={$outputState.find((a) => a.id === output.id)?.active === true} data-title={translateText(getOutputStateTitle(output, { $outputState, $ndiData }), $dictionary)}></div>
                 {#if output.stageOutput}<Icon id="stage" size={0.8} white />{/if}
                 <!-- {#if !allSameState && $outputState.find((a) => a.id === output.id)?.active}<Icon id="check" />{/if} -->
@@ -72,21 +72,43 @@
 {/if}
 
 <style>
+    /* Segmented control do handoff: trilha escura com as opcoes dentro, no
+       lugar das abas com regua colorida embaixo.
+
+       O clique continua fazendo o que sempre fez -- travar e destravar aquela
+       saida. O handoff propunha que passasse a so trocar o preview, mas essa
+       funcao ja mora aqui e nao teria para onde ir. Mudanca de comportamento
+       fica para uma decisao separada; isto e so a roupa nova. */
     .outputTitles {
         display: flex;
-        flex-wrap: wrap;
-        /* overflow-x: auto; */
-
-        background-color: var(--primary-darker);
+        gap: 2px;
+        margin: 5px 5px 0;
+        padding: 3px;
+        border-radius: 20px;
+        background: rgb(0 0 0 / 0.35);
     }
 
     .outputTitles :global(button) {
         cursor: pointer;
-        border-bottom: 2px solid var(--primary-lighter) !important;
         white-space: nowrap;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #83848b;
+        background: transparent !important;
+        transition:
+            background-color 120ms ease,
+            color 120ms ease;
     }
-    .outputTitles :global(button.active:hover) {
-        filter: brightness(0.8);
+    /* saida no ar: destaque neutro. O vermelho fica reservado para o slide. */
+    .outputTitles :global(button.active) {
+        background: rgb(255 255 255 / 0.1) !important;
+        color: #fff;
+    }
+    .outputTitles :global(button:hover) {
+        background: rgb(255 255 255 / 0.05) !important;
     }
 
     .indicator {
