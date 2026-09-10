@@ -22,6 +22,18 @@
     font-display: block;
 }
 
+/* JetBrains Mono -- todo dado numerico e tecnico do redesign: indices,
+   duracoes, resolucoes, relogio, contagens. Embutida pelo mesmo motivo da
+   Montserrat acima: o app roda sem rede na cabine. Tambem e variavel, um
+   arquivo cobre 400, 500 e 700. Licenca OFL, em JetBrainsMono-OFL.txt. */
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("./fonts/JetBrainsMono-Variable.woff2") format("woff2-variations");
+    font-weight: 100 800;
+    font-style: normal;
+    font-display: block;
+}
+
 /* custom CMG Sans */
 @font-face {
     font-family: "CMGSans";
@@ -84,6 +96,80 @@
     --font-size: 1em;
 
     --navigation-width: 290px;
+
+    /* ---------------------------------------------------------------
+       Redesign da tela Mostrar -- direcao "paineis de vidro" (2a).
+       Tokens do handoff de design, separados dos tokens de tema acima
+       de proposito: um tema do FreeShow tem 11 cores fixas, e o design
+       pede seis niveis de texto, cinco superficies de vidro e a rampa
+       de marca inteira. O tema continua mandando na interface antiga;
+       estes tokens sao a camada nova.
+
+       O vermelho vive em --brand-rgb e em nenhum outro lugar. O handoff
+       usava #E4383F, calibrado a partir de um print porque o logotipo
+       nao pode ser lido na epoca, e marcava "confirmar hex oficial". O
+       correto e o #F21A27 do guia de marca, ja usado no logotipo e em
+       --secondary; os tons claros abaixo foram re-derivados a partir
+       dele mantendo os mesmos deslocamentos de matiz, luz e saturacao
+       do estudo original. Todos passam de 5,8:1 de contraste sobre o
+       painel escuro.
+       --------------------------------------------------------------- */
+
+    --brand-rgb: 242, 26, 39;
+    --brand: rgb(var(--brand-rgb));
+    --brand-text: #ff7f8b; /* texto/icone sobre fundo de marca translucido */
+    --brand-text-strong: #ff8a96; /* numero do slide no ar, chip de arranjo ativo */
+    --brand-dot: #ff4b5b; /* ponto pulsante do badge NO AR */
+    --brand-wash: rgba(var(--brand-rgb), 0.16); /* selecao / estado ativo */
+    --brand-wash-soft: rgba(var(--brand-rgb), 0.14); /* badge NO AR */
+    --brand-line: rgba(var(--brand-rgb), 0.3); /* borda de elemento ativo */
+    --brand-glow: rgba(var(--brand-rgb), 0.6); /* gloria atras do slide no ar */
+
+    /* fundo da janela: gradiente radial + brilho decorativo de marca */
+    --bg-a: #1c1418;
+    --bg-b: #0b0b0d;
+    --bg-c: #08080a;
+
+    /* superficies de vidro. A separacao entre linhas e por fundo,
+       nunca por regua de 1px solida. */
+    --panel: rgba(255, 255, 255, 0.04);
+    --panel-top: rgba(255, 255, 255, 0.045);
+    --panel-line: rgba(255, 255, 255, 0.07);
+    --row: rgba(255, 255, 255, 0.035);
+    --control: rgba(255, 255, 255, 0.06);
+    --control-hover: rgba(255, 255, 255, 0.05);
+    --selected-neutral: rgba(255, 255, 255, 0.09);
+    --track: rgba(0, 0, 0, 0.32);
+    --divider: rgba(255, 255, 255, 0.06);
+    --panel-blur: 24px;
+
+    /* escala de texto: do mais forte ao mais apagado */
+    --text-hi: #ffffff;
+    --text-base: #eceded;
+    --text-mid: #c2c3c9;
+    --text-low: #a9aab0;
+    --text-dim: #83848b;
+    --text-faint: #6f7077;
+
+    --status-ok: #4ade80;
+    --status-warn: #facc15;
+    --status-off: #4b4e55;
+
+    /* dado numerico e tecnico: indices, duracoes, resolucoes, relogio */
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    /* raios */
+    --radius-chip: 2px;
+    --radius-row: 8px;
+    --radius-action: 9px;
+    --radius-card: 10px;
+    --radius-panel: 12px;
+    --radius-window: 14px;
+    --radius-pill: 20px;
+
+    /* e ferramenta ao vivo: nada mais longo que 160ms */
+    --t-fast: 120ms;
+    --t-slow: 160ms;
 }
 
 * {
