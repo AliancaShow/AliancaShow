@@ -540,9 +540,10 @@
             opacity 160ms ease,
             filter 160ms ease;
     }
+    /* Sem contorno no slide no ar: quem sinaliza e o brilho atras. O fio
+       claro em volta lia como traco rosa e disputava com a letra. */
     .main.active .slide {
-        outline: 1px solid rgb(255 120 130 / 0.75);
-        outline-offset: -1px;
+        outline: none;
     }
 
     .group_box {

@@ -103,10 +103,10 @@
         opacity: 0;
     }
 
-    /* Apenas selecionado: destaque neutro. Marca nao significa "escolhido". */
+    /* Apenas selecionado: destaque neutro, por fundo. Contorno em volta da
+       linha inteira briga com o texto; fundo separa sem riscar. */
     .main.preview {
-        outline: 2px solid rgb(255 255 255 / 0.28);
-        outline-offset: -1px;
+        background: rgb(255 255 255 / 0.09);
         z-index: 1;
         /* outline: 3px solid var(--primary-lighter);
     outline-offset: -2px;
@@ -122,11 +122,11 @@
         width: 100%;
         z-index: 1;
     }
-    /* Em uso no ar: a mesma borda clara do card de slide, para as duas telas
-       falarem a mesma lingua. */
+    /* Em uso no ar: wash de marca com uma barra de 3px na entrada da linha,
+       o mesmo gesto das abas da Biblioteca. Sem contorno em volta. */
     .main.active {
-        outline: 2px solid rgb(255 120 130 / 0.75);
-        outline-offset: -1px;
+        background: rgb(242 26 39 / 0.16);
+        box-shadow: inset 3px 0 0 0 var(--secondary);
         z-index: 2;
         /* outline: 3px solid var(--secondary);
     outline-offset: -2px;

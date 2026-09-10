@@ -89,7 +89,7 @@
     --red: rgb(255 0 0 / 0.25);
 
     --hover: rgb(255 255 255 / 0.05);
-    --focus: rgb(242 26 39 / 0.28);
+    --focus: rgb(255 255 255 / 0.1);
 
     /* https://css-tricks.com/snippets/css/system-font-stack/ */
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
@@ -101,6 +101,10 @@
        internas: a separacao entre linhas e por fundo, nao por regua de 1px.
        Sem sombra projetada -- a profundidade vem do desfoque mais a borda.
        Sombra fica so para overlays (popup, contexto, toast). */
+    /* anel de foco do teclado, na cor da marca. Separado de --focus, que neste
+       codigo e o fundo de item selecionado. */
+    --focus-ring: rgb(242 26 39 / 0.45);
+
     --glass: rgb(255 255 255 / 0.04);
     --glass-line: rgb(255 255 255 / 0.07);
     --glass-blur: 24px;

@@ -23,8 +23,11 @@ export const defaultThemes: { [key: string]: Themes } = {
             secondary: "#f21a27",
             "secondary-opacity": "rgba(242, 26, 39, 0.5)",
             hover: "rgb(255 255 255 / 0.05)",
-            // anel de foco na cor da marca: o app e operado por teclado
-            focus: "rgb(242 26 39 / 0.28)"
+            // Neutro de proposito. O handoff descreve --focus como o anel de
+            // foco do teclado, mas neste codigo ele tambem e o fundo de tudo que
+            // esta selecionado (SelectElem). Pinta-lo de marca deixava toda
+            // selecao rosa. O anel de foco da marca mora em --focus-ring.
+            focus: "rgb(255 255 255 / 0.1)"
         }
     },
     dark: {

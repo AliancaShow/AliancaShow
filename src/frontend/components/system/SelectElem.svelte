@@ -364,9 +364,11 @@
     div.isSelected {
         /* outline: 2px solid red;
     outline-offset: 2px; */
-        background-color: var(--focus);
-        outline: 2px solid var(--text);
-        opacity: 0.9;
+        /* Selecionado e destaque neutro, por fundo. O contorno em volta da
+           linha inteira riscava o texto e competia com o slide no ar. */
+        background-color: rgb(255 255 255 / 0.09);
+        outline: none;
+        opacity: 1;
 
         border-radius: 6px;
 
