@@ -1,6 +1,7 @@
 <script lang="ts">
     import { slide } from "svelte/transition"
     import { activeEdit, activePage, activeProfile, activeProject, activeShow, cloudUsers, dictionary, drawSettings, drawTool, os, outputDisplay, outputs, paintCache, profiles, saved, settingsTab, shows } from "../../stores"
+    import { onDestroy } from "svelte"
     import { getCloudUsers } from "../../utils/cloudSync"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
@@ -72,6 +73,39 @@
             else activeEdit.set({ type: "show", slide: 0, items: [], showId: user.activeShow.id })
         }
     }
+    // Cronometro do culto para o badge NO AR: comeca quando a primeira saida
+    // entra no ar e zera quando todas saem. Fica local a este componente
+    // porque nada mais no app precisa dele.
+    let noArDesde = 0
+    let tempoNoAr = "00:00"
+    let cronometro: ReturnType<typeof setInterval> | null = null
+
+    function atualizarTempo() {
+        if (!noArDesde) return
+        const total = Math.floor((Date.now() - noArDesde) / 1000)
+        const h = Math.floor(total / 3600)
+        const m = Math.floor((total % 3600) / 60)
+        const seg = total % 60
+        tempoNoAr = (h ? h + ":" : "") + `${m}`.padStart(2, "0") + ":" + `${seg}`.padStart(2, "0")
+    }
+
+    function pararCronometro() {
+        if (cronometro) clearInterval(cronometro)
+        cronometro = null
+        noArDesde = 0
+    }
+
+    $: if ($outputDisplay) {
+        if (!cronometro) {
+            noArDesde = Date.now()
+            atualizarTempo()
+            cronometro = setInterval(atualizarTempo, 1000)
+        }
+    } else if (cronometro) {
+        pararCronometro()
+    }
+
+    onDestroy(pararCronometro)
 </script>
 
 {#if users.length}
@@ -99,8 +133,12 @@
         {#if !$saved && $os.platform !== "win32"}
             <div class="unsaved" />
         {/if}
-        <!-- logo -->
-        <h1 style="align-self: center;width: 100%;padding: 0px 10px;text-align: center;font-size: 1.8em;">AliançaShow</h1>
+        <!-- marca -->
+        <div class="marca">
+            <span class="marcaSimbolo" />
+            <span class="marcaTexto">ALIANÇA</span>
+        </div>
+        <span class="divisor" />
         <!-- <div class="logo">
             <img style="height: 35px;" src="./import-logos/aliancashow.webp" alt="AliançaShow-logo" draggable={false} />
             <h1 style="color: var(--text);font-size: 1.7em;">AliançaShow</h1>
@@ -114,6 +152,12 @@
         <TopButton id="scripture" />
     </span>
     <span style="width: var(--navigation-width);justify-content: flex-end;">
+        {#if $outputDisplay}
+            <div class="noAr" data-title={translateText("menu._title_display_stop [Ctrl+O]", $dictionary)}>
+                <span class="noArPonto" />
+                NO AR · {tempoNoAr}
+            </div>
+        {/if}
         <TopButton id="draw" red={$drawTool === "fill" || ($drawTool === "zoom" && $drawSettings.zoom?.size !== 100) || !!($drawTool === "paint" && $paintCache?.length)} hideLabel />
         {#if !settingsDisabled}
             <TopButton id="settings" hideLabel />
@@ -165,8 +209,11 @@
         display: flex;
         justify-content: space-between;
         z-index: 30;
-        min-height: 40px;
-        height: 40px;
+        align-items: center;
+        gap: 18px;
+        padding: 0 16px;
+        min-height: 54px;
+        height: 54px;
 
         /* A barra e um painel de vidro como as colunas, so um pouco mais
            presente. A sombra projetada saiu: nesta direcao a profundidade vem
@@ -178,6 +225,67 @@
     }
     .top span {
         display: flex;
+    }
+
+    /* Marca: quadrado da cor da marca mais o wordmark. Substitui o titulo de
+       1.8em, que competia com o conteudo da tela. */
+    .marca {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-inline-start: 4px;
+    }
+    .marcaSimbolo {
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        background: var(--secondary);
+    }
+    .marcaTexto {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #eceded;
+    }
+    .divisor {
+        width: 1px;
+        height: 22px;
+        background: rgb(255 255 255 / 0.08);
+        align-self: center;
+    }
+
+    /* Badge NO AR: o unico elemento que pulsa na interface. O pulso e o que
+       chama o olho de longe; por isso nada mais anima em laco. */
+    .noAr {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        align-self: center;
+        padding: 6px 12px;
+        border-radius: 20px;
+        background: rgb(242 26 39 / 0.14);
+        border: 1px solid rgb(242 26 39 / 0.3);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: #ff8f97;
+        white-space: nowrap;
+    }
+    .noArPonto {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ff5b66;
+        animation: liveGlow 2s ease-in-out infinite;
+    }
+    @keyframes liveGlow {
+        0%,
+        100% {
+            opacity: 0.55;
+        }
+        50% {
+            opacity: 1;
+        }
     }
 
     .top.drag {
