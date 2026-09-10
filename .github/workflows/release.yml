@@ -1,8 +1,6 @@
 name: Release
 on:
-  push:
-    branches:
-      - "main"
+  # Ativacao manual apenas (aba Actions > Release > Run workflow).
   workflow_dispatch:
 
 jobs:

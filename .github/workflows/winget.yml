@@ -1,7 +1,8 @@
 name: Publish to WinGet
 on:
-    release:
-        types: [released]
+    # Desativado neste fork: publicaria o identificador ChurchApps.FreeShow
+    # no catalogo publico do WinGet.
+    workflow_dispatch:
 
 jobs:
     publish:
