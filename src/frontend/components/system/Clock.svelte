@@ -127,10 +127,17 @@
     }
     .align.styled {
         align-items: baseline;
-        font-size: 4em;
+        /* O relogio gigante vermelho sai: vira informacao de apoio, nao
+           protagonista. Mono, porque e dado numerico. */
+        font-size: 30px;
+        font-family: var(--font-mono);
+        font-weight: 500;
+        letter-spacing: -0.02em;
         height: unset;
     }
+    /* Sem a cor da marca: o vermelho fica reservado para "no ar". Nos itens de
+       palco o relogio continua colorido, porque la e conteudo projetado. */
     .colored {
-        color: var(--secondary);
+        color: var(--text);
     }
 </style>

@@ -346,10 +346,13 @@
 
         position: relative;
 
-        background-color: var(--primary-darker);
-        border: 1px solid var(--primary-lighter);
+        /* As secoes da coluna direita viram vidro, como os paineis. O modo
+           float mantem o backdrop-filter que ja existia. */
+        background: var(--glass);
+        backdrop-filter: blur(var(--glass-blur));
+        border: 1px solid var(--glass-line);
         margin: 5px;
-        border-radius: 10px;
+        border-radius: var(--radius);
 
         overflow: hidden;
 
