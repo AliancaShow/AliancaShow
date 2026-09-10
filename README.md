@@ -1,79 +1,136 @@
-<p align='center'>
- <a href='https://freeshow.app/'>
-  <img src='https://github.com/ChurchApps/FreeShow/assets/17619496/02ac9807-1f47-47fc-b895-b35f857c2b57' width=150 />
- </a>
+<p align="center">
+  <img src="brand-aliancashow/lockup-horizontal.png" width="440" alt="AliançaShow" />
 </p>
 
-<h1 align='center'>
-  FreeShow
-</h1>
-
-<p align='center'>
-  FreeShow is a free software with a user-friendly interface that offers powerful features for creating and editing slideshows. 
+<p align="center">
+  Software de envio de vídeos e imagens para projetores e painéis de LED.
 </p>
 
-<p align='center'>
-  <a href="https://github.com/ChurchApps/freeshow/releases"><img alt="Download" src="https://img.shields.io/github/downloads/ChurchApps/FreeShow/total?style=for-the-badge" /></a>
+<p align="center">
+  <a href="LICENSE"><img alt="Licença" src="https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-blue?style=for-the-badge" /></a>
   &nbsp;
-  <a href="https://github.com/ChurchApps/freeshow/blob/main/LICENSE"><img alt="Licence" src="https://img.shields.io/badge/licence-GPL-blue.svg?style=for-the-badge" /></a>
-  &nbsp;
-  <a href="https://github.com/ChurchApps/FreeShow/"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/ChurchApps/FreeShow?style=for-the-badge" /></a>
+  <img alt="Plataformas" src="https://img.shields.io/badge/windows%20%C2%B7%20macos%20%C2%B7%20linux-2b2b2b?style=for-the-badge" />
 </p>
-<br />
 
-## Get Started Using FreeShow
+## Sobre
 
-[![](https://markdown-videos.vercel.app/youtube/9_1lUNcrU1w)](https://youtu.be/9_1lUNcrU1w)
+O AliançaShow é o programa de projeção usado nos cultos: ele monta o roteiro
+antes e, na hora, controla o que aparece nas telas — letras de música, textos
+bíblicos, vídeos, imagens e avisos — com saída para projetores e painéis de LED.
 
-## Preview
+É um aplicativo de computador (Electron + Svelte), feito a partir do
+[FreeShow](https://github.com/ChurchApps/FreeShow) 1.6.5, e herda tudo que o
+FreeShow faz: apresentação de letras e slides, **stage display** para os músicos,
+controle remoto pelo celular, importação de Bíblias, saída NDI, gravação,
+transmissão e múltiplas saídas de vídeo simultâneas.
 
-<div style="display: flex;gap: 10px;">
-    <img style="width: 49%;" src="https://github.com/ChurchApps/FreeShow/assets/1447203/0e5e832d-9bb8-4c64-98cc-04f0ce3f966e">
-    <img style="width: 49%;" src="https://github.com/ChurchApps/FreeShow/assets/1447203/c1d71b2f-d873-4125-9f04-339e234e55f9">
-</div>
-<div style="display: flex;gap: 10px;margin-top: 10px;">
-    <img style="width: 49%;" src="https://github.com/ChurchApps/FreeShow/assets/1447203/39c344fd-5c22-4019-9cae-c6307364d580">
-    <img style="width: 49%;" src="https://github.com/ChurchApps/FreeShow/assets/1447203/b1275bfc-e966-4813-962e-a7350ba6a84a">
-</div>
+## O que muda em relação ao FreeShow
 
-## Short description
+Este repositório é uma adaptação do FreeShow, não um projeto do zero. As
+diferenças em relação ao original:
 
-FreeShow is a free and open-source presentation program that makes it easy to show text on a big screen. It supports stage display, remote control, media, and many other advanced features. It is open-sourced meaning anyone can contribute.
+- **Identidade própria** — nome, ícones e logotipo do AliançaShow, com os
+  arquivos de marca versionados em [`brand-aliancashow/`](brand-aliancashow).
+  Os ícones originais do FreeShow ficaram guardados em
+  `brand-aliancashow/_original-freeshow/` para referência.
+- **Pasta de dados própria** — o app grava em `Documentos/AliancaShow`, então
+  convive com uma instalação do FreeShow sem misturar os arquivos.
+- **Assinatura de código desativada** — o build do Windows usava a conta Azure
+  Code Signing do projeto original, à qual não temos acesso. O instalador sai
+  sem assinatura e o SmartScreen avisa na primeira execução. O bloco está
+  comentado em [`config/building/electron-builder.yaml`](config/building/electron-builder.yaml),
+  pronto para receber uma conta própria.
+- **CI só no manual** — os workflows de Release e WinGet não disparam sozinhos
+  (veja [GitHub Actions](#github-actions)).
 
-FreeShow exists because the creator found that other similar programs were either expensive or complex to use. He wanted to create a program that is easy to use and affordable for everyone, from small churches to large venues. FreeShow is now used by people all over the world.
+## Rodando em desenvolvimento
 
-## Support Us
+Requisitos:
 
-The only reason this program is free is because of the generous support from users. If you want to support us to keep this free, please head over to [ChurchApps](https://churchapps.org/partner) or [sponsor us on GitHub](https://github.com/sponsors/ChurchApps/). Thank you so much!
+- [Node.js](https://nodejs.org/) 22.12 ou superior
+- [Python 3.12](https://www.python.org/downloads/) com o pacote
+  [`setuptools`](https://pypi.org/project/setuptools/)
+- **Windows:** [Visual Studio](https://visualstudio.microsoft.com/downloads/)
+  com "Desenvolvimento para desktop com C++" e o Windows 10 SDK
+- **Linux:** `sudo apt-get install libfontconfig1-dev`
 
-## Join the Community
+Python e o compilador são necessários porque algumas dependências (NDI, áudio,
+SQLite) são módulos nativos.
 
-We have a great community for end-users on [Facebook](https://www.facebook.com/groups/freeshowapp). It's a good way to ask questions, get tips and follow new updates. Come join us!
+```bash
+npm install   # instala e recompila os módulos nativos para o Electron
+npm start     # abre o app em modo desenvolvimento, com recarga automática
+```
 
-## Report an issue or request a feature
+## Gerando o instalador
 
-If you notice a bug, or need a feature. Please create an [issue on GitHub](https://github.com/ChurchApps/freeshow/issues).
+```bash
+npm run build   # compila frontend, servidores e o processo do Electron
+npm run pack    # empacota sem instalador, em dist/ (bom para testar rápido)
+npm run release # gera o instalador da plataforma atual
+```
 
-## Give feedback
+> `npm run release` está configurado para publicar o resultado no GitHub e
+> precisa de um token com permissão de release. Para só gerar o arquivo local,
+> use `npm run pack`.
 
-Feedback is welcome! Please [open a discussion here](https://github.com/orgs/ChurchApps/discussions/categories/freeshow) or send a mail to [dev@freeshow.app](mailto:dev@freeshow.app).
+**Atenção:** compilar não atualiza o AliançaShow que já está instalado na
+máquina. Depois de gerar o instalador, é preciso instalar por cima para ver a
+mudança no app do dia a dia.
 
-## Help translate
+## Onde ficam os dados
 
-Head over to [FreeShow on Transifex](https://app.transifex.com/nettbiter/freeshow/) to request a language.
+| O quê | Onde |
+| --- | --- |
+| Shows, projetos, temas e mídias | `Documentos/AliancaShow` |
+| Configurações do app | pasta de dados do usuário do Electron (`AppData` no Windows) |
 
-## Help the development
+Os arquivos em `Documentos/AliancaShow` são o que interessa em um backup.
 
-You are welcome to contribute to the code!
+## Estrutura do repositório
 
-1. Clone the code in this repo
-2. Install [Node.js](https://nodejs.org/en/download/)
-3. Install [Python 3.12](https://www.python.org/downloads/), and the [`setuptools`](https://pypi.org/project/setuptools/) package
-4. On Windows, download [Visual Studio](https://visualstudio.microsoft.com/downloads/) and install "Desktop development with C++", also select the "Windows 10 SDK"
-5. On Linux, install the following library: `sudo apt-get install libfontconfig1-dev`
-6. In the terminal, run: `npm install`
-7. To start the app, run: `npm start`
+```
+src/electron/    processo principal do Electron (janelas, arquivos, NDI, streaming)
+src/frontend/    interface em Svelte — é aqui que fica quase tudo
+src/server/      servidores do controle remoto, do stage display e da câmera
+src/common/      código compartilhado entre frontend e electron (Bíblias)
+config/          build, lint, formatação, testes e tsconfig
+scripts/         scripts de build, empacotamento e snap
+public/          ícones e assets estáticos que vão para o app
+brand-aliancashow/  arquivos de marca (logotipo, ícones, fontes)
+```
 
-## Join us on Slack
+## Qualidade
 
-If you would like to get involved contributing in any way, head over to our [Slack Channel](https://join.slack.com/t/livechurchsolutions/shared_invite/zt-i88etpo5-ZZhYsQwQLVclW12DKtVflg) and introduce yourself. We'd love to hear from you.
+```bash
+npm run lint            # eslint + stylelint, com correção automática
+npm run format:prettier # formata src e scripts
+npm test                # testes unitários, Playwright, formatação e svelte-check
+```
+
+## GitHub Actions
+
+Os workflows em [`.github/workflows`](.github/workflows) rodam **apenas por
+acionamento manual** (aba *Actions* → escolher o workflow → *Run workflow*):
+
+| Workflow | O que faz |
+| --- | --- |
+| `build.yml` | compila o app nas três plataformas |
+| `release.yml` | build + publicação de um release |
+| `ci.yml` | verificação de formatação e tipos |
+| `playwright.yml` | testes de interface |
+| `winget.yml` | desativado — publicava o pacote do FreeShow no WinGet |
+
+O `release.yml` disparava a cada push na `main` no projeto original; aqui foi
+desligado de propósito, para não gerar releases sem querer.
+
+## Créditos e licença
+
+O AliançaShow é um fork do **[FreeShow](https://freeshow.app/)**, criado e
+mantido pela [ChurchApps](https://churchapps.org/) e por
+[vassbo](https://github.com/vassbo). Todo o mérito do software original é deles
+— aqui só houve adaptação de marca e de configuração.
+
+Distribuído sob a licença **GPL-3.0**, a mesma do projeto original. Veja
+[LICENSE](LICENSE). Se você distribuir o app modificado, precisa disponibilizar
+o código-fonte junto, sob a mesma licença.
