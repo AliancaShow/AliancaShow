@@ -135,9 +135,14 @@
         letter-spacing: -0.02em;
         height: unset;
     }
-    /* Sem a cor da marca: o vermelho fica reservado para "no ar". Nos itens de
-       palco o relogio continua colorido, porque la e conteudo projetado. */
+    /* Na interface o relogio perde a cor da marca: vermelho fica reservado para
+       "no ar". No palco ele continua colorido, porque la e conteudo projetado
+       -- e por isso a regra e escopada em .styled, que o palco nao usa
+       (Stagebox passa style={false}). */
     .colored {
+        color: var(--secondary);
+    }
+    .align.styled .colored {
         color: var(--text);
     }
 </style>

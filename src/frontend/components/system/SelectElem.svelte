@@ -364,10 +364,13 @@
     div.isSelected {
         /* outline: 2px solid red;
     outline-offset: 2px; */
-        /* Selecionado e destaque neutro, por fundo. O contorno em volta da
-           linha inteira riscava o texto e competia com o slide no ar. */
+        /* Selecionado e destaque neutro. O fundo sozinho nao serve: sobre
+           miniatura de imagem ele fica atras e some. O contorno fica, mas
+           neutro -- o que incomodava era o fundo vermelho, herdado de --focus,
+           nao a linha branca. */
         background-color: rgb(255 255 255 / 0.09);
-        outline: none;
+        outline: 2px solid rgb(255 255 255 / 0.5);
+        outline-offset: -2px;
         opacity: 1;
 
         border-radius: 6px;

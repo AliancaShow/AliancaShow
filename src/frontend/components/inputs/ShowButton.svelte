@@ -277,7 +277,7 @@
 </script>
 
 <div id="show_{id}" class="main" class:isProject class:played={show.played}>
-    <MaterialButton on:click={click} on:dblclick={doubleClick} {isActive} showOutline={outline} class="context {$$props.class}{readOnly ? '_readonly' : ''}" style="font-weight: normal;--outline-color: {activeOutput || 'var(--secondary)'};{$notFound.show?.includes(id) ? 'background-color: rgb(255 0 0 / 0.2);' : ''}{$$props.style || ''}" tab>
+    <MaterialButton on:click={click} on:dblclick={doubleClick} {isActive} showOutline={outline} class="context {$$props.class}{readOnly ? '_readonly' : ''}" style="font-weight: normal;{$notFound.show?.includes(id) ? 'background-color: rgb(255 0 0 / 0.2);' : ''}{$$props.style || ''}" tab>
         <div class="row" style={type === "show_placeholder" ? "font-style: italic;" : ""}>
             <span class="cell" style={isProject ? `width: 100%;max-width: ${show.layoutInfo?.name || show.scheduleLength ? 92 : 100}%;` : `width: 75%;min-width: 120px;max-width: calc(100% ${showNumber ? "- var(--number-width)" : ""} - var(--modified-width, 0px));`}>
                 <div class="icon" class:isMedia style="position: relative;">
@@ -419,6 +419,17 @@
     }
     .main :global(button p) {
         margin: 3px 5px;
+    }
+
+    /* Show no ar: wash de marca com barra de 3px na entrada, no lugar do
+       contorno de 2px que vinha na cor crua da saida (#F0008C por padrao).
+       Escopado aqui e nao no MaterialButton, que usa showOutline em outros 18
+       lugares -- popups de acorde, transicao, proporcao -- onde contorno e a
+       marcacao certa. */
+    .main :global(button.showOutline) {
+        outline: none !important;
+        background: rgb(242 26 39 / 0.16) !important;
+        box-shadow: inset 3px 0 0 0 var(--secondary);
     }
 
     .main.played :global(button:not(.isActive)) {
