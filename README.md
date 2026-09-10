@@ -124,6 +124,14 @@ acionamento manual** (aba *Actions* → escolher o workflow → *Run workflow*):
 O `release.yml` disparava a cada push na `main` no projeto original; aqui foi
 desligado de propósito, para não gerar releases sem querer.
 
+## AliançaShow Remote
+
+O [AliançaShow Remote](https://github.com/AliancaShow/AliancaShow-Remote)
+(repositório privado) é o app web que a equipe abre no celular durante a semana
+para enviar as fotos, vídeos e músicas do culto. Ele valida os arquivos contra
+o que este programa consegue tocar — formato, tamanho e vídeo em HEVC — para
+que nada falhe no domingo.
+
 ## Créditos e licença
 
 O AliançaShow é um fork do **[FreeShow](https://freeshow.app/)**, criado e
