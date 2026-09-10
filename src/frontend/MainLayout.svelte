@@ -124,28 +124,43 @@
 </div>
 
 <style>
+    /* Redesign "paineis de vidro": o fundo da janela aparece entre os paineis
+       como moldura. Por isso o padding no container e o gap entre colunas --
+       a separacao e o vazio, nao uma borda. */
     .column,
     .row {
         display: flex;
         justify-content: space-between;
-        /* background: var(--primary-darker); */
     }
 
     .column {
         flex-direction: column;
         height: 100%;
+        padding: 12px;
+        gap: 12px;
     }
 
     .row {
         flex: 1;
         overflow: hidden;
+        gap: 12px;
+    }
+
+    /* superficie padrao de painel: identica nos tres, sem sombra projetada --
+       a profundidade vem do desfoque e da borda de 1px */
+    .center,
+    .left,
+    .right {
+        background: var(--panel);
+        backdrop-filter: blur(var(--panel-blur));
+        border: 1px solid var(--panel-line);
+        border-radius: var(--radius-panel);
     }
 
     .center {
         position: relative;
 
         flex: 1;
-        background-color: var(--primary-darker);
         overflow: auto;
 
         scroll-behavior: smooth;
@@ -159,6 +174,10 @@
         flex-direction: column;
         flex: 1;
         justify-content: space-between;
+        /* min-height: 0 junto de overflow hidden e obrigatorio: sem isso os
+           cards de altura fixa comem a coluna e o painel flex:1 corta uma
+           linha no meio */
+        min-height: 0;
         overflow: hidden;
     }
     .right.row {
