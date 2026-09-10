@@ -1,0 +1,62 @@
+import type { BrowserWindow } from "electron"
+import { initializeSender } from "../../blackmagic/bmdTalk"
+import { CaptureHelper } from "../../capture/CaptureHelper"
+import { NdiSender } from "../../ndi/NdiSender"
+import type { Output as OutputWindow } from "../Output"
+import { OutputHelper } from "../OutputHelper"
+import type { Output } from "../../../types/Output"
+import { setOutputAlwaysOnTop } from "./OutputAlwaysOnTop"
+
+const setValues = {
+    ndi: async (value: boolean, window: BrowserWindow, id: string) => {
+        if (value) await NdiSender.createSenderNDI(id, NdiSender.initNameNDI(undefined, window.getTitle()))
+        else NdiSender.stopSenderNDI(id)
+
+        setValues.capture({ key: "ndi", value }, window, id)
+    },
+    blackmagic: (data: Output, window: BrowserWindow, id: string) => {
+        initializeSender(data, window, id)
+    },
+    webrtc: (value: boolean, _window: BrowserWindow, id: string) => {
+        CaptureHelper.Lifecycle.startCapture(id, { webrtc: value })
+    },
+    webrtcData: (value: any, _window: BrowserWindow, id: string, output: OutputWindow) => {
+        output.webrtcData = value
+        CaptureHelper.Lifecycle.startCapture(id, { webrtc: !!value?.streaming })
+    },
+    rtmp: (value: boolean, _window: BrowserWindow, id: string) => {
+        CaptureHelper.Lifecycle.startCapture(id, { rtmp: value })
+    },
+    rtmpData: (value: any, _window: BrowserWindow, id: string, output: OutputWindow) => {
+        output.rtmpData = value
+        CaptureHelper.Lifecycle.startCapture(id, { rtmp: !!value?.streaming })
+    },
+    capture: (data: { key: string; value: boolean }, _window: BrowserWindow, id: string) => {
+        CaptureHelper.Lifecycle.startCapture(id, { [data.key]: data.value })
+    },
+    transparent: (value: boolean, window: BrowserWindow, _id: string, output: OutputWindow) => {
+        window.setBackgroundColor(value ? "#00000000" : "#000000")
+        output.transparent = value
+    },
+    alwaysOnTop: (value: boolean, window: BrowserWindow, _id: string, output: OutputWindow) => {
+        setOutputAlwaysOnTop(window, value)
+        // show in taskbar if not always on top, because this will also show it in Alt+Tab menu
+        window.setSkipTaskbar(value)
+        if (output.boundsLocked !== true) window.setResizable(!value)
+    },
+    boundsLocked: (value: boolean, _window: BrowserWindow, id: string, output: OutputWindow) => {
+        output.boundsLocked = value
+        OutputHelper.Lifecycle.updateWindowConstraints(id)
+    }
+}
+
+export class OutputValues {
+    static updateValue({ id, key, value }: { id: string; key: string; value: any }) {
+        const output = OutputHelper.getOutput(id)
+        if (!output) return
+        if (!(key in setValues)) return
+
+        if (!output.window || output.window.isDestroyed()) return
+        setValues[key as keyof typeof setValues](value, output.window, id, output)
+    }
+}
