@@ -91,7 +91,7 @@
     </div>
 {/if}
 
-<div class="top" class:drag={!isWindows}>
+<div class="top panel" class:drag={!isWindows}>
     <!-- {#if !isWindows}
     <div class="dragZone" />
     {/if} -->
@@ -168,7 +168,10 @@
         min-height: 40px;
         height: 40px;
 
-        box-shadow: 0 0 4px rgb(0 0 0 / 0.4);
+        /* A barra e um painel de vidro como as colunas, so um pouco mais
+           presente. A sombra projetada saiu: nesta direcao a profundidade vem
+           do desfoque e da borda, e sombra fica reservada para overlays. */
+        background: rgb(255 255 255 / 0.045);
 
         /* disabled because it's causing unexpected behaviour in Windows 11 */
         /* -webkit-app-region: drag; */

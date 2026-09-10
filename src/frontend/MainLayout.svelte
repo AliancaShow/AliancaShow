@@ -34,13 +34,13 @@
     }
 </script>
 
-<div class="column">
+<div class="column" class:isOptimized={$special.optimizedMode}>
     {#if !$focusMode}
         <Top {isWindows} />
     {/if}
     <div class="row">
         <Resizeable id="leftPanel">
-            <div class="left">
+            <div class="left panel">
                 {#if page === "show"}
                     <!-- Layout D: Projetos em cima, biblioteca (8 abas) na parte de baixo -->
                     <div class="projectsWrap">
@@ -66,25 +66,25 @@
             </div>
         </Resizeable>
 
-        <div class="center">
+        <div class="center panel">
             <div class="pageContent">
-            {#if page === "show"}
-                {#if $focusMode}
-                    <LazyLoad component={() => import("./components/show/focus/FocusMode.svelte")} show={$focusMode} />
-                {:else}
-                    <Show />
+                {#if page === "show"}
+                    {#if $focusMode}
+                        <LazyLoad component={() => import("./components/show/focus/FocusMode.svelte")} show={$focusMode} />
+                    {:else}
+                        <Show />
+                    {/if}
+                {:else if page === "edit"}
+                    <LazyLoad component={() => import("./components/edit/Editor.svelte")} show={page === "edit"} />
+                {:else if page === "draw"}
+                    <LazyLoad component={() => import("./components/draw/Slide.svelte")} show={page === "draw"} />
+                {:else if page === "settings"}
+                    <LazyLoad component={() => import("./components/settings/Settings.svelte")} show={page === "settings"} />
+                {:else if page === "stage"}
+                    <LazyLoad component={() => import("./components/stage/StageLayout.svelte")} show={page === "stage"} />
+                {:else if page === "scripture"}
+                    <LazyLoad component={() => import("./components/bible/BiblePage.svelte")} show={page === "scripture"} />
                 {/if}
-            {:else if page === "edit"}
-                <LazyLoad component={() => import("./components/edit/Editor.svelte")} show={page === "edit"} />
-            {:else if page === "draw"}
-                <LazyLoad component={() => import("./components/draw/Slide.svelte")} show={page === "draw"} />
-            {:else if page === "settings"}
-                <LazyLoad component={() => import("./components/settings/Settings.svelte")} show={page === "settings"} />
-            {:else if page === "stage"}
-                <LazyLoad component={() => import("./components/stage/StageLayout.svelte")} show={page === "stage"} />
-            {:else if page === "scripture"}
-                <LazyLoad component={() => import("./components/bible/BiblePage.svelte")} show={page === "scripture"} />
-            {/if}
             </div>
 
             <!-- Layout D: o conteudo da aba ativa abre aqui, logo abaixo da grade de slides -->
@@ -94,7 +94,7 @@
         </div>
 
         <Resizeable id="rightPanel" let:width side="right">
-            <div class="right" class:row={width > DEFAULT_WIDTH * 1.8}>
+            <div class="right panel" class:row={width > DEFAULT_WIDTH * 1.8}>
                 <Preview />
                 {#if page === "show"}
                     {#if $activeShow && ($activeShow.type === "show" || $activeShow.type === undefined) && !$focusMode}
@@ -159,14 +159,19 @@
         /* background: var(--primary-darker); */
     }
 
+    /* O vao entre os paineis e o proprio fundo da janela aparecendo: por isso
+       padding no container e gap entre as colunas, em vez de bordas. */
     .column {
         flex-direction: column;
         height: 100%;
+        padding: 12px;
+        gap: 12px;
     }
 
     .row {
         flex: 1;
         overflow: hidden;
+        gap: 12px;
     }
 
     /* Layout D: o centro passa a ser uma coluna — conteudo da pagina em cima,
@@ -178,7 +183,6 @@
         display: flex;
         flex: 1;
         flex-direction: column;
-        background-color: var(--primary-darker);
         overflow: hidden;
     }
 
@@ -223,6 +227,10 @@
         flex-direction: column;
         flex: 1;
         justify-content: space-between;
+        /* Regra critica: min-height 0 junto de overflow hidden. Sem isso os
+           cards de altura fixa consomem a coluna e o painel flex:1 corta uma
+           linha no meio. */
+        min-height: 0;
         overflow: hidden;
     }
     .right.row {

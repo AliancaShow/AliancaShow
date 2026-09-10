@@ -1,6 +1,10 @@
 import type { Themes } from "../../../../types/Settings"
 
 export const defaultThemes: { [key: string]: Themes } = {
+    // Tema "Vidro" do AliancaShow. E a entrada default de proposito: num fork, o
+    // tema padrao e o tema do app. Os temas do FreeShow logo abaixo continuam
+    // todos disponiveis. font.family vazio preserva a stack de sistema -- o que
+    // muda no redesign e a escala tipografica, nao a fonte de interface.
     default: {
         name: "default",
         default: true,
@@ -9,17 +13,18 @@ export const defaultThemes: { [key: string]: Themes } = {
             size: "1em"
         },
         colors: {
-            primary: "#1d1d1d",
-            "primary-lighter": "#2a2a2a",
-            "primary-darker": "#161616",
-            "primary-darkest": "#0e0e0e",
-            text: "#f8f8f0",
+            primary: "#141416",
+            "primary-lighter": "#1f2023",
+            "primary-darker": "#0f0f11",
+            "primary-darkest": "#0a0a0c",
+            text: "#eceded",
             textInvert: "#161616",
             "secondary-text": "#f8f8f0",
-            secondary: "#F21A27",
+            secondary: "#f21a27",
             "secondary-opacity": "rgba(242, 26, 39, 0.5)",
             hover: "rgb(255 255 255 / 0.05)",
-            focus: "rgb(255 255 255 / 0.1)"
+            // anel de foco na cor da marca: o app e operado por teclado
+            focus: "rgb(242 26 39 / 0.28)"
         }
     },
     dark: {

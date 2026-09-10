@@ -22,6 +22,18 @@
     font-display: block;
 }
 
+/* JetBrains Mono: todo dado numerico e tecnico da interface -- indices,
+   duracoes, resolucoes, relogio, contagens. Empacotada localmente pelo mesmo
+   motivo da Montserrat: o Electron nao deve buscar fonte em runtime. E fonte
+   variavel, um arquivo cobre a faixa de peso. Licenca OFL, em
+   JetBrainsMono-OFL.txt. */
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("./fonts/JetBrainsMono-VariableFont_wght.woff2") format("woff2-variations");
+    font-weight: 400 700;
+    font-display: block;
+}
+
 /* custom CMG Sans */
 @font-face {
     font-family: "CMGSans";
@@ -58,11 +70,11 @@
        A rampa de cinzas e neutra (o original era azulada) e ancora o
        #161616 exato do guia em --primary-darker, que e o token usado
        nos paineis e linhas da interface. */
-    --primary: #1d1d1d;
-    --primary-lighter: #2a2a2a;
-    --primary-darker: #161616;
-    --primary-darkest: #0e0e0e;
-    --text: #f8f8f0;
+    --primary: #141416;
+    --primary-lighter: #1f2023;
+    --primary-darker: #0f0f11;
+    --primary-darkest: #0a0a0c;
+    --text: #eceded;
     --textInvert: #161616;
     --secondary: #f21a27;
     --secondary-opacity: rgba(242, 26, 39, 0.5);
@@ -77,13 +89,27 @@
     --red: rgb(255 0 0 / 0.25);
 
     --hover: rgb(255 255 255 / 0.05);
-    --focus: rgb(255 255 255 / 0.1);
+    --focus: rgb(242 26 39 / 0.28);
 
     /* https://css-tricks.com/snippets/css/system-font-stack/ */
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
     --font-size: 1em;
 
     --navigation-width: 290px;
+
+    /* Camada de vidro. Aplicada nos CONTAINERS de painel, nunca nas linhas
+       internas: a separacao entre linhas e por fundo, nao por regua de 1px.
+       Sem sombra projetada -- a profundidade vem do desfoque mais a borda.
+       Sombra fica so para overlays (popup, contexto, toast). */
+    --glass: rgb(255 255 255 / 0.04);
+    --glass-line: rgb(255 255 255 / 0.07);
+    --glass-blur: 24px;
+    --radius: 12px;
+
+    --canvas: radial-gradient(120% 90% at 16% -10%, #1c1418 0%, #0b0b0d 52%, #08080a 100%);
+
+    /* dado numerico e tecnico */
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 * {
@@ -114,6 +140,26 @@ body {
 
     font-family: var(--font-family);
     font-size: var(--font-size);
+
+    /* O fundo da janela aparece como moldura entre os paineis: e ele que da
+       profundidade ao vidro translucido por cima. */
+    background: var(--canvas);
+}
+
+/* brilho de marca decorativo, atras de tudo. No Electron o blur e barato; se
+   houver queda de FPS em maquina fraca, trocar por PNG/gradiente estatico. */
+body::before {
+    content: "";
+    position: absolute;
+    top: -140px;
+    inset-inline-start: -80px;
+    width: 600px;
+    height: 460px;
+    border-radius: 50%;
+    background: rgb(242 26 39 / 0.15);
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* persistent resizing cursor */
@@ -178,6 +224,22 @@ p {
 .checkered {
     /* background-color: var(--transparent); */
     background: repeating-conic-gradient(rgba(70, 70, 80, 0.15) 0% 25%, transparent 0% 50%) 50% / 26px 26px;
+}
+
+/* GLASS */
+
+.panel {
+    background: var(--glass);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-line);
+    border-radius: var(--radius);
+}
+
+/* O modo otimizado desliga o backdrop-filter, entao o vidro perderia o fundo
+   e o painel ficaria transparente sobre o gradiente. Fundo solido de reserva. */
+.isOptimized .panel,
+.isOptimized.panel {
+    background: var(--primary-darker);
 }
 
 /* OPTIMIZED MODE */
