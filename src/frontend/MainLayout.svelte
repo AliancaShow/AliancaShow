@@ -68,23 +68,23 @@
 
         <div class="center">
             <div class="pageContent">
-            {#if page === "show"}
-                {#if $focusMode}
-                    <LazyLoad component={() => import("./components/show/focus/FocusMode.svelte")} show={$focusMode} />
-                {:else}
-                    <Show />
+                {#if page === "show"}
+                    {#if $focusMode}
+                        <LazyLoad component={() => import("./components/show/focus/FocusMode.svelte")} show={$focusMode} />
+                    {:else}
+                        <Show />
+                    {/if}
+                {:else if page === "edit"}
+                    <LazyLoad component={() => import("./components/edit/Editor.svelte")} show={page === "edit"} />
+                {:else if page === "draw"}
+                    <LazyLoad component={() => import("./components/draw/Slide.svelte")} show={page === "draw"} />
+                {:else if page === "settings"}
+                    <LazyLoad component={() => import("./components/settings/Settings.svelte")} show={page === "settings"} />
+                {:else if page === "stage"}
+                    <LazyLoad component={() => import("./components/stage/StageLayout.svelte")} show={page === "stage"} />
+                {:else if page === "scripture"}
+                    <LazyLoad component={() => import("./components/bible/BiblePage.svelte")} show={page === "scripture"} />
                 {/if}
-            {:else if page === "edit"}
-                <LazyLoad component={() => import("./components/edit/Editor.svelte")} show={page === "edit"} />
-            {:else if page === "draw"}
-                <LazyLoad component={() => import("./components/draw/Slide.svelte")} show={page === "draw"} />
-            {:else if page === "settings"}
-                <LazyLoad component={() => import("./components/settings/Settings.svelte")} show={page === "settings"} />
-            {:else if page === "stage"}
-                <LazyLoad component={() => import("./components/stage/StageLayout.svelte")} show={page === "stage"} />
-            {:else if page === "scripture"}
-                <LazyLoad component={() => import("./components/bible/BiblePage.svelte")} show={page === "scripture"} />
-            {/if}
             </div>
 
             <!-- Layout D: o conteudo da aba ativa abre aqui, logo abaixo da grade de slides -->
@@ -152,21 +152,37 @@
 </div>
 
 <style>
+    /* Redesign "paineis de vidro": o fundo da janela aparece entre os paineis
+       como moldura. Por isso o padding no container e o gap entre colunas --
+       a separacao e o vazio, nao uma borda. */
     .column,
     .row {
         display: flex;
         justify-content: space-between;
-        /* background: var(--primary-darker); */
     }
 
     .column {
         flex-direction: column;
         height: 100%;
+        padding: 12px;
+        gap: 12px;
     }
 
     .row {
         flex: 1;
         overflow: hidden;
+        gap: 12px;
+    }
+
+    /* superficie padrao de painel: identica nas tres colunas, sem sombra
+       projetada -- nesta direcao a profundidade vem do desfoque e da borda */
+    .center,
+    .left,
+    .right {
+        background: var(--panel);
+        backdrop-filter: blur(var(--panel-blur));
+        border: 1px solid var(--panel-line);
+        border-radius: var(--radius-panel);
     }
 
     /* Layout D: o centro passa a ser uma coluna — conteudo da pagina em cima,
@@ -178,7 +194,6 @@
         display: flex;
         flex: 1;
         flex-direction: column;
-        background-color: var(--primary-darker);
         overflow: hidden;
     }
 
@@ -223,6 +238,10 @@
         flex-direction: column;
         flex: 1;
         justify-content: space-between;
+        /* min-height: 0 junto de overflow hidden e obrigatorio: sem isso os
+           cards de altura fixa comem a coluna e o painel flex:1 corta uma
+           linha no meio */
+        min-height: 0;
         overflow: hidden;
     }
     .right.row {

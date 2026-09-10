@@ -200,6 +200,27 @@ body {
 
     font-family: var(--font-family);
     font-size: var(--font-size);
+
+    /* Redesign: o fundo da janela aparece como moldura entre os paineis, e
+       intencional. Os paineis de vidro sao translucidos e e este gradiente
+       que da a profundidade deles. */
+    background: radial-gradient(120% 90% at 16% -10%, var(--bg-a) 0%, var(--bg-b) 52%, var(--bg-c) 100%);
+}
+
+/* brilho de marca decorativo, atras de tudo. No Electron o blur e barato;
+   se aparecer queda de FPS em maquina fraca, trocar por um PNG estatico. */
+body::before {
+    content: "";
+    position: absolute;
+    top: -140px;
+    inset-inline-start: -80px;
+    width: 600px;
+    height: 460px;
+    border-radius: 50%;
+    background: rgba(var(--brand-rgb), 0.15);
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* persistent resizing cursor */
