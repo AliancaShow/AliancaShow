@@ -471,7 +471,9 @@
     .main {
         display: flex;
         position: relative;
-        padding: 2px;
+        /* 7px de cada lado = 14px de vao entre cards, o gap da grade no
+           handoff. E o espaco que a gloria luminosa do slide no ar ocupa. */
+        padding: 7px;
         /* height: fit-content; */
     }
 
@@ -481,6 +483,15 @@
         z-index: 0;
         outline-offset: 0;
         width: 100%;
+
+        /* card do redesign: raio 10, borda hairline, sem regua dura */
+        border-radius: 10px;
+        overflow: hidden;
+        outline: 1px solid rgb(255 255 255 / 0.07);
+        outline-offset: -1px;
+        transition:
+            outline-color 120ms ease,
+            background-color 120ms ease;
 
         position: relative;
         display: flex;
@@ -509,12 +520,29 @@
         outline-offset: -1px;
         z-index: 2;
     }
-    .main.active {
-        /* outline: 3px solid var(--secondary); */
-        outline: 2px solid var(--secondary);
+
+    /* Slide no ar: "gloria luminosa" em vez da borda vermelha grossa. O brilho
+       fica atras do card, sangrando no vao da grade, e a borda do card so
+       clareia. Precisa ser identificavel a tres metros sem procurar -- e por
+       isso que o vermelho nao pode estar espalhado no resto da interface.
+       Entra em 160ms e nao anima em laco: piscar constante distrai na cabine.
+       Quem pulsa e apenas o badge NO AR da barra superior. */
+    .main.active::before {
+        content: "";
+        position: absolute;
+        inset: -13px;
+        border-radius: 18px;
+        background: rgb(242 26 39 / 0.6);
+        filter: blur(15px);
+        pointer-events: none;
+        z-index: -1;
+        transition:
+            opacity 160ms ease,
+            filter 160ms ease;
+    }
+    .main.active .slide {
+        outline: 1px solid rgb(255 120 130 / 0.75);
         outline-offset: -1px;
-        /* this z-index causes the button title to show behind! */
-        /* z-index: 2; */
     }
 
     .group_box {
