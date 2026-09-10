@@ -174,10 +174,16 @@
         justify-content: space-between;
     }
 
+    /* "No ar" numa linha de lista: fundo com wash de marca e uma barra de 3px
+       na entrada, em vez de contorno em volta. Contorno riscava o texto e
+       trazia a cor crua da saida (#F0008C por padrao) para dentro de uma
+       interface que nao tem magenta em mais lugar nenhum. A cor da saida
+       continua distinguindo saidas onde isso importa; aqui, com uma saida so,
+       ela nao distinguia nada. */
     button.showOutline {
-        --outline-color: var(--secondary);
-        outline: 2px solid var(--outline-color);
-        outline-offset: -2px;
+        outline: none;
+        background: rgb(242 26 39 / 0.16) !important;
+        box-shadow: inset 3px 0 0 0 var(--secondary);
     }
 
     button:not(.contained):not(.isActive):not(:disabled):hover {
