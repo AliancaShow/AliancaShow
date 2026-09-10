@@ -135,8 +135,13 @@
         {/if}
         <!-- marca -->
         <div class="marca">
-            <span class="marcaSimbolo" />
-            <span class="marcaTexto">ALIANÇA</span>
+            <!-- simbolo oficial, de brand-aliancashow/symbol.svg -->
+            <svg class="marcaSimbolo" viewBox="0 0 32.296 38.868" aria-hidden="true">
+                <path
+                    d="M16.982 0L16.982 2.802C25.57 3.588 32.296 10.808 32.296 19.606L32.296 23.041C29.245 16.618 22.796 12.124 15.295 11.911C16.222 15.138 15.769 18.803 13.397 20.807C10.225 23.489 8.164 27.017 8.151 31.178C8.142 33.996 8.943 36.656 10.528 38.867L2.208 38.867C0.988 38.867 0 37.879 0 36.661L0 16.782C0 7.515 7.512 0 16.78 0L16.982 0Z M28.732 38.868L18.318 38.868C17.64 37.953 17.238 36.824 17.208 35.634C17.163 33.865 17.958 32.463 19.242 31.327L20.722 30.014C21.964 28.913 23.25 27.94 22.991 26.223C25.891 27.69 26.954 31.065 25.567 34.003C26.806 33.405 27.683 32.32 28.315 30.943C29.105 31.701 29.438 32.72 29.603 33.804C29.87 35.562 29.538 37.328 28.732 38.868Z"
+                />
+            </svg>
+            <span class="marcaTexto">Aliança<span class="marcaShow">Show</span></span>
         </div>
         <span class="divisor" />
         <!-- <div class="logo">
@@ -236,17 +241,22 @@
         padding-inline-start: 4px;
     }
     .marcaSimbolo {
-        width: 9px;
-        height: 9px;
-        border-radius: 2px;
-        background: var(--secondary);
+        width: 17px;
+        height: 20px;
+        fill: var(--secondary);
+        flex: none;
     }
+    /* O lockup da marca: "Aliança" claro e "Show" no vermelho. Mesma leitura
+       do logotipo, em tipografia, sem o peso do titulo de 1.8em que competia
+       com o conteudo da tela. */
     .marcaTexto {
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
+        letter-spacing: 0.02em;
         color: #eceded;
+    }
+    .marcaShow {
+        color: var(--secondary);
     }
     .divisor {
         width: 1px;

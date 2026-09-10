@@ -63,7 +63,9 @@ export const selectedProfile: Writable<string | null> = writable(null)
 export const activeProfile: Writable<string | null> = writable(null)
 export const settingsTab: Writable<SettingsTabs> = writable("general")
 export const projectView: Writable<boolean> = writable(false)
-export const showRecentlyUsedProjects: Writable<boolean> = writable(true)
+// AliancaShow: desligado. A tela de "Recentemente usados" tomava o painel de
+// Projetos na abertura e escondia a arvore, que e por onde se navega no culto.
+export const showRecentlyUsedProjects: Writable<boolean> = writable(false)
 export const globalGroupViewEnabled: Writable<boolean> = writable(false)
 export const activeRecording: Writable<any> = writable(null)
 export const currentRecordingStream: Writable<any> = writable(null)
