@@ -628,8 +628,21 @@ function handleTemplate(obj, data, initializing) {
         const currentSlides = clone(show.slides) || {}
         if (!maxLines) return currentSlides
         const newSlides: { [key: string]: Slide } = {}
+
+        // quem ja e filho de outro slide. As fatias de um filho nao podem virar
+        // filhas dele -- um filho nao tem filhos --, entao entram na lista do pai
+        const parentOf: { [key: string]: string } = {}
         Object.entries(currentSlides).forEach(([id, slide]) => {
-            let childrenIds: string[] = []
+            ;(slide?.children || []).forEach((childId) => {
+                parentOf[childId] = id
+            })
+        })
+
+        // as fatias criadas a partir de cada slide, na ordem
+        const splitOf: { [key: string]: string[] } = {}
+
+        Object.entries(currentSlides).forEach(([id, slide]) => {
+            const childrenIds: string[] = []
             const totalLines = getItemWithMostLines(slide)
             const splitLines = Math.max(totalLines, 1)
             for (let i = 0; i < splitLines; i += maxLines) {
@@ -651,8 +664,30 @@ function handleTemplate(obj, data, initializing) {
                 newSlides[currentId] = newSlide
                 if (i > 0) childrenIds.push(currentId)
             }
-            if (childrenIds.length) newSlides[id].children = childrenIds
+            splitOf[id] = childrenIds
         })
+
+        // Remonta a lista de filhos preservando os que ja existiam. Antes daqui
+        // ela era simplesmente sobrescrita pelas fatias novas, e um show agrupado
+        // (uma entrada no layout com o resto pendurado como children) perdia tudo
+        // que estava pendurado: os slides continuavam no arquivo, sem ninguem
+        // apontando para eles, e sumiam da tela.
+        Object.entries(currentSlides).forEach(([id, slide]) => {
+            if (parentOf[id]) {
+                delete newSlides[id].children
+                return
+            }
+
+            const filhos: string[] = [...(splitOf[id] || [])]
+            ;(slide?.children || []).forEach((childId) => {
+                if (!newSlides[childId]) return
+                filhos.push(childId, ...(splitOf[childId] || []))
+            })
+
+            if (filhos.length) newSlides[id].children = filhos
+            else delete newSlides[id].children
+        })
+
         return newSlides
     }
 
