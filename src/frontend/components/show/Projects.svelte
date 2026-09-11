@@ -69,7 +69,53 @@
 
         folderSorted = []
         sortFolders()
-        tree = folderSorted
+        tree = acharPlano(folderSorted)
+    }
+
+    /**
+     * Lista continua: a arvore de pastas vira um nivel so, e a pasta que guarda
+     * os projetos passa a ser cabecalho de grupo em vez de no que abre e fecha.
+     *
+     * Motivo: a hierarquia daqui guarda uma data -- Alianca > 2026 > 01-janeiro
+     * > 04 sao quatro niveis para dizer "domingo, 4 de janeiro". Arvore serve
+     * para ramos diferentes entre si; quando todo no e do mesmo tipo e a ordem
+     * ja vem do calendario, ela nao organiza, so esconde. Eram quatro cliques
+     * ate um culto.
+     *
+     * Pastas que so guardam outras pastas somem (Alianca, 2026): o nome delas
+     * nao acrescenta nada quando ha um caminho unico ate os projetos. Sobra o
+     * cabecalho que de fato distingue, o mes.
+     */
+    function acharPlano(itens: Tree[]): Tree[] {
+        const porPai: { [key: string]: Tree[] } = {}
+        itens.forEach((a) => {
+            if (!porPai[a.parent]) porPai[a.parent] = []
+            porPai[a.parent].push(a)
+        })
+
+        const saida: Tree[] = []
+
+        function percorrer(paiId: string, rotulo: string, profundidade: number) {
+            if (profundidade > 20) return // trava contra pasta apontando para si mesma
+
+            const filhos = porPai[paiId] || []
+            const projetos = filhos.filter((a) => a.type !== "folder")
+            const pastas = filhos.filter((a) => a.type === "folder")
+
+            if (projetos.length) {
+                if (rotulo) saida.push({ id: "grupo:" + paiId, type: "grupo", name: rotulo, parent: paiId, index: 0 } as any)
+                projetos.forEach((projeto) => saida.push({ ...projeto, index: 0 }))
+            }
+
+            pastas.forEach((pasta) => {
+                const dela = porPai[pasta.id] || []
+                const soPastas = dela.length > 0 && dela.every((a) => a.type === "folder")
+                percorrer(pasta.id, soPastas ? rotulo : pasta.name, profundidade + 1)
+            })
+        }
+
+        percorrer("/", "", 0)
+        return saida
     }
 
     let folderSorted: Tree[] = []
