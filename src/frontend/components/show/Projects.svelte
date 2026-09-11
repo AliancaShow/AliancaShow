@@ -103,8 +103,11 @@
             const pastas = filhos.filter((a) => a.type === "folder")
 
             if (projetos.length) {
-                if (rotulo) saida.push({ id: "grupo:" + paiId, type: "grupo", name: rotulo, parent: paiId, index: 0 } as any)
-                projetos.forEach((projeto) => saida.push({ ...projeto, index: 0 }))
+                if (rotulo) saida.push({ id: "grupo:" + paiId, type: "grupo", name: rotulo, parent: paiId, index: 0, path: "" } as any)
+                // path vazio de proposito: o ProjectList so mostra um projeto
+                // quando todas as pastas do caminho dele estao abertas, e aqui
+                // nao ha mais pasta para abrir -- a lista e continua
+                projetos.forEach((projeto) => saida.push({ ...projeto, index: 0, path: "" }))
             }
 
             pastas.forEach((pasta) => {
