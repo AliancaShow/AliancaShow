@@ -53,6 +53,11 @@
 
     function abrir(id: string) {
         if ($activeProject === id && !$projectView) return
+
+        // openProject sai cedo quando o projeto ja e o ativo, e nesse caso nao
+        // troca a visualizacao -- o painel continuaria na lista. Aqui a troca e
+        // o ponto: apertar uma data mostra o conteudo dela.
+        projectView.set(false)
         openProject(id)
     }
 
@@ -90,6 +95,9 @@
         display: flex;
         flex: none;
         gap: 5px;
+        /* o cabecalho do painel e absoluto, 30px de altura, e flutua por cima:
+           a faixa comeca abaixo dele para nao ficar encoberta */
+        margin-top: 30px;
         padding: 10px 10px 12px;
         overflow-x: auto;
         scrollbar-width: none;
