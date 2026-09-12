@@ -544,6 +544,13 @@
         </div>
     {:else if $editingProjectTemplate}
         <ProjectContentList tree={[]} on:scrollElem={(e) => (contentScrollElem = e.detail)} isTemplate />
+    {:else if projectActive}
+        <!-- Culto aberto: o painel mostra o conteudo dele, nao a lista. Antes os
+             itens eram expandidos embaixo da linha do projeto dentro da lista, o
+             que funcionava quando a lista era curta -- com 52 domingos, abrir um
+             de junho abria o conteudo fora da vista. O cabecalho ja tinha o botao
+             de voltar para este caso. -->
+        <ProjectContentList {tree} on:scrollElem={(e) => (contentScrollElem = e.detail)} />
     {:else if !projectActive && showProjectsOptions}
         <div class="options">
             <MaterialTextInput label="settings.default_project_name<span style='opacity: 0.5;padding-left: 8px;font-size: 0.8em;color: var(--text);'>{getProjectName($special)}</span>" title={projectReplacerTitle} value={projectName} defaultValue={getDefaultProjectName()} on:change={(e) => updateSpecial(e.detail, "default_project_name", true)} />
