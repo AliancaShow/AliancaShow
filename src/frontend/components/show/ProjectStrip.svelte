@@ -1,0 +1,165 @@
+<script lang="ts">
+    /**
+     * Faixa de cultos: a navegação entre projetos vira horizontal e some do
+     * caminho, liberando toda a altura do painel para o conteúdo do culto.
+     *
+     * Motivo: escolher a data é um gesto por sessão; mexer nos itens é o
+     * trabalho inteiro. Antes a lista de datas ocupava a coluna toda e o
+     * conteúdo só aparecia depois de escolher — agora a data custa uma faixa e
+     * o resto é conteúdo.
+     *
+     * O ponto embaixo de cada data diz se aquele culto já tem material. Era a
+     * informação que faltava: com dezenas de projetos criados de antemão, não
+     * havia como saber quais estão prontos sem abrir um por um.
+     */
+    import { onMount, tick } from "svelte"
+    import type { Tree } from "../../../types/Projects"
+    import { activeProject, projects, projectView } from "../../stores"
+    import { openProject } from "./project"
+
+    export let tree: Tree[] = []
+
+    let faixaElem: HTMLDivElement | undefined
+
+    // Só projetos: os cabeçalhos de grupo da lista contínua viram o rótulo
+    // pequeno em cima de cada data, em vez de linha própria.
+    $: cultos = montarCultos(tree)
+
+    function montarCultos(itens: Tree[]) {
+        const saida: { id: string; nome: string; grupo: string }[] = []
+        let grupoAtual = ""
+
+        itens.forEach((item) => {
+            if (item.type === "grupo") {
+                grupoAtual = abreviar(item.name || "")
+                return
+            }
+            if (item.type === "folder") return
+            saida.push({ id: item.id, nome: item.name || "—", grupo: grupoAtual })
+        })
+
+        return saida
+    }
+
+    // "09-setembro" -> "SET". Nomes livres viram as três primeiras letras.
+    function abreviar(nome: string) {
+        const semNumero = nome.replace(/^\d+\s*[-_.]?\s*/, "")
+        return semNumero.slice(0, 3).toUpperCase()
+    }
+
+    function contarItens(id: string) {
+        return $projects[id]?.shows?.length || 0
+    }
+
+    function abrir(id: string) {
+        if ($activeProject === id && !$projectView) return
+        openProject(id)
+    }
+
+    // Mantém o culto aberto sempre visível na faixa, inclusive quando ele é
+    // trocado por outro caminho (atalho, clique num show, sincronização).
+    $: if ($activeProject && faixaElem) centralizar($activeProject)
+
+    async function centralizar(id: string) {
+        await tick()
+        const alvo = faixaElem?.querySelector<HTMLElement>(`[data-id="${id}"]`)
+        alvo?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" })
+    }
+
+    onMount(() => {
+        if ($activeProject) centralizar($activeProject)
+    })
+</script>
+
+{#if cultos.length}
+    <div class="faixa" bind:this={faixaElem} role="tablist" aria-label="Cultos">
+        {#each cultos as culto (culto.id)}
+            {@const itens = contarItens(culto.id)}
+            {@const aberto = $activeProject === culto.id && !$projectView}
+            <button class="culto" class:aberto class:cheio={itens > 0} type="button" role="tab" aria-selected={aberto} data-id={culto.id} data-title="{culto.nome}{itens ? ` — ${itens} itens` : ''}" on:click={() => abrir(culto.id)}>
+                {#if culto.grupo}<span class="grupo">{culto.grupo}</span>{/if}
+                <span class="dia">{culto.nome}</span>
+                <span class="pip"></span>
+            </button>
+        {/each}
+    </div>
+{/if}
+
+<style>
+    .faixa {
+        display: flex;
+        flex: none;
+        gap: 5px;
+        padding: 10px 10px 12px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .faixa::-webkit-scrollbar {
+        display: none;
+    }
+
+    .culto {
+        flex: none;
+        width: 50px;
+        padding: 8px 0 9px;
+        border: none;
+        border-radius: 10px;
+        background: rgb(255 255 255 / 0.06);
+        color: inherit;
+        cursor: pointer;
+        display: grid;
+        gap: 2px;
+        justify-items: center;
+        font-family: inherit;
+        transition:
+            background-color 120ms ease,
+            box-shadow 120ms ease;
+    }
+    .culto:hover {
+        background: rgb(255 255 255 / 0.1);
+    }
+    .culto:focus-visible {
+        outline: 2px solid var(--focus-ring, var(--secondary));
+        outline-offset: 2px;
+    }
+
+    .grupo {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 0.12em;
+        color: #6f7077;
+    }
+    .dia {
+        font-family: var(--font-mono);
+        font-size: 17px;
+        font-weight: 500;
+        line-height: 1.1;
+        color: #c2c3c9;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* preparado ou vazio, de relance */
+    .pip {
+        width: 4px;
+        height: 4px;
+        margin-top: 1px;
+        border-radius: 50%;
+        background: #6f7077;
+        opacity: 0.45;
+    }
+    .culto.cheio .pip {
+        background: #4ade80;
+        opacity: 1;
+    }
+
+    .culto.aberto {
+        background: rgb(242 26 39 / 0.16);
+        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+    }
+    .culto.aberto .dia {
+        color: #ffffff;
+    }
+    .culto.aberto .grupo {
+        color: #ff7f8b;
+    }
+</style>

@@ -25,6 +25,7 @@
     import { getRecentlyUsedProjects, openProject } from "./project"
     import ProjectContentList from "./ProjectContentList.svelte"
     import ProjectList from "./ProjectList.svelte"
+    import ProjectStrip from "./ProjectStrip.svelte"
 
     let tree: Tree[] = []
 
@@ -390,6 +391,9 @@
 <svelte:window on:keydown={checkInput} on:keydown|capture={handleKeydown} on:mousedown={mousedown} on:dragenter={dragStart} on:dragstart={dragStart} on:dragend={dragEnd} on:drop={dragEnd} on:mouseup={dragEnd} />
 
 <div class="main" class:focusMode={$focusMode}>
+    {#if !$focusMode}
+        <ProjectStrip {tree} />
+    {/if}
     <span class="tabs">
         {#if projectActive || recentlyUsedList.length}
             {#if !$focusMode}
