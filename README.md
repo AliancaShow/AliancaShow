@@ -24,9 +24,13 @@ Este não é um rebrand de superfície. As diferenças que importam no uso:
 
 **Já vem com o conteúdo da igreja**
 
-- A **Bíblia NVI** vai embutida no instalador e é instalada na primeira
-  execução — ninguém precisa baixar Bíblia em máquina nova.
+- As **Bíblias NVI e ARA** vão embutidas no instalador e são instaladas na
+  primeira execução — ninguém precisa baixar Bíblia em máquina nova. Os
+  arquivos não ficam no repositório (texto licenciado): veja
+  [Gerando o instalador](#gerando-o-instalador).
 - **306 músicas** importadas do ProPresenter vão junto, na categoria Músicas.
+- Um layout de palco **Retorno** (slide atual, próximo e relógio) já vem
+  criado: é só escolher em Configurações → Saídas, na saída da TV de retorno.
 
 **Integração com o [AliançaShow Remote](https://github.com/AliancaShow/AliancaShow-Remote)**
 
@@ -34,6 +38,24 @@ A equipe envia fotos, vídeos e músicas pelo celular durante a semana; o app
 recebe esse material sem ninguém copiar arquivo na mão. A árvore do Storage é
 espelhada na pasta Online do disco, e remover um item no Remote remove também
 aqui. A pasta de shows é observada: mudou na pasta, recarrega sozinho.
+
+O painel **Cultos** tem as abas Todos, Aliança, Impulso e Extra. Cada agenda é
+uma pasta raiz (`Alianca/2026/09-setembro/06`), com o mesmo desenho do
+Storage; o evento Extra criado no celular aparece com o nome.
+
+Do celular também dá para:
+
+- **Passar slide** (avançar, voltar, limpar e saltar para um item), vendo o
+  que está no ar. Responde o computador que tem o culto aberto; se dois
+  estiverem no mesmo culto, só o primeiro (o "dono") obedece.
+- **Mandar versículo**: vira um show aqui, um slide por versículo, na
+  tradução escolhida.
+- **Ver o que foi montado no computador** e tirar do culto por lá.
+
+O código fica em `src/frontend/utils/alianca*.ts` e `agendas.ts`. Para testar
+sem tocar no banco da igreja, rode com o emulador do Firebase:
+`VITE_ALIANCA_EMULADOR=127.0.0.1 npm start` (só vale em desenvolvimento; no
+build de produção isso não existe).
 
 **Layout D**
 
@@ -91,6 +113,15 @@ Problemas conhecidos ao instalar:
   VS Code herda. Rode `unset ELECTRON_RUN_AS_NODE` antes, ou use outro terminal.
 
 ## Gerando o instalador
+
+Antes, ponha o conteúdo que não fica no repositório nas pastas `bundled-*`. Sem
+ele o build funciona, mas o instalador sai **sem Bíblia e sem músicas**:
+
+```bash
+# Bíblias, a partir das fontes da pasta da igreja
+node scripts/gerarBiblias.js --nvi <pasta>/Biblia-NVI/nvi.json --ara <pasta>/ARA/ARA.xml
+# Músicas: copie os .show para bundled-shows/
+```
 
 ```bash
 npm run build     # compila frontend, servidores e o processo do Electron

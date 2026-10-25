@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { AGENDAS, caminhoDoCulto, diasDoMes } from "./agendas"
+import { AGENDAS, caminhoDoCulto, cultoDoProjeto, diasDoMes } from "./agendas"
 
 const [alianca, impulso, extra] = AGENDAS
 
@@ -46,5 +46,44 @@ describe("caminhoDoCulto", () => {
 
     it("id que nao e data e recusado", () => {
         expect(caminhoDoCulto(alianca, "acampa-sexta")).toBeNull()
+    })
+})
+
+describe("cultoDoProjeto", () => {
+    const pastas = {
+        a: { name: "Alianca", parent: "/" },
+        a26: { name: "2026", parent: "a" },
+        aSet: { name: "09-setembro", parent: "a26" },
+        e: { name: "Extra", parent: "/" },
+        e26: { name: "2026", parent: "e" },
+        eNov: { name: "11-novembro", parent: "e26" },
+        solta: { name: "Ensaios", parent: "/" }
+    }
+    const projetos = {
+        p1: { name: "06", parent: "aSet" },
+        p2: { name: "07 - Rede de Mulheres", parent: "eNov" },
+        p3: { name: "06", parent: "solta" },
+        p4: { name: "Culto especial", parent: "aSet" }
+    }
+
+    it("projeto da Aliança vira o culto da data", () => {
+        const culto = cultoDoProjeto("p1", projetos, pastas)
+        expect(culto?.agenda.id).toBe("alianca")
+        expect(culto?.cultoId).toBe("2026-09-06")
+    })
+
+    it("evento Extra: o dia vem do comeco do nome", () => {
+        expect(cultoDoProjeto("p2", projetos, pastas)?.cultoId).toBe("2026-11-07")
+    })
+
+    it("fora da arvore de agendas nao e culto", () => {
+        expect(cultoDoProjeto("p3", projetos, pastas)).toBeNull()
+        expect(cultoDoProjeto("p4", projetos, pastas)).toBeNull()
+        expect(cultoDoProjeto("nao-existe", projetos, pastas)).toBeNull()
+    })
+
+    it("ida e volta batem com caminhoDoCulto", () => {
+        const partes = caminhoDoCulto(extra, "2026-11-07", "Rede de Mulheres")
+        expect(partes?.projeto).toBe(projetos.p2.name)
     })
 })

@@ -1,12 +1,15 @@
 import { initializeApp, type FirebaseApp } from "firebase/app"
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, type Auth } from "firebase/auth"
-import { getDatabase, onValue, ref, type Database } from "firebase/database"
+import { connectAuthEmulator, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, type Auth } from "firebase/auth"
+import { connectDatabaseEmulator, getDatabase, onValue, ref, type Database } from "firebase/database"
 import { get } from "svelte/store"
 import { uid } from "uid"
 import { Main } from "../../types/IPC/Main"
 import { requestMain, sendMain } from "../IPC/main"
-import { folders, media, mediaFolders, projects, shows } from "../stores"
+import { activeProject, folders, media, mediaFolders, projects, shows } from "../stores"
 import { AGENDAS, caminhoDoCulto, diasDoMes, MESES } from "./agendas"
+import { iniciarControle, pararControle } from "./aliancaControle"
+import { showDoVersiculo } from "./aliancaVersiculo"
+import { sincronizarLocais } from "./aliancaLocais"
 import { save } from "./save"
 
 /**
@@ -72,17 +75,30 @@ function iniciar() {
     auth = getAuth(app)
     db = getDatabase(app)
 
+    // So em desenvolvimento: VITE_ALIANCA_EMULADOR=127.0.0.1 npm start liga a
+    // ponte no emulador do Firebase, para testar sem tocar no banco da igreja.
+    // No build de producao import.meta.env.DEV e false e isto nem existe.
+    const emulador = import.meta.env.DEV ? import.meta.env.VITE_ALIANCA_EMULADOR : ""
+    if (emulador) {
+        connectAuthEmulator(auth, `http://${emulador}:9099`, { disableWarnings: true })
+        connectDatabaseEmulator(db, emulador, 9000)
+        console.warn("AliançaShow Remote: usando o EMULADOR do Firebase em", emulador)
+    }
+
     onAuthStateChanged(auth, (usuario) => {
         estado.ligado = !!usuario
         estado.email = usuario?.email || ""
         estado.entrando = false
         avisar()
 
-        if (usuario) ouvirCultos()
-        else {
+        if (usuario) {
+            ouvirCultos()
+            iniciarControle(db!)
+        } else {
             pararOuvintes.forEach((parar) => parar())
             pararOuvintes = []
             for (const id of Object.keys(fotos)) delete fotos[id]
+            pararControle()
         }
     })
 }
@@ -180,6 +196,18 @@ function ouvirCultos() {
             )
         )
     }
+
+    // O que o operador monta aqui tambem vai para o celular (aliancaLocais).
+    // Sem este gatilho so iria quando algo mudasse no banco. A espera junta
+    // uma sequencia de arrastos numa publicacao so.
+    let espera: ReturnType<typeof setTimeout> | undefined
+    const reagendar = () => {
+        clearTimeout(espera)
+        espera = setTimeout(() => {
+            if (AGENDAS.every((a) => fotos[a.id])) enfileirar({ ...fotos })
+        }, 3000)
+    }
+    pararOuvintes.push(projects.subscribe(reagendar), activeProject.subscribe(reagendar), () => clearTimeout(espera))
 }
 
 /** garante uma pasta pelo caminho, devolvendo o id da ultima */
@@ -388,7 +416,8 @@ async function sincronizar(porAgenda: { [agenda: string]: { [culto: string]: any
             const { id: projetoId, mudou: m2 } = garantirProjeto(partes.projeto, pastaId, partes.dia)
             mudou = mudou || m1 || m2
 
-            const itens = Object.values(culto?.itens || {}) as any[]
+            // a chave do item vai junto: o versiculo deriva dela o id do show
+            const itens = Object.entries(culto?.itens || {}).map(([chave, item]: [string, any]) => ({ ...item, chave }))
             if (!itens.length) continue
 
             if (await sincronizarItens(`${agenda.id}/${cultoId}`, projetoId, [...partes.pastas, partes.dia].join("/"), itens, pedidos, incompletos)) mudou = true
@@ -414,6 +443,8 @@ async function sincronizar(porAgenda: { [agenda: string]: { [culto: string]: any
     vindosDoRemote = pedidos
     if (JSON.stringify(pedidos) !== antes) guardarRegistro()
 
+    if (await sincronizarLocais(porAgenda, db, auth?.currentUser, vindosDoRemote)) mudou = true
+
     if (mudou) {
         estado.ultimaSync = Date.now()
         avisar()
@@ -437,9 +468,19 @@ async function sincronizarItens(chave: string, projetoId: string, pasta: string,
             continue
         }
 
-        // versiculo e item "local" nao sao arquivo para baixar. Sem este desvio
-        // iam para o download, falhavam por falta de url e deixavam o culto
-        // marcado como incompleto para sempre -- nada mais saia dele.
+        if (item.tipo === "biblia") {
+            // sem a traducao instalada nao ha o que montar; nao marca o culto
+            // como incompleto, senao nada mais sairia dele
+            const showId = await showDoVersiculo(item)
+            if (!showId) continue
+            daqui.push(showId)
+            if (adicionarAoProjeto(projetoId, { id: showId, type: "show" }, showId)) mudou = true
+            continue
+        }
+
+        // item "local" e o que este computador publicou: nao e arquivo para
+        // baixar. Sem este desvio ia para o download, falhava por falta de url
+        // e deixava o culto incompleto para sempre -- nada mais saia dele.
         if (!ARQUIVOS.includes(item.tipo)) continue
 
         const arquivo = nomeDoArquivo(item)

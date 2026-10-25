@@ -33,6 +33,36 @@ export function caminhoDoCulto(agenda: Agenda, cultoId: string, nome = "") {
 }
 
 /**
+ * O caminho inverso: de um projeto no painel ao culto no banco.
+ *
+ *     Alianca > 2026 > 09-setembro > "06"                     -> alianca, 2026-09-06
+ *     Extra > 2026 > 11-novembro > "07 - Rede de Mulheres"    -> extra, 2026-11-07
+ *
+ * Projeto fora dessa arvore (criado a mao em outra pasta) nao e culto: null.
+ */
+type Pastas = { [id: string]: { name?: string; parent?: string } | undefined }
+type Projetos = { [id: string]: { name?: string; parent?: string } | undefined }
+export function cultoDoProjeto(projetoId: string, projetos: Projetos, pastas: Pastas) {
+    const projeto = projetos[projetoId]
+    if (!projeto) return null
+
+    const caminho: string[] = []
+    let pasta = pastas[projeto.parent || ""]
+    for (let i = 0; pasta && i < 20; i++) {
+        caminho.unshift(pasta.name || "")
+        pasta = pastas[pasta.parent || ""]
+    }
+
+    const [raiz, ano, mes] = caminho
+    const agenda = AGENDAS.find((a) => a.pasta === raiz)
+    const indiceMes = MESES.indexOf(mes)
+    const dia = String(projeto.name || "").match(/^(\d{2})(?: - |$)/)?.[1]
+    if (!agenda || caminho.length !== 3 || !/^\d{4}$/.test(ano) || indiceMes < 0 || !dia) return null
+
+    return { agenda, cultoId: `${ano}-${String(indiceMes + 1).padStart(2, "0")}-${dia}` }
+}
+
+/**
  * Os dias de culto de um mes na cadencia da agenda: Aliança todo domingo,
  * Impulso a cada quinze dias no sabado a partir da ancora -- sem ela nao daria
  * para saber QUAL sabado. Mesma conta do diasDoMes do Remote. Extra, sem
