@@ -1,0 +1,20 @@
+{
+  "name": "AliançaShow — Vidro",
+  "font": {
+    "family": "",
+    "size": "1em"
+  },
+  "colors": {
+    "primary": "#141416",
+    "primary-lighter": "#1f2023",
+    "primary-darker": "#0f0f11",
+    "primary-darkest": "#0a0a0c",
+    "text": "#eceded",
+    "textInvert": "#161616",
+    "secondary-text": "#f8f8f0",
+    "secondary": "#f21a27",
+    "secondary-opacity": "rgba(242, 26, 39, 0.5)",
+    "hover": "rgb(255 255 255 / 0.05)",
+    "focus": "rgb(242 26 39 / 0.28)"
+  }
+}

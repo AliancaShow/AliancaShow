@@ -25,6 +25,7 @@
     import { getRecentlyUsedProjects, openProject } from "./project"
     import ProjectContentList from "./ProjectContentList.svelte"
     import ProjectList from "./ProjectList.svelte"
+    import ProjectStrip from "./ProjectStrip.svelte"
 
     let tree: Tree[] = []
 
@@ -69,7 +70,56 @@
 
         folderSorted = []
         sortFolders()
-        tree = folderSorted
+        tree = acharPlano(folderSorted)
+    }
+
+    /**
+     * Lista continua: a arvore de pastas vira um nivel so, e a pasta que guarda
+     * os projetos passa a ser cabecalho de grupo em vez de no que abre e fecha.
+     *
+     * Motivo: a hierarquia daqui guarda uma data -- Alianca > 2026 > 01-janeiro
+     * > 04 sao quatro niveis para dizer "domingo, 4 de janeiro". Arvore serve
+     * para ramos diferentes entre si; quando todo no e do mesmo tipo e a ordem
+     * ja vem do calendario, ela nao organiza, so esconde. Eram quatro cliques
+     * ate um culto.
+     *
+     * Pastas que so guardam outras pastas somem (Alianca, 2026): o nome delas
+     * nao acrescenta nada quando ha um caminho unico ate os projetos. Sobra o
+     * cabecalho que de fato distingue, o mes.
+     */
+    function acharPlano(itens: Tree[]): Tree[] {
+        const porPai: { [key: string]: Tree[] } = {}
+        itens.forEach((a) => {
+            if (!porPai[a.parent]) porPai[a.parent] = []
+            porPai[a.parent].push(a)
+        })
+
+        const saida: Tree[] = []
+
+        function percorrer(paiId: string, rotulo: string, profundidade: number) {
+            if (profundidade > 20) return // trava contra pasta apontando para si mesma
+
+            const filhos = porPai[paiId] || []
+            const projetos = filhos.filter((a) => a.type !== "folder")
+            const pastas = filhos.filter((a) => a.type === "folder")
+
+            if (projetos.length) {
+                if (rotulo) saida.push({ id: "grupo:" + paiId, type: "grupo", name: rotulo, parent: paiId, index: 0, path: "" } as any)
+                // path vazio de proposito: o ProjectList so mostra um projeto
+                // quando todas as pastas do caminho dele estao abertas, e aqui
+                // nao ha mais pasta para abrir -- a lista e continua
+                projetos.forEach((projeto) => saida.push({ ...projeto, index: 0, path: "" }))
+            }
+
+            pastas.forEach((pasta) => {
+                const dela = porPai[pasta.id] || []
+                const soPastas = dela.length > 0 && dela.every((a) => a.type === "folder")
+                percorrer(pasta.id, soPastas ? rotulo : pasta.name, profundidade + 1)
+            })
+        }
+
+        percorrer("/", "", 0)
+        return saida
     }
 
     let folderSorted: Tree[] = []
@@ -341,6 +391,9 @@
 <svelte:window on:keydown={checkInput} on:keydown|capture={handleKeydown} on:mousedown={mousedown} on:dragenter={dragStart} on:dragstart={dragStart} on:dragend={dragEnd} on:drop={dragEnd} on:mouseup={dragEnd} />
 
 <div class="main" class:focusMode={$focusMode}>
+    {#if !$focusMode}
+        <ProjectStrip {tree} />
+    {/if}
     <span class="tabs">
         {#if projectActive || recentlyUsedList.length}
             {#if !$focusMode}
@@ -491,6 +544,13 @@
         </div>
     {:else if $editingProjectTemplate}
         <ProjectContentList tree={[]} on:scrollElem={(e) => (contentScrollElem = e.detail)} isTemplate />
+    {:else if projectActive}
+        <!-- Culto aberto: o painel mostra o conteudo dele, nao a lista. Antes os
+             itens eram expandidos embaixo da linha do projeto dentro da lista, o
+             que funcionava quando a lista era curta -- com 52 domingos, abrir um
+             de junho abria o conteudo fora da vista. O cabecalho ja tinha o botao
+             de voltar para este caso. -->
+        <ProjectContentList {tree} on:scrollElem={(e) => (contentScrollElem = e.detail)} />
     {:else if !projectActive && showProjectsOptions}
         <div class="options">
             <MaterialTextInput label="settings.default_project_name<span style='opacity: 0.5;padding-left: 8px;font-size: 0.8em;color: var(--text);'>{getProjectName($special)}</span>" title={projectReplacerTitle} value={projectName} defaultValue={getDefaultProjectName()} on:change={(e) => updateSpecial(e.detail, "default_project_name", true)} />

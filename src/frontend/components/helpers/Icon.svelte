@@ -56,7 +56,7 @@
 
 {#if select}
     <svg class={$$props.class} class:flip class:white class:right class:fill class:select class:boxed on:click={click} on:keydown={triggerClickOnEnterSpace} tabindex={0} role="button" style="{$$props.style || ''};{color ? `color: ${color};` : ''}{boxed && color ? `background-color: ${fadeColor(color, 0.3)};` : ''}min-width: {width};{boxed ? `min-height: ${height};` : ''}" {width} {height} viewBox="0 0 {box} {box}" data-title={title}>
-        {#if !white && colorMid && colorEnd && colorStart}
+        {#if (gradient || gradientColor) && colorMid && colorEnd && colorStart}
             <defs>
                 <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
                     <!-- <stop offset="0%" stop-color="#f21a27" />
@@ -76,7 +76,7 @@
     </svg>
 {:else}
     <svg class={$$props.class} class:flip class:white class:right class:fill class:boxed style="{$$props.style || ''};{color ? `color: ${color};` : ''}{boxed && color ? `background-color: ${fadeColor(color, 0.3)};` : ''}min-width: {width};{boxed ? `min-height: ${height};` : ''}" {width} {height} viewBox="0 0 {box} {box}" data-title={title}>
-        {#if !white && colorMid && colorEnd && colorStart}
+        {#if (gradient || gradientColor) && colorMid && colorEnd && colorStart}
             <defs>
                 <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color={colorStart} />
@@ -94,8 +94,13 @@
 {/if}
 
 <style>
+    /* Icones monocromaticos: herdam a cor do texto de quem os contem, em vez
+       de virem no vermelho da marca. Assim o icone acompanha a hierarquia da
+       linha (#83848b num cabecalho, #fff num item ativo) e o vermelho volta a
+       significar "no ar" em vez de decorar. Quem quiser o gradiente antigo
+       ainda pode pedir com a prop gradient. */
     svg {
-        fill: var(--secondary);
+        fill: currentColor;
     }
 
     svg.select {

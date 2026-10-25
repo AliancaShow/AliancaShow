@@ -127,10 +127,22 @@
     }
     .align.styled {
         align-items: baseline;
-        font-size: 4em;
+        /* O relogio gigante vermelho sai: vira informacao de apoio, nao
+           protagonista. Mono, porque e dado numerico. */
+        font-size: 30px;
+        font-family: var(--font-mono);
+        font-weight: 500;
+        letter-spacing: -0.02em;
         height: unset;
     }
+    /* Na interface o relogio perde a cor da marca: vermelho fica reservado para
+       "no ar". No palco ele continua colorido, porque la e conteudo projetado
+       -- e por isso a regra e escopada em .styled, que o palco nao usa
+       (Stagebox passa style={false}). */
     .colored {
         color: var(--secondary);
+    }
+    .align.styled .colored {
+        color: var(--text);
     }
 </style>

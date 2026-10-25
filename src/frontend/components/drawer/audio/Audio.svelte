@@ -507,11 +507,17 @@
     .tabs :global(button) {
         border-radius: 0;
         border: none !important;
-        border-bottom: 1px solid var(--primary-lighter) !important;
         padding: 8px;
+        border-radius: 8px;
+        transition:
+            background-color 120ms ease,
+            color 120ms ease;
     }
+    /* Sem regua de 1px entre as linhas: a separacao e por fundo. A aba ativa
+       usa wash de marca em vez de um risco vermelho embaixo. */
     .tabs :global(button.isActive) {
-        border-bottom: 1px solid var(--secondary) !important;
+        background: rgb(242 26 39 / 0.16) !important;
+        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
     }
 
     .scroll {

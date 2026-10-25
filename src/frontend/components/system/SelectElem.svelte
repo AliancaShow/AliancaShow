@@ -364,9 +364,14 @@
     div.isSelected {
         /* outline: 2px solid red;
     outline-offset: 2px; */
-        background-color: var(--focus);
-        outline: 2px solid var(--text);
-        opacity: 0.9;
+        /* Selecionado e destaque neutro. O fundo sozinho nao serve: sobre
+           miniatura de imagem ele fica atras e some. O contorno fica, mas
+           neutro -- o que incomodava era o fundo vermelho, herdado de --focus,
+           nao a linha branca. */
+        background-color: rgb(255 255 255 / 0.09);
+        outline: 2px solid rgb(255 255 255 / 0.5);
+        outline-offset: -2px;
+        opacity: 1;
 
         border-radius: 6px;
 

@@ -550,9 +550,13 @@
         background-color: var(--hover);
     }
 
+    /* Versiculo selecionado: wash de marca no lugar do preenchimento solido.
+       Vermelho cheio e exclusivo do "Limpar tudo". A regua de 3px do
+       versiculo ativo permanece -- e a unica que sobrevive no redesign. */
     .num.active {
-        background-color: var(--secondary);
-        color: var(--secondary-text);
+        background-color: rgb(242 26 39 / 0.16);
+        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+        color: #fff;
         font-weight: 700;
     }
 
