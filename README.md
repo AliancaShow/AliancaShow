@@ -76,6 +76,20 @@ npm install
 npm start
 ```
 
+**Baixe o projeto numa pasta sem espaços no caminho**, como `C:\AliancaShow` ou
+`~/AliancaShow`. O módulo do NDI (`grandiose`) passa o caminho ao linker sem
+aspas, e em `.../Maria Silva/...` ou `.../AliançaShow All/...` o `npm install`
+falha com `no such file or directory: 'All/...'`.
+
+Problemas conhecidos ao instalar:
+
+- **No macOS, `tapi error: malformed file` / `unknown architecture`**: sobrou
+  um SDK mais novo que o linker (comum depois de um beta). Reinstale as
+  Command Line Tools: `sudo rm -rf /Library/Developer/CommandLineTools && xcode-select --install`.
+- **`npm start` cai com `Cannot read properties of undefined (reading 'on')`**:
+  o terminal está com `ELECTRON_RUN_AS_NODE=1`, que o terminal integrado do
+  VS Code herda. Rode `unset ELECTRON_RUN_AS_NODE` antes, ou use outro terminal.
+
 ## Gerando o instalador
 
 ```bash
