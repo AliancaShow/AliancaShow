@@ -6,6 +6,7 @@ import { uid } from "uid"
 import { Main } from "../../types/IPC/Main"
 import { requestMain, sendMain } from "../IPC/main"
 import { folders, media, mediaFolders, projects, shows } from "../stores"
+import { AGENDAS, caminhoDoCulto, diasDoMes, MESES } from "./agendas"
 import { save } from "./save"
 
 /**
@@ -15,6 +16,9 @@ import { save } from "./save"
  * arquivos no disco e projetos prontos, com a MESMA arvore do Firebase Storage:
  *
  *     Alianca/2026/09-setembro/06     -> pastas Alianca > 2026 > 09-setembro, projeto "06"
+ *     Extra/2026/11-novembro/07       -> projeto "07 - Rede de Mulheres"
+ *
+ * No banco, cada agenda tem seu espaco: agendas/{alianca|impulso|extra}/cultos.
  *
  * A ligacao e so de saida: o app abre a conexao com o Firebase, nunca recebe
  * conexao. E o que permite funcionar atras do firewall da igreja, sem porta
@@ -31,15 +35,15 @@ const firebaseConfig = {
     appId: "1:609682479414:web:3ccdafe7d59d35ac3efb97"
 }
 
-// as duas raizes, que viram pastas de projeto e tambem pastas de midia
-const RAIZES = ["Alianca"]
+// as raizes viram pastas de projeto e tambem pastas de midia
+const RAIZES = AGENDAS.map((a) => a.pasta)
 
 export type EstadoRemote = { ligado: boolean; entrando: boolean; email: string; erro: string; ultimaSync: number; baixando: number }
 
 let app: FirebaseApp | null = null
 let auth: Auth | null = null
 let db: Database | null = null
-let pararOuvinte: (() => void) | null = null
+let pararOuvintes: (() => void)[] = []
 let aoMudarEstado: ((e: EstadoRemote) => void) | null = null
 
 const estado: EstadoRemote = { ligado: false, entrando: false, email: "", erro: "", ultimaSync: 0, baixando: 0 }
@@ -76,8 +80,9 @@ function iniciar() {
 
         if (usuario) ouvirCultos()
         else {
-            pararOuvinte?.()
-            pararOuvinte = null
+            pararOuvintes.forEach((parar) => parar())
+            pararOuvintes = []
+            for (const id of Object.keys(fotos)) delete fotos[id]
         }
     })
 }
@@ -132,7 +137,6 @@ function enfileirar(cultos: { [id: string]: any }) {
     proximaFoto = cultos
     if (sincronizando) return
     sincronizando = true
-
     ;(async () => {
         try {
             while (proximaFoto) {
@@ -148,20 +152,34 @@ function enfileirar(cultos: { [id: string]: any }) {
     })()
 }
 
-function ouvirCultos() {
-    if (!db || pararOuvinte) return
+/**
+ * Um ouvinte por agenda, so em "cultos": ouvir "agendas" inteira faria cada
+ * toque no Remote (comando, estado) disparar uma sincronizacao.
+ *
+ * A sincronizacao so roda com as tres em maos. Com uma faltando, os cultos
+ * dela pareceriam esvaziados e o registro tiraria os itens dos projetos.
+ */
+const fotos: { [agenda: string]: { [culto: string]: any } } = {}
 
-    pararOuvinte = onValue(
-        ref(db, "cultos"),
-        (snap) => {
-            enfileirar(snap.val() || {})
-        },
-        (erro) => {
-            console.error("Falha ao ler os cultos:", erro)
-            estado.erro = "Sem acesso aos cultos. Confira a conta."
-            avisar()
-        }
-    )
+function ouvirCultos() {
+    if (!db || pararOuvintes.length) return
+
+    for (const agenda of AGENDAS) {
+        pararOuvintes.push(
+            onValue(
+                ref(db, `agendas/${agenda.id}/cultos`),
+                (snap) => {
+                    fotos[agenda.id] = snap.val() || {}
+                    if (AGENDAS.every((a) => fotos[a.id])) enfileirar({ ...fotos })
+                },
+                (erro) => {
+                    console.error(`Falha ao ler os cultos (${agenda.nome}):`, erro)
+                    estado.erro = "Sem acesso aos cultos. Confira a conta."
+                    avisar()
+                }
+            )
+        )
+    }
 }
 
 /** garante uma pasta pelo caminho, devolvendo o id da ultima */
@@ -190,10 +208,23 @@ function garantirPastas(caminho: string[]) {
     return { id: pai, mudou }
 }
 
-function garantirProjeto(nome: string, pastaId: string) {
-    const atuais = get(projects)
-    const existente = Object.entries(atuais).find(([, p]: any) => p.name === nome && p.parent === pastaId)
-    if (existente) return { id: existente[0], mudou: false }
+/** o projeto do dia nesta pasta: "06", ou "07 - Rede de Mulheres" no Extra */
+function acharProjeto(pastaId: string, dia: string) {
+    const achado = Object.entries(get(projects)).find(([, p]: any) => p.parent === pastaId && (p.name === dia || String(p.name).startsWith(`${dia} - `)))
+    return achado?.[0] || null
+}
+
+function garantirProjeto(nome: string, pastaId: string, dia: string) {
+    const existente = acharProjeto(pastaId, dia)
+    if (existente) {
+        // evento Extra renomeado no celular: mesmo dia, outro nome
+        if (get(projects)[existente].name === nome) return { id: existente, mudou: false }
+        projects.update((a) => {
+            a[existente].name = nome
+            return a
+        })
+        return { id: existente, mudou: true }
+    }
 
     const id = uid()
     projects.update((a) => {
@@ -208,9 +239,12 @@ async function garantirPastasDeMidia() {
     const raizOnline: string = await requestMain(Main.ALIANCA_PASTA_ONLINE, undefined as any)
     if (!raizOnline) return false
 
+    // barra do sistema: a pasta de midia tem de bater com o caminho real no Mac tambem
+    const barra = raizOnline.includes("\\") ? "\\" : "/"
+
     let mudou = false
     for (const nome of RAIZES) {
-        const caminho = `${raizOnline}\\${nome}`
+        const caminho = `${raizOnline}${barra}${nome}`
         const jaTem = Object.values(get(mediaFolders)).some((f: any) => f.path === caminho)
         if (jaTem) continue
 
@@ -223,14 +257,6 @@ async function garantirPastasDeMidia() {
     return mudou
 }
 
-/** "2026-09-06" -> pastas Alianca/2026/09-setembro + projeto "06" */
-const MESES = ["01-janeiro", "02-fevereiro", "03-marco", "04-abril", "05-maio", "06-junho", "07-julho", "08-agosto", "09-setembro", "10-outubro", "11-novembro", "12-dezembro"]
-function caminhoDoculto(cultoId: string) {
-    const data = cultoId.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-    if (!data) return null
-    return { pastas: ["Alianca", data[1], MESES[Number(data[2]) - 1]], projeto: data[3] }
-}
-
 /**
  * Cria a arvore inteira de uma vez, mesmo sem conteudo:
  *
@@ -240,17 +266,6 @@ function caminhoDoculto(cultoId: string) {
  * ficava cheio de buracos: so o domingo com foto aparecia. Com a arvore pronta
  * o operador encontra qualquer culto pelo calendario, tenha conteudo ou nao.
  */
-function domingosDoMes(ano: number, mes: number) {
-    const dias: string[] = []
-    const d = new Date(ano, mes, 1)
-    d.setDate(1 + ((7 - d.getDay()) % 7))
-    while (d.getMonth() === mes) {
-        dias.push(String(d.getDate()).padStart(2, "0"))
-        d.setDate(d.getDate() + 7)
-    }
-    return dias
-}
-
 let pastasNoDiscoFeitas = false
 
 function garantirEstruturaCompleta() {
@@ -259,13 +274,19 @@ function garantirEstruturaCompleta() {
     // um caminho por projeto: e o mesmo desenho que a pasta Online precisa ter
     const caminhos: string[] = []
 
-    for (let mes = 0; mes < 12; mes++) {
-        const { id: pastaMes, mudou: m1 } = garantirPastas(["Alianca", String(ano), MESES[mes]])
-        mudou = mudou || m1
-        for (const dia of domingosDoMes(ano, mes)) {
-            const { mudou: m2 } = garantirProjeto(dia, pastaMes)
-            mudou = mudou || m2
-            caminhos.push(`Alianca/${ano}/${MESES[mes]}/${dia}`)
+    // o Extra fica de fora: sem cadencia, seus eventos so nascem do banco
+    for (const agenda of AGENDAS.filter((a) => a.cada)) {
+        for (let mes = 0; mes < 12; mes++) {
+            const dias = diasDoMes(agenda, ano, mes)
+            if (!dias.length) continue
+
+            const { id: pastaMes, mudou: m1 } = garantirPastas([agenda.pasta, String(ano), MESES[mes]])
+            mudou = mudou || m1
+            for (const dia of dias) {
+                const { mudou: m2 } = garantirProjeto(dia, pastaMes, dia)
+                mudou = mudou || m2
+                caminhos.push(`${agenda.pasta}/${ano}/${MESES[mes]}/${dia}`)
+            }
         }
     }
 
@@ -292,7 +313,12 @@ let registroCarregado = false
 async function carregarRegistro() {
     if (registroCarregado) return
     registroCarregado = true
-    vindosDoRemote = (await requestMain(Main.GET_STORE_VALUE, { file: "config", key: "aliancaVindosDoRemote" })) || {}
+    const salvo = (await requestMain(Main.GET_STORE_VALUE, { file: "config", key: "aliancaVindosDoRemote" })) || {}
+
+    // a chave passou a levar a agenda ("alianca/2026-09-06"); as de antes das
+    // agendas eram todas da Aliança
+    vindosDoRemote = {}
+    for (const [chave, ids] of Object.entries(salvo)) vindosDoRemote[chave.includes("/") ? chave : `alianca/${chave}`] = ids as string[]
 }
 
 function guardarRegistro() {
@@ -304,14 +330,16 @@ function ninguemMaisUsa(caminho: string) {
     return !Object.values(get(projects)).some((p: any) => (p.shows || []).some((s: any) => s.id === caminho))
 }
 
-function tirarDoProjeto(cultoId: string, sumiram: string[]) {
-    const partes = caminhoDoculto(cultoId)
+function tirarDoProjeto(chave: string, sumiram: string[]) {
+    const [agendaId, cultoId] = chave.split("/")
+    const agenda = AGENDAS.find((a) => a.id === agendaId)
+    const partes = agenda && caminhoDoCulto(agenda, cultoId)
     if (!partes || !sumiram.length) return false
 
     const pastaId = garantirPastas(partes.pastas).id
-    const projetoId = garantirProjeto(partes.projeto, pastaId).id
-    const projeto: any = get(projects)[projetoId]
-    if (!projeto) return false
+    const projetoId = acharProjeto(pastaId, partes.dia)
+    const projeto: any = projetoId && get(projects)[projetoId]
+    if (!projetoId || !projeto) return false
 
     const fora = new Set(sumiram)
     const restantes = (projeto.shows || []).filter((s: any) => !fora.has(s.id))
@@ -336,7 +364,9 @@ function tirarDoProjeto(cultoId: string, sumiram: string[]) {
     return true
 }
 
-async function sincronizar(cultos: { [id: string]: any }) {
+const ARQUIVOS = ["image", "video", "audio"]
+
+async function sincronizar(porAgenda: { [agenda: string]: { [culto: string]: any } }) {
     await carregarRegistro()
 
     let mudou = await garantirPastasDeMidia()
@@ -347,57 +377,21 @@ async function sincronizar(cultos: { [id: string]: any }) {
     const pedidos: { [culto: string]: string[] } = {}
     const incompletos = new Set<string>()
 
-    for (const [cultoId, culto] of Object.entries(cultos)) {
-        const itens = Object.values((culto as any)?.itens || {}) as any[]
-        if (!itens.length) continue
+    for (const agenda of AGENDAS) {
+        for (const [cultoId, culto] of Object.entries(porAgenda[agenda.id] || {})) {
+            const partes = caminhoDoCulto(agenda, cultoId, culto?.nome)
+            if (!partes) continue
 
-        const partes = caminhoDoculto(cultoId)
-        if (!partes) continue
+            // todo culto do banco vira projeto, mesmo vazio: e assim que o
+            // evento Extra criado no celular aparece aqui antes do primeiro envio
+            const { id: pastaId, mudou: m1 } = garantirPastas(partes.pastas)
+            const { id: projetoId, mudou: m2 } = garantirProjeto(partes.projeto, pastaId, partes.dia)
+            mudou = mudou || m1 || m2
 
-        const { id: pastaId, mudou: m1 } = garantirPastas(partes.pastas)
-        const { id: projetoId, mudou: m2 } = garantirProjeto(partes.projeto, pastaId)
-        mudou = mudou || m1 || m2
+            const itens = Object.values(culto?.itens || {}) as any[]
+            if (!itens.length) continue
 
-        // ordena pela hora de envio, para o projeto seguir a ordem em que a equipe montou
-        itens.sort((a, b) => (a.enviadoEm || 0) - (b.enviadoEm || 0))
-
-        const daqui: string[] = []
-        pedidos[cultoId] = daqui
-
-        for (const item of itens) {
-            if (item.tipo === "musica") {
-                daqui.push(item.showId)
-                if (adicionarAoProjeto(projetoId, { id: item.showId, type: "show" }, item.showId)) mudou = true
-                continue
-            }
-
-            const pasta = [...partes.pastas, partes.projeto].join("/")
-            const arquivo = nomeDoArquivo(item)
-
-            estado.baixando++
-            avisar()
-
-            const caminhoLocal: string | null = await requestMain(Main.ALIANCA_BAIXAR, { url: item.url, pasta, arquivo })
-
-            estado.baixando--
-            avisar()
-
-            // download falho deixa a lista incompleta; sem esta marca o item
-            // seria lido como removido e sairia do projeto na volta seguinte
-            if (!caminhoLocal) {
-                incompletos.add(cultoId)
-                continue
-            }
-            daqui.push(caminhoLocal)
-
-            const tipoProjeto = item.tipo === "image" ? "image" : item.tipo === "video" ? "video" : "audio"
-            if (adicionarAoProjeto(projetoId, { id: caminhoLocal, type: tipoProjeto, name: item.nome }, caminhoLocal)) {
-                media.update((a) => {
-                    if (!a[caminhoLocal]) a[caminhoLocal] = {}
-                    return a
-                })
-                mudou = true
-            }
+            if (await sincronizarItens(`${agenda.id}/${cultoId}`, projetoId, [...partes.pastas, partes.dia].join("/"), itens, pedidos, incompletos)) mudou = true
         }
     }
 
@@ -425,6 +419,58 @@ async function sincronizar(cultos: { [id: string]: any }) {
         avisar()
         setTimeout(() => save(), 1500)
     }
+}
+
+async function sincronizarItens(chave: string, projetoId: string, pasta: string, itens: any[], pedidos: { [culto: string]: string[] }, incompletos: Set<string>) {
+    let mudou = false
+
+    // ordena pela hora de envio, para o projeto seguir a ordem em que a equipe montou
+    itens.sort((a, b) => (a.enviadoEm || 0) - (b.enviadoEm || 0))
+
+    const daqui: string[] = []
+    pedidos[chave] = daqui
+
+    for (const item of itens) {
+        if (item.tipo === "musica") {
+            daqui.push(item.showId)
+            if (adicionarAoProjeto(projetoId, { id: item.showId, type: "show" }, item.showId)) mudou = true
+            continue
+        }
+
+        // versiculo e item "local" nao sao arquivo para baixar. Sem este desvio
+        // iam para o download, falhavam por falta de url e deixavam o culto
+        // marcado como incompleto para sempre -- nada mais saia dele.
+        if (!ARQUIVOS.includes(item.tipo)) continue
+
+        const arquivo = nomeDoArquivo(item)
+
+        estado.baixando++
+        avisar()
+
+        const caminhoLocal: string | null = await requestMain(Main.ALIANCA_BAIXAR, { url: item.url, pasta, arquivo })
+
+        estado.baixando--
+        avisar()
+
+        // download falho deixa a lista incompleta; sem esta marca o item
+        // seria lido como removido e sairia do projeto na volta seguinte
+        if (!caminhoLocal) {
+            incompletos.add(chave)
+            continue
+        }
+        daqui.push(caminhoLocal)
+
+        const tipoProjeto = item.tipo === "image" ? "image" : item.tipo === "video" ? "video" : "audio"
+        if (adicionarAoProjeto(projetoId, { id: caminhoLocal, type: tipoProjeto, name: item.nome }, caminhoLocal)) {
+            media.update((a) => {
+                if (!a[caminhoLocal]) a[caminhoLocal] = {}
+                return a
+            })
+            mudou = true
+        }
+    }
+
+    return mudou
 }
 
 function nomeDoArquivo(item: any) {

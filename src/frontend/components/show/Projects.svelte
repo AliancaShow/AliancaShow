@@ -26,6 +26,7 @@
     import ProjectContentList from "./ProjectContentList.svelte"
     import ProjectList from "./ProjectList.svelte"
     import ProjectStrip from "./ProjectStrip.svelte"
+    import { AGENDAS } from "../../utils/agendas"
 
     let tree: Tree[] = []
 
@@ -70,8 +71,37 @@
 
         folderSorted = []
         sortFolders()
-        tree = acharPlano(folderSorted)
+        tree = acharPlano(folderSorted, agendaAtiva)
     }
+
+    /**
+     * Abas de agenda: Todos, Aliança, Impulso, Extra. Cada agenda e uma pasta
+     * raiz criada pela sincronizacao com o Remote; a aba so escolhe qual raiz
+     * entra na lista. Em Todos, pastas que nao sao de agenda continuam aparecendo.
+     */
+    const ABAS = [{ id: "todos", nome: "Todos", pasta: "" }, ...AGENDAS.map((a) => ({ id: a.id, nome: a.nome, pasta: a.pasta }))]
+    const CHAVE_ABA = "aliancashow.agendaAtiva"
+
+    let agendaAtiva = lerAba()
+    function lerAba() {
+        try {
+            const salva = localStorage.getItem(CHAVE_ABA)
+            return ABAS.some((a) => a.id === salva) ? salva! : "todos"
+        } catch {
+            return "todos"
+        }
+    }
+    function escolherAba(id: string) {
+        agendaAtiva = id
+        try {
+            localStorage.setItem(CHAVE_ABA, id)
+        } catch {
+            // sem armazenamento: vale so ate fechar
+        }
+    }
+
+    // "Alianca" -> "Aliança" no cabecalho de grupo; pasta que nao e agenda fica como esta
+    const nomeDaRaiz = (pasta: string) => AGENDAS.find((a) => a.pasta === pasta)?.nome || pasta
 
     /**
      * Lista continua: a arvore de pastas vira um nivel so, e a pasta que guarda
@@ -87,7 +117,7 @@
      * nao acrescenta nada quando ha um caminho unico ate os projetos. Sobra o
      * cabecalho que de fato distingue, o mes.
      */
-    function acharPlano(itens: Tree[]): Tree[] {
+    function acharPlano(itens: Tree[], agenda: string): Tree[] {
         const porPai: { [key: string]: Tree[] } = {}
         itens.forEach((a) => {
             if (!porPai[a.parent]) porPai[a.parent] = []
@@ -95,16 +125,22 @@
         })
 
         const saida: Tree[] = []
+        // na aba de uma agenda, so a raiz dela entra; em Todos, todas
+        const raizDaAba = ABAS.find((a) => a.id === agenda)?.pasta || ""
 
-        function percorrer(paiId: string, rotulo: string, profundidade: number) {
+        function percorrer(paiId: string, rotulo: string, profundidade: number, raiz: string) {
             if (profundidade > 20) return // trava contra pasta apontando para si mesma
 
             const filhos = porPai[paiId] || []
             const projetos = filhos.filter((a) => a.type !== "folder")
             const pastas = filhos.filter((a) => a.type === "folder")
 
-            if (projetos.length) {
-                if (rotulo) saida.push({ id: "grupo:" + paiId, type: "grupo", name: rotulo, parent: paiId, index: 0, path: "" } as any)
+            // projeto solto na raiz nao e de agenda nenhuma: so em Todos
+            if (projetos.length && !(raizDaAba && !raiz)) {
+                // Em Todos, Aliança e Impulso tem cada uma o seu "09-setembro":
+                // o nome da agenda entra no cabecalho para nao parecer o mesmo mes
+                const titulo = !raizDaAba && raiz && rotulo && rotulo !== raiz ? `${nomeDaRaiz(raiz)} · ${rotulo}` : rotulo
+                if (titulo) saida.push({ id: "grupo:" + paiId, type: "grupo", name: titulo, parent: paiId, index: 0, path: "" } as any)
                 // path vazio de proposito: o ProjectList so mostra um projeto
                 // quando todas as pastas do caminho dele estao abertas, e aqui
                 // nao ha mais pasta para abrir -- a lista e continua
@@ -112,13 +148,16 @@
             }
 
             pastas.forEach((pasta) => {
+                const raizDela = raiz || pasta.name || ""
+                if (raizDaAba && raizDela !== raizDaAba) return
+
                 const dela = porPai[pasta.id] || []
                 const soPastas = dela.length > 0 && dela.every((a) => a.type === "folder")
-                percorrer(pasta.id, soPastas ? rotulo : pasta.name, profundidade + 1)
+                percorrer(pasta.id, soPastas ? rotulo : pasta.name || "", profundidade + 1, raizDela)
             })
         }
 
-        percorrer("/", "", 0)
+        percorrer("/", "", 0, "")
         return saida
     }
 
@@ -392,6 +431,11 @@
 
 <div class="main" class:focusMode={$focusMode}>
     {#if !$focusMode}
+        <div class="agendas" role="tablist" aria-label="Agendas">
+            {#each ABAS as aba (aba.id)}
+                <button type="button" role="tab" class:ativa={agendaAtiva === aba.id} aria-selected={agendaAtiva === aba.id} on:click={() => escolherAba(aba.id)}>{aba.nome}</button>
+            {/each}
+        </div>
         <ProjectStrip {tree} />
     {/if}
     <span class="tabs">
@@ -414,7 +458,7 @@
                         <!-- AliancaShow: titulo do painel fica fixo. O nome do projeto ja
                              aparece na propria arvore, e trocar o titulo dava a impressao
                              de que o painel tinha mudado de tela. Continua na tooltip. -->
-                        <p style="font-size: 1.08em;margin-right: 20px;"><T id="remote.projects" /></p>
+                        <p style="font-size: 1.08em;margin-right: 20px;">Cultos</p>
 
                         <div class="right context">
                             <MaterialButton style="width: 32px;height: 100%;padding: 0.3em 0.5em;border-bottom-right-radius: 10px;{showProjectDropdown ? '' : 'opacity: 0.8;'}" title="create_show.more_options" icon="more" on:click={() => (showProjectDropdown = !showProjectDropdown)} white={!showProjectDropdown}>
@@ -507,7 +551,7 @@
                 {/if}
 
                 <!-- <Icon id="folder" white right /> -->
-                <p style="font-size: 1.08em;{showProjectsOptions ? 'margin-left: 20px;' : 'margin-right: 20px;'}"><T id="remote.projects" /></p>
+                <p style="font-size: 1.08em;{showProjectsOptions ? 'margin-left: 20px;' : 'margin-right: 20px;'}">Cultos</p>
 
                 {#if !showProjectsOptions}
                     <div class="right">
@@ -635,6 +679,50 @@
 </div>
 
 <style>
+    /* abas de agenda: o cabecalho do painel e absoluto, 30px, e flutua por
+       cima -- as abas comecam abaixo dele, e a faixa de datas logo depois */
+    .agendas {
+        display: flex;
+        flex: none;
+        gap: 4px;
+        margin-top: 30px;
+        padding: 8px 10px 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .agendas::-webkit-scrollbar {
+        display: none;
+    }
+    .agendas button {
+        flex: 1;
+        min-width: 0;
+        padding: 6px 4px;
+        border: none;
+        border-radius: 8px;
+        background: rgb(255 255 255 / 0.06);
+        color: #c2c3c9;
+        font-family: inherit;
+        font-size: 0.85em;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        transition: background-color 120ms ease;
+    }
+    .agendas button:hover {
+        background: rgb(255 255 255 / 0.1);
+    }
+    .agendas button:focus-visible {
+        outline: 2px solid var(--focus-ring, var(--secondary));
+        outline-offset: 2px;
+    }
+    .agendas button.ativa {
+        background: rgb(242 26 39 / 0.16);
+        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+        color: #ffffff;
+    }
+
     .main {
         /* max-height: 50%; */
         /* width: 100%; */

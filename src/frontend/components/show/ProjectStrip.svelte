@@ -26,7 +26,7 @@
     $: cultos = montarCultos(tree)
 
     function montarCultos(itens: Tree[]) {
-        const saida: { id: string; nome: string; grupo: string }[] = []
+        const saida: { id: string; nome: string; dia: string; grupo: string }[] = []
         let grupoAtual = ""
 
         itens.forEach((item) => {
@@ -35,16 +35,25 @@
                 return
             }
             if (item.type === "folder") return
-            saida.push({ id: item.id, nome: item.name || "—", grupo: grupoAtual })
+            saida.push({ id: item.id, nome: item.name || "—", dia: diaDe(item.name || "—"), grupo: grupoAtual })
         })
 
         return saida
     }
 
     // "09-setembro" -> "SET". Nomes livres viram as três primeiras letras.
+    // Na aba Todos o grupo vem como "Aliança · 09-setembro" -> "A·SET".
     function abreviar(nome: string) {
-        const semNumero = nome.replace(/^\d+\s*[-_.]?\s*/, "")
-        return semNumero.slice(0, 3).toUpperCase()
+        const [agenda, mes] = nome.includes(" · ") ? nome.split(" · ") : ["", nome]
+        const semNumero = mes.replace(/^\d+\s*[-_.]?\s*/, "")
+        const curto = semNumero.slice(0, 3).toUpperCase()
+        return agenda ? `${agenda.charAt(0).toUpperCase()}·${curto}` : curto
+    }
+
+    // evento Extra: "07 - Rede de Mulheres" cabe na faixa so como "07"; o nome
+    // inteiro fica na dica
+    function diaDe(nome: string) {
+        return nome.match(/^(\d{1,2}) - /)?.[1] || nome
     }
 
     function contarItens(id: string) {
@@ -83,7 +92,7 @@
             {@const aberto = $activeProject === culto.id && !$projectView}
             <button class="culto" class:aberto class:cheio={itens > 0} type="button" role="tab" aria-selected={aberto} data-id={culto.id} data-title="{culto.nome}{itens ? ` — ${itens} itens` : ''}" on:click={() => abrir(culto.id)}>
                 {#if culto.grupo}<span class="grupo">{culto.grupo}</span>{/if}
-                <span class="dia">{culto.nome}</span>
+                <span class="dia">{culto.dia}</span>
                 <span class="pip"></span>
             </button>
         {/each}
@@ -95,10 +104,9 @@
         display: flex;
         flex: none;
         gap: 5px;
-        /* o cabecalho do painel e absoluto, 30px de altura, e flutua por cima:
-           a faixa comeca abaixo dele para nao ficar encoberta */
-        margin-top: 30px;
-        padding: 10px 10px 12px;
+        /* fica logo abaixo das abas de agenda, que ja descontam o cabecalho
+           absoluto do painel (Projects.svelte) */
+        padding: 8px 10px 12px;
         overflow-x: auto;
         scrollbar-width: none;
     }
