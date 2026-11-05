@@ -238,10 +238,45 @@ export function criarPastasOnline(pastas: string[]) {
     for (const relativo of pastas) {
         const partes = relativo.split("/").filter(Boolean)
         if (!partes.length) continue
-        makeDir(path.join(raiz, ...partes))
+        const alvo = path.resolve(raiz, ...partes)
+        if (!dentroDaPastaOnline(alvo)) {
+            console.error("Recusado: pasta fora da pasta Online ->", relativo)
+            continue
+        }
+        makeDir(alvo)
     }
 
     return raiz
+}
+
+/**
+ * O caminho fica dentro da pasta Online?
+ *
+ * Nome de pasta e de arquivo chegam de fora (o nome do evento Extra, o nome
+ * do item enviado pelo celular). Um ".." ou um "\" nesses nomes faria o
+ * path.join sair da pasta Online e gravar em qualquer lugar do computador --
+ * inclusive na pasta de inicializacao do Windows. Por isso todo destino passa
+ * por aqui antes de tocar o disco, venha de onde vier.
+ */
+function dentroDaPastaOnline(alvo: string) {
+    const raiz = path.resolve(getDataFolderPath("onlineMedia"))
+    const resolvido = path.resolve(alvo)
+    return resolvido === raiz || resolvido.startsWith(raiz + path.sep)
+}
+
+/**
+ * So baixa do Firebase Storage. A url vem do banco, e quem escreve no banco e
+ * qualquer conta da equipe: sem esta trava, o computador do culto baixaria o
+ * que alguem apontasse.
+ */
+function urlDoStorage(url: string) {
+    try {
+        const u = new URL(url)
+        if (u.protocol !== "https:") return false
+        return u.hostname === "firebasestorage.googleapis.com" || u.hostname.endsWith(".firebasestorage.app")
+    } catch {
+        return false
+    }
 }
 
 /**
@@ -272,11 +307,21 @@ export function apagarDaPastaOnline(caminho: string) {
 }
 
 export async function baixarParaPasta({ url, pasta, arquivo }: { url: string; pasta: string; arquivo: string }) {
-    if (!url?.startsWith("http")) return null
+    if (!urlDoStorage(url)) {
+        console.error("Recusado: download fora do Firebase Storage ->", url)
+        return null
+    }
 
     const raiz = getDataFolderPath("onlineMedia")
-    const destinoPasta = path.join(raiz, ...pasta.split("/").filter(Boolean))
-    const destino = path.join(destinoPasta, arquivo)
+    const destinoPasta = path.resolve(raiz, ...String(pasta || "").split("/").filter(Boolean))
+    const destino = path.resolve(destinoPasta, String(arquivo || ""))
+
+    // o arquivo tem que cair DIRETO na pasta do culto (nome sem "\" nem ".."),
+    // e a pasta do culto tem que estar dentro da pasta Online
+    if (!dentroDaPastaOnline(destinoPasta) || path.dirname(destino) !== destinoPasta || !path.basename(destino)) {
+        console.error("Recusado: destino fora da pasta Online ->", pasta, arquivo)
+        return null
+    }
 
     if (doesPathExist(destino)) return destino
     if (downloading.has(destino)) return null
