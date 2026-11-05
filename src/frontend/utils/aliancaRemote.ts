@@ -427,14 +427,26 @@ async function sincronizar(cultos: { [id: string]: any }) {
     }
 }
 
-function nomeDoArquivo(item: any) {
-    const extensao = (String(item.arquivo || "").match(/\.[^.]+$/) || [""])[0].toLowerCase()
-    const limpo = String(item.nome || "")
+// Nome de arquivo vindo do celular nunca vai cru para o disco: so letras,
+// numeros, espaco, ponto, hifen e sublinhado, sem ponto no comeco (".." e
+// arquivo oculto). A extensao so vale se for curta e alfanumerica -- antes ela
+// podia carregar "\" e montar caminho. O processo principal confere de novo
+// (downloadMedia.ts), mas o nome ja sai limpo daqui.
+function limparNome(texto: string) {
+    return String(texto || "")
         .normalize("NFD")
         .replace(/[̀-ͯ]/g, "")
         .replace(/[^A-Za-z0-9 ._-]/g, "")
+        .replace(/^[.\s]+/, "")
         .trim()
-    return limpo ? limpo + extensao : String(item.arquivo || "arquivo")
+}
+
+function nomeDoArquivo(item: any) {
+    const arquivo = String(item.arquivo || "")
+    const extensao = (arquivo.match(/\.[A-Za-z0-9]{1,8}$/) || [""])[0].toLowerCase()
+    const semExtensao = extensao ? arquivo.slice(0, -extensao.length) : arquivo
+    const base = limparNome(item.nome) || limparNome(semExtensao) || "arquivo"
+    return base + extensao
 }
 
 /** devolve true se acrescentou; nunca duplica nem mexe no que o operador reordenou */
