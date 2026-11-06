@@ -6,17 +6,29 @@
 // acrescenta a chave e faz o POST. Desenho: docs/INTEGRACAO-SIRVO.md §4-§5.
 
 import { safeStorage } from "electron"
+import { isProd } from ".."
 import { _store } from "../data/store"
 
-// Endereço e chave PÚBLICA do projeto (a mesma que vai no app web do Sirvo).
-// Quem dá acesso é a chave do dispositivo, não esta.
-const SIRVO_URL = "https://acwpsnfvliidyxtjevfv.supabase.co/rest/v1/rpc/"
-const SIRVO_APIKEY = "sb_publishable_3s0fAbx7UN1nZl6nekdABQ_BlF6KnHo"
+// Endereço e chave PÚBLICA de cada projeto (as mesmas que vão no app web do
+// Sirvo). Quem dá acesso é a chave do dispositivo, não esta.
+// O Show instalado fala com a PRODUÇÃO; o Show rodando em desenvolvimento
+// (npm start) fala com o STAGING do Sirvo — testar nunca mexe no culto real.
+const AMBIENTES = {
+    producao: { url: "https://acwpsnfvliidyxtjevfv.supabase.co/rest/v1/rpc/", apikey: "sb_publishable_3s0fAbx7UN1nZl6nekdABQ_BlF6KnHo" },
+    staging: { url: "https://lnnlkavwgaosnikeacpd.supabase.co/rest/v1/rpc/", apikey: "sb_publishable_mH4z5OVTdZmVoXkJC30ZAQ_Md7kM0q0" }
+}
+// Calculado na HORA, nunca no carregamento: este módulo é importado (via
+// responsesMain) enquanto o index ainda carrega, e um `isProd` lido cedo
+// demais viria undefined — o Show de produção cairia no staging.
+export function sirvoAmbiente(): keyof typeof AMBIENTES {
+    return isProd === false ? "staging" : "producao"
+}
 
 // Só as funções de leitura da F0a. Qualquer outro nome é recusado aqui mesmo.
 const FUNCOES = new Set(["show_cultos", "show_rev", "show_roteiro"])
 const TEMPO_LIMITE_MS = 8_000
-const CHAVE_NO_COFRE = "sirvo"
+// cofre separado por ambiente: a chave do staging nunca é usada contra a produção
+const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "sirvo")
 const FORMATO_DA_CHAVE = /^sirvo_show_[A-Za-z0-9_-]{20,100}$/
 
 export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "rede" | "erro"; mensagem: string }
@@ -25,7 +37,7 @@ let chaveEmMemoria: string | null = null
 
 function lerDoCofre(): string | null {
     if (chaveEmMemoria) return chaveEmMemoria
-    const salvo = _store.ACCESS?.get(CHAVE_NO_COFRE) as { cifrada?: string } | undefined
+    const salvo = _store.ACCESS?.get(chaveNoCofre()) as { cifrada?: string } | undefined
     if (!salvo?.cifrada) return null
     try {
         chaveEmMemoria = safeStorage.decryptString(Buffer.from(salvo.cifrada, "base64"))
@@ -45,7 +57,7 @@ export function sirvoSalvarChave(chave: string): { ok: boolean; erro?: string } 
     if (!FORMATO_DA_CHAVE.test(limpa)) return { ok: false, erro: "Isso não parece uma chave do Sirvo (começa com sirvo_show_)." }
     if (!safeStorage.isEncryptionAvailable()) return { ok: false, erro: "Este computador não oferece cofre seguro para guardar a chave." }
     const cifrada = safeStorage.encryptString(limpa).toString("base64")
-    _store.ACCESS?.set(CHAVE_NO_COFRE, { cifrada })
+    _store.ACCESS?.set(chaveNoCofre(), { cifrada })
     chaveEmMemoria = limpa
     return { ok: true }
 }
@@ -53,7 +65,7 @@ export function sirvoSalvarChave(chave: string): { ok: boolean; erro?: string } 
 // devolve algo de propósito: o IPC só responde quando há resposta, e sem ela
 // o renderer esperaria o tempo-limite de 15 s para saber que desconectou
 export function sirvoApagarChave(): { ok: true } {
-    _store.ACCESS?.delete(CHAVE_NO_COFRE)
+    _store.ACCESS?.delete(chaveNoCofre())
     chaveEmMemoria = null
     return { ok: true }
 }
@@ -66,9 +78,10 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
     const controle = new AbortController()
     const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE_MS)
     try {
-        const resposta = await fetch(SIRVO_URL + funcao, {
+        const ambiente = AMBIENTES[sirvoAmbiente()]
+        const resposta = await fetch(ambiente.url + funcao, {
             method: "POST",
-            headers: { apikey: SIRVO_APIKEY, "Content-Type": "application/json" },
+            headers: { apikey: ambiente.apikey, "Content-Type": "application/json" },
             body: JSON.stringify({ ...args, p_chave: chave }),
             signal: controle.signal
         })

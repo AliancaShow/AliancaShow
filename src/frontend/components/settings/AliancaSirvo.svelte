@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { onMount } from "svelte"
+    import { Main } from "../../../types/IPC/Main"
+    import { requestMain } from "../../IPC/main"
     import { desconectarSirvo, escolherCultoSirvo, salvarChaveSirvo, sirvo } from "../../utils/aliancaSirvo"
     import Icon from "../helpers/Icon.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
@@ -9,6 +12,8 @@
     // que montam tooltip com HTML (o MaterialDropdown faz isso com o rótulo).
 
     let chave = ""
+    let ambiente: "producao" | "staging" = "producao"
+    onMount(async () => (ambiente = (await requestMain(Main.SIRVO_AMBIENTE)) || "producao"))
     let salvando = false
     let erro = ""
 
@@ -36,7 +41,7 @@
     <div class="topo">
         <span class="ponto" class:ligado={$sirvo.status === "conectado"} class:caido={$sirvo.status === "caido"}></span>
         <div class="texto">
-            <span class="titulo">Sirvo · roteiro do culto</span>
+            <span class="titulo">Sirvo · roteiro do culto{#if ambiente === "staging"} <span class="staging">STAGING</span>{/if}</span>
             <span class="detalhe">{rotuloStatus}</span>
         </div>
     </div>
@@ -124,6 +129,15 @@
     }
     .titulo {
         font-weight: 600;
+    }
+    .staging {
+        margin-inline-start: 6px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background-color: var(--secondary);
+        color: var(--secondary-text);
+        font-size: 0.7em;
+        letter-spacing: 0.05em;
     }
     .detalhe {
         font-size: 0.8em;

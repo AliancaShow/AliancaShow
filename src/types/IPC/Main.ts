@@ -164,6 +164,7 @@ export enum Main {
     PCO_LOAD_PLAN = "PCO_LOAD_PLAN",
     // Sirvo (AliançaShow)
     SIRVO_TEM_CHAVE = "SIRVO_TEM_CHAVE",
+    SIRVO_AMBIENTE = "SIRVO_AMBIENTE",
     SIRVO_SALVAR_CHAVE = "SIRVO_SALVAR_CHAVE",
     SIRVO_APAGAR_CHAVE = "SIRVO_APAGAR_CHAVE",
     SIRVO_CHAMAR = "SIRVO_CHAMAR",
@@ -383,6 +384,7 @@ export interface MainReturnPayloads {
     [Main.PCO_LIVE_GET]: Promise<{ liveId: string | null; liveChannel: string | null; orgId: string | null; liveStartAt: string | null; liveEndAt: string | null; length: number | null; isPreService: boolean; serviceStartAt: string | null; serviceEndAt: string | null } | null>
     [Main.PCO_PUSHER_AUTH]: Promise<{ auth: string; channel_data?: string } | null>
     [Main.SIRVO_TEM_CHAVE]: boolean
+    [Main.SIRVO_AMBIENTE]: "producao" | "staging"
     [Main.SIRVO_APAGAR_CHAVE]: { ok: true }
     [Main.SIRVO_SALVAR_CHAVE]: { ok: boolean; erro?: string }
     [Main.SIRVO_CHAMAR]: Promise<RespostaSirvo>
