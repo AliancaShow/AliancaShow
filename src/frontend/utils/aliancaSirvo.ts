@@ -53,7 +53,8 @@ type Roteiro = {
     blocos: Bloco[]
     mensagem_palco: { id: string; texto: string; ate: string } | null
 }
-type Resposta = { ok: true; dados: any } | { ok: false; codigo: string; mensagem: string }
+// os dois lados declaram todos os campos: o tsconfig do Show não é strict e não estreita a união por `ok`
+type Resposta = { ok: true; dados: any; codigo?: undefined } | { ok: false; codigo: string; mensagem: string; dados?: undefined }
 
 export type EstadoSirvo = {
     status: "sem_chave" | "conectando" | "conectado" | "caido" | "chave_invalida"
@@ -74,6 +75,8 @@ const VARIAVEIS = ["sirvo_bloco", "sirvo_proximo", "sirvo_mensagem", "sirvo_fim"
 // ---------------------------------------------------------------- estado
 
 export const sirvo = writable<EstadoSirvo>({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0 })
+// nome do bloco no ar, para o controle do timer ao lado da prévia ("" fora do culto)
+export const sirvoBlocoNoAr = writable("")
 
 let roteiro: Roteiro | null = null
 let revVisto = -1
@@ -313,6 +316,8 @@ function publicar() {
     }
 
     escreverVariaveis({ sirvo_bloco: c.bloco, sirvo_proximo: c.proximo, sirvo_mensagem: c.mensagem, sirvo_fim: c.fim })
+    const bloco = c.noAr ? c.bloco : ""
+    if (get(sirvoBlocoNoAr) !== bloco) sirvoBlocoNoAr.set(bloco)
 }
 
 /** Tira o Sirvo do palco (timer fora, variáveis vazias). */

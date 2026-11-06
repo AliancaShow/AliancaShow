@@ -16,6 +16,7 @@
     import SelectElem from "../../system/SelectElem.svelte"
     import { getCurrentTimerValue, getTimerDynamicValue, playPauseGlobal, resetTimer } from "./timers"
     import { openDrawer } from "../../edit/scripts/edit"
+    import { sirvoBlocoNoAr } from "../../../utils/aliancaSirvo"
 
     export let searchValue
     export let onlyPlaying: boolean = false
@@ -123,11 +124,17 @@
 
             <SelectElem id="global_timer" data={timer} draggable={!onlyPlaying} selectable={!onlyPlaying}>
                 <div class:outline={!onlyPlaying && isActive} class:project={list.includes(timer.id)} class={onlyPlaying ? "" : `context #global_timer${isReadOnly ? "_readonly" : ""}`} style="display: flex;justify-content: space-between;padding: 3px;">
-                    <div style="display: flex;{onlyPlaying ? '' : 'width: 50%;'}">
+                    <div style="display: flex;min-width: 0;{onlyPlaying ? '' : 'width: 50%;'}">
                         <Button disabled={isReadOnly || timer.type !== "counter"} on:click={() => playPauseGlobal(timer.id, timer)} title={translateText(isPlaying ? "media.pause" : "media.play")}>
                             <Icon id={isPlaying ? "pause" : "play"} white={!isPlaying} />
                         </Button>
-                        {#if !onlyPlaying}
+                        {#if timer.type === "sirvo_live" && $sirvoBlocoNoAr}
+                            <!-- o timer do Sirvo conta o BLOCO no ar: o nome que importa é o do bloco (texto escapado pelo Svelte) -->
+                            <p class="sirvoBloco" style="align-self: center;padding: 0 5px;{onlyPlaying ? '' : 'min-width: 100px;'}" data-title={$sirvoBlocoNoAr}>
+                                {$sirvoBlocoNoAr}
+                                {#if !onlyPlaying}<span style="opacity: 0.5;font-size: 0.85em;margin-inline-start: 6px;">{timer.name}</span>{/if}
+                            </p>
+                        {:else if !onlyPlaying}
                             <p style="align-self: center;padding: 0 5px;{onlyPlaying ? '' : 'min-width: 100px;'}" data-title={timer.name}>
                                 {#if timer.name}
                                     {timer.name}
@@ -191,6 +198,12 @@
 {/if}
 
 <style>
+    .sirvoBloco {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .timers {
         flex: 1;
         overflow: auto;
