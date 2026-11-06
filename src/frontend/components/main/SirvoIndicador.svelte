@@ -1,0 +1,140 @@
+<script lang="ts">
+    // Indicador do Sirvo na barra do topo: QUAL culto o Show está seguindo e se
+    // o roteiro está vivo. Visível em todas as telas.
+    //
+    // - Diz a data e a hora, não só o nome: "Culto de Domingo" vale para todo
+    //   domingo, e em 09/ago a equipe rodou o culto no roteiro do domingo seguinte.
+    // - Só é clicável com problema (laranja/vermelho): um clique errado no verde,
+    //   no meio do culto, não pode tirar o operador da grade de slides.
+    // - "Sem conexão" mede a idade da última resposta do ROTEIRO (show_rev /
+    //   show_roteiro), com folga para um soluço do Wi-Fi não piscar laranja.
+    // Texto do Sirvo só por interpolação {…} (escapada pelo Svelte), nunca {@html}.
+    import { onDestroy } from "svelte"
+    import { activePage, settingsTab } from "../../stores"
+    import { intervaloRev, sirvo } from "../../utils/aliancaSirvo"
+
+    let agoraMs = Date.now()
+    const relogio = setInterval(() => (agoraMs = Date.now()), 2_000)
+    onDestroy(() => clearInterval(relogio))
+
+    const fmtDia = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "short", day: "2-digit", month: "2-digit" })
+    const fmtHora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    function quando(iso: string): string {
+        const d = new Date(iso)
+        if (isNaN(d.getTime())) return ""
+        const [h, m] = fmtHora.format(d).split(":")
+        return `${fmtDia.format(d).replace(/\.,?/g, "").replace(",", "")} ${h}h${m === "00" ? "" : m}`
+    }
+
+    function minutos(ms: number): string {
+        const min = Math.floor(ms / 60_000)
+        return min < 1 ? "há instantes" : `há ${min} min`
+    }
+
+    type Visual = { tom: "verde" | "cinza" | "laranja" | "vermelho"; texto: string; dica: string; clicavel: boolean }
+
+    $: culto = $sirvo.cultos.find((c) => c.event_id === $sirvo.cultoId) || null
+    $: visual = calcular($sirvo, culto, agoraMs)
+
+    function calcular(e: typeof $sirvo, c: typeof culto, t: number): Visual | null {
+        if (e.status === "sem_chave") return null
+        if (e.status === "chave_invalida") return { tom: "vermelho", texto: "Chave do Sirvo recusada", dica: "A chave guardada não vale mais. Clique para abrir Conexão.", clicavel: true }
+        if (e.status === "conectando") return { tom: "cinza", texto: "Sirvo · conectando…", dica: "", clicavel: false }
+
+        // com culto: vale a idade da última resposta do roteiro; sem culto, o status
+        const limite = Math.max(10_000, 2 * intervaloRev())
+        const base = c ? e.ultimoRoteiroOk : e.ultimaResposta
+        const caido = c ? (base ? t - base > limite : e.status === "caido") : e.status === "caido"
+        if (caido) {
+            const texto = base ? `Sem Sirvo ${minutos(t - base)}` : "Sem conexão com o Sirvo"
+            const dica = e.roteiroNoAr ? "O timer segue pelo último estado recebido. Clique para abrir Conexão." : "Clique para abrir Conexão."
+            return { tom: "laranja", texto, dica, clicavel: true }
+        }
+
+        if (!c) return { tom: "cinza", texto: "Sirvo · nenhum culto por perto", dica: "", clicavel: false }
+        const estado = e.roteiroNoAr ? " · no ar" : e.roteiroEncerrado ? " · encerrado" : ""
+        const dica = `Seguindo ${c.titulo} · ${quando(c.comeca_em)}${estado}${e.escolhaManual ? " · escolhido à mão" : " · escolhido automaticamente"}`
+        return { tom: "verde", texto: `${quando(c.comeca_em)}${estado}`, dica, clicavel: false }
+    }
+
+    function abrirConexao() {
+        if (!visual?.clicavel) return
+        settingsTab.set("connection")
+        activePage.set("settings")
+    }
+</script>
+
+{#if visual}
+    {#if visual.clicavel}
+        <button class="sirvo {visual.tom}" data-title={visual.dica} on:click={abrirConexao}>
+            <span class="ponto" />
+            <span class="texto">{visual.texto}</span>
+        </button>
+    {:else}
+        <div class="sirvo {visual.tom}" data-title={visual.dica} role="status">
+            <span class="ponto" />
+            <span class="rotulo">Sirvo</span>
+            <span class="texto">{visual.texto}</span>
+        </div>
+    {/if}
+{/if}
+
+<style>
+    .sirvo {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        align-self: center;
+        padding: 4px 9px 4px 8px;
+        border: 0;
+        border-radius: 20px;
+        background: rgb(255 255 255 / 0.05);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    button.sirvo {
+        cursor: pointer;
+    }
+    button.sirvo:hover {
+        background: rgb(255 255 255 / 0.1);
+    }
+
+    .ponto {
+        flex: none;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--text);
+        opacity: 0.4;
+    }
+    .verde .ponto {
+        background: var(--connected);
+        opacity: 1;
+    }
+    .laranja .ponto {
+        background: #ff8000;
+        opacity: 1;
+    }
+    .vermelho .ponto {
+        background: var(--disconnected);
+        opacity: 1;
+    }
+    .laranja {
+        color: #ffb066;
+    }
+    .vermelho {
+        color: #ff8f97;
+    }
+
+    .rotulo {
+        opacity: 0.5;
+    }
+    .texto {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

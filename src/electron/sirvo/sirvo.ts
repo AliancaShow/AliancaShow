@@ -89,7 +89,10 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         if (resposta.ok) return { ok: true, dados: corpo }
 
         const codigo = corpo?.code
-        if (codigo === "42501") return { ok: false, codigo: "chave_invalida", mensagem: "Chave do Sirvo inválida ou revogada." }
+        // 42501 também é "permission denied" do Postgres (um GRANT faltando numa
+        // migration). Só é chave recusada com a mensagem do próprio Sirvo; o
+        // resto vira erro comum: o Show segue tentando em vez de se desligar.
+        if (codigo === "42501" && String(corpo?.message || "").startsWith("Chave do Sirvo")) return { ok: false, codigo: "chave_invalida", mensagem: "Chave do Sirvo inválida ou revogada." }
         if (codigo === "P0002") return { ok: false, codigo: "culto_inexistente", mensagem: "Culto não encontrado no Sirvo." }
         return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.` }
     } catch {

@@ -27,6 +27,7 @@ import type { Variable } from "../../types/Main"
 import { requestMain } from "../IPC/main"
 import { activeTimers, timers, variables } from "../stores"
 import { send } from "./request"
+import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./aliancaSirvoAvisos"
 
 // ---------------------------------------------------------------- tipos
 
@@ -52,6 +53,7 @@ type Roteiro = {
     fim_previsto: string
     blocos: Bloco[]
     mensagem_palco: { id: string; texto: string; ate: string } | null
+    mudancas?: Mudanca[]
 }
 // os dois lados declaram todos os campos: o tsconfig do Show não é strict e não estreita a união por `ok`
 type Resposta = { ok: true; dados: any; codigo?: undefined } | { ok: false; codigo: string; mensagem: string; dados?: undefined }
@@ -63,6 +65,11 @@ export type EstadoSirvo = {
     cultoTitulo: string
     escolhaManual: string | null
     ultimaResposta: number
+    /** última resposta boa de show_rev/show_roteiro (não da lista de cultos): é a idade DELA que diz se o roteiro está vivo */
+    ultimoRoteiroOk: number
+    /** o culto seguido já começou e não terminou, segundo o roteiro */
+    roteiroNoAr: boolean
+    roteiroEncerrado: boolean
 }
 
 // ---------------------------------------------------------------- nomes fixos
@@ -74,7 +81,7 @@ const VARIAVEIS = ["sirvo_bloco", "sirvo_proximo", "sirvo_mensagem", "sirvo_fim"
 
 // ---------------------------------------------------------------- estado
 
-export const sirvo = writable<EstadoSirvo>({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0 })
+export const sirvo = writable<EstadoSirvo>({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0, ultimoRoteiroOk: 0, roteiroNoAr: false, roteiroEncerrado: false })
 // nome do bloco no ar, para o controle do timer ao lado da prévia ("" fora do culto)
 export const sirvoBlocoNoAr = writable("")
 
@@ -122,7 +129,7 @@ async function chamar(funcao: "show_cultos" | "show_rev" | "show_roteiro", args:
             const novo = servidor - (antes + depois) / 2
             desvioMs = desvioMs === null || Math.abs(novo - desvioMs) > 5_000 ? novo : desvioMs * 0.8 + novo * 0.2
         }
-        atualizar({ status: "conectado", ultimaResposta: depois })
+        atualizar(funcao === "show_cultos" ? { status: "conectado", ultimaResposta: depois } : { status: "conectado", ultimaResposta: depois, ultimoRoteiroOk: depois })
     } else if (r.codigo === "chave_invalida" || r.codigo === "sem_chave") {
         // Chave revogada no meio do culto: o palco não pode ficar com dado velho.
         parar()
@@ -178,7 +185,13 @@ async function buscarCultos() {
         revVisto = -1
         msgVista = null
         publicar()
-        if (novoId) await buscarRoteiro(novoId)
+        limparAvisos()
+        atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
+        if (novoId) {
+            // o culto novo decide pelo que ficou guardado (com prazo), não por uma memória de dias atrás
+            vistoEmMemoria.delete(novoId)
+            await buscarRoteiro(novoId)
+        }
     }
 }
 
@@ -188,13 +201,25 @@ async function buscarRoteiro(eventId: string) {
     // trocaram de culto enquanto esta resposta viajava: ela não vale mais
     if (get(sirvo).cultoId !== eventId) return
     if (r.ok) {
-        roteiro = r.dados as Roteiro
+        const novo = r.dados as Roteiro
+        // duas buscas do mesmo culto podem cruzar (troca de culto + ciclo do rev):
+        // a mais velha chegando depois voltaria o palco para trás. O rev só sobe.
+        if (roteiro && roteiro.event_id === novo.event_id && Number(novo.rev) < Number(roteiro.rev)) return
+        roteiro = novo
         revVisto = roteiro.rev
         msgVista = roteiro.mensagem_palco?.id || null
         publicar()
+        atualizar({ roteiroNoAr: !!roteiro.iniciado_em && !roteiro.encerrado_em, roteiroEncerrado: !!roteiro.encerrado_em })
+        // depois do palco, e isolado: um erro no aviso não pode parar o roteiro
+        try {
+            processarAvisos(roteiro)
+        } catch (erro) {
+            console.error("Sirvo: falha ao montar o aviso de mudança", erro)
+        }
     } else if (r.codigo === "culto_inexistente") {
         roteiro = null
         publicar()
+        atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
         await cicloCultos()
     }
 }
@@ -203,7 +228,7 @@ async function buscarRoteiro(eventId: string) {
  * 2 s com o culto no ar e na janela em volta do horário (1 h antes até 2 h
  * depois — culto que começa atrasado ainda não está "no ar"); 30 s fora (§5.3).
  */
-function intervaloRev(): number {
+export function intervaloRev(): number {
     const e = get(sirvo)
     const culto = e.cultos.find((c) => c.event_id === e.cultoId)
     if (!culto) return 30_000
@@ -214,20 +239,26 @@ function intervaloRev(): number {
 
 async function cicloRev(g: number) {
     if (g !== geracao) return
-    const e = get(sirvo)
-    if (e.cultoId) {
-        const caidoAntes = e.status === "caido"
-        const r = await chamar("show_rev", { p_event: e.cultoId })
-        if (g !== geracao) return
-        if (r?.ok) {
-            const msgId = r.dados?.msg_id || null
-            // na volta da conexão, busca o roteiro inteiro de qualquer jeito (§5.3)
-            if (caidoAntes || r.dados?.rev !== revVisto || msgId !== msgVista) await buscarRoteiro(e.cultoId)
-        } else if (r?.codigo === "culto_inexistente") {
-            await cicloCultos()
+    try {
+        const e = get(sirvo)
+        if (e.cultoId) {
+            const caidoAntes = e.status === "caido"
+            const r = await chamar("show_rev", { p_event: e.cultoId })
+            if (g !== geracao) return
+            if (r?.ok) {
+                const msgId = r.dados?.msg_id || null
+                // na volta da conexão, busca o roteiro inteiro de qualquer jeito (§5.3)
+                if (caidoAntes || r.dados?.rev !== revVisto || msgId !== msgVista) await buscarRoteiro(e.cultoId)
+            } else if (r?.codigo === "culto_inexistente") {
+                await cicloCultos()
+            }
         }
+    } catch (erro) {
+        console.error("Sirvo: falha no ciclo do roteiro", erro)
+    } finally {
+        // SEMPRE reagenda: sem isto, um erro qualquer congelava o roteiro até o fim do culto
+        if (g === geracao) timerRev = setTimeout(() => cicloRev(g), intervaloRev())
     }
-    if (g === geracao) timerRev = setTimeout(() => cicloRev(g), intervaloRev())
 }
 
 // ---------------------------------------------------------------- relógio e publicação
@@ -326,6 +357,100 @@ function zerar() {
     revVisto = -1
     msgVista = null
     publicar()
+    limparAvisos()
+    atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
+}
+
+// ---------------------------------------------------------------- aviso "o roteiro mudou"
+//
+// O que já existia quando o Show viu o culto pela primeira vez conta como
+// visto: o aviso é sobre o que muda daqui pra frente. A rev vista é por culto,
+// só SOBE, e fica guardada com prazo: reabrir o Show minutos depois (no meio do
+// culto) mostra o que mudou enquanto ele estava fechado; reabrir dias depois
+// não acorda com o ensaio de sábado.
+
+export type AvisosSirvo = { linhas: LinhaDeAviso[]; anteriores: boolean; desde: number }
+export const sirvoAvisos = writable<AvisosSirvo>({ linhas: [], anteriores: false, desde: 0 })
+
+const CHAVE_VISTAS = "aliancashow:sirvo-mudancas-vistas"
+const PRAZO_VISTA_MS = 6 * 3_600_000
+const DESCARTE_VISTA_MS = 30 * 86_400_000
+const LISTA_CHEIA = 20 // o Sirvo manda as últimas 20
+
+const vistoEmMemoria = new Map<string, number>()
+let pendentes: Mudanca[] = []
+let anterioresPendentes = false
+
+function lerVistas(): { [ev: string]: { rev: number; em: number } } {
+    try {
+        const v = JSON.parse(localStorage.getItem(CHAVE_VISTAS) || "{}")
+        return v && typeof v === "object" ? v : {}
+    } catch {
+        return {}
+    }
+}
+
+function vistoGuardado(ev: string): number | null {
+    const v = lerVistas()[ev]
+    if (!v || !Number.isFinite(v.rev) || Date.now() - v.em > PRAZO_VISTA_MS) return null
+    return v.rev
+}
+
+function guardarVisto(ev: string, rev: number) {
+    try {
+        const todas = lerVistas()
+        const agoraMs = Date.now()
+        for (const k of Object.keys(todas)) if (agoraMs - (todas[k]?.em || 0) > DESCARTE_VISTA_MS) delete todas[k]
+        todas[ev] = { rev, em: agoraMs }
+        localStorage.setItem(CHAVE_VISTAS, JSON.stringify(todas))
+    } catch {
+        // sem localStorage o aviso só não sobrevive a reabrir o Show
+    }
+}
+
+function limparAvisos() {
+    pendentes = []
+    anterioresPendentes = false
+    const a = get(sirvoAvisos)
+    if (a.linhas.length || a.anteriores) sirvoAvisos.set({ linhas: [], anteriores: false, desde: 0 })
+}
+
+/** "Ok, vi". */
+export function dispensarAvisosSirvo() {
+    limparAvisos()
+}
+
+function processarAvisos(r: Roteiro) {
+    const ev = r.event_id
+    const lista = (Array.isArray(r.mudancas) ? r.mudancas : []).filter((m) => Number.isFinite(Number(m?.rev)))
+    const topo = lista.reduce((mx, m) => Math.max(mx, Number(m.rev)), 0)
+
+    let visto = vistoEmMemoria.get(ev)
+    if (visto === undefined) {
+        const guardado = vistoGuardado(ev)
+        // nunca viu (ou faz tempo): tudo que existe conta como visto.
+        // Guardado acima do topo só com dado corrompido: recomeça do topo.
+        visto = guardado === null || guardado > topo ? topo : guardado
+    }
+    const desde = visto
+    // a rev vista só sobe
+    const novoVisto = Math.max(desde, topo)
+    vistoEmMemoria.set(ev, novoVisto)
+    guardarVisto(ev, novoVisto)
+    if (topo <= desde) return
+
+    const novas = lista
+        .filter((m) => Number(m.rev) > desde)
+        .sort((a, b) => Number(a.rev) - Number(b.rev))
+        .filter((m) => mereceAviso(m, r.blocos, r.iniciado_em, r.encerrado_em))
+    // lista cheia e a rev vista ficou antes do começo dela: teve mudança que não chegou até aqui
+    const menor = lista.reduce((mn, m) => Math.min(mn, Number(m.rev)), Infinity)
+    const anteriores = lista.length >= LISTA_CHEIA && desde < menor - 1
+    if (!novas.length && !anteriores) return
+
+    pendentes = [...pendentes, ...novas]
+    anterioresPendentes = anterioresPendentes || anteriores
+    sirvoAvisos.set({ linhas: juntarAvisos(pendentes, r.blocos), anteriores: anterioresPendentes, desde: Date.now() })
 }
 
 // ---------------------------------------------------------------- liga / desliga
@@ -366,7 +491,7 @@ export async function salvarChaveSirvo(chave: string): Promise<string | null> {
 export async function desconectarSirvo() {
     parar()
     zerar()
-    atualizar({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null })
+    atualizar({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0, ultimoRoteiroOk: 0 })
     await requestMain(Main.SIRVO_APAGAR_CHAVE)
 }
 
