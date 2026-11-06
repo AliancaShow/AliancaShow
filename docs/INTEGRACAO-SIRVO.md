@@ -360,7 +360,7 @@ roteiro atual e mostra o que mudou desde a última `rev` vista.
 | Fase | Entrega | Sirvo | Show |
 |---|---|---|---|
 | **F1** ✅ | Operações por intenção, histórico, aviso de mudança, relógio do servidor | feito | — |
-| **F0a** (Sirvo ✅) | Show conectado, **só leitura**: timer do bloco + mensagem no Retorno ✅ chave, `show_cultos`, `show_rev`, `show_roteiro` (em produção 06/nov) | chave no main, timer, Retorno |
+| **F0a** (Sirvo ✅) | Show conectado, **só leitura**: timer do bloco + mensagem no Retorno | ✅ chave, `show_cultos`, `show_rev`, `show_roteiro` (em produção 06/nov) | chave no main, timer, Retorno |
 | **F0b** | Montar/atualizar o projeto a partir do roteiro (§6) | — | ponte |
 | **F2** | Show edita: avançar, ±, reordenar, culto, Retorno | funções `show_*`, posse por culto | botões → funções |
 | **F3** | Músicas | catálogo sincronizado, músicas por bloco | catálogo estendido e contínuo, itens no projeto |
