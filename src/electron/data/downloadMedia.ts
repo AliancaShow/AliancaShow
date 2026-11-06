@@ -9,6 +9,7 @@ import { doesPathExist, getDataFolderPath, getMimeType, getValidFileName, makeDi
 import { waitUntilValueIsDefined } from "../utils/helpers"
 import { encryptFile, getProtectedPath, registerProtectedMediaFile } from "./protected"
 import { filePathHashCode } from "./thumbnails"
+import { isProd } from ".."
 
 export function downloadLessonsMedia(lessons: LessonsData[]) {
     const replace = lessons.map(checkLesson)
@@ -272,11 +273,33 @@ function dentroDaPastaOnline(alvo: string) {
 function urlDoStorage(url: string) {
     try {
         const u = new URL(url)
+        if (urlDoEmulador(u)) return true
         if (u.protocol !== "https:") return false
         return u.hostname === "firebasestorage.googleapis.com" || u.hostname.endsWith(".firebasestorage.app")
     } catch {
         return false
     }
+}
+
+/**
+ * Excecao SO de desenvolvimento: com VITE_ALIANCA_EMULADOR=127.0.0.1 npm start,
+ * as fotos vem do emulador do Storage (http, porta 9199), que a trava acima
+ * recusaria. Fora do `npm start` (isProd) isto devolve sempre false, e mesmo
+ * em desenvolvimento so vale para o host exato do emulador.
+ */
+function urlDoEmulador(u: URL) {
+    const emulador = isProd ? "" : process.env.VITE_ALIANCA_EMULADOR || ""
+    return !!emulador && u.protocol === "http:" && u.hostname === emulador && u.port === "9199"
+}
+
+/**
+ * O Windows nao deixa criar arquivo com estes nomes (com ou sem extensao):
+ * "CON.jpg" falharia na hora de gravar. O nome ja chega tratado da tela; isto
+ * e a segunda trava, aqui no processo principal.
+ */
+const NOME_RESERVADO_WINDOWS = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i
+function nomeReservado(arquivo: string) {
+    return NOME_RESERVADO_WINDOWS.test(path.parse(arquivo).name.trim())
 }
 
 /**
@@ -313,12 +336,15 @@ export async function baixarParaPasta({ url, pasta, arquivo }: { url: string; pa
     }
 
     const raiz = getDataFolderPath("onlineMedia")
-    const destinoPasta = path.resolve(raiz, ...String(pasta || "").split("/").filter(Boolean))
+    const partes = String(pasta || "")
+        .split("/")
+        .filter(Boolean)
+    const destinoPasta = path.resolve(raiz, ...partes)
     const destino = path.resolve(destinoPasta, String(arquivo || ""))
 
     // o arquivo tem que cair DIRETO na pasta do culto (nome sem "\" nem ".."),
     // e a pasta do culto tem que estar dentro da pasta Online
-    if (!dentroDaPastaOnline(destinoPasta) || path.dirname(destino) !== destinoPasta || !path.basename(destino)) {
+    if (!dentroDaPastaOnline(destinoPasta) || path.dirname(destino) !== destinoPasta || !path.basename(destino) || nomeReservado(path.basename(destino))) {
         console.error("Recusado: destino fora da pasta Online ->", pasta, arquivo)
         return null
     }

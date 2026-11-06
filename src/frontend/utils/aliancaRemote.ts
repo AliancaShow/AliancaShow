@@ -532,7 +532,9 @@ function nomeDoArquivo(item: any) {
     const arquivo = String(item.arquivo || "")
     const extensao = (arquivo.match(/\.[A-Za-z0-9]{1,8}$/) || [""])[0].toLowerCase()
     const semExtensao = extensao ? arquivo.slice(0, -extensao.length) : arquivo
-    const base = limparNome(item.nome) || limparNome(semExtensao) || "arquivo"
+    let base = limparNome(item.nome) || limparNome(semExtensao) || "arquivo"
+    // CON, NUL, COM1... o Windows nao deixa criar arquivo com esses nomes
+    if (/^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(base)) base = "_" + base
     return base + extensao
 }
 
