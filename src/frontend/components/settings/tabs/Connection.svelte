@@ -20,6 +20,7 @@
     import Tip from "../../main/Tip.svelte"
     import { startRemoteController, stopRemoteController } from "../../../utils/remoteController"
     import AliancaRemote from "../AliancaRemote.svelte"
+    import AliancaSirvo from "../AliancaSirvo.svelte"
 
     let ip = "localhost"
 
@@ -190,6 +191,7 @@
 </script>
 
 <AliancaRemote />
+<AliancaSirvo />
 
 {#each servers as server}
     {@const disabled = server.id === "companion" ? $companion?.enabled !== true : server.enabledByDefault ? $disabledServers[server.id] === true : $disabledServers[server.id] !== false}

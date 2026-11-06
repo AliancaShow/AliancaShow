@@ -94,7 +94,8 @@
         counter: translateText("timer.counter"),
         clock: translateText("timer.time"),
         event: translateText("timer.event"),
-        pco_live: "PCO Live"
+        pco_live: "PCO Live",
+        sirvo_live: "Sirvo"
     }
     $: if (timer.event && eventList.length) updateEventName()
     const updateEventName = () => (timerNames.event = eventList.find((a) => a.id === timer.event)?.name)
@@ -157,7 +158,9 @@
         if (timer.tags) newTimer.tags = timer.tags
         if (timer.type === "event") newTimer.event = timer.event
         else if (timer.type === "clock") newTimer.time = timer.time || "12:00"
-        else if (timer.type === "pco_live") {
+        else if (timer.type === "sirvo_live") {
+            // o valor vem do Sirvo (aliancaSirvo.ts); nada de início/fim próprios
+        } else if (timer.type === "pco_live") {
             newTimer.pco = { serviceTypeId: timer.pco?.serviceTypeId || "", planId: timer.pco?.planId || "", countdownType: timer.pco?.countdownType || "end_on_time" }
         } else {
             newTimer.start = timer.start === undefined ? 300 : Number(timer.start)
@@ -332,6 +335,10 @@
             {:else}
                 <div style="padding: 10px;display: flex;align-items: center;opacity: 0.5;"><T id="timer.no_events" /></div>
             {/if}
+        </div>
+    {:else if timer.type === "sirvo_live"}
+        <div class="timerbox" style="width: 100%;margin: 20px 0;">
+            <p style="border: none;min-height: unset;border-radius: 8px;" class="part">Tempo do bloco no ar, vindo do roteiro do Sirvo.</p>
         </div>
     {:else if timer.type === "pco_live"}
         <div class="timerbox" style="width: 100%;margin: 20px 0;overflow: visible;">

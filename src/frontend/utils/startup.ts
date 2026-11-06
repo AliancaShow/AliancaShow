@@ -17,6 +17,7 @@ import { receiveOUTPUTasOUTPUT, remoteListen, setupMainReceivers } from "./recei
 import { destroy, receive, send } from "./request"
 import { save, unsavedUpdater } from "./save"
 import { entrarSalvo } from "./aliancaRemote"
+import { iniciarSirvo } from "./aliancaSirvo"
 
 let initialized = false
 let startupProfile = ""
@@ -77,6 +78,9 @@ async function startupMain() {
 
     // liga a ponte com o AliancaShow Remote, se ja houver conta guardada
     entrarSalvo()
+
+    // liga a ponte com o Sirvo (roteiro do culto), se já houver chave guardada
+    iniciarSirvo()
 
     // custom alert
     // if (Math.random() < 0.01) {

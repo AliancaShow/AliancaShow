@@ -198,7 +198,7 @@ export interface ShowGroup {
 export interface Timer {
     id?: string
     name: string
-    type: "counter" | "clock" | "event" | "pco_live"
+    type: "counter" | "clock" | "event" | "pco_live" | "sirvo_live"
     viewType?: "time" | "line" | "circle"
     circleMask?: boolean
     showHours?: boolean // use just minutes or minutes and hours
