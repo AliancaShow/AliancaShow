@@ -2,7 +2,8 @@
 
 > **Status:** proposta para o Pedro revisar. Nada do lado do Show foi codado.
 > Do lado do Sirvo, a primeira parte (operações por intenção e o registro de
-> mudanças) está em produção desde 06/nov/2026.
+> mudanças) está em produção desde 06/nov/2026, e **a leitura pelo Show (F0a)
+> também** — o §5.1 é o contrato que já responde de verdade.
 > Tudo aqui pode mudar com a sua revisão — é para isso que vem antes do código.
 > Referências de código são da branch `cultos-e-remote`.
 > As decisões de produto já tomadas pelo André estão no §13; o que falta
@@ -77,33 +78,31 @@ Por baixo:
 Os erros vêm em português, prontos para mostrar ao operador ("Esse bloco já
 passou — não dá pra mover.").
 
-## 4. Como o Show se conecta (proposta)
+## 4. Como o Show se conecta (em produção desde 06/nov)
 
 - **Só conexões de saída.** O Show chama o Sirvo; nada abre porta no
   computador da igreja.
-- **Conta de dispositivo "Sala de vídeo".** Uma conta do Sirvo que não é de
-  nenhuma pessoa, marcada como dispositivo (não aparece em escalas, listas nem
-  avisos), com permissão de conduzir o roteiro, **sem** ser admin.
-- **Chave do dispositivo.** O admin do Sirvo gera a chave uma vez, numa tela de
-  configurações. O operador cola no Show. O Show troca a chave por uma sessão
-  numa rota do Sirvo e repete a troca antes de a sessão vencer (~1 h; um culto
-  de 2 h passa disso). Revogar = apagar a chave no Sirvo; a sessão já emitida
-  morre em até 1 h.
-- **O que a conta pode fazer é cercado no banco do Sirvo**, não só "por
-  combinação": ela só chama as funções da lista (§5) e não lê tabela nenhuma
-  direto, nem pelo tempo real. (Fizemos a mesma cerca para os agentes de IA que
-  se conectam ao Sirvo.)
-- **Sessão no processo principal do Electron**, guardada com `safeStorage`, e
+- **Uma chave, e nenhuma conta.** O admin gera a chave no Sirvo (Perfil →
+  AliançaShow), dá um nome a ela ("Sala de vídeo") e o operador cola no Show.
+  A chave aparece uma vez só; o Sirvo guarda apenas o hash. Perdeu, revoga e
+  gera outra.
+- **A chave vai em toda chamada, no corpo de um POST.** Não existe sessão para
+  renovar nem usuário do dispositivo: o Show chama, com a chave pública do
+  projeto (`apikey`, a mesma que o app web usa), as funções `show_*`, passando
+  `p_chave` como argumento. Chamada por GET é recusada — com GET a chave
+  andaria na URL e ficaria em log.
+- **Cercado no banco.** Sem login, o Show não lê tabela nenhuma; o que ele
+  enxerga é exatamente o que as funções `show_*` devolvem, e só da igreja da
+  chave. Revogar corta na chamada seguinte.
+- **Chave no processo principal do Electron**, guardada com `safeStorage`, e
   falando com o renderer por IPC. Isso é um padrão novo no repo — hoje o
   Firebase roda no renderer (`aliancaRemote.ts:74,113`) —, mas tem precedente:
   o REST do Planning Center roda no main (`Main.PCO_LIVE_GET`,
   `pcoLiveSync.ts:247`). O motivo: o renderer exibe texto de fora, e a chave
   não deve morar onde texto de fora é renderizado.
-- **Tempo real por Broadcast.** Quando o `rev` de um culto muda, o banco
-  publica num canal privado da igreja só "o culto X mudou, rev N". O Show busca
-  o roteiro pela função. O evento é só um "vá buscar"; se se perder, a busca
-  periódica e a reconexão pegam o atraso. Ninguém consegue publicar nesse canal
-  além do próprio banco.
+- **Tempo real por pergunta curta.** Sem sessão não há canal privado; o Show
+  pergunta `show_rev` (resposta de ~100 bytes) e só busca o roteiro quando o
+  `rev` muda (§5.3).
 - **Indicador visível** "Sirvo: conectado / caído" no Show.
 
 ## 5. O contrato (proposta v0)
@@ -111,56 +110,81 @@ passou — não dá pra mover.").
 Funções novas que o Sirvo cria para o Show. Nomes e formatos são propostas —
 se algo atrapalhar do seu lado, muda agora.
 
-### 5.1 Ler
+### 5.1 Ler (em produção)
 
-**`cultos_do_show()`** → os cultos que o Show pode abrir: o que está no ar e
-os próximos.
+Todas: `POST {URL do projeto}/rest/v1/rpc/<função>`, cabeçalhos `apikey` e
+`Content-Type: application/json`, corpo JSON com os argumentos. Erros vêm como
+`{ "code", "message" }`: `42501` = chave inválida ou revogada (ou GET);
+`P0002` = culto que não existe ou não é da igreja da chave.
+
+**`show_cultos({ p_chave })`** → os cultos que o Show pode abrir: o que está no
+ar, os de hoje (mesmo encerrados, que dá para reabrir) e os próximos 14 dias.
 
 ```json
 [{ "event_id": "uuid", "titulo": "Culto de Domingo",
-   "comeca_em": "2026-11-08T13:00:00Z", "no_ar": false, "encerrado": false, "rev": 12 }]
+   "comeca_em": "2026-11-08T21:00:00+00:00", "no_ar": false, "encerrado": false, "rev": 12 }]
 ```
 
-**`roteiro_do_culto(p_event)`** → tudo que o Show precisa, **já calculado no
-servidor**, para o Show não reescrever (e divergir de) a conta de horários do
-Sirvo:
+**`show_rev({ p_chave, p_event })`** → a pergunta de cada poucos segundos.
+
+```json
+{ "rev": 42, "agora_servidor": "2026-11-08T21:41:07.120+00:00",
+  "msg_id": "uuid-ou-null", "msg_ate": "2026-11-08T21:46:00+00:00" }
+```
+
+`msg_id`/`msg_ate` existem porque a mensagem de palco é da igreja (não do
+culto) e vencer não muda o `rev`: se o `msg_id` mudou, busque o roteiro.
+
+**`show_roteiro({ p_chave, p_event })`** → tudo que o Show precisa:
 
 ```json
 {
-  "event_id": "uuid",
-  "rev": 42,
-  "agora_servidor": "2026-11-08T13:41:07.120Z",
-  "comeca_em": "2026-11-08T13:00:00Z",
-  "iniciado_em": "2026-11-08T13:02:10.381522Z",
+  "event_id": "uuid", "titulo": "Culto de Domingo", "rev": 42,
+  "agora_servidor": "2026-11-08T21:41:07.120+00:00",
+  "comeca_em": "2026-11-08T21:00:00+00:00",
+  "iniciado_em": "2026-11-08T21:02:10.381522+00:00",
   "encerrado_em": null,
   "bloco_no_ar": "uuid-do-bloco",
-  "fim_projetado": "2026-11-08T14:40:00Z",
-  "desvio_min": 3,
+  "fim_previsto": "2026-11-08T22:40:00+00:00",
+  "fim_planejado": "2026-11-08T22:35:00+00:00",
   "blocos": [
     { "id": "uuid", "ordem": 0, "titulo": "Abertura", "tipo": "Abertura", "cor": "#C8A15A",
-      "duracao_min": 5, "inicio_projetado": "…", "fim_projetado": "…",
-      "concluido_em": "2026-11-08T13:08:40.120933Z",
-      "responsavel": "Pr. João", "nota": "…", "link": "…",
-      "itens": [ { "show_id": "id-da-musica-no-show", "ordem": 0 } ] }
+      "duracao_min": 5, "estado": "concluido",
+      "inicio_previsto": "…", "fim_previsto": "…",
+      "concluido_em": "2026-11-08T21:08:40.120933+00:00",
+      "responsavel": "Pr. João", "nota": "…", "link": "…" }
   ],
-  "mensagem_palco": { "texto": "Estende mais 5 min", "ate": "2026-11-08T13:46:00Z" },
+  "mensagem_palco": { "id": "uuid", "texto": "Estende mais 5 min", "ate": "2026-11-08T21:46:00+00:00" },
   "mudancas": [ { "rev": 42, "tipo": "duracao", "bloco_id": "uuid", "bloco_titulo": "Palavra",
                   "antes": 35, "depois": 40, "autor": "Ana", "em": "…" } ]
 }
 ```
 
-- `bloco_no_ar` é `null` antes de iniciar e depois de encerrar. Ele é o
-  primeiro bloco ainda não concluído; o início dele é o `concluido_em` do bloco
-  anterior (ou `iniciado_em`, se for o primeiro).
-- `agora_servidor` serve para corrigir o relógio do PC
-  (`desvio = agora_servidor − agora_local`). O Sirvo web já faz isso desde 06/nov.
-- **Carimbos são texto opaco.** `concluido_em` vem com microssegundos; o Show
-  devolve exatamente a string que recebeu (não passa por `Date`).
-- `mudancas` traz as últimas; o Show guarda a última `rev` que viu e mostra como
-  aviso o que for mais novo.
-- `itens` só existe a partir da fase das músicas (§8).
+- `estado` de cada bloco: `concluido`, `no_ar`, `a_seguir` (culto iniciado) ou
+  `planejado` (culto não iniciado). `bloco_no_ar` é `null` antes de iniciar e
+  depois de encerrar.
+- **Os horários `_previsto` não andam com o relógio** — só mudam quando o
+  `rev` muda. A conta é a do Sirvo: o primeiro bloco começa em `iniciado_em`
+  (ou `comeca_em`); cada bloco começa onde o anterior terminou; bloco concluído
+  termina no `concluido_em`; os outros, no início + duração.
+- **O que anda com o relógio o Show soma, a cada segundo:**
+  `estouro = max(0, agora − fim_previsto do bloco no ar)`, somado ao fim do
+  bloco no ar e ao início/fim de todos os blocos depois dele (e ao
+  `fim_previsto` do culto). Timer do bloco = `fim_previsto − agora` (negativo =
+  estourou). `agora` = relógio do PC corrigido por
+  `desvio = agora_servidor − agora_local`.
+- **Carimbos são texto opaco.** `concluido_em` vem com microssegundos; quando o
+  Show precisar devolver um carimbo (F2), devolve a string que recebeu.
+- `mudancas` traz as últimas 20 que importam ao operador (edição de nota,
+  responsável, cor etc. sobe o `rev` mas não entra aqui); o Show guarda a
+  última `rev` que viu e mostra como aviso o que for mais novo.
+- `mensagem_palco` é `null` quando não há mensagem viva; o Show tira da tela
+  sozinho quando passa do `ate`.
+- `itens` (músicas) entra na fase das músicas (§8).
 
 ### 5.2 Escrever
+
+*(F2 — ainda não existe. Toda função de escrita também leva `p_chave`, omitida na tabela.)*
 
 **Toda escrita do Show leva `p_pedido` (um uuid gerado no Show).** Se a
 resposta se perder e o Show reenviar depois de reconectar, o Sirvo reconhece o
@@ -183,10 +207,10 @@ seguinte.
 
 ### 5.3 Ouvir
 
-Canal Broadcast privado `roteiro:<church_id>`, evento `mudou`, payload
-`{ "event_id": "uuid", "rev": 43 }`. Nada de conteúdo no evento — só o aviso
-para buscar. A sessão do Show precisa ser reaplicada ao canal a cada troca de
-sessão.
+`show_rev` a cada **2 s** com o culto no ar (ou até 1 h antes dele) e a cada
+**30 s** fora disso. Quando `rev` ou `msg_id` mudar, chame `show_roteiro`.
+Na reconexão, chame `show_roteiro` direto. Um PC no culto dá ~1.800 chamadas
+por hora, todas minúsculas — cabe folgado.
 
 ### 5.4 Um computador edita por culto
 
@@ -246,12 +270,12 @@ produção continuam editando.
   pedido ao Sirvo. O Sirvo não apaga o que não criou.
 - **Operador mexendo no Show** (± duração, arrastar bloco, avançar) vira
   chamada às funções do §5.2. O Show só muda a cópia dele quando a resposta (ou
-  o Broadcast) chega.
+  o próximo `show_roteiro`) chega.
 
 ## 7. Timer e Retorno
 
 - **Timer do bloco:** recalculado a cada segundo a partir das âncoras do
-  `roteiro_do_culto`, como o `pco_live` faz (`pcoLiveSync.ts`), mas aplicando o
+  `show_roteiro` (§5.1), como o `pco_live` faz (`pcoLiveSync.ts`), mas aplicando o
   desvio do relógio (o `pco_live` usa `Date.now()` cru, `:140`). Com
   **overflow ligado** (opção que todo timer do Show já tem), o bloco que estoura
   aparece como `−1:23`, igual ao Sirvo.
@@ -327,7 +351,7 @@ roteiro atual e mostra o que mudou desde a última `rev` vista.
   recusa o resto de qualquer jeito).
 - Mudar a própria cópia do roteiro antes de o Sirvo aceitar.
 - Mexer em item que não veio do Sirvo.
-- Guardar a sessão ou a chave no renderer ou em arquivo sem `safeStorage`.
+- Guardar a chave no renderer ou em arquivo sem `safeStorage`.
 - Mostrar texto vindo do Sirvo (nota, chat, nome de música, mensagem) por
   `{@html}` ou por `{variable_…}` em caixa de texto.
 
@@ -336,11 +360,11 @@ roteiro atual e mostra o que mudou desde a última `rev` vista.
 | Fase | Entrega | Sirvo | Show |
 |---|---|---|---|
 | **F1** ✅ | Operações por intenção, histórico, aviso de mudança, relógio do servidor | feito | — |
-| **F0a** | Show conectado, **só leitura**: timer do bloco + mensagem no Retorno | conta do dispositivo, chave, cercas, `cultos_do_show`, `roteiro_do_culto`, Broadcast | sessão no main, timer, Retorno |
+| **F0a** (Sirvo ✅) | Show conectado, **só leitura**: timer do bloco + mensagem no Retorno ✅ chave, `show_cultos`, `show_rev`, `show_roteiro` (em produção 06/nov) | chave no main, timer, Retorno |
 | **F0b** | Montar/atualizar o projeto a partir do roteiro (§6) | — | ponte |
 | **F2** | Show edita: avançar, ±, reordenar, culto, Retorno | funções `show_*`, posse por culto | botões → funções |
 | **F3** | Músicas | catálogo sincronizado, músicas por bloco | catálogo estendido e contínuo, itens no projeto |
-| **F4** | Chat no Show | chat para a conta do dispositivo | painel de chat |
+| **F4** | Chat no Show | chat pela chave do dispositivo | painel de chat |
 | **F5** | Material pelo Sirvo | armazenamento + link temporário | download para a pasta do culto |
 
 Cada fase é útil sozinha. A F0a já substitui o que fazíamos com o ProPresenter
@@ -364,8 +388,8 @@ branch e manda PR para você revisar.
 
 ## 14. O que queremos confirmar com você
 
-1. **Sessão no processo principal:** algum problema em rodar o tempo real e as
-   chamadas ao Sirvo no main, falando com a tela por IPC (como o REST do
-   Planning Center já faz)?
+1. **Chave no processo principal:** algum problema em rodar as chamadas ao
+   Sirvo no main, falando com a tela por IPC (como o REST do Planning Center
+   já faz)?
 2. **Nomes das variáveis** do §7: há convenção no Show que a gente deva seguir?
 3. **Qualquer coisa** daqui que esbarre em algo do FreeShow que a gente não viu.
