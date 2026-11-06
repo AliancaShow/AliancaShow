@@ -5,6 +5,8 @@
 > mudanças) está em produção desde 06/nov/2026.
 > Tudo aqui pode mudar com a sua revisão — é para isso que vem antes do código.
 > Referências de código são da branch `cultos-e-remote`.
+> As decisões de produto já tomadas pelo André estão no §13; o que falta
+> confirmar com você está no §14.
 
 ## 1. O que queremos
 
@@ -214,10 +216,11 @@ produção continuam editando.
 - **Nota do bloco NÃO vai em `notes` da seção.** Fora do modo foco, seção com
   `notes` vira uma parada a mais no "próximo" (`OutputHelper.ts:191`). Vai em
   `data.sirvo`.
-- **`sectionsLocked`** trava todas as seções do projeto (nome, horário, notas,
-  arrastar, "nova seção"), não os itens, e o operador desliga num botão. Serve
-  de proteção contra engano, não de garantia — a garantia é o §2: o que vale é o
-  Sirvo.
+- **Só as seções vindas do Sirvo ficam travadas.** Hoje `sectionsLocked` trava
+  todas as seções do projeto (nome, horário, notas, arrastar, "nova seção"), e
+  o operador desliga num botão. Proposta (André já aprovou): o `isLocked` passa
+  a olhar `data.sirvo`, e o operador continua criando e mexendo nas seções dele.
+  A trava protege contra engano; a garantia continua sendo o §2.
 - **Antes do culto:** o projeto é montado e atualizado sozinho a cada mudança.
 - **Durante o culto:**
   - **Timer, âncoras e estado do culto aplicam na hora**, sempre — inclusive
@@ -234,8 +237,9 @@ produção continuam editando.
     (`OutputHelper.ts:163-166`) e o que o Remote publica por posição
     (`estado.itens`/`itemAtual`, `aliancaControle.ts:216,227`). O comando
     `abrir` do Remote é por **índice** e vale 30 s (`aliancaControle.ts:153`):
-    um toque no celular feito antes da reescrita abriria o item errado — ver
-    pergunta 5.
+    um toque no celular feito antes da reescrita abriria o item errado. Por
+    isso o `abrir` passa a mandar **o id do item junto com o índice**, e o Show
+    confere antes de abrir (André já aprovou).
   - Trava "aplicando do Sirvo": mudança no store que a própria ponte causou
     nunca vira pedido de volta ao Sirvo (senão laço).
 - **Item que o operador pôs à mão fica**, preso à seção anterior, e nunca vira
@@ -250,27 +254,52 @@ produção continuam editando.
   `roteiro_do_culto`, como o `pco_live` faz (`pcoLiveSync.ts`), mas aplicando o
   desvio do relógio (o `pco_live` usa `Date.now()` cru, `:140`). Com
   **overflow ligado** (opção que todo timer do Show já tem), o bloco que estoura
-  aparece como `−1:23`, igual ao Sirvo. Um tipo novo (`sirvo_live`) precisa
-  entrar em `Timers.svelte:27`, `timers.ts:101`, `timerTick.ts:240` e no
-  `getCurrentTimerValue` do palco (`src/server/common/util/time.ts:77`) — ver
-  pergunta 3.
-- **Mensagem da produção** (`mensagem_palco`) vai para uma variável de texto,
-  mostrada no palco pelo **item de variável** (que escapa o texto,
+  aparece como `−1:23`, igual ao Sirvo.
+- **Tipo novo `sirvo_live`, sem mexer no `pco_live`.** O `pco_live` é código do
+  FreeShow original; generalizá-lo complicaria cada atualização que você trouxer
+  de lá, e hoje ele só liga com o Planning Center configurado
+  (`pcoLiveSync.ts:68`). O tipo novo entra em `Timers.svelte:27`,
+  `timers.ts:101`, `timerTick.ts:240` e no `getCurrentTimerValue` do palco
+  (`src/server/common/util/time.ts:77`). Ele tem um id fixo, para qualquer layout
+  poder mostrá-lo.
+- **A ponte nunca cria nem edita layout de palco.** O layout é do Show e pode
+  mudar com o tempo. A ponte só publica **valores com nome fixo**, e qualquer
+  layout mostra os que quiser:
+
+  | Nome | O que é |
+  |---|---|
+  | timer `sirvo_live` | tempo do bloco no ar (regressivo, com overflow) |
+  | variável `sirvo_bloco` | título do bloco no ar |
+  | variável `sirvo_proximo` | título do próximo bloco |
+  | variável `sirvo_mensagem` | mensagem da produção (vazia quando não há; some no `ate`) |
+  | variável `sirvo_fim` | hora projetada do fim do culto |
+
+  Os nomes são proposta — se já houver convenção de nomes de variável no Show,
+  seguimos a sua.
+- **Texto do Sirvo no palco só pelo item de variável** (que escapa o texto,
   `Variable.svelte:15`) — **nunca** por `{variable_…}` dentro de uma caixa de
-  texto, que passa por `{@html}` (`Textbox.svelte:500`). Some no `ate`.
-- O layout "Retorno" só é criado em instalação nova (`createData.ts:41`) e não
-  tem timer nem mensagem: no PC da igreja ele precisa ser editado uma vez (ou a
-  ponte cria o item ao conectar — pergunta 6).
+  texto, que passa por `{@html}` (`Textbox.svelte:500`).
+- O layout "Retorno" é criado pelo Show (hoje em instalação nova,
+  `createData.ts:41`); a gente sugere incluir nele o timer e a variável de
+  mensagem, mas a ponte funciona com qualquer layout.
 
 ## 8. Músicas
 
-- **Primeiro, limpar a biblioteca com você.** Há duplicadas (parecem vir do
-  import do ProPresenter). Sem isso, o seletor do Sirvo mostra três "Oceanos" e
-  o problema da versão errada só muda de lugar.
+- A biblioteca já foi limpa das duplicadas. Mas ela **vai continuar mudando**:
+  o André quer revisar letras contra referências da internet, músicas são
+  renomeadas, versões são juntadas. O catálogo no Sirvo não pode ser uma foto
+  tirada uma vez — tem que acompanhar.
 - **Estender o catálogo que você já publica** (`publicarCatalogo`, hoje só
   `nome`), em vez de criar outro: id, nome, categoria, primeira linha da letra,
-  artista/tom quando houver, data de modificação. O Show envia ao Sirvo por uma
-  função `show_publicar_catalogo(p_itens)`.
+  artista/tom quando houver, **data de modificação**.
+- **Sincronia contínua, por diferença:** o Show envia ao Sirvo
+  (`show_publicar_catalogo(p_itens)`) só o que mudou desde a última vez,
+  usando a data de modificação. O Sirvo guarda pelo **id** da música, então
+  renomear ou corrigir letra não quebra nada.
+- **Música removida não some calada.** Ela vai como "removida" — ou "juntada
+  com X", quando duas versões viram uma. O roteiro que apontava para ela troca
+  sozinho para X, ou aparece marcado "esta música não existe mais" para alguém
+  escolher outra.
 - No Sirvo, cada bloco ganha a lista de músicas (`show_id` + ordem). No Show,
   música que não existe naquele PC aparece como item visível "não existe neste
   computador" — nunca pulada em silêncio.
@@ -310,7 +339,7 @@ roteiro atual e mostra o que mudou desde a última `rev` vista.
 | **F0a** | Show conectado, **só leitura**: timer do bloco + mensagem no Retorno | conta do dispositivo, chave, cercas, `cultos_do_show`, `roteiro_do_culto`, Broadcast | sessão no main, timer, Retorno |
 | **F0b** | Montar/atualizar o projeto a partir do roteiro (§6) | — | ponte |
 | **F2** | Show edita: avançar, ±, reordenar, culto, Retorno | funções `show_*`, posse por culto | botões → funções |
-| **F3** | Músicas | catálogo, músicas por bloco | limpeza da biblioteca, catálogo estendido, itens no projeto |
+| **F3** | Músicas | catálogo sincronizado, músicas por bloco | catálogo estendido e contínuo, itens no projeto |
 | **F4** | Chat no Show | chat para a conta do dispositivo | painel de chat |
 | **F5** | Material pelo Sirvo | armazenamento + link temporário | download para a pasta do culto |
 
@@ -320,23 +349,23 @@ Cada fase é útil sozinha. A F0a já substitui o que fazíamos com o ProPresent
 Como nas correções de segurança: a gente faz a parte do Sirvo, faz a do Show em
 branch e manda PR para você revisar.
 
-## 13. Perguntas para você
+## 13. Decisões já tomadas (André, 06/nov)
 
-1. **Arquivo novo ou reaproveitar?** Propomos a ponte do Sirvo num arquivo novo
-   (`aliancaSirvo.ts` + um módulo no main), ao lado do `aliancaControle`, sem
-   mexer no Firebase. Faz sentido, ou prefere outro arranjo?
-2. **Seções travadas só as do Sirvo.** Hoje `sectionsLocked` trava todas. Topa
-   que o `isLocked` passe a olhar `data.sirvo`, para o operador continuar
-   criando as dele?
-3. **Timer:** tipo novo `sirvo_live` (toca os 4 lugares do §7) ou generalizar o
-   `pco_live` (que hoje só liga com o Planning Center configurado,
-   `pcoLiveSync.ts:68`)?
-4. **Biblioteca:** as duplicadas vêm mesmo do import do ProPresenter? Quanto
-   trabalho é limpar?
-5. **Comando `abrir` do Remote:** dá para ele passar a mandar o id do item junto
-   com o índice, e o Show conferir antes de abrir? Senão, um toque no celular no
-   meio de uma reescrita abre o item errado.
-6. **Retorno no PC da igreja:** você edita o layout uma vez à mão, ou prefere que
-   a ponte crie os itens (timer + variável) ao conectar?
-7. **Sessão no processo principal:** algum problema com o Broadcast e as
-   chamadas rodando no main e falando com a tela por IPC?
+1. **Arquivo novo:** a ponte do Sirvo vai num arquivo novo (`aliancaSirvo.ts` +
+   um módulo no processo principal), ao lado do `aliancaControle`, sem mexer no
+   Firebase.
+2. **Só as seções do Sirvo travadas** (`isLocked` olha `data.sirvo`).
+3. **Timer novo `sirvo_live`**, sem mexer no `pco_live` (§7).
+4. **Biblioteca já limpa; catálogo sincronizado continuamente**, com removidas e
+   juntadas avisadas (§8).
+5. **`abrir` do Remote manda o id do item junto com o índice** (§6).
+6. **A ponte não toca no layout de palco** — só publica timer e variáveis com
+   nome fixo (§7).
+
+## 14. O que queremos confirmar com você
+
+1. **Sessão no processo principal:** algum problema em rodar o tempo real e as
+   chamadas ao Sirvo no main, falando com a tela por IPC (como o REST do
+   Planning Center já faz)?
+2. **Nomes das variáveis** do §7: há convenção no Show que a gente deva seguir?
+3. **Qualquer coisa** daqui que esbarre em algo do FreeShow que a gente não viu.
