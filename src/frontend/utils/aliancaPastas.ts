@@ -49,7 +49,7 @@ export function garantirPastas(caminho: string[]) {
 
 // so os campos lidos aqui: os testes passam projetos sem o resto
 type ProjetoComLigacao = Partial<Pick<Project, "name" | "parent" | "archived" | "deleted" | "sirvo">>
-type ProjetosComLigacao = { [id: string]: ProjetoComLigacao | undefined }
+type ProjetosComLigacao = { [id: string]: ProjetoComLigacao }
 
 const vivo = (p: ProjetoComLigacao | undefined) => !!p && !p.archived && !p.deleted
 const ligado = (p: ProjetoComLigacao | undefined) => vivo(p) && !!p!.sirvo?.eventId
