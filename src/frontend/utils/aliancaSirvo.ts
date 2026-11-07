@@ -19,7 +19,7 @@
 //      no FIM da lista: o FreeShow usa `activeTimers[0]` como "primeiro timer
 //      ativo", que deve continuar sendo o do operador.
 
-import { get, writable } from "svelte/store"
+import { get, readonly, writable } from "svelte/store"
 import { STAGE } from "../../types/Channels"
 import { Main } from "../../types/IPC/Main"
 import type { Timer } from "../../types/Show"
@@ -32,25 +32,36 @@ import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./al
 // ---------------------------------------------------------------- tipos
 
 type Culto = { event_id: string; titulo: string; comeca_em: string; no_ar: boolean; encerrado: boolean; rev: number }
-type Bloco = {
+// os campos que o show_roteiro manda (servir: supabase/migrations/0079_ponte_show_leitura.sql)
+export type Bloco = {
     id: string
     ordem: number
     titulo: string
+    /** o tipo do bloco no Sirvo ("louvor", "palavra"...) */
+    tipo: string
+    /** a cor final (a do bloco, senão a do tipo), "#rrggbb" */
+    cor: string
     estado: "concluido" | "no_ar" | "a_seguir" | "planejado"
     duracao_min: number
     inicio_previsto: string
     fim_previsto: string
     concluido_em: string | null
+    responsavel: string | null
+    nota: string | null
+    link: string | null
 }
-type Roteiro = {
+export type Roteiro = {
     event_id: string
     titulo: string
     rev: number
     agora_servidor: string
+    comeca_em: string
     iniciado_em: string | null
     encerrado_em: string | null
     bloco_no_ar: string | null
     fim_previsto: string
+    /** começo + soma das durações, sem os atrasos */
+    fim_planejado: string
     blocos: Bloco[]
     mensagem_palco: { id: string; texto: string; ate: string } | null
     mudancas?: Mudanca[]
@@ -86,6 +97,14 @@ export const sirvo = writable<EstadoSirvo>({ status: "sem_chave", cultos: [], cu
 export const sirvoBlocoNoAr = writable("")
 
 let roteiro: Roteiro | null = null
+// O roteiro aceito, para quem monta o projeto do culto (F0b): o mesmo objeto de
+// `roteiro`, depois das mesmas conferências de geração e de rev; null sem
+// roteiro. Só leitura para fora. É anunciado no FIM de cada passada (`anunciar`),
+// depois do palco e do aviso: quem assina vê o estado já coerente e não atrasa o
+// palco. Quem assina não pode lançar erro: o `set` do Svelte roda os assinantes
+// ali mesmo, e um erro no meio deixa a fila de stores do app inteiro travada.
+const roteiroAceito = writable<Roteiro | null>(null)
+export const sirvoRoteiro = readonly(roteiroAceito)
 let revVisto = -1
 let msgVista: string | null = null
 let desvioMs: number | null = null // relógio do Sirvo − relógio deste PC
@@ -97,6 +116,10 @@ let cultosEmVoo: { g: number; p: Promise<void> } | null = null
 
 const agora = () => Date.now() + (desvioMs || 0)
 const ms = (iso: string | null | undefined) => (iso ? Date.parse(iso) : NaN)
+
+function anunciar() {
+    if (get(roteiroAceito) !== roteiro) roteiroAceito.set(roteiro)
+}
 
 /** Texto externo → texto seguro para variável do FreeShow (sem HTML, sem {…}). */
 function limpo(t: string | null | undefined): string {
@@ -187,6 +210,7 @@ async function buscarCultos() {
         publicar()
         limparAvisos()
         atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
+        anunciar()
         if (novoId) {
             // o culto novo decide pelo que ficou guardado (com prazo), não por uma memória de dias atrás
             vistoEmMemoria.delete(novoId)
@@ -216,10 +240,12 @@ async function buscarRoteiro(eventId: string) {
         } catch (erro) {
             console.error("Sirvo: falha ao montar o aviso de mudança", erro)
         }
+        anunciar()
     } else if (r.codigo === "culto_inexistente") {
         roteiro = null
         publicar()
         atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
+        anunciar()
         await cicloCultos()
     }
 }
@@ -359,6 +385,7 @@ function zerar() {
     publicar()
     limparAvisos()
     atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
+    anunciar()
 }
 
 // ---------------------------------------------------------------- aviso "o roteiro mudou"
