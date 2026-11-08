@@ -240,6 +240,14 @@ function podeEscrever() {
     return false
 }
 
+/**
+ * De onde a hora dos cabeçalhos conta: do Iniciar, se o culto já começou; senão
+ * do horário marcado. É o que o Sirvo web mostra (teste do André, 08/nov: o
+ * culto iniciado às 13h29 aparecia no Show como "TEste 18:00" contando 4h30).
+ * Muda uma vez no Iniciar (e no Reiniciar), não a cada bloco concluído.
+ */
+const inicioDoPlano = (r: { comeca_em: string; iniciado_em?: string | null }) => r.iniciado_em || r.comeca_em
+
 // ---------------------------------------------------------------- a passada
 
 type Pedido = { montar?: string; forcar?: string }
@@ -254,7 +262,7 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
     // cabeçalhos de outro culto, ela mexeria na ordem: só fora do culto.
     if (protegido(projetoId) && itens.some((i) => papelDoItem(i))) return "Com o culto no ar ou algo na tela, este projeto não pode ser remontado agora. Limpe a tela e tente de novo."
     const ponteiros = lerPonteiros(projetoId, itens)
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: r.comeca_em })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: inicioDoPlano(r) })
     escrever(projetoId, itens, res.itens, { ligar: { eventId: r.event_id }, ponteiros })
     lembrarMontado(r.event_id, projetoId)
     dispensados.delete(chaveDispensa(r.event_id, projetoId))
@@ -272,7 +280,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     const prot = protegido(projetoId)
     // daqui até o fim do `escrever` é tudo síncrono: lido, contado e escrito sem pausa
     const ponteiros = lerPonteiros(projetoId, itens)
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: r.comeca_em })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: inicioDoPlano(r) })
 
     let depois = res.itens
     let pendente = res.motivo
@@ -328,7 +336,7 @@ function passada(pedido: Pedido = {}): string | null {
             // a lista vem pronta da conta: o projeto nasce montado, numa escrita só
             const pasta = garantirPastas(decisao.pastas).id
             const id = uid()
-            const itens = reconciliar([], r.blocos, { forcar: true, comecaEm: r.comeca_em }).itens
+            const itens = reconciliar([], r.blocos, { forcar: true, comecaEm: inicioDoPlano(r) }).itens
             projects.update((a) => {
                 a[id] = { name: decisao.nome, parent: pasta, created: Date.now(), modified: Date.now(), shows: itens, sirvo: { eventId: r.event_id, montadoEm: Date.now() } }
                 return a

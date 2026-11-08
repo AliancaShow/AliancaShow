@@ -199,6 +199,8 @@
     $: {
         closestTime = 0
         projectItemsList?.find((a) => {
+            // AliançaShow: a hora de um bloco do Sirvo é o PLANO; com um bloco estourado, o relógio apontava como "o próximo" um bloco que ainda nem começou (teste do André, 08/nov). Quem diz o bloco ao vivo é o timer sirvo_live.
+            if (!isTemplate && cabecalhoTrancado(currentProject, a)) return
             const timeLeft = getTimeUntilClock(a.data?.time, today)
             if (timeLeft > 0 && (!closestTime || timeLeft < closestTime)) closestTime = timeLeft
         })
