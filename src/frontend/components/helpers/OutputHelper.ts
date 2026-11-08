@@ -483,6 +483,10 @@ export class OutputHelper {
 
     // store active show so we can reference it in case we have multiple outputs and the first changes the active show
     private static currentActiveShow: { time: number; show: ShowRef | null } = { time: 0, show: null }
+    // AliançaShow: a ordem do projeto mudou (Sirvo) e o item ativo foi para outra posição: o cache de 50 ms não vale mais
+    static esquecerItemAtivo() {
+        this.currentActiveShow = { time: 0, show: null }
+    }
     private static getActiveItem() {
         // use the last active if less than 50ms ago
         if (this.currentActiveShow.time > Date.now() - 50) return this.currentActiveShow.show

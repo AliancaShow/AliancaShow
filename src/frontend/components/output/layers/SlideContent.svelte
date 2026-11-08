@@ -100,6 +100,8 @@
         delete newOutSlide.line
         delete newOutSlide.revealCount
         delete newOutSlide.itemClickReveal
+        // AliançaShow: a posição no projeto não é conteúdo (o Sirvo a corrige ao aplicar a ordem nova)
+        delete newOutSlide.projectIndex
         let outSlideString = JSON.stringify(newOutSlide)
         if (outSlideString !== currentOutSlide) currentOutSlide = outSlideString
     }
