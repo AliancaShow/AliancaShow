@@ -62,6 +62,8 @@ export interface Tree extends Project {
     index?: number
     path?: string
     readOnly?: boolean
-    type?: "project" | "folder"
+    // "grupo" e um cabecalho sintetico da lista continua de projetos: nao existe
+    // em disco, e criado ao achatar a arvore de pastas
+    type?: "project" | "folder" | "grupo"
     // created: number
 }

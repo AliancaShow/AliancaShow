@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; height:100%; background:#08080a; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  a { color:#ff8f97; text-decoration:none; }
+  a:hover { color:#ffb3b9; }
+  @keyframes liveGlow { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+  * { box-sizing:border-box; }
+  input, textarea { font-family:inherit; }
+  ::selection { background:rgba(228,56,63,0.35); }
+</style>
+</helmet>
+
+<div ref="{{ palcoRef }}" style="position:fixed; inset:0; overflow:hidden; display:flex; align-items:center; justify-content:center; background:radial-gradient(120% 90% at 16% -10%, #1c1418 0%, #0b0b0d 52%, #08080a 100%); color:#eceded; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div style="width:1600px; height:900px; flex:none; position:relative; overflow:hidden; transform:{{ stageTransform }}">
+  <div style="position:absolute; top:-140px; left:-80px; width:600px; height:460px; border-radius:50%; background:{{ glowBrand }}; filter:blur(100px); pointer-events:none"></div>
+
+  <div style="position:relative; height:100%; display:flex; flex-direction:column; padding:12px; gap:12px">
+
+    <div style="height:54px; flex:none; display:flex; align-items:center; gap:18px; padding:0 16px; border-radius:12px; background:rgba(255,255,255,0.045); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07)">
+      <div style="display:flex; align-items:center; gap:9px">
+        <div style="width:9px; height:9px; border-radius:2px; background:{{ brand }}"></div>
+        <div style="font-size:13px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase">Aliança</div>
+      </div>
+      <div style="width:1px; height:22px; background:rgba(255,255,255,0.08)"></div>
+      <div style="display:flex; gap:4px">
+        <div onClick="{{ goMostrar }}" style="display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:8px; font-size:13px; cursor:pointer; transition:background-color 120ms ease, color 120ms ease; background:{{ tabMostrarBg }}; color:{{ tabMostrarFg }}; font-weight:{{ tabMostrarW }}" style-hover="background:rgba(255,255,255,0.09)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="14" rx="2"></rect><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"></path></svg>
+          Mostrar
+        </div>
+        <div onClick="{{ goEditar }}" style="display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:8px; font-size:13px; cursor:pointer; transition:background-color 120ms ease, color 120ms ease; background:{{ tabEditarBg }}; color:{{ tabEditarFg }}; font-weight:{{ tabEditarW }}" style-hover="background:rgba(255,255,255,0.09)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20h4l10-10-4-4L4 16z"></path><path d="M14 6l4 4"></path></svg>
+          Editar
+        </div>
+        <div onClick="{{ goPalco }}" style="display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:8px; font-size:13px; cursor:pointer; transition:background-color 120ms ease, color 120ms ease; background:{{ tabPalcoBg }}; color:{{ tabPalcoFg }}; font-weight:{{ tabPalcoW }}" style-hover="background:rgba(255,255,255,0.09)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="11" rx="2"></rect><path d="M8 20h8"></path></svg>
+          Palco
+        </div>
+        <div onClick="{{ goBiblia }}" style="display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:8px; font-size:13px; cursor:pointer; transition:background-color 120ms ease, color 120ms ease; background:{{ tabBibliaBg }}; color:{{ tabBibliaFg }}; font-weight:{{ tabBibliaW }}" style-hover="background:rgba(255,255,255,0.09)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5h6v14H5zM13 5h6v14h-6zM11 5v14"></path></svg>
+          Bíblia
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <sc-if value="{{ noAr }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:20px; background:{{ brandWashSoft }}; border:1px solid {{ brandLine }}; font-family:'JetBrains Mono',monospace; font-size:11px; color:#ff8f97">
+          <div style="width:6px; height:6px; border-radius:50%; background:#ff5b66; animation:liveGlow 2s ease-in-out infinite"></div>
+          {{ badgeTexto }}
+        </div>
+      </sc-if>
+      <div style="display:flex; gap:6px; color:#9a9ba1">
+        <div onClick="{{ toggleAudio }}" title="Áudio" style="width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background-color 120ms ease; background:{{ audioBg }}; color:{{ audioFg }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 18c4-1 6-9 10-9s4 5 6 5"></path></svg>
+        </div>
+        <div onClick="{{ goAjustes }}" title="Ajustes" style="width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background-color 120ms ease; background:{{ ajustesBg }}; color:{{ ajustesFg }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 4v2M12 18v2M4 12h2M18 12h2M6.5 6.5l1.5 1.5M16 16l1.5 1.5M17.5 6.5L16 8M8 16l-1.5 1.5"></path></svg>
+        </div>
+        <div onClick="{{ toggleSaidas }}" title="Saídas" style="width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background-color 120ms ease; background:{{ saidasBg }}; border:1px solid {{ saidasLine }}; color:{{ saidasFg }}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="12" rx="2"></rect><path d="M12 9v-4M12 5l-2 2M12 5l2 2"></path></svg>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ isMostrar }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; gap:12px; min-height:0">
+
+        <div style="width:276px; flex:none; display:flex; flex-direction:column; gap:0; min-height:0">
+          <div style="flex:1; min-height:0; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column">
+            <div style="flex:none; padding:14px 16px 10px; display:flex; align-items:center; gap:8px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#83848b" stroke-width="1.6"><path d="M3 7h6l2 2h10v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+              <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Projetos</div>
+              <div style="flex:1"></div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#83848b" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg>
+            </div>
+            <div onClick="{{ toggleProjeto }}" style="flex:none; padding:0 10px 4px; font-size:13px; font-weight:600; cursor:pointer">
+              <div style="padding:6px 8px; display:flex; align-items:center; gap:8px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:{{ brand }}; transform:{{ chevronRot }}; transition:transform 140ms ease"><path d="M9 6l6 6-6 6"></path></svg>
+                <div style="flex:1">Domingo</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6f7077; font-weight:400">{{ qtdItens }}</div>
+              </div>
+            </div>
+            <sc-if value="{{ projetoAberto }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1; min-height:0; overflow-y:auto; padding:0 10px 10px; display:flex; flex-direction:column; gap:2px">
+                <sc-for list="{{ itens }}" as="it" hint-placeholder-count="11">
+                  <div onClick="{{ it.click }}" style="flex:none; display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:8px; cursor:pointer; transition:background-color 120ms ease; background:{{ it.bg }}" style-hover="background:rgba(255,255,255,0.06)">
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#6f7077; width:13px">{{ it.n }}</div>
+                    <div style="flex:1; font-size:12.5px; min-width:0; color:{{ it.fg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ it.nome }}</div>
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:{{ it.tipoFg }}">{{ it.tipo }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <div onMouseDown="{{ dragBiblioteca }}" title="Arraste para redimensionar" style="flex:none; height:12px; cursor:row-resize; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:background-color 120ms ease" style-hover="background:rgba(255,255,255,0.06)">
+            <div style="width:44px; height:3px; border-radius:2px; background:rgba(255,255,255,0.14)"></div>
+          </div>
+          <div style="flex:none; height:{{ hBiblioteca }}; overflow-y:auto; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:10px; display:flex; flex-direction:column; gap:2px">
+            <div style="flex:none; padding:4px 8px 8px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Biblioteca</div>
+            <sc-for list="{{ biblioteca }}" as="b" hint-placeholder-count="8">
+              <div onClick="{{ b.click }}" style="flex:none; display:flex; align-items:center; gap:11px; padding:8px 9px; border-radius:8px; font-size:12.5px; cursor:pointer; transition:background-color 120ms ease; color:{{ b.fg }}; background:{{ b.bg }}; box-shadow:{{ b.ring }}" style-hover="background:rgba(255,255,255,0.06)">
+                <div style="width:15px; height:15px; display:flex; align-items:center; justify-content:center" dangerouslySetInnerHTML="{{ b.icone }}"></div>
+                {{ b.nome }}
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:0">
+          <div style="flex:1; min-height:0; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column">
+            <div style="flex:none; padding:16px 20px 12px; display:flex; align-items:center; gap:14px">
+              <div style="font-size:19px; font-weight:600; letter-spacing:-0.015em">{{ showNome }}</div>
+              <div style="padding:3px 9px; border-radius:20px; background:rgba(255,255,255,0.07); font-size:11px; color:#b6b7bd">{{ showCategoria }}</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6f7077">{{ showContagem }}</div>
+              <div style="flex:1"></div>
+              <div onClick="{{ toggleArranjo }}" style="display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:18px; cursor:pointer; font-size:12px; transition:background-color 120ms ease; background:{{ arranjoBtnBg }}; color:{{ arranjoBtnFg }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg>
+                Arranjo
+              </div>
+              <div style="display:flex; gap:4px; color:#83848b">
+                <div onClick="{{ setGrade }}" style="width:30px; height:30px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:{{ gradeBg }}; color:{{ gradeFg }}">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></svg>
+                </div>
+                <div onClick="{{ setLista }}" style="width:30px; height:30px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; background:{{ listaBg }}; color:{{ listaFg }}">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+                </div>
+              </div>
+            </div>
+            <sc-if value="{{ mostrarArranjo }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:none; padding:0 20px 12px; display:flex; flex-wrap:wrap; gap:6px; font-family:'JetBrains Mono',monospace; font-size:10px">
+                <sc-for list="{{ arranjo }}" as="a" hint-placeholder-count="5">
+                  <div onClick="{{ a.click }}" style="padding:5px 11px; border-radius:14px; cursor:pointer; letter-spacing:0.08em; transition:background-color 120ms ease; background:{{ a.bg }}; color:{{ a.fg }}">{{ a.rotulo }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isGrade }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1; min-height:0; overflow-y:auto; padding:0 20px 18px; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; align-content:start">
+                <sc-for list="{{ slides }}" as="s" hint-placeholder-count="10">
+                  <div onClick="{{ s.click }}" style="position:relative; cursor:pointer">
+                    <div style="position:absolute; inset:-13px; border-radius:18px; background:{{ s.glow }}; filter:blur(15px); transition:background-color 160ms ease; pointer-events:none"></div>
+                    <div style="position:relative; border-radius:10px; overflow:hidden; border:1px solid {{ s.ring }}; background:rgba(255,255,255,0.03); transition:border-color 120ms ease">
+                      <div style="aspect-ratio:16/9; background-color:#000; background-image:{{ s.fundo }}; background-size:cover; display:flex; align-items:center; justify-content:center; padding:11px">
+                        <div style="font-size:14px; line-height:1.25; text-align:center; color:#fff; font-weight:600; text-wrap:pretty">{{ s.texto }}</div>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:rgba(255,255,255,0.03)">
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:{{ s.numFg }}">{{ s.n }}</div>
+                        <div style="font-size:10px; letter-spacing:0.09em; text-transform:uppercase; color:#83848b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ s.grupo }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isLista }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1; min-height:0; overflow-y:auto; padding:0 20px 18px; display:flex; flex-direction:column; gap:4px">
+                <sc-for list="{{ slides }}" as="s" hint-placeholder-count="10">
+                  <div onClick="{{ s.click }}" style="flex:none; display:flex; align-items:center; gap:14px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:background-color 120ms ease; background:{{ s.rowBg }}" style-hover="background:rgba(255,255,255,0.06)">
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:{{ s.numFg }}; width:18px">{{ s.n }}</div>
+                    <div style="width:74px; flex:none; font-size:10px; letter-spacing:0.09em; text-transform:uppercase; color:{{ s.grupoFg }}">{{ s.grupo }}</div>
+                    <div style="flex:1; min-width:0; font-size:13px; color:{{ s.rowFg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ s.linha }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <div onMouseDown="{{ dragMidia }}" title="Arraste para redimensionar" style="flex:none; height:12px; cursor:row-resize; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:background-color 120ms ease" style-hover="background:rgba(255,255,255,0.06)">
+            <div style="width:44px; height:3px; border-radius:2px; background:rgba(255,255,255,0.14)"></div>
+          </div>
+          <div style="flex:none; height:{{ hMidia }}; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex">
+            <div style="width:210px; flex:none; padding:14px 12px; display:flex; flex-direction:column; gap:2px; border-right:1px solid rgba(255,255,255,0.06)">
+              <div style="padding:2px 8px 10px; display:flex; align-items:center; gap:8px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#83848b" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="9" cy="10" r="1.6"></circle><path d="M4 17l5-4 4 3 3-2 4 3"></path></svg>
+                <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">{{ acervoTitulo }}</div>
+              </div>
+              <div style="flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:2px">
+                <sc-for list="{{ fontesMidia }}" as="m" hint-placeholder-count="6">
+                  <div onClick="{{ m.click }}" style="flex:none; display:flex; align-items:center; gap:10px; padding:7px 9px; border-radius:8px; cursor:pointer; transition:background-color 120ms ease; background:{{ m.bg }}" style-hover="background:rgba(255,255,255,0.06)">
+                    <div style="width:6px; height:6px; border-radius:2px; background:{{ m.dot }}"></div>
+                    <div style="flex:1; min-width:0; font-size:12.5px; color:{{ m.fg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ m.nome }}</div>
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#6f7077">{{ m.qtd }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div onClick="{{ addPasta }}" style="flex:none; display:flex; align-items:center; justify-content:center; gap:8px; padding:9px; border-radius:8px; cursor:pointer; background:rgba(255,255,255,0.06); font-size:12px; color:#d6d7da" style-hover="background:rgba(255,255,255,0.1)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg>
+                Adicionar pasta
+              </div>
+            </div>
+            <div style="flex:1; min-width:0; padding:14px 16px; display:flex; flex-direction:column; gap:10px">
+              <div style="flex:none; display:flex; align-items:center; gap:10px">
+                <div style="display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:18px; background:rgba(255,255,255,0.05); flex:1; max-width:280px">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6f7077" stroke-width="1.8"><circle cx="11" cy="11" r="6"></circle><path d="M15.5 15.5L20 20"></path></svg>
+                  <input value="{{ busca }}" onChange="{{ onBusca }}" placeholder="{{ buscaPlaceholder }}" style="flex:1; min-width:0; border:none; outline:none; background:transparent; font-size:12px; color:#eceded" />
+                </div>
+                <div style="flex:1"></div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6f7077">{{ midiaContexto }}</div>
+              </div>
+              <div style="flex:1; min-height:0; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:10px; align-content:start">
+                <sc-for list="{{ midias }}" as="m" hint-placeholder-count="12">
+                  <div onClick="{{ m.click }}" style="border-radius:8px; overflow:hidden; cursor:pointer; border:1px solid {{ m.ring }}; transition:border-color 120ms ease">
+                    <div style="aspect-ratio:16/9; background-image:{{ m.fundo }}; position:relative">
+                      <div style="position:absolute; bottom:4px; right:5px; font-family:'JetBrains Mono',monospace; font-size:8px; color:rgba(255,255,255,0.75)">{{ m.dur }}</div>
+                    </div>
+                    <div style="padding:5px 7px; font-size:10px; color:{{ m.fg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:rgba(255,255,255,0.03)">{{ m.nome }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="width:352px; flex:none; display:flex; flex-direction:column; gap:0; min-height:0">
+          <div style="flex:none; height:{{ hMonitor }}; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px; display:flex; flex-direction:column; gap:11px">
+            <div style="flex:none; display:flex; gap:4px; padding:3px; border-radius:20px; background:rgba(0,0,0,0.35); font-family:'JetBrains Mono',monospace; font-size:10px">
+              <sc-for list="{{ saidas }}" as="o" hint-placeholder-count="4">
+                <div onClick="{{ o.click }}" style="flex:1; text-align:center; padding:6px; border-radius:16px; cursor:pointer; transition:background-color 120ms ease; background:{{ o.bg }}; color:{{ o.fg }}; font-weight:{{ o.w }}">{{ o.rotulo }}</div>
+              </sc-for>
+            </div>
+            <div style="flex:none; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.12)">
+              <div style="aspect-ratio:16/9; background-color:#000; background-image:{{ previewFundo }}; background-size:cover; display:flex; align-items:center; justify-content:center; padding:18px">
+                <div style="font-size:{{ previewSize }}; font-weight:700; color:{{ previewFg }}; text-align:center; line-height:1.2; text-wrap:pretty; white-space:pre-line">{{ previewTexto }}</div>
+              </div>
+            </div>
+            <div style="flex:1; min-height:0"></div>
+            <div style="flex:none; display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10px; color:#83848b">
+              <div>{{ previewSpec }}</div>
+              <div>{{ previewPos }}</div>
+            </div>
+            <div style="flex:none; display:flex; gap:6px">
+              <div onClick="{{ prev }}" title="Slide anterior" style="flex:1; height:36px; border-radius:9px; cursor:pointer; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; color:#d6d7da" style-hover="background:rgba(255,255,255,0.11)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 6l-6 6 6 6"></path></svg>
+              </div>
+              <div onClick="{{ next }}" title="Próximo slide" style="flex:1; height:36px; border-radius:9px; cursor:pointer; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; color:#d6d7da" style-hover="background:rgba(255,255,255,0.11)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 6l6 6-6 6"></path></svg>
+              </div>
+              <div onClick="{{ togglePlay }}" title="Avanço automático" style="flex:1; height:36px; border-radius:9px; cursor:pointer; background:{{ playBg }}; box-shadow:{{ playRing }}; display:flex; align-items:center; justify-content:center; color:{{ playFg }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M9 6l9 6-9 6z"></path></svg>
+              </div>
+              <div onClick="{{ toggleLock }}" title="Travar navegação" style="flex:1; height:36px; border-radius:9px; cursor:pointer; background:{{ lockBg }}; box-shadow:{{ lockRing }}; display:flex; align-items:center; justify-content:center; color:{{ lockFg }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="10" width="14" height="9" rx="2"></rect><path d="M8.5 10V8a3.5 3.5 0 017 0v2"></path></svg>
+              </div>
+              <div onClick="{{ toggleBlackout }}" title="Blackout" style="flex:1; height:36px; border-radius:9px; cursor:pointer; background:{{ blackoutBg }}; box-shadow:{{ blackoutRing }}; display:flex; align-items:center; justify-content:center; color:{{ blackoutFg }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="7"></circle><path d="M12 5a7 7 0 000 14z" fill="currentColor" stroke="none"></path></svg>
+              </div>
+            </div>
+          </div>
+
+          <div onMouseDown="{{ dragMonitor }}" title="Arraste para redimensionar" style="flex:none; height:12px; cursor:row-resize; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:background-color 120ms ease" style-hover="background:rgba(255,255,255,0.06)">
+            <div style="width:44px; height:3px; border-radius:2px; background:rgba(255,255,255,0.14)"></div>
+          </div>
+          <div style="flex:none; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:12px; display:flex; flex-direction:column; gap:10px">
+            <div onClick="{{ limparTudo }}" style="display:flex; align-items:center; justify-content:center; gap:9px; padding:10px; border-radius:9px; cursor:pointer; background:{{ limparBg }}; font-size:13px; font-weight:700; color:#fff; transition:background-color 120ms ease" style-hover="background:{{ brand }}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              Limpar tudo
+            </div>
+            <div style="display:flex; gap:6px">
+              <sc-for list="{{ camadas }}" as="c" hint-placeholder-count="5">
+                <div onClick="{{ c.click }}" style="flex:1; height:38px; border-radius:9px; cursor:pointer; transition:background-color 120ms ease; background:{{ c.bg }}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:{{ c.fg }}">
+                  <div style="width:12px; height:2px; border-radius:2px; background:currentColor"></div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:0.06em">{{ c.rotulo }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="flex:none; height:12px"></div>
+          <div style="flex:1; min-height:0; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column">
+            <div style="flex:none; display:flex; padding:4px; margin:10px 10px 0; border-radius:9px; background:rgba(0,0,0,0.3); font-size:12px">
+              <sc-for list="{{ abasDireita }}" as="t" hint-placeholder-count="3">
+                <div onClick="{{ t.click }}" style="flex:1; text-align:center; padding:7px; border-radius:7px; cursor:pointer; transition:background-color 120ms ease; background:{{ t.bg }}; color:{{ t.fg }}; font-weight:{{ t.w }}">{{ t.rotulo }}</div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ abaGrupos }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1; min-height:0; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:4px">
+                <sc-for list="{{ grupos }}" as="g" hint-placeholder-count="5">
+                  <div onClick="{{ g.click }}" style="flex:none; display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer; transition:background-color 120ms ease; background:{{ g.bg }}" style-hover="background:rgba(255,255,255,0.07)">
+                    <div style="width:7px; height:7px; border-radius:2px; background:{{ g.cor }}"></div>
+                    <div style="flex:1; font-size:12.5px; color:#c2c3c9">{{ g.nome }}</div>
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#6f7077">{{ g.qtd }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ abaMeta }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1; min-height:0; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:4px">
+                <sc-for list="{{ metadados }}" as="m" hint-placeholder-count="5">
+                  <div style="flex:none; display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.035)">
+                    <div style="width:88px; flex:none; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:#6f7077">{{ m.rotulo }}</div>
+                    <div style="flex:1; min-width:0; font-size:12.5px; color:#c2c3c9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ m.valor }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ abaNotas }}" hint-placeholder-val="{{ true }}">
+              <div style="flex:1; min-height:0; padding:10px; display:flex">
+                <textarea value="{{ notas }}" onChange="{{ onNotas }}" placeholder="Notas do culto — visíveis no palco" style="flex:1; resize:none; border:none; outline:none; border-radius:8px; background:rgba(255,255,255,0.035); padding:10px 12px; font-size:12.5px; line-height:1.5; color:#c2c3c9"></textarea>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="flex:none; height:12px"></div>
+          <div style="flex:none; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px 16px; display:flex; align-items:baseline; justify-content:space-between">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:500; letter-spacing:-0.02em; color:#eceded">{{ horaHM }}<span style="font-size:15px; color:#6f7077">{{ horaS }}</span></div>
+            <div style="font-size:11px; color:#83848b">{{ dataHoje }}</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEditar }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; gap:12px; min-height:0">
+        <div style="width:276px; flex:none; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column">
+          <div style="flex:none; padding:14px 16px 10px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Slides · {{ showNome }}</div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:0 10px 10px; display:flex; flex-direction:column; gap:2px">
+            <sc-for list="{{ slides }}" as="s" hint-placeholder-count="10">
+              <div onClick="{{ s.selecionar }}" style="flex:none; display:flex; align-items:center; gap:10px; padding:8px 9px; border-radius:8px; cursor:pointer; background:{{ s.editBg }}" style-hover="background:rgba(255,255,255,0.06)">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#6f7077; width:14px">{{ s.n }}</div>
+                <div style="flex:1; min-width:0; font-size:12.5px; color:{{ s.editFg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ s.linha }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:12px">
+          <div style="flex:1; min-height:0; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:20px; display:flex; flex-direction:column; gap:14px">
+            <div style="flex:none; display:flex; align-items:center; gap:12px">
+              <div style="font-size:15px; font-weight:600">Slide {{ cursorLabel }}</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6f7077">EDIÇÃO DE TEXTO</div>
+              <div style="flex:1"></div>
+              <div onClick="{{ enviarCursor }}" style="display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:9px; cursor:pointer; background:{{ brandWash }}; box-shadow:inset 0 0 0 1px {{ brandLine }}; font-size:12px; font-weight:600; color:#ff8f97">Enviar ao ar</div>
+            </div>
+            <div style="flex:none; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.12); max-width:640px">
+              <div style="aspect-ratio:16/9; background:#000; display:flex; align-items:center; justify-content:center; padding:28px">
+                <div style="font-size:26px; font-weight:700; color:#fff; text-align:center; line-height:1.2; text-wrap:pretty; white-space:pre-line">{{ textoAtual }}</div>
+              </div>
+            </div>
+            <textarea value="{{ textoAtual }}" onChange="{{ onTexto }}" style="flex:1; min-height:0; resize:none; border:none; outline:none; border-radius:10px; background:rgba(255,255,255,0.05); padding:14px 16px; font-size:14px; line-height:1.6; color:#eceded" placeholder="Texto do slide"></textarea>
+          </div>
+        </div>
+
+        <div style="width:352px; flex:none; display:flex; flex-direction:column; gap:12px; min-height:0">
+          <div style="flex:none; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px; display:flex; flex-direction:column; gap:8px">
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b; padding-bottom:2px">Grupo do slide</div>
+            <sc-for list="{{ gruposEscolha }}" as="g" hint-placeholder-count="5">
+              <div onClick="{{ g.click }}" style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer; transition:background-color 120ms ease; background:{{ g.bg }}" style-hover="background:rgba(255,255,255,0.07)">
+                <div style="width:7px; height:7px; border-radius:2px; background:{{ g.cor }}"></div>
+                <div style="flex:1; font-size:12.5px; color:{{ g.fg }}">{{ g.nome }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px; display:flex; flex-direction:column; gap:4px">
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b; padding-bottom:6px">Metadados</div>
+            <sc-for list="{{ metadados }}" as="m" hint-placeholder-count="5">
+              <div style="flex:none; display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.035)">
+                <div style="width:88px; flex:none; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:#6f7077">{{ m.rotulo }}</div>
+                <div style="flex:1; min-width:0; font-size:12.5px; color:#c2c3c9">{{ m.valor }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPalco }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; gap:12px; min-height:0">
+        <div style="flex:1; min-width:0; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:20px; display:flex; flex-direction:column; gap:14px">
+          <div style="flex:none; display:flex; align-items:center; gap:12px">
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Palco · Músicos</div>
+            <div style="flex:1"></div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#83848b">{{ previewPos }}</div>
+          </div>
+          <div style="flex:1; min-height:0; border-radius:12px; background:#000; display:flex; align-items:center; justify-content:center; padding:40px">
+            <div style="font-size:44px; font-weight:700; color:#fff; text-align:center; line-height:1.15; text-wrap:pretty; white-space:pre-line">{{ palcoAtual }}</div>
+          </div>
+          <div style="flex:none; display:flex; gap:12px; align-items:stretch">
+            <div style="flex:1; min-width:0; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); padding:14px 16px; display:flex; flex-direction:column; gap:6px">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.1em; color:#6f7077">PRÓXIMO</div>
+              <div style="font-size:16px; color:#c2c3c9; line-height:1.3; white-space:pre-line">{{ palcoProximo }}</div>
+            </div>
+            <div style="width:200px; flex:none; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); padding:14px 16px; display:flex; flex-direction:column; gap:6px">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.1em; color:#6f7077">TEMPO DE CULTO</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:500; color:#eceded; letter-spacing:-0.02em">{{ tempoCulto }}</div>
+            </div>
+          </div>
+        </div>
+        <div style="width:352px; flex:none; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:16px; display:flex; flex-direction:column; gap:10px">
+          <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Notas do culto</div>
+          <textarea value="{{ notas }}" onChange="{{ onNotas }}" placeholder="Notas do culto" style="flex:1; resize:none; border:none; outline:none; border-radius:8px; background:rgba(255,255,255,0.035); padding:12px; font-size:13px; line-height:1.6; color:#c2c3c9"></textarea>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:500; color:#eceded; letter-spacing:-0.02em">{{ horaHM }}<span style="font-size:15px; color:#6f7077">{{ horaS }}</span></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isBiblia }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; gap:12px; min-height:0">
+        <div style="width:276px; flex:none; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column">
+          <div style="flex:none; padding:14px 16px 10px; display:flex; align-items:center; gap:8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#83848b" stroke-width="1.6"><path d="M3 7h6l2 2h10v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Projetos · Domingo</div>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:0 10px 10px; display:flex; flex-direction:column; gap:2px">
+            <sc-for list="{{ itens }}" as="it" hint-placeholder-count="11">
+              <div onClick="{{ it.click }}" style="flex:none; display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:8px; cursor:pointer; transition:background-color 120ms ease; background:{{ it.bg }}" style-hover="background:rgba(255,255,255,0.06)">
+                <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:#6f7077; width:13px">{{ it.n }}</div>
+                <div style="flex:1; font-size:12.5px; min-width:0; color:{{ it.fg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ it.nome }}</div>
+                <div style="font-family:'JetBrains Mono',monospace; font-size:9px; color:{{ it.tipoFg }}">{{ it.tipo }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:0; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex">
+          <div style="width:172px; flex:none; min-height:0; overflow-y:auto; padding:14px 10px; display:flex; flex-direction:column; gap:2px; border-right:1px solid rgba(255,255,255,0.06)">
+            <div style="padding:2px 8px 10px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Livros</div>
+            <sc-for list="{{ bibLivros }}" as="l" hint-placeholder-count="13">
+              <div onClick="{{ l.click }}" style="flex:none; padding:7px 9px; border-radius:8px; cursor:pointer; font-size:12.5px; transition:background-color 120ms ease; background:{{ l.bg }}; color:{{ l.fg }}" style-hover="background:rgba(255,255,255,0.06)">{{ l.nome }}</div>
+            </sc-for>
+          </div>
+          <div style="width:104px; flex:none; min-height:0; overflow-y:auto; padding:14px 10px; border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:8px">
+            <div style="padding:2px 4px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Cap.</div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px">
+              <sc-for list="{{ bibCaps }}" as="c" hint-placeholder-count="21">
+                <div onClick="{{ c.click }}" style="height:26px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:10px; background:{{ c.bg }}; color:{{ c.fg }}" style-hover="background:rgba(255,255,255,0.1)">{{ c.n }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:1; min-width:0; display:flex; flex-direction:column">
+            <div style="flex:none; padding:16px 20px 10px; display:flex; align-items:center; gap:14px">
+              <div style="font-size:19px; font-weight:600; letter-spacing:-0.015em">{{ bibRef }}</div>
+              <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6f7077">{{ bibVersaoContexto }}</div>
+              <div style="flex:1"></div>
+              <div style="font-size:11.5px; color:#6f7077">clique seleciona · duplo-clique envia ao ar</div>
+            </div>
+            <div style="flex:1; min-height:0; overflow-y:auto; padding:0 20px 18px; display:flex; flex-direction:column; gap:2px">
+              <sc-for list="{{ bibVersos }}" as="v" hint-placeholder-count="8">
+                <div onClick="{{ v.click }}" onDoubleClick="{{ v.enviar }}" style="flex:none; display:flex; gap:12px; padding:9px 12px; border-radius:8px; cursor:pointer; transition:background-color 120ms ease; background:{{ v.bg }}; box-shadow:{{ v.linha }}" style-hover="background:rgba(255,255,255,0.06)">
+                  <div style="width:18px; flex:none; font-family:'JetBrains Mono',monospace; font-size:11px; color:{{ v.numFg }}; padding-top:2px">{{ v.n }}</div>
+                  <div style="flex:1; min-width:0; font-size:14px; line-height:1.5; color:{{ v.fg }}; text-wrap:pretty">{{ v.texto }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="width:352px; flex:none; display:flex; flex-direction:column; gap:12px; min-height:0">
+          <div style="flex:none; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px; display:flex; flex-direction:column; gap:11px">
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">No ar</div>
+            <div style="border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.12)">
+              <div style="aspect-ratio:16/9; background:#000; display:flex; align-items:center; justify-content:center; padding:18px">
+                <div style="font-size:17px; font-weight:700; color:{{ bibNoArFg }}; text-align:center; line-height:1.3; text-wrap:pretty; white-space:pre-line">{{ bibNoArTexto }}</div>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10px; color:#83848b">
+              <div>{{ previewSpec }}</div>
+              <div>{{ previewPos }}</div>
+            </div>
+          </div>
+          <div style="flex:none; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:12px">
+            <div onClick="{{ limparTudo }}" style="display:flex; align-items:center; justify-content:center; gap:9px; padding:10px; border-radius:9px; cursor:pointer; background:{{ limparBg }}; font-size:13px; font-weight:700; color:#fff" style-hover="background:{{ brand }}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              Limpar tudo
+            </div>
+          </div>
+          <div style="flex:1; min-height:0; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px 16px; display:flex; flex-direction:column; gap:8px">
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Versões</div>
+            <div style="display:flex; flex-direction:column; gap:4px">
+              <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:{{ brandWash }}; box-shadow:inset 0 0 0 1px {{ brandLine }}; font-size:12.5px; color:#fff">ARC · Almeida Revista e Corrigida</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.035); font-size:12.5px; color:#c2c3c9">NVI · Nova Versão Internacional</div>
+              <div style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.035); font-size:12.5px; color:#c2c3c9">NTLH · Nova Tradução na Linguagem de Hoje</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isAjustes }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1; display:flex; gap:12px; min-height:0">
+        <div style="width:276px; flex:none; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column">
+          <div style="flex:none; padding:14px 16px 10px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Ajustes</div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:0 0 10px; display:flex; flex-direction:column; gap:2px">
+            <sc-for list="{{ ajustesAbas }}" as="a" hint-placeholder-count="8">
+              <div onClick="{{ a.click }}" style="flex:none; padding:9px 16px; cursor:pointer; font-size:12.5px; transition:background-color 120ms ease; background:{{ a.bg }}; color:{{ a.fg }}; box-shadow:{{ a.linha }}" style-hover="background:rgba(255,255,255,0.06)">{{ a.nome }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:0; overflow:hidden; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); display:flex; flex-direction:column">
+          <div style="flex:none; padding:18px 24px 14px; display:flex; align-items:center; gap:14px">
+            <div style="font-size:19px; font-weight:600; letter-spacing:-0.015em">{{ ajustesTitulo }}</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6f7077">TEMA APLICADO A TODA A INTERFACE</div>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; padding:0 24px 24px; display:flex; flex-direction:column; gap:22px">
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Temas</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px">
+                <sc-for list="{{ temas }}" as="t" hint-placeholder-count="4">
+                  <div onClick="{{ t.click }}" style="border-radius:10px; cursor:pointer; padding:14px; display:flex; flex-direction:column; gap:11px; border:1px solid {{ t.ring }}; background:{{ t.bg }}; transition:background-color 120ms ease, border-color 120ms ease">
+                    <div style="display:flex; gap:5px">
+                      <sc-for list="{{ t.cores }}" as="c" hint-placeholder-count="4">
+                        <div style="flex:1; height:26px; border-radius:5px; border:1px solid rgba(255,255,255,0.08); background:{{ c.c }}"></div>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px">
+                      <div style="flex:1; min-width:0; font-size:13px; font-weight:600; color:{{ t.fg }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ t.nome }}</div>
+                      <div style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.08em; color:{{ t.marcaFg }}">{{ t.marca }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Cores do tema</div>
+              <div style="border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.07)">
+                <sc-for list="{{ tokensTema }}" as="t" hint-placeholder-count="8">
+                  <div style="display:flex; align-items:center; gap:14px; padding:10px 14px; background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.05)">
+                    <div style="width:16px; height:16px; flex:none; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:{{ t.amostra }}"></div>
+                    <div style="width:180px; flex:none; font-family:'JetBrains Mono',monospace; font-size:11px; color:#ff9aa2">{{ t.k }}</div>
+                    <div style="flex:1; min-width:0; font-family:'JetBrains Mono',monospace; font-size:11px; color:#c2c3c9">{{ t.v }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Tipografia</div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px">
+                <div style="border-radius:10px; background:rgba(255,255,255,0.035); padding:14px; display:flex; flex-direction:column; gap:6px">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#6f7077">FONTE DA INTERFACE</div>
+                  <div style="font-size:13px; color:#eceded">Sistema (padrão)</div>
+                </div>
+                <div style="border-radius:10px; background:rgba(255,255,255,0.035); padding:14px; display:flex; flex-direction:column; gap:6px">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#6f7077">DADOS NUMÉRICOS</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#eceded">JetBrains Mono</div>
+                </div>
+                <div style="border-radius:10px; background:rgba(255,255,255,0.035); padding:14px; display:flex; flex-direction:column; gap:6px">
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#6f7077">TAMANHO</div>
+                  <div style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#eceded">1em</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="width:352px; flex:none; display:flex; flex-direction:column; gap:12px; min-height:0">
+          <div style="flex:none; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px; display:flex; flex-direction:column; gap:11px">
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Pré-visualização</div>
+            <div style="border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.12)">
+              <div style="aspect-ratio:16/9; background-color:#000; background-image:{{ previewFundo }}; background-size:cover; display:flex; align-items:center; justify-content:center; padding:18px">
+                <div style="font-size:{{ previewSize }}; font-weight:700; color:{{ previewFg }}; text-align:center; line-height:1.2; white-space:pre-line">{{ previewTexto }}</div>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10px; color:#83848b">
+              <div>{{ previewSpec }}</div>
+              <div>{{ previewPos }}</div>
+            </div>
+          </div>
+          <div style="flex:1; min-height:0; overflow-y:auto; border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:14px 16px; display:flex; flex-direction:column; gap:10px">
+            <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#83848b">Como instalar</div>
+            <div style="font-size:12.5px; line-height:1.6; color:#a9aab0; text-wrap:pretty">O tema vive em <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#ff9aa2">theme/aliancashow-vidro.json</span>, no mesmo formato dos temas do app. Entra como padrão em <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#ff9aa2">defaultThemes.ts</span> sem apagar os temas existentes.</div>
+            <div style="font-size:12.5px; line-height:1.6; color:#a9aab0; text-wrap:pretty">Vidro, raios e o glow do slide no ar não são cor: vêm das variáveis novas em <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#ff9aa2">public/global.css</span>, com fundo sólido de fallback no modo otimizado.</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="flex:none; display:flex; align-items:center; gap:16px; padding:0 4px; font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.08em; color:#4f5157">
+      <div>← → ESPAÇO NAVEGAR</div>
+      <div>ENTER ENVIAR AO AR</div>
+      <div>B BLACKOUT</div>
+      <div>L TRAVAR</div>
+      <div>ESC LIMPAR TUDO</div>
+      <div style="flex:1"></div>
+      <div>{{ statusRodape }}</div>
+    </div>
+  </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;brand&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#f21a27&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#f21a27&quot;,&quot;#e4383f&quot;,&quot;#750b0b&quot;,&quot;#f1d278&quot;],&quot;section&quot;:&quot;Marca&quot;},&quot;glowNoAr&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Comportamento&quot;}}">
+const GRUPO_COR = { "Verso": "#6ea8fe", "Coro": "#e4383f", "Ponte": "#facc15", "Final": "#4ade80", "Pré-coro": "#a78bfa", "Slide": "#8b8d92", "Texto": "#6ea8fe", "Vídeo": "#a78bfa", "Imagem": "#4ade80" };
+
+const ICONES = {
+  Shows: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>',
+  "Mídia": '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4 4 3 3-2 4 3"/></svg>',
+  "Áudio": '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 10v4M9 7v10M13 9v6M17 11v2M21 9v6"/></svg>',
+  "Sobreposições": '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="12" height="12" rx="2"/><rect x="8" y="8" width="12" height="12" rx="2"/></svg>',
+  Modelos: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+  "Bíblia": '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5h6v14H5zM13 5h6v14h-6zM11 5v14"/></svg>',
+  "Calendário": '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 4v4M16 4v4M4 11h16"/></svg>',
+  "Funções": '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h16M4 16h16"/><circle cx="10" cy="8" r="2.2"/><circle cx="15" cy="16" r="2.2"/></svg>'
+};
+
+function faixa(h) {
+  return "repeating-linear-gradient(135deg, hsl(" + h + ",14%,13%) 0 7px, hsl(" + h + ",16%,19%) 7px 14px)";
+}
+
+const SHOWS = [
+  { id: "abertura", nome: "Vídeo Abertura", tipo: "VID", categoria: "Vídeo", slides: [{ t: "Abertura\n(vídeo)", g: "Vídeo" }] },
+  { id: "tudosobre", nome: "É tudo sobre você", tipo: "LTR", categoria: "Louvor", arranjo: ["VERSO 1", "CORO", "VERSO 2", "CORO", "FINAL"], slides: [
+    { t: "É tudo sobre você\ne nada sobre mim", g: "Verso" },
+    { t: "Vim buscar teu rosto\nvim buscar de ti", g: "Verso" },
+    { t: "Tudo o que eu sou\né para tua glória", g: "Coro" },
+    { t: "Tudo o que eu tenho\nte pertence", g: "Coro" },
+    { t: "Nada mais desejo\nsenão a ti", g: "Verso" },
+    { t: "Só a ti, Senhor", g: "Final" }
+  ] },
+  { id: "yahweh", nome: "Yahweh", tipo: "LTR", categoria: "Louvor", arranjo: ["VERSO 1", "CORO", "VERSO 2", "PONTE", "CORO"], slides: [
+    { t: "Antes que houvesse\no tempo, tu és", g: "Verso" },
+    { t: "Antes do primeiro\namanhecer", g: "Verso" },
+    { t: "Yahweh, Yahweh\no Deus que não falha", g: "Coro" },
+    { t: "Yahweh, Yahweh\nsanto para sempre", g: "Coro" },
+    { t: "Nas águas profundas\ntu me sustentaste", g: "Verso" },
+    { t: "No deserto seco\nfoste minha fonte", g: "Verso" },
+    { t: "Quem é como tu\nentre os deuses?", g: "Ponte" },
+    { t: "Ninguém é como tu", g: "Ponte" },
+    { t: "Yahweh, Yahweh\no Deus que não falha", g: "Coro" },
+    { t: "Santo para sempre", g: "Final" }
+  ] },
+  { id: "naoparou", nome: "Não parou a igreja", tipo: "LTR", categoria: "Louvor", arranjo: ["VERSO 1", "CORO", "PONTE"], slides: [
+    { t: "Não parou a igreja\ndo Senhor", g: "Verso" },
+    { t: "Ela avança\nnão retrocede", g: "Verso" },
+    { t: "As portas do inferno\nnão prevalecerão", g: "Coro" },
+    { t: "A igreja segue\nem marcha", g: "Coro" },
+    { t: "Aleluia, aleluia", g: "Ponte" }
+  ] },
+  { id: "oferta", nome: "Oferta", tipo: "SLD", categoria: "Avisos", slides: [
+    { t: "Momento da oferta", g: "Slide" },
+    { t: "Cada um dê conforme\npropôs no coração", g: "Slide" },
+    { t: "PIX\naliancashow@igreja.com", g: "Slide" }
+  ] },
+  { id: "joao1", nome: "João 1:1", tipo: "BIB", categoria: "Bíblia", slides: [
+    { t: "No princípio era o Verbo,\ne o Verbo estava com Deus", g: "Texto" },
+    { t: "e o Verbo era Deus.\nJoão 1:1", g: "Texto" }
+  ] },
+  { id: "foto1", nome: "Avisos — Foto 1", tipo: "IMG", categoria: "Avisos", slides: [{ t: "Foto — Avisos", g: "Imagem" }] },
+  { id: "video1", nome: "Avisos — Vídeo 1", tipo: "VID", categoria: "Avisos", slides: [{ t: "Vídeo — Avisos", g: "Vídeo" }] },
+  { id: "mateus1", nome: "Mateus 1:1", tipo: "BIB", categoria: "Bíblia", slides: [
+    { t: "Livro da genealogia\nde Jesus Cristo", g: "Texto" },
+    { t: "filho de Davi,\nfilho de Abraão.", g: "Texto" }
+  ] },
+  { id: "apoc2", nome: "Apocalipse 2:2-20", tipo: "BIB", categoria: "Bíblia", slides: [
+    { t: "Conheço as tuas obras,\no teu trabalho", g: "Texto" },
+    { t: "e a tua perseverança", g: "Texto" },
+    { t: "e que não podes\nsuportar os maus", g: "Texto" }
+  ] },
+  { id: "encerramento", nome: "Encerramento", tipo: "SLD", categoria: "Avisos", slides: [
+    { t: "Boa semana!", g: "Slide" },
+    { t: "Culto de quarta · 20h", g: "Slide" }
+  ] }
+];
+
+const PASTAS = {
+  Fundos: { h: 220, nomes: ["Nuvens lentas", "Luz dourada", "Vitral azul", "Partículas", "Névoa roxa", "Ondas suaves", "Cruz de luz", "Céu noturno", "Bokeh quente", "Linhas finas", "Tecido escuro", "Gradiente vivo"] },
+  "Vídeos": { h: 280, nomes: ["Abertura culto", "Chamada ceia", "Convite quarta", "Testemunho Ana", "Missões 2026", "Batismo abril", "Aniversário igreja", "Retiro jovens"] },
+  Fotos: { h: 150, nomes: ["Equipe louvor", "Batismo 01", "Batismo 02", "Ceia 2026", "Escola bíblica", "Cantina", "Fachada", "Grupo jovens", "Coral", "Crianças"] },
+  Loops: { h: 20, nomes: ["Loop âmbar", "Loop azul", "Loop preto", "Loop poeira", "Loop raios", "Loop chuva"] },
+  Entradas: { h: 340, nomes: ["Câmera palco", "Câmera plateia", "NDI — Cabine"] },
+  Online: { h: 190, nomes: ["YouTube — Louvor", "YouTube — Aviso", "Vimeo — Missões", "Link ceia"] }
+};
+
+const MIDIA_ORDEM = ["Tudo", "Entradas", "Online", "Fundos", "Vídeos", "Fotos", "Loops"];
+
+function midiaFontes() {
+  return MIDIA_ORDEM.map((nome) => {
+    if (nome === "Tudo") return { nome, itens: null };
+    const p = PASTAS[nome];
+    return { nome, hue: p.h, itens: p.nomes.map((n, i) => ({ n, m: String(Math.floor(i / 3) + 1).padStart(2, "0") + ":" + String((i * 17) % 60).padStart(2, "0") })) };
+  });
+}
+
+const ACERVO = {
+  Shows: { fontes: [
+    { nome: "Todas", itens: null },
+    { nome: "Louvor", hue: 355, itens: [{ n: "Yahweh", m: "LTR · 10" }, { n: "É tudo sobre você", m: "LTR · 06" }, { n: "Não parou a igreja", m: "LTR · 05" }, { n: "Bondade de Deus", m: "LTR · 08" }, { n: "Nada além do sangue", m: "LTR · 07" }, { n: "Deus é Deus", m: "LTR · 09" }] },
+    { nome: "Avisos", hue: 40, itens: [{ n: "Oferta", m: "SLD · 03" }, { n: "Encerramento", m: "SLD · 02" }, { n: "Retiro de jovens", m: "SLD · 04" }, { n: "Ceia", m: "SLD · 02" }] },
+    { nome: "Bíblia", hue: 210, itens: [{ n: "João 1:1", m: "BIB · 02" }, { n: "Mateus 1:1", m: "BIB · 02" }, { n: "Apocalipse 2:2-20", m: "BIB · 03" }, { n: "Salmos 23", m: "BIB · 06" }] },
+    { nome: "Especiais", hue: 280, itens: [{ n: "Batismo abril", m: "SLD · 05" }, { n: "Aniversário igreja", m: "SLD · 04" }] }
+  ] },
+  "Mídia": { fontes: midiaFontes() },
+  "Áudio": { fontes: [
+    { nome: "Tudo", itens: null },
+    { nome: "Playlists", hue: 165, itens: [{ n: "Pré-culto", m: "42:10" }, { n: "Oferta", m: "08:30" }, { n: "Pós-culto", m: "26:00" }] },
+    { nome: "Trilhas", hue: 190, itens: [{ n: "Pad em Mi", m: "10:00" }, { n: "Pad em Sol", m: "10:00" }, { n: "Base ceia", m: "05:40" }, { n: "Piano suave", m: "07:20" }] },
+    { nome: "Efeitos", hue: 30, itens: [{ n: "Aplausos", m: "00:06" }, { n: "Vinheta abertura", m: "00:12" }, { n: "Toque aviso", m: "00:03" }] }
+  ] },
+  "Sobreposições": { fontes: [
+    { nome: "Tudo", itens: null },
+    { nome: "Nomes", hue: 210, itens: [{ n: "Pr. Marcos", m: "LOWER" }, { n: "Ministério de louvor", m: "LOWER" }, { n: "Convidado", m: "LOWER" }] },
+    { nome: "Avisos", hue: 40, itens: [{ n: "PIX da oferta", m: "FULL" }, { n: "Inscrições abertas", m: "FULL" }] },
+    { nome: "Rodapés", hue: 280, itens: [{ n: "Versículo do dia", m: "FOOT" }, { n: "Redes sociais", m: "FOOT" }, { n: "Site", m: "FOOT" }] }
+  ] },
+  Modelos: { fontes: [
+    { nome: "Tudo", itens: null },
+    { nome: "Louvor", hue: 355, itens: [{ n: "Letra centralizada", m: "16:9" }, { n: "Letra 2 linhas", m: "16:9" }, { n: "Coro destacado", m: "16:9" }] },
+    { nome: "Bíblia", hue: 210, itens: [{ n: "Versículo + ref.", m: "16:9" }, { n: "Versículo grande", m: "16:9" }] },
+    { nome: "Avisos", hue: 40, itens: [{ n: "Título + texto", m: "16:9" }, { n: "Só título", m: "16:9" }, { n: "Foto cheia", m: "16:9" }] }
+  ] },
+  "Bíblia": { fontes: [
+    { nome: "Todas as versões", itens: null },
+    { nome: "ARC", hue: 210, itens: [{ n: "Gênesis", m: "50" }, { n: "Salmos", m: "150" }, { n: "Mateus", m: "28" }, { n: "João", m: "21" }, { n: "Romanos", m: "16" }, { n: "Apocalipse", m: "22" }] },
+    { nome: "NVI", hue: 190, itens: [{ n: "Gênesis", m: "50" }, { n: "Salmos", m: "150" }, { n: "João", m: "21" }, { n: "Efésios", m: "06" }] },
+    { nome: "NTLH", hue: 250, itens: [{ n: "Provérbios", m: "31" }, { n: "Isaías", m: "66" }, { n: "Lucas", m: "24" }] }
+  ] },
+  "Calendário": { fontes: [
+    { nome: "Tudo", itens: null },
+    { nome: "Cultos", hue: 355, itens: [{ n: "Culto de domingo", m: "13/09" }, { n: "Culto de quarta", m: "16/09" }, { n: "Ceia", m: "20/09" }] },
+    { nome: "Ensaios", hue: 165, itens: [{ n: "Ensaio louvor", m: "11/09" }, { n: "Ensaio coral", m: "12/09" }] },
+    { nome: "Eventos", hue: 40, itens: [{ n: "Retiro de jovens", m: "26/09" }, { n: "Batismo", m: "04/10" }] }
+  ] },
+  "Funções": { fontes: [
+    { nome: "Todas", itens: null },
+    { nome: "Ações", hue: 355, itens: [{ n: "Iniciar saídas", m: "CTRL+O" }, { n: "Limpar tudo", m: "ESC" }, { n: "Blackout", m: "B" }, { n: "Próximo slide", m: "→" }] },
+    { nome: "Cronômetros", hue: 40, itens: [{ n: "Contagem oferta", m: "05:00" }, { n: "Pré-culto", m: "15:00" }] },
+    { nome: "Variáveis", hue: 210, itens: [{ n: "nome_pregador", m: "TEXTO" }, { n: "versiculo_dia", m: "TEXTO" }, { n: "contador_visitantes", m: "NÚM" }] }
+  ] }
+};
+
+const BIBLIA_LIVROS = ["Gênesis", "Êxodo", "Salmos", "Provérbios", "Isaías", "Mateus", "Marcos", "Lucas", "João", "Atos", "Romanos", "Efésios", "Apocalipse"];
+const BIBLIA_VERSOS = {
+  "João 1": [
+    "No princípio era o Verbo, e o Verbo estava com Deus, e o Verbo era Deus.",
+    "Ele estava no princípio com Deus.",
+    "Todas as coisas foram feitas por ele, e sem ele nada do que foi feito se fez.",
+    "Nele estava a vida, e a vida era a luz dos homens.",
+    "E a luz resplandece nas trevas, e as trevas não a compreenderam.",
+    "Houve um homem enviado por Deus, cujo nome era João.",
+    "Este veio para testemunho, para que testificasse da luz.",
+    "Não era ele a luz, mas para que testificasse da luz."
+  ]
+};
+
+const AJUSTES_ABAS = ["Geral", "Saídas", "Tema", "Estilos", "Atalhos", "Perfis", "Conexões", "Nuvem"];
+
+const TEMAS = [
+  { nome: "AliançaShow — Vidro", cores: ["#0f0f11", "#141416", "#f21a27", "#eceded"] },
+  { nome: "FreeShow padrão", cores: ["#161616", "#1d1d1d", "#f21a27", "#f8f8f0"] },
+  { nome: "Dark", cores: ["#191923", "#242832", "#e64934", "#f0f0ff"] },
+  { nome: "Light", cores: ["#f8f4cf", "#f2edc4", "#f21a27", "#161616"] }
+];
+
+const TOKENS_TEMA = [
+  { k: "primary", v: "#141416" },
+  { k: "primary-lighter", v: "#1f2023" },
+  { k: "primary-darker", v: "#0f0f11" },
+  { k: "primary-darkest", v: "#0a0a0c" },
+  { k: "text", v: "#eceded" },
+  { k: "secondary", v: "#f21a27" },
+  { k: "secondary-text", v: "#f8f8f0" },
+  { k: "focus", v: "rgb(242 26 39 / 0.28)" }
+];
+
+class Component extends DCLogic {
+  state = {
+    view: "mostrar",
+    lib: "Mídia",
+    projetoAberto: true,
+    showId: "yahweh",
+    cursor: 0,
+    liveShow: null,
+    liveIndex: null,
+    liveStart: null,
+    blackout: false,
+    locked: false,
+    playing: false,
+    saida: "PROJETOR",
+    camada: "TEXTO",
+    aba: "Grupos",
+    pasta: "Fundos",
+    fonte: { "Mídia": "Fundos" },
+    bibLivro: "João",
+    bibCap: 1,
+    bibVers: null,
+    bibNoAr: null,
+    ajustesAba: "Tema",
+    temaSel: "AliançaShow — Vidro",
+    busca: "",
+    modo: "grade",
+    fundoAtivo: null,
+    fundoNome: null,
+    mostrarArranjo: true,
+    audioOn: false,
+    ajustesOn: false,
+    saidasOn: true,
+    textos: {},
+    gruposEdit: {},
+    notas: "Chegar 18h30 para passagem de som.\nOferta depois do 3º louvor.\nAvisos: retiro de jovens (inscrições abertas).",
+    now: Date.now(),
+    escala: 1,
+    hBiblioteca: 314,
+    hMidia: 264,
+    hMonitor: 320
+  };
+
+  limites = { hBiblioteca: [120, 620], hMidia: [140, 560], hMonitor: [210, 560] };
+
+  arrastar = (chave, sinal) => (e) => {
+    e.preventDefault();
+    const inicioY = e.clientY;
+    const inicial = this.state[chave];
+    const [min, max] = this.limites[chave];
+    const mover = (ev) => {
+      const d = ((ev.clientY - inicioY) / (this.state.escala || 1)) * sinal;
+      this.setState({ [chave]: Math.max(min, Math.min(max, Math.round(inicial + d))) });
+    };
+    const soltar = () => {
+      window.removeEventListener("mousemove", mover);
+      window.removeEventListener("mouseup", soltar);
+      document.body.style.cursor = "";
+    };
+    document.body.style.cursor = "row-resize";
+    window.addEventListener("mousemove", mover);
+    window.addEventListener("mouseup", soltar);
+  };
+
+  palco = React.createRef();
+
+  medir = () => {
+    const el = this.palco.current;
+    const w = el && el.clientWidth ? el.clientWidth : window.innerWidth;
+    const h = el && el.clientHeight ? el.clientHeight : window.innerHeight;
+    if (!w || !h) return;
+    const k = Math.min(w / 1600, h / 900);
+    if (k > 0 && Math.abs(k - this.state.escala) > 0.0005) this.setState({ escala: k });
+  };
+
+  componentDidMount() {
+    this.medir();
+    if (window.ResizeObserver && this.palco.current) {
+      this.ro = new ResizeObserver(() => this.medir());
+      this.ro.observe(this.palco.current);
+    }
+    window.addEventListener("resize", this.medir);
+    requestAnimationFrame(this.medir);
+    setTimeout(this.medir, 120);
+    this.timer = setInterval(() => {
+      this.setState({ now: Date.now() });
+      if (this.state.playing && this.state.liveShow) this.avancar(1, true);
+    }, 1000);
+    this.onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      const k = e.key;
+      if (k === "ArrowRight" || k === " " || k === "PageDown") { e.preventDefault(); this.avancar(1); }
+      else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); this.avancar(-1); }
+      else if (k === "Enter") { e.preventDefault(); this.enviar(this.state.cursor); }
+      else if (k === "Escape") { this.limpar(); }
+      else if (k === "b" || k === "B") { this.setState((s) => ({ blackout: !s.blackout })); }
+      else if (k === "l" || k === "L") { this.setState((s) => ({ locked: !s.locked })); }
+    };
+    window.addEventListener("keydown", this.onKey);
+  }
+  componentWillUnmount() { clearInterval(this.timer); window.removeEventListener("keydown", this.onKey); window.removeEventListener("resize", this.medir); if (this.ro) this.ro.disconnect(); }
+
+  show(id) { return SHOWS.find((s) => s.id === (id || this.state.showId)) || SHOWS[0]; }
+  slidesDo(id) {
+    const sh = this.show(id);
+    return sh.slides.map((s, i) => ({
+      texto: this.state.textos[sh.id + ":" + i] !== undefined ? this.state.textos[sh.id + ":" + i] : s.t,
+      grupo: this.state.gruposEdit[sh.id + ":" + i] || s.g
+    }));
+  }
+
+  enviar(i) {
+    if (!this.state.saidasOn) return;
+    const total = this.slidesDo().length;
+    const idx = Math.max(0, Math.min(total - 1, i));
+    this.setState((s) => ({ cursor: idx, liveShow: s.showId, liveIndex: idx, blackout: false, liveStart: s.liveStart || Date.now() }));
+  }
+  avancar(d, auto) {
+    if (this.state.locked) return;
+    const s = this.state;
+    if (s.liveShow === s.showId && s.liveIndex !== null) {
+      const total = this.slidesDo().length;
+      const n = s.liveIndex + d;
+      if (n >= total) { if (auto) this.setState({ playing: false }); return; }
+      if (n < 0) return;
+      this.enviar(n);
+    } else {
+      const total = this.slidesDo().length;
+      this.setState({ cursor: Math.max(0, Math.min(total - 1, s.cursor + d)) });
+    }
+  }
+  limpar() {
+    this.setState({ liveShow: null, liveIndex: null, liveStart: null, blackout: false, playing: false, fundoAtivo: null, fundoNome: null, bibNoAr: null });
+  }
+
+  rgba(hex, a) {
+    const h = (hex || "#e4383f").replace("#", "");
+    const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+    return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
+  }
+  hhmmss(ms) {
+    const t = Math.max(0, Math.floor(ms / 1000));
+    const p = (v) => String(v).padStart(2, "0");
+    return p(Math.floor(t / 3600)) + ":" + p(Math.floor((t % 3600) / 60)) + ":" + p(t % 60);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const brand = this.props.brand || "#f21a27";
+    const wash = this.rgba(brand, 0.16);
+    const washSoft = this.rgba(brand, 0.14);
+    const line = this.rgba(brand, 0.3);
+    const glowOn = this.props.glowNoAr !== false;
+    const sh = this.show();
+    const slides = this.slidesDo();
+    const liveAqui = s.liveShow === s.showId && s.liveIndex !== null;
+    const noAr = s.liveShow !== null && s.saidasOn;
+    const d = new Date(s.now);
+
+    const itens = SHOWS.map((it, i) => {
+      const atual = it.id === s.showId;
+      const emAr = it.id === s.liveShow;
+      return {
+        n: String(i + 1).padStart(2, "0"), nome: it.nome, tipo: it.tipo,
+        bg: emAr ? wash : atual ? "rgba(255,255,255,0.09)" : "transparent",
+        fg: emAr || atual ? "#ffffff" : "#a9aab0",
+        tipoFg: emAr ? "#ff8f97" : "#6f7077",
+        click: () => this.setState({ showId: it.id, cursor: 0, busca: "" })
+      };
+    });
+
+    const biblioteca = Object.keys(ICONES).map((nome) => {
+      const sel = s.lib === nome;
+      return {
+        nome, icone: { __html: ICONES[nome] },
+        bg: sel ? wash : "transparent", fg: sel ? "#fff" : "#a9aab0",
+        ring: sel ? "inset 0 0 0 1px " + this.rgba(brand, 0.28) : "none",
+        click: () => this.setState({ lib: nome, busca: "" })
+      };
+    });
+
+    const bibChave = s.bibLivro + " " + s.bibCap;
+    const bibBase = BIBLIA_VERSOS[bibChave] || BIBLIA_VERSOS["João 1"];
+    const bibLivros = BIBLIA_LIVROS.map((nome) => {
+      const ativo = s.bibLivro === nome;
+      return { nome, bg: ativo ? wash : "transparent", fg: ativo ? "#fff" : "#a9aab0", click: () => this.setState({ bibLivro: nome, bibCap: 1, bibVers: null }) };
+    });
+    const bibCaps = [];
+    for (let i = 1; i <= 21; i++) {
+      const ativo = s.bibCap === i;
+      bibCaps.push({ n: String(i), bg: ativo ? wash : "rgba(255,255,255,0.04)", fg: ativo ? "#fff" : "#a9aab0", click: () => this.setState({ bibCap: i, bibVers: null }) });
+    }
+    const bibVersos = bibBase.map((texto, i) => {
+      const noArV = s.bibNoAr === i;
+      const sel = s.bibVers === i;
+      return {
+        n: String(i + 1), texto,
+        bg: noArV ? wash : sel ? "rgba(255,255,255,0.06)" : "transparent",
+        fg: noArV || sel ? "#fff" : "#c2c3c9",
+        numFg: noArV ? "#ff9aa2" : "#6f7077",
+        linha: noArV ? "inset 3px 0 0 0 " + brand : "none",
+        click: () => this.setState({ bibVers: i }),
+        enviar: () => { if (this.state.saidasOn) this.setState((st) => ({ bibNoAr: i, bibVers: i, blackout: false, liveStart: st.liveStart || Date.now(), liveShow: st.liveShow || "biblia" })); }
+      };
+    });
+
+    const ajustesAbas = AJUSTES_ABAS.map((nome) => {
+      const ativo = s.ajustesAba === nome;
+      return {
+        nome, bg: ativo ? wash : "transparent", fg: ativo ? "#fff" : "#a9aab0",
+        linha: ativo ? "inset 3px 0 0 0 " + brand : "inset 3px 0 0 0 transparent",
+        click: () => this.setState({ ajustesAba: nome })
+      };
+    });
+    const temas = TEMAS.map((t) => {
+      const ativo = s.temaSel === t.nome;
+      return {
+        nome: t.nome, cores: t.cores.map((c, i) => ({ c, k: t.nome + i })),
+        ring: ativo ? "rgba(255,120,130,0.75)" : "rgba(255,255,255,0.07)",
+        bg: ativo ? wash : "rgba(255,255,255,0.03)",
+        fg: ativo ? "#fff" : "#c2c3c9",
+        marca: ativo ? "NO USO" : "APLICAR",
+        marcaFg: ativo ? "#ff9aa2" : "#6f7077",
+        click: () => this.setState({ temaSel: t.nome })
+      };
+    });
+
+    const secaoAtual = slides[liveAqui ? s.liveIndex : s.cursor];
+    const arranjo = (sh.arranjo || []).map((rot, i) => {
+      const base = rot.split(" ")[0];
+      const ativa = secaoAtual && secaoAtual.grupo.toUpperCase().indexOf(base) === 0;
+      return {
+        rotulo: rot,
+        bg: ativa ? this.rgba(brand, 0.22) : "rgba(255,255,255,0.06)",
+        fg: ativa ? "#ff9aa2" : "#a9aab0",
+        click: () => {
+          const alvo = slides.findIndex((x) => x.grupo.toUpperCase().indexOf(base) === 0);
+          if (alvo >= 0) this.setState({ cursor: alvo });
+        }
+      };
+    });
+
+    const slidesV = slides.map((sl, i) => {
+      const emAr = liveAqui && s.liveIndex === i && !s.blackout;
+      const prox = liveAqui && s.liveIndex + 1 === i;
+      const sel = s.cursor === i;
+      return {
+        n: String(i + 1).padStart(2, "0"), texto: sl.texto, grupo: sl.grupo,
+        linha: sl.texto.replace(/\n/g, " · "),
+        fundo: emAr && s.fundoAtivo ? s.fundoAtivo : "none",
+        glow: emAr && glowOn ? this.rgba(brand, 0.6) : "transparent",
+        ring: emAr ? "rgba(255,120,130,0.75)" : sel ? "rgba(255,255,255,0.28)" : prox ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.07)",
+        numFg: emAr ? "#ff9aa2" : "#6f7077",
+        grupoFg: GRUPO_COR[sl.grupo] || "#83848b",
+        rowBg: emAr ? wash : sel ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.035)",
+        rowFg: emAr || sel ? "#fff" : "#c2c3c9",
+        editBg: sel ? "rgba(255,255,255,0.09)" : "transparent",
+        editFg: sel ? "#fff" : "#a9aab0",
+        click: () => this.enviar(i),
+        selecionar: () => this.setState({ cursor: i })
+      };
+    });
+
+    const acervo = ACERVO[s.lib] || ACERVO["Mídia"];
+    const fonteNome = s.fonte[s.lib] || acervo.fontes[0].nome;
+    const todosItens = [];
+    acervo.fontes.forEach((f) => { if (f.itens) f.itens.forEach((it) => todosItens.push({ n: it.n, m: it.m, h: f.hue || 200 })); });
+    const fontes = acervo.fontes.map((f) => {
+      const ativo = fonteNome === f.nome;
+      const itens = f.itens || todosItens;
+      return {
+        nome: f.nome, qtd: String(itens.length),
+        bg: ativo ? wash : "transparent", fg: ativo ? "#fff" : "#a9aab0",
+        dot: ativo ? brand : "#4b4e55",
+        click: () => this.setState((st) => ({ fonte: Object.assign({}, st.fonte, { [st.lib]: f.nome }), busca: "" }))
+      };
+    });
+    const fonteObj = acervo.fontes.find((f) => f.nome === fonteNome) || acervo.fontes[0];
+    const arquivos = (fonteObj.itens || todosItens).map((it) => ({ n: it.n, m: it.m, h: it.h !== undefined ? it.h : fonteObj.hue || 200 }));
+    const filtro = s.busca.trim().toLowerCase();
+    const visiveis = filtro ? arquivos.filter((a) => a.n.toLowerCase().indexOf(filtro) >= 0) : arquivos;
+    const midias = visiveis.map((a, i) => {
+      const fundo = faixa(a.h + (i % 5) * 12);
+      const ativo = s.fundoNome === a.n;
+      return {
+        nome: a.n, dur: a.m,
+        fundo, ring: ativo ? "rgba(255,120,130,0.75)" : "rgba(255,255,255,0.06)",
+        fg: ativo ? "#fff" : "#a9aab0",
+        click: () => this.setState({ fundoAtivo: fundo, fundoNome: a.n, camada: "FUNDO" })
+      };
+    });
+
+    const contGrupos = {};
+    slides.forEach((sl) => { contGrupos[sl.grupo] = (contGrupos[sl.grupo] || 0) + 1; });
+    const grupos = Object.keys(contGrupos).map((nome) => ({
+      nome, qtd: String(contGrupos[nome]), cor: GRUPO_COR[nome] || "#8b8d92",
+      bg: "rgba(255,255,255,0.035)",
+      click: () => { const alvo = slides.findIndex((x) => x.grupo === nome); if (alvo >= 0) this.setState({ cursor: alvo }); }
+    }));
+
+    const gruposEscolha = ["Verso", "Pré-coro", "Coro", "Ponte", "Final"].map((nome) => {
+      const atual = slides[s.cursor] && slides[s.cursor].grupo === nome;
+      return {
+        nome, cor: GRUPO_COR[nome], bg: atual ? wash : "rgba(255,255,255,0.035)", fg: atual ? "#fff" : "#c2c3c9",
+        click: () => this.setState((st) => ({ gruposEdit: Object.assign({}, st.gruposEdit, { [st.showId + ":" + st.cursor]: nome }) }))
+      };
+    });
+
+    const specs = { PROJETOR: "1920×1080 · 60Hz", LED: "1024×768 · 60Hz", STREAM: "1280×720 · 30Hz", PALCO: "1920×1080 · 60Hz" };
+    const saidas = ["PROJETOR", "LED", "STREAM", "PALCO"].map((rot) => ({
+      rotulo: rot, bg: s.saida === rot ? "rgba(255,255,255,0.10)" : "transparent",
+      fg: s.saida === rot ? "#fff" : "#83848b", w: s.saida === rot ? 700 : 400,
+      click: () => this.setState({ saida: rot })
+    }));
+
+    const camadas = ["TEXTO", "FUNDO", "SOBREP", "ÁUDIO", "PALCO"].map((rot) => ({
+      rotulo: rot, bg: s.camada === rot ? wash : "rgba(255,255,255,0.06)",
+      fg: s.camada === rot ? "#ff8f97" : "#a9aab0",
+      click: () => this.setState({ camada: rot })
+    }));
+
+    const abas = ["Grupos", "Metadados", "Notas"].map((rot) => ({
+      rotulo: rot, bg: s.aba === rot ? "rgba(255,255,255,0.09)" : "transparent",
+      fg: s.aba === rot ? "#fff" : "#83848b", w: s.aba === rot ? 600 : 400,
+      click: () => this.setState({ aba: rot })
+    }));
+
+    const liveSlide = s.liveShow !== null ? this.slidesDo(s.liveShow)[s.liveIndex] : null;
+    const liveTotal = s.liveShow !== null ? this.slidesDo(s.liveShow).length : 0;
+    const semSaida = !s.saidasOn;
+    const bibAoArTexto = s.bibNoAr !== null && bibBase[s.bibNoAr] ? bibBase[s.bibNoAr] + "\n" + s.bibLivro + " " + s.bibCap + ":" + (s.bibNoAr + 1) : null;
+    const previewTexto = semSaida ? "SAÍDA DESLIGADA" : s.blackout ? "BLACKOUT" : bibAoArTexto ? bibAoArTexto : liveSlide ? liveSlide.texto : "—";
+    const proximo = s.liveShow !== null && this.slidesDo(s.liveShow)[s.liveIndex + 1];
+
+    const tab = (v) => ({ bg: s.view === v ? "rgba(255,255,255,0.09)" : "transparent", fg: s.view === v ? "#fff" : "#83848b", w: s.view === v ? 600 : 400 });
+    const tm = tab("mostrar"), te = tab("editar"), tp = tab("palco"), tb = tab("biblia");
+
+    return {
+      stageTransform: "scale(" + s.escala + ")",
+      palcoRef: this.palco,
+      hBiblioteca: s.hBiblioteca + "px",
+      hMidia: s.hMidia + "px",
+      hMonitor: s.hMonitor + "px",
+      dragBiblioteca: this.arrastar("hBiblioteca", -1),
+      dragMidia: this.arrastar("hMidia", -1),
+      dragMonitor: this.arrastar("hMonitor", 1),
+      brand, brandWash: wash, brandWashSoft: washSoft, brandLine: line, glowBrand: this.rgba(brand, 0.15),
+      isMostrar: s.view === "mostrar", isEditar: s.view === "editar", isPalco: s.view === "palco",
+      isBiblia: s.view === "biblia", isAjustes: s.view === "ajustes",
+      goMostrar: () => this.setState({ view: "mostrar" }), goEditar: () => this.setState({ view: "editar" }), goPalco: () => this.setState({ view: "palco" }),
+      goBiblia: () => this.setState({ view: "biblia" }), goAjustes: () => this.setState({ view: "ajustes" }),
+      tabMostrarBg: tm.bg, tabMostrarFg: tm.fg, tabMostrarW: tm.w,
+      tabEditarBg: te.bg, tabEditarFg: te.fg, tabEditarW: te.w,
+      tabPalcoBg: tp.bg, tabPalcoFg: tp.fg, tabPalcoW: tp.w,
+      tabBibliaBg: tb.bg, tabBibliaFg: tb.fg, tabBibliaW: tb.w,
+      bibLivros, bibCaps, bibVersos,
+      bibRef: s.bibLivro + " " + s.bibCap, bibVersaoContexto: "ARC · " + bibBase.length + " VERSÍCULOS",
+      bibNoArTexto: bibAoArTexto ? bibAoArTexto : "—",
+      bibNoArFg: bibAoArTexto ? "#fff" : "#4b4e55",
+      ajustesAbas, temas, tokensTema: TOKENS_TEMA.map((t) => ({ k: "--" + t.k, v: t.v, amostra: t.v })),
+      ajustesTitulo: s.ajustesAba,
+      isAbaTema: s.ajustesAba === "Tema",
+      noAr, badgeTexto: "NO AR · " + (s.liveStart ? this.hhmmss(s.now - s.liveStart) : "00:00:00"),
+      audioBg: s.audioOn ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)", audioFg: s.audioOn ? "#fff" : "#9a9ba1",
+      toggleAudio: () => this.setState((st) => ({ audioOn: !st.audioOn })),
+      ajustesBg: s.view === "ajustes" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)", ajustesFg: s.view === "ajustes" ? "#fff" : "#9a9ba1",
+      saidasBg: s.saidasOn ? wash : "rgba(255,255,255,0.05)", saidasLine: s.saidasOn ? line : "transparent", saidasFg: s.saidasOn ? "#ff8f97" : "#9a9ba1",
+      toggleSaidas: () => this.setState((st) => { if (st.saidasOn) return { saidasOn: false, liveShow: null, liveIndex: null, liveStart: null, playing: false }; return { saidasOn: true }; }),
+
+      projetoAberto: s.projetoAberto, chevronRot: s.projetoAberto ? "rotate(90deg)" : "rotate(0deg)",
+      toggleProjeto: () => this.setState((st) => ({ projetoAberto: !st.projetoAberto })),
+      qtdItens: String(SHOWS.length), itens, biblioteca,
+
+      showNome: sh.nome, showCategoria: sh.categoria, showContagem: slides.length + (slides.length === 1 ? " SLIDE" : " SLIDES"),
+      arranjo, mostrarArranjo: s.mostrarArranjo && (sh.arranjo || []).length > 0,
+      toggleArranjo: () => this.setState((st) => ({ mostrarArranjo: !st.mostrarArranjo })),
+      arranjoBtnBg: s.mostrarArranjo ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)", arranjoBtnFg: s.mostrarArranjo ? "#fff" : "#d6d7da",
+      isGrade: s.modo === "grade", isLista: s.modo === "lista",
+      setGrade: () => this.setState({ modo: "grade" }), setLista: () => this.setState({ modo: "lista" }),
+      gradeBg: s.modo === "grade" ? "rgba(255,255,255,0.09)" : "transparent", gradeFg: s.modo === "grade" ? "#fff" : "#83848b",
+      listaBg: s.modo === "lista" ? "rgba(255,255,255,0.09)" : "transparent", listaFg: s.modo === "lista" ? "#fff" : "#83848b",
+      slides: slidesV,
+
+      fontesMidia: fontes, midias, busca: s.busca,
+      acervoTitulo: s.lib,
+      buscaPlaceholder: "Pesquisar em " + fonteNome,
+      onBusca: (e) => this.setState({ busca: e.target.value }),
+      midiaContexto: fonteNome.toUpperCase() + " · " + visiveis.length + (visiveis.length === 1 ? " ITEM" : " ITENS"),
+      addPasta: () => this.setState((st) => ({ fonte: Object.assign({}, st.fonte, { [st.lib]: acervo.fontes[0].nome }), busca: "" })),
+
+      saidas, previewFundo: !semSaida && !s.blackout && s.fundoAtivo ? s.fundoAtivo : "none",
+      previewTexto, previewFg: semSaida || s.blackout ? "#4b4e55" : "#fff",
+      previewSize: semSaida || s.blackout ? "13px" : "22px",
+      previewSpec: semSaida ? "SEM SAÍDA" : specs[s.saida], 
+      previewPos: bibAoArTexto ? String(s.bibNoAr + 1).padStart(2, "0") + " / " + String(bibBase.length).padStart(2, "0") : s.liveShow !== null && s.liveIndex !== null ? String(s.liveIndex + 1).padStart(2, "0") + " / " + String(liveTotal).padStart(2, "0") : "— / —",
+      prev: () => this.avancar(-1), next: () => this.avancar(1),
+      togglePlay: () => this.setState((st) => ({ playing: !st.playing })),
+      playBg: s.playing ? wash : "rgba(255,255,255,0.06)", playRing: s.playing ? "inset 0 0 0 1px " + line : "none", playFg: s.playing ? "#ff8f97" : "#d6d7da",
+      toggleLock: () => this.setState((st) => ({ locked: !st.locked })),
+      lockBg: s.locked ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)", lockRing: s.locked ? "inset 0 0 0 1px rgba(255,255,255,0.25)" : "none", lockFg: s.locked ? "#fff" : "#d6d7da",
+      toggleBlackout: () => this.setState((st) => ({ blackout: !st.blackout })),
+      blackoutBg: s.blackout ? this.rgba(brand, 0.9) : wash, blackoutRing: "inset 0 0 0 1px " + line, blackoutFg: s.blackout ? "#fff" : "#ff8f97",
+      limparTudo: () => this.limpar(), limparBg: this.rgba(brand, 0.9),
+      camadas, abasDireita: abas,
+      abaGrupos: s.aba === "Grupos", abaMeta: s.aba === "Metadados", abaNotas: s.aba === "Notas",
+      grupos, gruposEscolha,
+      metadados: [
+        { rotulo: "Show", valor: sh.nome },
+        { rotulo: "Categoria", valor: sh.categoria },
+        { rotulo: "Tipo", valor: sh.tipo },
+        { rotulo: "Slides", valor: String(slides.length) },
+        { rotulo: "Camada", valor: s.camada },
+        { rotulo: "Fundo", valor: s.fundoNome || "nenhum" },
+        { rotulo: "Saída", valor: s.saidasOn ? s.saida : "desligada" }
+      ],
+      notas: s.notas, onNotas: (e) => this.setState({ notas: e.target.value }),
+      horaHM: d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      horaS: ":" + String(d.getSeconds()).padStart(2, "0"),
+      dataHoje: d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" }),
+
+      cursorLabel: String(s.cursor + 1).padStart(2, "0") + " / " + String(slides.length).padStart(2, "0"),
+      textoAtual: slides[s.cursor] ? slides[s.cursor].texto : "",
+      onTexto: (e) => this.setState((st) => ({ textos: Object.assign({}, st.textos, { [st.showId + ":" + st.cursor]: e.target.value }) })),
+      enviarCursor: () => this.enviar(s.cursor),
+
+      palcoAtual: semSaida ? "—" : bibAoArTexto ? bibAoArTexto : liveSlide ? liveSlide.texto : "—",
+      palcoProximo: proximo ? proximo.texto : "fim do show",
+      tempoCulto: s.liveStart ? this.hhmmss(s.now - s.liveStart) : "00:00:00",
+      statusRodape: (s.locked ? "TRAVADO · " : "") + (s.playing ? "AUTO · " : "") + "CAMADA " + s.camada + " · " + (s.saidasOn ? s.saida : "SAÍDAS OFF")
+    };
+  }
+}
+
+</script>
+</body>
+</html>

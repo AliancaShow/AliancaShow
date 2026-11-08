@@ -1,6 +1,7 @@
 // ----- FreeShow -----
 // This is the electron entry point
 
+import { join } from "path"
 import type { Rectangle } from "electron"
 import { BrowserWindow, Menu, app, ipcMain, powerSaveBlocker, protocol, screen } from "electron"
 import { AUDIO, BLACKMAGIC, CLOUD, EXPORT, MAIN, NDI, OUTPUT, STARTUP } from "../types/Channels"
@@ -119,6 +120,10 @@ async function startApp() {
     // } catch (err) {
     //     console.warn("Failed to initialize Widevine CDM components:", err)
     // }
+
+    // No Mac em desenvolvimento o Dock mostra o icone do proprio Electron; o
+    // instalador ja usa o icon.icns, entao isto so vale para o npm start
+    if (!isProd && process.platform === "darwin") app.dock?.setIcon(join(process.cwd(), "public", "icon.png"))
 
     setTimeout(createLoading)
 

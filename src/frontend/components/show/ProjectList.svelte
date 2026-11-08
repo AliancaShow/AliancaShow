@@ -159,6 +159,9 @@
                     {#each tree as project}
                         {#if project.id === "ROOT"}
                             <div class="title"><T id="category.unlabeled" /></div>
+                        {:else if project.type === "grupo"}
+                            <!-- cabecalho da lista continua: acompanha a rolagem -->
+                            <div class="grupo">{project.name}</div>
                         {:else}
                             {@const opened = $openedFolders.includes(project.id)}
                             {@const shown = checkIfShown(project, $openedFolders)}
@@ -315,7 +318,28 @@
         font-weight: normal;
     }
 
+    /* Na lista continua nao ha recuo, entao a regua de arvore sai junto. */
     .indented {
-        border-inline-start: 1px solid var(--primary-lighter);
+        border-inline-start: none;
+    }
+
+    /* Cabecalho de grupo: fica colado no topo enquanto o mes rola. Fundo com
+       desfoque para as linhas passarem por baixo sem embolar o texto. */
+    .grupo {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+
+        padding: 10px 12px 6px;
+
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-dim, #83848b);
+
+        background: linear-gradient(to bottom, rgb(15 15 17 / 0.96), rgb(15 15 17 / 0.82));
+        backdrop-filter: blur(8px);
     }
 </style>

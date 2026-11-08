@@ -10,6 +10,7 @@ import { playFolder, togglePlayingMedia } from "../../utils/shortcuts"
 import { openProjectItem } from "../show/project"
 import { clone } from "./array"
 import { getAllActiveOutputIds, setOutput } from "./output"
+import { loadShows } from "./setShow"
 import { checkActionTrigger, getFewestOutputLines, getItemWithMostLines, playPdf, updateOut } from "./showActions"
 import { _show } from "./shows"
 import { runActionId } from "../actions/actions"
@@ -45,6 +46,29 @@ export class OutputHelper {
         if (triggerKey === "ArrowLeft" || triggerKey === "PageUp") return this.playPrevious(outputId, opts)
 
         this.playNext(outputId, opts) // ArrowRight, PageDown, Space
+    }
+
+    // AliancaShow: o Remote salta para um item da ordem do culto. Abre o item e
+    // ja o poe no ar, do mesmo jeito que a passagem automatica de um item para
+    // o proximo (changeProjectItem com playNext).
+    static async playProjectItem(index: number) {
+        if (get(outLocked)) return
+
+        const item = this.getProjectItems()[index]
+        if (!item) return
+
+        const isShow = (item.type || "show") === "show"
+        if (isShow) await loadShows([item.id])
+
+        openProjectItem(get(activeProject) || "", index)
+
+        const options: Options = { isSpace: false, slideLayers: true, playNext: true }
+        getAllActiveOutputIds().forEach((outputId) => {
+            if (!isShow) return this.playItem(outputId, item, true, options)
+
+            const newOut = this.getNextSlide(outputId, { id: item.id, layout: item.layout, projectIndex: index })
+            if (newOut) this.playSlide(outputId, newOut, options.slideLayers)
+        })
     }
 
     /////

@@ -12,6 +12,7 @@ import { checkFFmpeg, checkWindowCapture, setOutput, toggleOutputs } from "../co
 import { migrateOutputsRtmp } from "../components/helpers/rtmpDestinations"
 import { defaultThemes } from "../components/settings/tabs/defaultThemes"
 import { ensureImpulsoCategory } from "./impulsoSongs"
+import { registrarBibliasEmbutidas } from "./bibliasEmbutidas"
 import { sendMain } from "../IPC/main"
 import {
     actionTags,
@@ -352,7 +353,11 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     // chave do projeto original, que nao podemos usar, e sao todas em ingles. Tirar
     // dos padroes nao bastava: quem ja abriu o app tem as 5 gravadas em
     // settings_synced.json, e valor salvo vence padrao.
-    scriptures: (v: any) => scriptures.set(Object.fromEntries(Object.entries((v || {}) as Record<string, any>).filter(([, b]) => !b?.api))),
+    scriptures: (v: any) => {
+        scriptures.set(Object.fromEntries(Object.entries((v || {}) as Record<string, any>).filter(([, b]) => !b?.api)))
+        // ARA ao lado da NVI tambem em maquina antiga, se o arquivo estiver no disco
+        registrarBibliasEmbutidas()
+    },
     scriptureSettings: (v: any) => scriptureSettings.set(v),
     slidesOptions: (v: any) => slidesOptions.set(v),
     splitLines: (v: any) => splitLines.set(v),

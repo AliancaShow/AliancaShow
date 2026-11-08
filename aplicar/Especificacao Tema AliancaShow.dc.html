@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; background:#0a0a0c; -webkit-font-smoothing:antialiased; }
+  a { color:#ff8f97; text-decoration:none; border-bottom:1px solid rgba(255,143,151,0.35); }
+  a:hover { color:#ffb3b9; }
+  pre { margin:0; font-family:'JetBrains Mono',monospace; font-size:11.5px; line-height:1.65; color:#c9cbd0; white-space:pre; overflow-x:auto; }
+  code { font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#ffb3b9; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:radial-gradient(120% 70% at 14% -6%, #1c1418 0%, #0b0b0d 52%, #08080a 100%); color:#eceded; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; padding:48px 32px 96px">
+  <div style="max-width:960px; margin:0 auto; display:flex; flex-direction:column; gap:32px">
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:center; gap:10px">
+        <div style="width:9px; height:9px; border-radius:2px; background:#f21a27"></div>
+        <div style="font-size:13px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:#eceded">Aliança</div>
+      </div>
+      <div style="font-size:34px; font-weight:600; letter-spacing:-0.02em; line-height:1.15; text-wrap:pretty">Tema “Vidro” — especificação de implementação</div>
+      <div style="font-size:15px; line-height:1.6; color:#a9aab0; max-width:70ch; text-wrap:pretty">Direção 2a aplicada sobre o código real do fork. O redesenho é <strong style="color:#eceded; font-weight:600">um tema novo + ajustes de CSS por componente</strong> — a estrutura de painéis, os stores e as ações continuam as mesmas.</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.08em; color:#83848b; padding-top:4px">
+        <div style="padding:5px 10px; border-radius:14px; background:rgba(255,255,255,0.05)">REPO · ALIANCASHOW/ALIANCASHOW @ MAIN</div>
+        <div style="padding:5px 10px; border-radius:14px; background:rgba(255,255,255,0.05)">SVELTE 4 · ELECTRON</div>
+        <div style="padding:5px 10px; border-radius:14px; background:rgba(255,255,255,0.05)">FIDELIDADE · MANTER ESTRUTURA</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px">
+      <div style="border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:16px 18px; display:flex; flex-direction:column; gap:8px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#6f7077">DECISÃO 01</div>
+        <div style="font-size:15px; font-weight:600">Vermelho oficial: #F21A27</div>
+        <div style="font-size:13px; line-height:1.55; color:#a9aab0">O handoff usava <code>#e4383f</code>, calibrado de um print. O valor oficial já está no repo (<code>public/global.css</code>, “Vermelho LED”). O token <code>--secondary</code> passa a ser a única fonte da cor.</div>
+      </div>
+      <div style="border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:16px 18px; display:flex; flex-direction:column; gap:8px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#6f7077">DECISÃO 02</div>
+        <div style="font-size:15px; font-weight:600">O “Layout D” já existe</div>
+        <div style="font-size:13px; line-height:1.55; color:#a9aab0">Projetos em cima, Biblioteca (8 abas) embaixo, drawer dentro do centro e relógio no pé da coluna direita já estão em <code>MainLayout.svelte</code>. Nada de reestruturar — só revestir.</div>
+      </div>
+      <div style="border-radius:12px; background:rgba(255,255,255,0.04); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.07); padding:16px 18px; display:flex; flex-direction:column; gap:8px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.1em; color:#6f7077">DECISÃO 03</div>
+        <div style="font-size:15px; font-weight:600">Tema resolve 70%</div>
+        <div style="font-size:13px; line-height:1.55; color:#a9aab0">Os 11 tokens do tema resolvem cor e hierarquia. Vidro, raios e o glow do slide no ar exigem CSS nos componentes — listado abaixo, arquivo por arquivo.</div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6f7077">01</div>
+        <div style="font-size:21px; font-weight:600; letter-spacing:-0.015em">Paleta e tokens</div>
+      </div>
+      <div style="border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); overflow:hidden">
+        <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="12">
+          <div style="display:flex; align-items:center; gap:14px; padding:11px 16px; border-top:1px solid rgba(255,255,255,0.05)">
+            <div style="width:18px; height:18px; flex:none; border-radius:4px; border:1px solid rgba(255,255,255,0.12); background:{{ t.amostra }}"></div>
+            <div style="width:190px; flex:none; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#ffb3b9">{{ t.token }}</div>
+            <div style="width:190px; flex:none; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#c9cbd0">{{ t.valor }}</div>
+            <div style="flex:1; min-width:0; font-size:12.5px; color:#a9aab0; text-wrap:pretty">{{ t.uso }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12.5px; line-height:1.6; color:#83848b">Vinho <code>#750B0B</code> e dourado <code>#F1D278</code> do guia de marca ficam como acentos já existentes (<code>--accent</code>, gradientes do <code>MaterialButton</code>). Não entram na interface do dia a dia.</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6f7077">02</div>
+        <div style="font-size:21px; font-weight:600; letter-spacing:-0.015em">Tema importável</div>
+      </div>
+      <div style="font-size:13.5px; line-height:1.6; color:#a9aab0; max-width:75ch">Arquivo <code>theme/aliancashow-vidro.json</code>, no formato <code>Themes</code> de <code>src/types/Settings.ts</code>. Duas formas de instalar:</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px">
+        <div style="border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); padding:16px 18px; display:flex; flex-direction:column; gap:6px">
+          <div style="font-size:14px; font-weight:600">A — como tema padrão</div>
+          <div style="font-size:13px; line-height:1.55; color:#a9aab0">Adicionar a entrada em <code>src/frontend/components/settings/tabs/defaultThemes.ts</code> com <code>default: true</code> e apontar o tema inicial em <code>startup.ts</code>. Vai no instalador para todos.</div>
+        </div>
+        <div style="border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); padding:16px 18px; display:flex; flex-direction:column; gap:6px">
+          <div style="font-size:14px; font-weight:600">B — teste rápido</div>
+          <div style="font-size:13px; line-height:1.55; color:#a9aab0">Ajustes → Tema → importar/colar os valores nos campos de cor. Serve para validar contraste na cabine antes de mexer no código.</div>
+        </div>
+      </div>
+      <div style="border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.07); padding:16px 18px; overflow:hidden">
+<pre>{
+  "name": "AliançaShow — Vidro",
+  "font": { "family": "", "size": "1em" },
+  "colors": {
+    "primary":           "#141416",
+    "primary-lighter":   "#1f2023",
+    "primary-darker":    "#0f0f11",
+    "primary-darkest":   "#0a0a0c",
+    "text":              "#eceded",
+    "textInvert":        "#161616",
+    "secondary-text":    "#f8f8f0",
+    "secondary":         "#f21a27",
+    "secondary-opacity": "rgba(242, 26, 39, 0.5)",
+    "hover":             "rgb(255 255 255 / 0.05)",
+    "focus":             "rgb(242 26 39 / 0.28)"
+  }
+}</pre>
+      </div>
+      <div style="font-size:12.5px; line-height:1.6; color:#83848b"><code>secondary-text</code> é recalculado por contraste em <code>App.svelte</code>; manter off-white para o vermelho da marca. <code>font.family</code> vazio mantém a stack de sistema — a escala tipográfica é o que muda, não a fonte de UI.</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6f7077">03</div>
+        <div style="font-size:21px; font-weight:600; letter-spacing:-0.015em">Camada de vidro (o que o tema não alcança)</div>
+      </div>
+      <div style="font-size:13.5px; line-height:1.6; color:#a9aab0; max-width:75ch">Três variáveis novas em <code>public/global.css</code>, usadas por todos os painéis. Ficam no <code>:root</code>, ao lado dos tokens já existentes.</div>
+      <div style="border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.07); padding:16px 18px">
+<pre>:root {
+  --glass:      rgb(255 255 255 / 0.04);   /* superfície de painel */
+  --glass-line: rgb(255 255 255 / 0.07);   /* borda hairline       */
+  --glass-blur: 24px;
+  --radius:     12px;
+
+  /* fundo da janela */
+  --canvas: radial-gradient(120% 90% at 16% -10%, #1c1418 0%, #0b0b0d 52%, #08080a 100%);
+}
+
+/* painel padrão — aplicar nos containers, não nas linhas internas */
+.panel {
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius);
+}
+
+/* modo otimizado (special.optimizedMode) já remove o blur:
+   .isOptimized { backdrop-filter: none !important; }
+   por isso o vidro precisa de um fundo sólido de fallback */
+.isOptimized .panel { background: var(--primary-darker); }</pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; line-height:1.6; color:#a9aab0">
+        <div>· <strong style="color:#eceded; font-weight:600">Sem bordas internas.</strong> Substituir os <code>border-bottom: 1px solid</code> entre linhas de lista (<code>drawer/media/Media.svelte</code>, <code>drawer/audio/Audio.svelte</code>) por fundo <code>rgb(255 255 255 / 0.035)</code>.</div>
+        <div>· <strong style="color:#eceded; font-weight:600">Sem sombras nos painéis.</strong> Remover <code>box-shadow: 0 0 4px rgb(0 0 0 / 0.4)</code> de <code>components/main/Top.svelte</code>. Sombra fica só para overlays (popup, contexto, toast).</div>
+        <div>· <strong style="color:#eceded; font-weight:600">Seleção neutra vs. de marca.</strong> Item apenas selecionado: <code>rgb(255 255 255 / 0.09)</code>. Item no ar / ativo: <code>rgb(242 26 39 / 0.16)</code> + <code>inset 0 0 0 1px rgb(242 26 39 / 0.30)</code>. Hoje o app usa <code>outline: 2px solid var(--secondary)</code> nos dois casos (<code>drawer/Card.svelte</code>) — separar.</div>
+        <div>· <strong style="color:#eceded; font-weight:600">Transições.</strong> <code>background-color 120ms ease, border-color 120ms ease, color 120ms ease</code>. Nada acima de 160ms: é ferramenta ao vivo.</div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6f7077">04</div>
+        <div style="font-size:21px; font-weight:600; letter-spacing:-0.015em">Tela por tela</div>
+      </div>
+      <sc-for list="{{ telas }}" as="s" hint-placeholder-count="8">
+        <div style="border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); padding:18px 20px; display:flex; flex-direction:column; gap:12px">
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+            <div style="font-size:16px; font-weight:600">{{ s.nome }}</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.08em; color:#6f7077; padding:4px 9px; border-radius:12px; background:rgba(255,255,255,0.05)">{{ s.tag }}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:5px; font-family:'JetBrains Mono',monospace; font-size:11px; color:#83848b">
+            <sc-for list="{{ s.arquivos }}" as="f" hint-placeholder-count="3">
+              <div>{{ f }}</div>
+            </sc-for>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:7px; font-size:13px; line-height:1.6; color:#a9aab0">
+            <sc-for list="{{ s.itens }}" as="i" hint-placeholder-count="4">
+              <div>· {{ i }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6f7077">05</div>
+        <div style="font-size:21px; font-weight:600; letter-spacing:-0.015em">Tipografia</div>
+      </div>
+      <div style="border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.07); padding:16px 18px">
+<pre>/* public/global.css — empacotar o .woff2 em public/fonts (sem rede em runtime) */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("./fonts/JetBrainsMono-VariableFont_wght.woff2") format("woff2-variations");
+  font-weight: 400 700;
+  font-display: block;
+}
+:root { --font-mono: "JetBrains Mono", ui-monospace, monospace; }</pre>
+      </div>
+      <div style="border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); overflow:hidden">
+        <sc-for list="{{ tipos }}" as="t" hint-placeholder-count="8">
+          <div style="display:flex; align-items:center; gap:14px; padding:10px 16px; border-top:1px solid rgba(255,255,255,0.05)">
+            <div style="width:150px; flex:none; font-family:'JetBrains Mono',monospace; font-size:11px; color:#c9cbd0">{{ t.escala }}</div>
+            <div style="flex:1; min-width:0; font-size:12.5px; color:#a9aab0; text-wrap:pretty">{{ t.uso }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:12.5px; line-height:1.6; color:#83848b">Todo dado numérico ou técnico vai em mono: índices de slide, contagens, durações, resolução, relógio, cronômetro. Nada abaixo de 10px para texto lido em operação. Montserrat e CMGSans continuam sendo fontes de <em>conteúdo projetado</em>, não de UI.</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6f7077">06</div>
+        <div style="font-size:21px; font-weight:600; letter-spacing:-0.015em">Ordem de implementação</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <sc-for list="{{ ordem }}" as="o" hint-placeholder-count="7">
+          <div style="display:flex; align-items:flex-start; gap:14px; padding:13px 16px; border-radius:10px; background:rgba(255,255,255,0.035)">
+            <div style="width:20px; flex:none; font-family:'JetBrains Mono',monospace; font-size:11px; color:#ff8f97">{{ o.n }}</div>
+            <div style="flex:1; min-width:0; font-size:13.5px; line-height:1.55; color:#c2c3c9; text-wrap:pretty">{{ o.texto }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6f7077">07</div>
+        <div style="font-size:21px; font-weight:600; letter-spacing:-0.015em">Aceite</div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:10px">
+        <sc-for list="{{ aceite }}" as="a" hint-placeholder-count="6">
+          <div style="display:flex; align-items:flex-start; gap:10px; padding:13px 15px; border-radius:10px; background:rgba(255,255,255,0.035); font-size:13px; line-height:1.5; color:#c2c3c9">
+            <div style="width:14px; height:14px; flex:none; margin-top:2px; border-radius:4px; border:1px solid rgba(255,255,255,0.2)"></div>
+            <div style="flex:1; min-width:0; text-wrap:pretty">{{ a }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="border-radius:12px; background:rgba(242,26,39,0.1); border:1px solid rgba(242,26,39,0.28); padding:18px 20px; display:flex; flex-direction:column; gap:8px">
+      <div style="font-size:14px; font-weight:600; color:#ff9aa2">Pendências para você confirmar</div>
+      <div style="font-size:13px; line-height:1.6; color:#e3c4c6">· Exportar o SVG monocromático do logotipo (<code>brand-aliancashow/Logotipo_AliançaShow.pdf</code>) para a barra superior — hoje <code>Top.svelte</code> usa o wordmark tipografado.<br>· Confirmar se o vermelho de projeção (conteúdo) é o mesmo <code>#F21A27</code> da interface.<br>· Baixar o <code>.woff2</code> da JetBrains Mono para <code>public/fonts/</code> — licença OFL, pode ir no instalador.</div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      tokens: [
+        { token: "--secondary", valor: "#f21a27", amostra: "#f21a27", uso: "Marca. Item no ar, blackout, Limpar tudo, borda de aba ativa. Vem do guia (“Vermelho LED”)." },
+        { token: "--secondary-opacity", valor: "rgba(242,26,39,0.5)", amostra: "rgba(242,26,39,0.5)", uso: "Seleção de texto e outline do editbox (já usado pelo app)." },
+        { token: "wash de marca", valor: "rgb(242 26 39 / 0.16)", amostra: "rgba(242,26,39,0.16)", uso: "Fundo de item ativo/no ar. Novo — some como classe utilitária." },
+        { token: "linha de marca", valor: "rgb(242 26 39 / 0.30)", amostra: "rgba(242,26,39,0.30)", uso: "Borda (inset) do elemento ativo." },
+        { token: "glow no ar", valor: "rgb(242 26 39 / 0.60)", amostra: "rgba(242,26,39,0.60)", uso: "Glória luminosa atrás do card do slide no ar, com blur(15px)." },
+        { token: "--primary", valor: "#141416", amostra: "#141416", uso: "Superfície base do app (fundo do <main>)." },
+        { token: "--primary-lighter", valor: "#1f2023", amostra: "#1f2023", uso: "Divisores e bordas herdadas do FreeShow." },
+        { token: "--primary-darker", valor: "#0f0f11", amostra: "#0f0f11", uso: "Fundo dos painéis no fallback sólido (modo otimizado)." },
+        { token: "--primary-darkest", valor: "#0a0a0c", amostra: "#0a0a0c", uso: "Canvas / faixa mais funda, base do gradiente da janela." },
+        { token: "--text", valor: "#eceded", amostra: "#eceded", uso: "Texto principal. Escala de apoio: #c2c3c9 · #a9aab0 · #83848b · #6f7077." },
+        { token: "--hover", valor: "rgb(255 255 255 / 0.05)", amostra: "rgba(255,255,255,0.05)", uso: "Hover de linhas e botões (valor já existente, mantido)." },
+        { token: "--focus", valor: "rgb(242 26 39 / 0.28)", amostra: "rgba(242,26,39,0.28)", uso: "Anel de foco de teclado — obrigatório, o app é operado por teclado." }
+      ],
+      telas: [
+        { nome: "Mostrar", tag: "TELA PRINCIPAL", arquivos: ["src/frontend/MainLayout.svelte", "components/show/Show.svelte · Slides.svelte", "components/slide/Layouts.svelte", "components/drawer/LibraryTabs.svelte"], itens: [
+          "Moldura: padding 12px + gap 12px entre painéis no .row / .column, cada painel com a classe de vidro e raio 12px. O fundo da janela aparece entre eles — é intencional.",
+          "Grade de slides: card raio 10px, área 16/9 preta, rodapé com número em mono 10px + nome do grupo em uppercase 10px, tracking 0.09em. Cinco por linha é a densidade aprovada.",
+          "Slide no ar: pseudo-elemento atrás do card (inset -13px, raio 18px, blur 15px, marca a 0.60) + borda rgba(255,120,130,0.75). Substitui o outline grosso de hoje. Próximo slide: só borda mais clara, sem glow.",
+          "Barra de arranjo (Layouts.svelte): chips mono 10px, raio 14px; seção atual com wash de marca 0.22 e texto #ff9aa2.",
+          "Biblioteca: manter a borda-esquerda de 3px em var(--secondary) da aba ativa, trocando o fundo por wash de marca 0.16 e o header para 11px uppercase tracking 0.12em."
+        ] },
+        { nome: "Barra superior", tag: "TOP.SVELTE", arquivos: ["components/main/Top.svelte", "components/inputs/TopButton.svelte"], itens: [
+          "Altura 54px (hoje 40px), padding 0 16px, gap 18px, sem box-shadow — a separação passa a ser a moldura de 12px.",
+          "Marca: quadrado 9×9px raio 2px em var(--secondary) + “ALIANÇA” 13px/600 uppercase tracking 0.18em. Substituir o h1 de 1.8em.",
+          "Abas Mostrar/Editar/Palco/Bíblia: ícone 15px + label 13px, padding 7px 14px, raio 8px; ativa com fundo rgb(255 255 255 / 0.09), inativa #83848b.",
+          "Badge “NO AR”: só quando $outputDisplay é true — pill mono 11px, wash 0.14, borda 0.30, ponto 6px pulsando 2s. O texto traz o cronômetro do culto (novo estado serviceElapsed, derivado do instante em que a primeira saída ficou ativa).",
+          "Ícones utilitários 32×32px raio 8px; o botão de saídas (output_window_button) fica em estado de marca em vez do border-bottom atual."
+        ] },
+        { nome: "Monitor de saída", tag: "PREVIEW", arquivos: ["components/output/preview/Preview.svelte", "preview/PreviewOutputs.svelte · MultiOutputs.svelte", "components/output/ShowActions.svelte", "preview/ClearButtons.svelte"], itens: [
+          "Uma única área de monitoramento, comutável (decisão de produto): segmented control full-width com PROJETOR · LED · STREAM · PALCO sobre trilha rgba(0,0,0,0.35). Novo estado local previewOutputId, persistido por sessão; NÃO altera qual saída está no ar.",
+          "Preview 16/9, raio 10px, borda rgb(255 255 255 / 0.12). Linha de status em mono 10px: resolução/refresh à esquerda, slide atual/total à direita.",
+          "Transporte em 5 botões flex, altura 36px, raio 9px. Só o blackout usa cor de marca (wash 0.16 + inset de 1px).",
+          "As .section do Preview trocam border/border-radius 10px por vidro e raio 12px; o modo float mantém o backdrop-filter que já existe.",
+          "Limpar tudo (ClearButtons) vira o único botão sólido vermelho da tela — a hierarquia depende disso. Seletores de camada abaixo, altura 38px, label mono 8px."
+        ] },
+        { nome: "Editar", tag: "PÁGINA EDIT", arquivos: ["components/edit/Editor.svelte", "components/edit/Navigation.svelte · Slides.svelte", "components/edit/tools/EditValues.svelte · ItemsList.svelte", "components/edit/editbox/Editbox.svelte"], itens: [
+          "Mesma moldura e vidro do Mostrar; a coluna de ferramentas herda os cabeçalhos 11px uppercase tracking 0.12em.",
+          "Trocar os fundos var(--primary-darker) das barras de ferramenta por vidro + raio 12px; os campos internos ficam em rgb(255 255 255 / 0.06), raio 8px.",
+          "Editbox: manter o outline em var(--secondary-opacity) (é sinalização de seleção, não de marca) e reduzir para 3px.",
+          "Tira de slides (edit/Slides.svelte): mesmo card e mesma sinalização de no ar da grade do Mostrar, para não existirem duas linguagens de slide."
+        ] },
+        { nome: "Palco", tag: "STAGE", arquivos: ["components/stage/StageLayout.svelte", "components/stage/StageLayouts.svelte · StageTools.svelte"], itens: [
+          "Lista de layouts com a mesma linha de 8px/raio 8px do painel Projetos; layout ativo com wash de marca.",
+          "Canvas de edição do palco continua com fundo preto puro — é WYSIWYG do que o músico vê; só a moldura ganha raio 12px.",
+          "Saída de palco no monitor único aparece como a opção PALCO do comutador, sem preview separado."
+        ] },
+        { nome: "Bíblia", tag: "SCRIPTURE", arquivos: ["components/bible/BiblePage.svelte", "components/drawer/bible/Scripture.svelte"], itens: [
+          "A página já usa var(--secondary) em versão/versículo selecionado: manter a semântica, trocar o preenchimento sólido por wash 0.16 + texto #fff (o sólido vermelho fica reservado ao Limpar tudo).",
+          "border-inline-start: 3px solid var(--secondary) do versículo ativo permanece — é o único “régua vermelha” que sobrevive.",
+          "Colunas de livro/capítulo/versículo em vidro com raio 12px; números dos versículos em mono 11px, cor #6f7077.",
+          "Projetos fica à esquerda também nesta página (já implementado no MainLayout) — o versículo vai direto ao culto."
+        ] },
+        { nome: "Mídia", tag: "DRAWER", arquivos: ["components/drawer/Drawer.svelte", "components/drawer/media/Media.svelte · Folder.svelte", "components/drawer/Card.svelte", "components/drawer/Navigation.svelte"], itens: [
+          "Duas partes: fontes (210px, com ponto de estado 6px e contagem em mono 9px) e arquivos (grade de 6 colunas, gap 10px).",
+          "Card de mídia: raio 8px, borda rgb(255 255 255 / 0.06), duração em mono 8px no canto inferior direito, nome 10px em faixa rgb(255 255 255 / 0.03) com ellipsis.",
+          "Trocar o outline: 2px solid var(--secondary) do Card.svelte por borda rgba(255,120,130,0.75) no item em uso e rgb(255 255 255 / 0.09) no apenas selecionado.",
+          "Busca em pill (raio 18px, fundo 0.05, lupa 13px) e contexto à direita em mono 10px: “FUNDOS · 24 ARQUIVOS”.",
+          "Remover o border-bottom: 1px solid var(--secondary) das linhas de lista de Media.svelte e Audio.svelte."
+        ] },
+        { nome: "Saídas e Ajustes", tag: "SETTINGS", arquivos: ["components/settings/Settings.svelte · SettingsTabs.svelte", "components/settings/tabs/Theme.svelte · defaultThemes.ts", "components/inputs/Material*.svelte"], itens: [
+          "SettingsTabs herda a linha da Biblioteca (borda-esquerda 3px + wash de marca na aba ativa).",
+          "Grupos de configuração viram cards de vidro raio 12px; os CombinedInput/InputRow em rgb(255 255 255 / 0.06), raio 8px, altura mínima 36px.",
+          "MaterialButton contained: usar var(--secondary) plano, sem o gradiente vinho→dourado, exceto em ações destacadas de marca.",
+          "Ajustes → Tema é onde o tema “AliançaShow — Vidro” aparece; entrar como default e sem apagar os temas do FreeShow."
+        ] },
+        { nome: "Remote (celular)", tag: "SERVIDOR", arquivos: ["src/server/ (remote · stage · cam)", "src/frontend/utils/remoteTalk.ts · aliancaRemote.ts"], itens: [
+          "Aplicar os mesmos tokens de cor e o card de slide (raio 10px, glow de no ar) na interface do controle remoto — é a mesma marca na mão da equipe.",
+          "Alvos de toque nunca abaixo de 44px; o transporte do remoto repete a ordem do monitor (anterior, próximo, play, travar, blackout).",
+          "O AliançaShow Remote (repo separado) recebe a mesma paleta em um segundo passo — fora do escopo deste tema."
+        ] }
+      ],
+      tipos: [
+        { escala: "30px / 500 / mono", uso: "Relógio da coluna direita (o relógio gigante vermelho de hoje sai — vira informação de apoio)." },
+        { escala: "22px / 700", uso: "Texto renderizado dentro do preview de saída." },
+        { escala: "19px / 600 · -0.015em", uso: "Título do show no painel central." },
+        { escala: "14px / 600", uso: "Texto da miniatura de slide." },
+        { escala: "13px / 600", uso: "Marca, abas da barra superior, botão primário." },
+        { escala: "12.5px / 400", uso: "Itens de lista (projetos, biblioteca, fontes de mídia, grupos)." },
+        { escala: "11px uppercase 0.12em", uso: "Cabeçalho de painel (PROJETOS, BIBLIOTECA, MÍDIA)." },
+        { escala: "10px mono 0.08em", uso: "Chips de arranjo, status, contexto de pasta, contagens." },
+        { escala: "9px–8px mono", uso: "Metadados: índice de item, duração de mídia, label de camada." }
+      ],
+      ordem: [
+        { n: "01", texto: "Instalar o tema (cores + escala tipográfica) e aplicar globalmente. Já resolve a maior queixa: “tudo tem o mesmo peso”." },
+        { n: "02", texto: "Adicionar as variáveis de vidro em public/global.css e converter os containers de painel (bordas duras → vidro + raio 12px), com o fallback sólido para o modo otimizado." },
+        { n: "03", texto: "Normalizar os ícones: 15px, stroke 1.6, monocromáticos em currentColor, usando o set que já existe em components/helpers/Icon.svelte." },
+        { n: "04", texto: "Grade de slides: card novo e sinalização de no ar por glow (Slides.svelte + Layouts.svelte)." },
+        { n: "05", texto: "Barra superior: 54px, abas com ícone, badge NO AR com cronômetro, ícones utilitários." },
+        { n: "06", texto: "Coluna direita: comutador de saída único (previewOutputId), transporte, camadas explícitas (activeLayer), abas e relógio reduzido." },
+        { n: "07", texto: "Painel Mídia: fontes com contadores e grade de 6 colunas; depois Bíblia, Editar, Palco e Ajustes na mesma linguagem." }
+      ],
+      aceite: [
+        "Em uma tela de 1600×900 nenhum painel corta linha no meio (min-height: 0 + overflow: hidden nos containers flex, flex: none nas linhas).",
+        "O slide no ar é identificável a 3 metros de distância, sem procurar.",
+        "Só existe um botão sólido vermelho na tela Mostrar: Limpar tudo.",
+        "Nenhum texto operacional abaixo de 10px; nenhum texto abaixo de 8px em nenhum lugar.",
+        "Anel de foco visível em todos os controles alcançáveis por Tab.",
+        "Com special.optimizedMode ligado a interface continua legível (vidro cai para fundo sólido, sem perder contraste)."
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>
