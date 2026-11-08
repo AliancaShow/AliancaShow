@@ -25,6 +25,7 @@
     import DropArea from "../system/DropArea.svelte"
     import SelectElem from "../system/SelectElem.svelte"
     import { clipboardToProject } from "./project"
+    import SirvoProjetoFaixa from "./SirvoProjetoFaixa.svelte"
 
     export let tree: Tree[]
     export let recentlyUsedList: any[] = []
@@ -255,6 +256,11 @@
 <svelte:window on:mousedown={mousedown} on:keydown|capture={handleKeydown} />
 
 <div id="projectArea" class="list {projectReadOnly ? '' : 'context #project'}">
+    <!-- AliançaShow: o roteiro do Sirvo neste projeto (montar, ordem nova, desligar) -->
+    {#if !isTemplate}
+        <SirvoProjetoFaixa />
+    {/if}
+
     <Autoscroll {offset} bind:scrollElem timeout={150}>
         <!-- WIP dragging content to this sometimes does not drop it -->
         <DropArea id="project" selectChildren hoverTimeout={150} let:fileOver file>
@@ -330,7 +336,6 @@
                         {/each}
                     </div>
                 {/each}
-
             {:else}
                 <Center absolute>
                     <span style="opacity: 0.5;"><T id="empty.general" /></span>
@@ -611,5 +616,4 @@
     :global(.addButton svg) {
         transition: transform 0.2s ease !important;
     }
-
 </style>
