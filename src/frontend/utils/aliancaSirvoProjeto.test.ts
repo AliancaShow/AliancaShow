@@ -3,6 +3,7 @@ import type { ProjectShowRef } from "../../types/Projects"
 import { COR_LAPIDE, horaDoBloco, ID_RODAPE, NOME_RODAPE, papelDoItem, reconciliar, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
 
 // 10:00 em Sao Paulo, e cada bloco 15 min depois do anterior
+const INICIO = "2026-11-08T13:00:00Z"
 const bloco = (id: string, i = 0, extra: Partial<BlocoParaProjeto> = {}): BlocoParaProjeto => ({
     id,
     titulo: id.toUpperCase(),
@@ -34,7 +35,7 @@ const desenho = (itens: ProjectShowRef[]) =>
 
 /** monta o projeto a partir do zero, como o Show faria no projeto vazio */
 function montado(...ids: string[]) {
-    return reconciliar([], roteiro(...ids)).itens
+    return reconciliar([], roteiro(...ids), { comecaEm: INICIO }).itens
 }
 
 /** acha o item pelo desenho curto */
@@ -42,7 +43,7 @@ const item = (itens: ProjectShowRef[], d: string) => itens[desenho(itens).indexO
 
 describe("reconciliar: criar", () => {
     it("projeto vazio: um cabecalho por bloco, na ordem do Sirvo, e o rodape", () => {
-        const r = reconciliar([], roteiro("a", "b", "c"))
+        const r = reconciliar([], roteiro("a", "b", "c"), { comecaEm: INICIO })
         expect(desenho(r.itens)).toEqual(["[a]", "[b]", "[c]", "[fim]"])
         expect(r).toMatchObject({ mudouEstrutura: true, pendente: false, motivo: null })
 
@@ -308,29 +309,43 @@ describe("reconciliar: idempotencia e escrita minima", () => {
         expect(r.mudouCampos).toBe(false)
     })
 
-    it("hora prevista que muda de minuto atualiza so aquele cabecalho", () => {
+    it("bloco concluido (inicio_previsto anda) NAO escreve nada: a hora e a do plano", () => {
         const itens = montado("a", "b")
         const [a, b] = itens
         const dataA = a.data
+        const dataB = b.data
         const novo = [bloco("a", 0), bloco("b", 0, { inicio_previsto: "2026-11-08T13:20:30Z" })]
-        const r = reconciliar(itens, novo)
+        const r = reconciliar(itens, novo, { comecaEm: INICIO })
+        expect(r.mudouCampos).toBe(false)
+        expect(a.data).toBe(dataA)
+        expect(b.data).toBe(dataB)
+        expect(b.data.time).toBe("10:15")
+    })
+
+    it("duracao que muda no plano desloca a hora so dos cabecalhos de baixo", () => {
+        const itens = montado("a", "b", "c")
+        const [a, b, c] = itens
+        const dataA = a.data
+        const r = reconciliar(itens, [bloco("a", 0, { duracao_min: 20 }), bloco("b", 1), bloco("c", 2)], { comecaEm: INICIO })
         expect(r.mudouCampos).toBe(true)
         expect(r.mudouEstrutura).toBe(false)
-        expect(a.data).toBe(dataA)
+        expect(a.data.time).toBe("10:00")
         expect(b.data.time).toBe("10:20")
+        expect(c.data.time).toBe("10:35")
+        expect(dataA).not.toBe(a.data) // a mudou so a duracao guardada em data.sirvo
     })
 
     it("o data do operador e preservado na atualizacao", () => {
         const itens = montado("a")
         itens[0].data.settings = { triggerAction: "minha_acao" }
         itens[0].data.outro = 1
-        reconciliar(itens, [bloco("a", 0, { responsavel: "Pr. Joao", nota: "ler Sl 23", link: "https://x" })])
+        reconciliar(itens, [bloco("a", 0, { responsavel: "Pr. Joao", nota: "ler Sl 23", link: "https://x" })], { comecaEm: INICIO })
         expect(itens[0].data).toMatchObject({ settings: { triggerAction: "minha_acao" }, outro: 1, time: "10:00", sirvo: { responsavel: "Pr. Joao", nota: "ler Sl 23", link: "https://x" } })
     })
 
-    it("sem hora valida, a hora que ja estava fica", () => {
+    it("sem o inicio do culto, a hora que ja estava fica", () => {
         const itens = montado("a")
-        reconciliar(itens, [bloco("a", 0, { inicio_previsto: null })])
+        reconciliar(itens, [bloco("a", 0)])
         expect(itens[0].data.time).toBe("10:00")
     })
 })

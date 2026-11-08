@@ -45,6 +45,27 @@ export type OpcoesReconciliar = {
     forcar?: boolean
     /** id da seção comum que nasce de uma duplicata (padrão: uid(5), como as seções do FreeShow) */
     novoId?: () => string
+    /**
+     * Início PLANEJADO do culto (`comeca_em`). A hora de cada cabeçalho é a do
+     * PLANO (início + durações dos blocos de cima), não o `inicio_previsto`:
+     * esse anda a cada bloco concluído, e gravar no projeto a cada bloco
+     * acordaria o autosave e o Remote do Pedro a cada troca, no meio do culto.
+     * Sem ele, a hora do cabeçalho não é tocada.
+     */
+    comecaEm?: string | null
+}
+
+/** "HH:MM" planejado de cada bloco: início do culto + soma das durações de cima */
+export function horasPlanejadas(blocos: BlocoParaProjeto[], comecaEm: string | null | undefined): Map<string, string> {
+    const horas = new Map<string, string>()
+    let t = comecaEm ? Date.parse(comecaEm) : NaN
+    if (isNaN(t)) return horas
+    for (const b of blocos) {
+        horas.set(b.id, horaDoBloco(new Date(t).toISOString()))
+        const d = Number(b.duracao_min)
+        t += (Number.isFinite(d) && d > 0 ? d : 0) * 60_000
+    }
+    return horas
 }
 
 export type MotivoPendente = "roteiro_vazio" | "muitos_sumiram" | "no_ar"
@@ -111,7 +132,7 @@ const mesmosDados = (a: any, b: DadosSirvoDoCabecalho) => !!a && typeof a === "o
  * uma escrita à toa acorda o autosave, o Remote e a própria reconciliação.
  * `data` é mesclado: o que o operador pôs (ex.: a ação da seção) fica.
  */
-function aplicarCampos(item: ProjectShowRef, b: BlocoParaProjeto) {
+function aplicarCampos(item: ProjectShowRef, b: BlocoParaProjeto, hora: string) {
     let mudou = false
 
     const nome = texto(b.titulo)
@@ -128,7 +149,7 @@ function aplicarCampos(item: ProjectShowRef, b: BlocoParaProjeto) {
     }
 
     const data = item.data && typeof item.data === "object" ? item.data : {}
-    const hora = horaDoBloco(b.inicio_previsto)
+
     const sirvo = dadosDoBloco(b)
     // sem hora válida, não apaga a que já estava
     const horaMudou = !!hora && data.time !== hora
@@ -140,9 +161,9 @@ function aplicarCampos(item: ProjectShowRef, b: BlocoParaProjeto) {
     return mudou
 }
 
-function novoCabecalho(b: BlocoParaProjeto): ProjectShowRef {
+function novoCabecalho(b: BlocoParaProjeto, hora: string): ProjectShowRef {
     const item: ProjectShowRef = { id: idDoCabecalho(b.id), type: "section", name: "" }
-    aplicarCampos(item, b)
+    aplicarCampos(item, b, hora)
     return item
 }
 
@@ -206,6 +227,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         return true
     })
     const doRoteiro = new Map(roteiro.map((b) => [b.id, b]))
+    const horas = horasPlanejadas(roteiro, opcoes.comecaEm)
 
     // Duplicata de um id do Sirvo (copiar e colar): a primeira é a oficial; as
     // outras viram seção comum, com id novo, e nunca são apagadas.
@@ -236,7 +258,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     // 2. campos (valem até com a ordem pendente: não movem nada)
     for (const f of familias) {
         const bloco = doRoteiro.get(f.blocoId!)
-        if (bloco && aplicarCampos(f.itens[0], bloco)) mudouCampos = true
+        if (bloco && aplicarCampos(f.itens[0], bloco, horas.get(bloco.id) || "")) mudouCampos = true
     }
 
     const semMudanca = (motivo: MotivoPendente | null, sumiram: number): ResultadoReconciliar => ({ itens, mudouCampos, mudouEstrutura: false, pendente: !!motivo, motivo, sumiram })
@@ -272,7 +294,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     if (reorganizar) {
         const rodape = segmentos.find((s) => s.papel === "rodape")
         novos = [...segmentos[0].itens]
-        for (const b of roteiro) novos.push(...(porBloco.get(b.id)?.itens || [novoCabecalho(b)]))
+        for (const b of roteiro) novos.push(...(porBloco.get(b.id)?.itens || [novoCabecalho(b, horas.get(b.id) || "")]))
         novos.push(rodape ? rodape.itens[0] : novoRodape())
         // as lápides de cima descem agora, com o conteúdo delas
         for (const s of segmentos) if (s.papel === "lapide" && !s.depoisDoRodape) novos.push(...s.itens)
@@ -287,7 +309,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         const posicaoDoBloco = new Map<string, Segmento>(vivas.map((f) => [f.blocoId!, f]))
         roteiro.forEach((b, i) => {
             if (posicaoDoBloco.has(b.id)) return
-            const seg: Segmento = { papel: "familia", itens: [novoCabecalho(b)], blocoId: b.id, depoisDoRodape: false }
+            const seg: Segmento = { papel: "familia", itens: [novoCabecalho(b, horas.get(b.id) || "")], blocoId: b.id, depoisDoRodape: false }
             posicaoDoBloco.set(b.id, seg)
 
             // logo depois do bloco anterior que já está no projeto

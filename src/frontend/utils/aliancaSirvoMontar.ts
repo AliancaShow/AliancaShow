@@ -168,7 +168,7 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
     // era do operador fica todo no topo): nenhuma posição muda, nem no ar. Com
     // cabeçalhos de outro culto, ela mexeria na ordem: só fora do culto.
     if (protegido(projetoId) && itens.some((i) => papelDoItem(i))) return "Com o culto no ar ou algo na tela, este projeto não pode ser remontado agora. Limpe a tela e tente de novo."
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: r.comeca_em })
     escrever(projetoId, itens, res.itens, { ligar: { eventId: r.event_id } })
     lembrarMontado(r.event_id, projetoId)
     dispensados.delete(chaveDispensa(r.event_id, projetoId))
@@ -179,7 +179,7 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
 function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     const itens = get(projects)[projetoId]?.shows || []
     const prot = protegido(projetoId)
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: r.comeca_em })
 
     let depois = res.itens
     let pendente = res.motivo
@@ -227,7 +227,7 @@ function passada(pedido: Pedido = {}): string | null {
             // a lista vem pronta da conta: o projeto nasce montado, numa escrita só
             const pasta = garantirPastas(decisao.pastas).id
             const id = uid()
-            const itens = reconciliar([], r.blocos, { forcar: true }).itens
+            const itens = reconciliar([], r.blocos, { forcar: true, comecaEm: r.comeca_em }).itens
             projects.update((a) => {
                 a[id] = { name: decisao.nome, parent: pasta, created: Date.now(), modified: Date.now(), shows: itens, sirvo: { eventId: r.event_id, montadoEm: Date.now() } }
                 return a
