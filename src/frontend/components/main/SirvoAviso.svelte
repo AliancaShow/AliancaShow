@@ -10,6 +10,7 @@
     // Texto do Sirvo só por interpolação {…}, nunca {@html}.
     import { onDestroy } from "svelte"
     import { dispensarAvisosSirvo, sirvoAvisos } from "../../utils/aliancaSirvo"
+    import { dicaSegura } from "../../utils/aliancaDica"
 
     const ENCOLHE_EM_MS = 60_000
     const MAX_LINHAS = 4
@@ -48,7 +49,7 @@
             </div>
             <ul>
                 {#each visiveis as l (l.chave)}
-                    <li data-title={l.texto}>{l.texto}</li>
+                    <li data-title={dicaSegura(l.texto)}>{l.texto}</li>
                 {/each}
                 {#if resto > 0}
                     <li class="fraco">e mais {resto}…</li>

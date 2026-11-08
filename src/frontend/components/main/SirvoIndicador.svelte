@@ -11,6 +11,7 @@
     // Texto do Sirvo só por interpolação {…} (escapada pelo Svelte), nunca {@html}.
     import { onDestroy } from "svelte"
     import { activePage, settingsTab } from "../../stores"
+    import { dicaSegura } from "../../utils/aliancaDica"
     import { intervaloRev, sirvo } from "../../utils/aliancaSirvo"
 
     let agoraMs = Date.now()
@@ -66,12 +67,12 @@
 
 {#if visual}
     {#if visual.clicavel}
-        <button class="sirvo {visual.tom}" data-title={visual.dica} on:click={abrirConexao}>
+        <button class="sirvo {visual.tom}" data-title={dicaSegura(visual.dica)} on:click={abrirConexao}>
             <span class="ponto" />
             <span class="texto">{visual.texto}</span>
         </button>
     {:else}
-        <div class="sirvo {visual.tom}" data-title={visual.dica} role="status">
+        <div class="sirvo {visual.tom}" data-title={dicaSegura(visual.dica)} role="status">
             <span class="ponto" />
             <span class="rotulo">Sirvo</span>
             <span class="texto">{visual.texto}</span>

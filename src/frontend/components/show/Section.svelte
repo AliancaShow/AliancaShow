@@ -2,6 +2,7 @@
     import { actions, activeProject, activeShow, editingProjectTemplate, projects, projectTemplates, special } from "../../stores"
     import { Main } from "../../../types/IPC/Main"
     import { sendMain } from "../../IPC/main"
+    import { dicaSegura } from "../../utils/aliancaDica"
     import { cabecalhoTrancado, linkSeguro } from "../../utils/aliancaSirvoProjeto"
     import { translateText } from "../../utils/language"
     import { getActionIcon, runAction } from "../actions/actions"
@@ -160,7 +161,7 @@
                             <Icon id="launch" white />
                             <span>Abrir link</span>
                         </MaterialButton>
-                        <span class="host" data-title={sirvoLink}>{sirvoHost}</span>
+                        <span class="host" data-title={dicaSegura(sirvoLink)}>{sirvoHost}</span>
                     </div>
                 {:else if sirvoDados.link}
                     <div class="campo">
