@@ -7,7 +7,19 @@ artifactName: AliancaShow-${version}-${arch}.${ext}
 # app-update.yml apontando para ChurchApps/FreeShow -- o app baixaria e
 # instalaria o FreeShow original por cima deste. O campo repository fica como
 # esta, porque registra a origem do codigo, exigencia saudavel sob GPL-3.0.
-publish: null
+#
+# Destino explicito: este repositorio, como RASCUNHO de release. O "Release"
+# do GitHub Actions (npm run release, --publish always) publica o instalador
+# ali, visivel so para quem administra o repositorio; com null ele era montado
+# e descartado junto com a maquina do Actions. Nao ha atualizacao automatica
+# no app (nenhum codigo usa o electron-updater), entao o app-update.yml que
+# isto gera nao e lido por ninguem -- e, se um dia for, aponta para ca.
+# Build local continua com --publish never e nao publica nada.
+publish:
+    provider: github
+    owner: AliancaShow
+    repo: AliancaShow
+    releaseType: draft
 
 # WIDEVINE
 # Use castlabs electron builds to get widevine support
