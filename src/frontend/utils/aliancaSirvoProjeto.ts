@@ -101,6 +101,32 @@ export function papelDoItem(item: ProjectShowRef | null | undefined): "cabecalho
     return "cabecalho"
 }
 
+/**
+ * A trava POR ITEM (§2.6): o cabeçalho de um bloco, num projeto ligado a um
+ * culto, não se arrasta, renomeia, recolore nem apaga à mão. Lápide e rodapé
+ * ficam livres, e o resto do projeto também. Sem internet a trava continua (não
+ * há com o que comparar); "Desligar do Sirvo" solta tudo.
+ */
+export function cabecalhoTrancado(projeto: { sirvo?: { eventId?: string } | null } | null | undefined, item: ProjectShowRef | null | undefined) {
+    return !!projeto?.sirvo?.eventId && papelDoItem(item) === "cabecalho"
+}
+
+/** quantos itens são do operador: cabeçalho, lápide e rodapé do Sirvo não contam como material */
+export function quantosDoOperador(itens: ProjectShowRef[] | null | undefined) {
+    return (itens || []).filter((i) => i && !papelDoItem(i)).length
+}
+
+/** o link da nota do bloco, só se for https:// de verdade; "" para o resto */
+export function linkSeguro(link: string | null | undefined) {
+    if (typeof link !== "string") return ""
+    try {
+        const u = new URL(link.trim())
+        return u.protocol === "https:" && !!u.hostname && !u.username && !u.password ? u.href : ""
+    } catch {
+        return ""
+    }
+}
+
 // ---------------------------------------------------------------- campos
 
 const fmtHora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })

@@ -5,6 +5,7 @@
     import { getLayoutRef } from "../../helpers/show"
     import { _show } from "../../helpers/shows"
     import { setCalendarColor } from "../../drawer/calendar/calendars"
+    import { cabecalhoTrancado } from "../../../utils/aliancaSirvoProjeto"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialColorInput from "../../inputs/MaterialColorInput.svelte"
 
@@ -101,6 +102,8 @@
 
                 selection.data.forEach(({ index }) => {
                     if (!a[projectId]?.shows?.[index]) return
+                    // AliançaShow: a cor do cabeçalho de um bloco vem do Sirvo
+                    if (!$editingProjectTemplate && cabecalhoTrancado(a[projectId], a[projectId].shows[index])) return
                     a[projectId].shows[index].color = value
                 })
 

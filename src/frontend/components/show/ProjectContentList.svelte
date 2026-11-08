@@ -26,6 +26,8 @@
     import SelectElem from "../system/SelectElem.svelte"
     import { clipboardToProject } from "./project"
     import SirvoProjetoFaixa from "./SirvoProjetoFaixa.svelte"
+    // AliançaShow: o cabeçalho de um bloco do Sirvo tranca sozinho (isLocked); o resto do projeto continua livre
+    import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 
     export let tree: Tree[]
     export let recentlyUsedList: any[] = []
@@ -276,7 +278,7 @@
                             {@const borderRadiusStyle = `${isFirst ? "border-top-right-radius: 10px;" : ""}${isLast ? "border-bottom-right-radius: 10px;" : ""}`}
                             {@const sectionTime = show.data?.time ? getTimeUntilClock(show.data.time, today) : 0}
                             {@const isActive = show.type === "section" ? ($focusMode ? $activeFocus.id === show.id : $activeShow?.id === show.id) : false}
-                            {@const isLocked = show.type === "section" && currentProject?.sectionsLocked}
+                            {@const isLocked = show.type === "section" && (currentProject?.sectionsLocked || (!isTemplate && cabecalhoTrancado(currentProject, show)))}
 
                             {#if show.type === "DIVIDER"}
                                 <div style="border-top: 1px solid var(--primary-lighter);margin: 5px 0;"></div>

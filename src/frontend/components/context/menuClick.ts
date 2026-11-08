@@ -116,6 +116,7 @@ import { clearSlide } from "../output/clear"
 import { defaultThemes } from "../settings/tabs/defaultThemes"
 import { activeProject } from "./../../stores"
 import type { ContextMenuItem } from "./contextMenus"
+import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
 
 interface ObjData {
     sel: Selected | null
@@ -1120,6 +1121,8 @@ const clickActions = {
         if (!project) return
 
         project = { name: project.name, parent: "/", shows: project.shows, created: 0 }
+        // AliançaShow: o modelo não é do culto (cabeçalhos do Sirvo viram seções comuns)
+        copiaSemSirvo(project, () => uid(5))
 
         let id = uid()
 

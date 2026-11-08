@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { COR_LAPIDE, horaDoBloco, ID_RODAPE, NOME_RODAPE, papelDoItem, reconciliar, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
+import { cabecalhoTrancado, COR_LAPIDE, horaDoBloco, ID_RODAPE, linkSeguro, NOME_RODAPE, papelDoItem, quantosDoOperador, reconciliar, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
 
 // 10:00 em Sao Paulo, e cada bloco 15 min depois do anterior
 const INICIO = "2026-11-08T13:00:00Z"
@@ -355,5 +355,39 @@ describe("horaDoBloco", () => {
         expect(horaDoBloco("2026-11-08T22:05:00Z")).toBe("19:05")
         expect(horaDoBloco("")).toBe("")
         expect(horaDoBloco("nao e data")).toBe("")
+    })
+})
+
+describe("trava por item", () => {
+    const ligado = { sirvo: { eventId: "ev1" } }
+    it("so o cabecalho de bloco, e so com o projeto ligado", () => {
+        expect(cabecalhoTrancado(ligado, secao("sirvo_a"))).toBe(true)
+        expect(cabecalhoTrancado(ligado, secao("sirvo_x_a"))).toBe(false) // lapide
+        expect(cabecalhoTrancado(ligado, secao(ID_RODAPE))).toBe(false)
+        expect(cabecalhoTrancado(ligado, secao("s1"))).toBe(false) // secao do operador
+        expect(cabecalhoTrancado(ligado, { id: "sirvo_a", type: "show" })).toBe(false)
+        expect(cabecalhoTrancado({ sirvo: null }, secao("sirvo_a"))).toBe(false) // desligado
+        expect(cabecalhoTrancado(null, secao("sirvo_a"))).toBe(false)
+    })
+})
+
+describe("quantosDoOperador (o pontinho 'tem material')", () => {
+    it("cabecalhos, lapides e rodape nao contam", () => {
+        expect(quantosDoOperador(montado("a", "b"))).toBe(0)
+        expect(quantosDoOperador([...montado("a"), foto("f1"), secao("sirvo_x_b"), secao("s1")])).toBe(2)
+        expect(quantosDoOperador(undefined)).toBe(0)
+    })
+})
+
+describe("linkSeguro", () => {
+    it("so https de verdade", () => {
+        expect(linkSeguro("https://docs.google.com/x?y=1")).toBe("https://docs.google.com/x?y=1")
+        expect(linkSeguro("  https://a.com  ")).toBe("https://a.com/")
+        expect(linkSeguro("http://a.com")).toBe("")
+        expect(linkSeguro("javascript:alert(1)")).toBe("")
+        expect(linkSeguro("file:///C:/Windows/system32/calc.exe")).toBe("")
+        expect(linkSeguro("https://user:senha@a.com")).toBe("")
+        expect(linkSeguro("a.com")).toBe("")
+        expect(linkSeguro(null)).toBe("")
     })
 })

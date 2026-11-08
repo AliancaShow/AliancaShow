@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { apenasAcrescenta, decidirProjeto, eventosNoDia, pastaPeloCaminho, soltarDoSirvo, type EntradaDecisao } from "./aliancaSirvoMontagem"
+import { apenasAcrescenta, copiaSemSirvo, decidirProjeto, eventosNoDia, pastaPeloCaminho, soltarDoSirvo, type EntradaDecisao } from "./aliancaSirvoMontagem"
 
 // Alianca/2026/11-novembro, e o culto de domingo 08/11 as 10h (13h UTC)
 const pastas = {
@@ -130,5 +130,29 @@ describe("soltarDoSirvo", () => {
         expect(itens.map((i) => i.id)).toEqual(["m1", "novo1", "novo2", "s1", "novo3"])
         expect(itens[1].data).toEqual({ time: "10:00", settings: { triggerAction: "x" } })
         expect(itens[1].name).toBe("A")
+    })
+})
+
+describe("copiaSemSirvo (modelo e projeto duplicado)", () => {
+    it("tira a ligacao e transforma os itens do Sirvo em secoes comuns, sem mexer no resto", () => {
+        const copia = {
+            name: "09",
+            sirvo: { eventId: "ev1", montadoEm: 1 },
+            shows: [
+                { id: "m1", type: "show" },
+                { id: "sirvo_a", type: "section", name: "Louvor", data: { time: "10:00", settings: { triggerAction: "x" }, sirvo: { blocoId: "a" } } },
+                { id: "sirvo_fim", type: "section", name: "Fora do roteiro" }
+            ] as ProjectShowRef[]
+        }
+        let n = 0
+        copiaSemSirvo(copia, () => `novo${++n}`)
+        expect("sirvo" in copia).toBe(false)
+        expect(copia.shows.map((i) => i.id)).toEqual(["m1", "novo1", "novo2"])
+        expect(copia.shows[1]).toMatchObject({ name: "Louvor", data: { time: "10:00", settings: { triggerAction: "x" } } })
+        expect(copia.shows[1].data.sirvo).toBeUndefined()
+    })
+
+    it("projeto sem shows nao quebra", () => {
+        expect(copiaSemSirvo({ sirvo: null } as any, () => "x")).toEqual({})
     })
 })

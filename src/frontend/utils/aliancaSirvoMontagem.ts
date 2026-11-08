@@ -123,3 +123,15 @@ export function soltarDoSirvo(itens: ProjectShowRef[], novoId: () => string) {
     }
     return n
 }
+
+/**
+ * Converter em modelo e duplicar o projeto: a CÓPIA não é do culto. Tira o
+ * campo `sirvo` e os itens do Sirvo viram seções comuns (o rodapé também). Muda
+ * a cópia no próprio objeto: chame só sobre um clone.
+ */
+export function copiaSemSirvo<T extends { sirvo?: Project["sirvo"]; shows?: ProjectShowRef[] }>(copia: T, novoId: () => string): T {
+    if (!copia || typeof copia !== "object") return copia
+    delete copia.sirvo
+    if (Array.isArray(copia.shows)) soltarDoSirvo(copia.shows, novoId)
+    return copia
+}
