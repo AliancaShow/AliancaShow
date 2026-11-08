@@ -17,6 +17,7 @@
     import { getCurrentTimerValue, getTimerDynamicValue, playPauseGlobal, resetTimer } from "./timers"
     import { openDrawer } from "../../edit/scripts/edit"
     import { sirvoBlocoNoAr } from "../../../utils/aliancaSirvo"
+    import { dicaSegura } from "../../../utils/aliancaDica"
 
     export let searchValue
     export let onlyPlaying: boolean = false
@@ -130,7 +131,7 @@
                         </Button>
                         {#if timer.type === "sirvo_live" && $sirvoBlocoNoAr}
                             <!-- o timer do Sirvo conta o BLOCO no ar: o nome que importa é o do bloco (texto escapado pelo Svelte) -->
-                            <p class="sirvoBloco" style="align-self: center;padding: 0 5px;{onlyPlaying ? '' : 'min-width: 100px;'}" data-title={$sirvoBlocoNoAr}>
+                            <p class="sirvoBloco" style="align-self: center;padding: 0 5px;{onlyPlaying ? '' : 'min-width: 100px;'}" data-title={dicaSegura($sirvoBlocoNoAr)}>
                                 {$sirvoBlocoNoAr}
                                 {#if !onlyPlaying}<span style="opacity: 0.5;font-size: 0.85em;margin-inline-start: 6px;">{timer.name}</span>{/if}
                             </p>
