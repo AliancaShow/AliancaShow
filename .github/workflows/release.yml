@@ -3,6 +3,11 @@ on:
   # Ativacao manual apenas (aba Actions > Release > Run workflow).
   workflow_dispatch:
 
+# O instalador e publicado como rascunho de release neste repositorio
+# (config/building/electron-builder.yaml); para isso o token precisa de escrita.
+permissions:
+  contents: write
+
 jobs:
   publish_windows:
     name: "Publish Windows"
