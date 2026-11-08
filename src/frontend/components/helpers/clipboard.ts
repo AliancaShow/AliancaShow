@@ -77,7 +77,7 @@ import { checkName, getLayoutRef, removeTemplatesFromShow } from "./show"
 import { _show } from "./shows"
 import { removeOutputAudioChannel } from "../../audio/routing/audioRoutingInit"
 import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
-import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
+import { naoSaiDoProjeto } from "../../utils/aliancaSirvoProjeto"
 
 export function copy(clip: Clipboard | null = null, getData = true, shouldDuplicate = false) {
     let copyData: Clipboard | null = clip
@@ -928,8 +928,8 @@ const deleteActions = {
             const projectRef = projectItems[index]
             if (!projectRef) return
 
-            // AliançaShow: o cabeçalho de um bloco do Sirvo não sai à mão (nem pelo Ctrl+A + Delete)
-            if (!isTemplate && cabecalhoTrancado(currentProject, projectRef)) {
+            // AliançaShow: o cabeçalho de um bloco do Sirvo e o rodapé "Fora do roteiro" não saem à mão (nem pelo Ctrl+A + Delete)
+            if (!isTemplate && naoSaiDoProjeto(currentProject, projectRef)) {
                 trancados++
                 return
             }
@@ -941,7 +941,7 @@ const deleteActions = {
             indexes.push(index)
         })
 
-        if (trancados) newToast(trancados === 1 ? "O cabeçalho vem do Sirvo: ele não sai daqui. Mude no Sirvo." : "Os cabeçalhos vêm do Sirvo: eles não saem daqui. Mude no Sirvo.")
+        if (trancados) newToast("Os cabeçalhos do Sirvo e o \"Fora do roteiro\" ficam no projeto. Mude o roteiro no Sirvo.")
         if (!indexes.length) return
 
         if (get(activeShow)?.index !== undefined && indexes.includes(get(activeShow)!.index!)) {

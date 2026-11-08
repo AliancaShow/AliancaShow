@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { cabecalhoTrancado, COR_LAPIDE, horaDoBloco, ID_RODAPE, linkSeguro, NOME_RODAPE, papelDoItem, quantosDoOperador, reconciliar, resumirPendencia, textoDaPendencia, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
+import { cabecalhoTrancado, COR_LAPIDE, naoSaiDoProjeto, horaDoBloco, ID_RODAPE, linkSeguro, NOME_RODAPE, papelDoItem, quantosDoOperador, reconciliar, resumirPendencia, textoDaPendencia, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
 
 // 10:00 em Sao Paulo, e cada bloco 15 min depois do anterior
 const INICIO = "2026-11-08T13:00:00Z"
@@ -368,6 +368,13 @@ describe("trava por item", () => {
         expect(cabecalhoTrancado(ligado, { id: "sirvo_a", type: "show" })).toBe(false)
         expect(cabecalhoTrancado({ sirvo: null }, secao("sirvo_a"))).toBe(false) // desligado
         expect(cabecalhoTrancado(null, secao("sirvo_a"))).toBe(false)
+    })
+    it("apagar: cabecalho e rodape ficam; lapide e o resto saem", () => {
+        expect(naoSaiDoProjeto(ligado, secao("sirvo_a"))).toBe(true)
+        expect(naoSaiDoProjeto(ligado, secao(ID_RODAPE))).toBe(true)
+        expect(naoSaiDoProjeto(ligado, secao("sirvo_x_a"))).toBe(false)
+        expect(naoSaiDoProjeto(ligado, secao("s1"))).toBe(false)
+        expect(naoSaiDoProjeto({ sirvo: null }, secao(ID_RODAPE))).toBe(false)
     })
 })
 

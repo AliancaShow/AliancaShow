@@ -111,6 +111,19 @@ export function cabecalhoTrancado(projeto: { sirvo?: { eventId?: string } | null
     return !!projeto?.sirvo?.eventId && papelDoItem(item) === "cabecalho"
 }
 
+/**
+ * O que não sai à mão de um projeto ligado: o cabeçalho (trancado) e o rodapé
+ * "Fora do roteiro". O rodapé pode ser renomeado e recolorido, mas apagado ele
+ * volta na passada seguinte, e essa volta conta como mudança de estrutura e
+ * apaga o Ctrl+Z da lista (teste do André, 08/nov: Ctrl+A + Delete levava o
+ * rodapé junto, ele voltava, e o Ctrl+Z não desfazia mais nada).
+ */
+export function naoSaiDoProjeto(projeto: { sirvo?: { eventId?: string } | null } | null | undefined, item: ProjectShowRef | null | undefined) {
+    if (!projeto?.sirvo?.eventId) return false
+    const papel = papelDoItem(item)
+    return papel === "cabecalho" || papel === "rodape"
+}
+
 /** quantos itens são do operador: cabeçalho, lápide e rodapé do Sirvo não contam como material */
 export function quantosDoOperador(itens: ProjectShowRef[] | null | undefined) {
     return (itens || []).filter((i) => i && !papelDoItem(i)).length
