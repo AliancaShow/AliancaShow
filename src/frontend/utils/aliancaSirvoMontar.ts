@@ -14,18 +14,25 @@
 //   - Só escreve quando algo mudou (a conta é idempotente): a própria escrita
 //     volta como "nada a fazer" e não forma laço.
 //   - Nunca roda sem roteiro aceito do culto seguido.
-//   - Até existir o passo 6 (remapear a saída), a ORDEM do projeto não muda
-//     com o culto no ar ou com algo na tela (ver `protegido`): só os campos. A ordem nova
-//     fica pendente e a faixa avisa. Nada pula debaixo da mão do operador.
+//   - Momento protegido (culto no ar ou algo na tela, ver `protegido`): os
+//     campos aplicam; a ORDEM só muda sozinha se a primeira posição que muda
+//     vem depois de todo ponteiro vivo (bloco novo no fim etc.). Senão fica
+//     pendente, a faixa diz o que mudou, e o operador aperta Aplicar.
+//   - Mudou a ordem do projeto aberto: os ponteiros por posição (item aberto,
+//     foco, saídas) seguem o MESMO objeto (aliancaSirvoPonteiros.ts), na mesma
+//     passada, e o "abrir" por posição do celular é recusado por 30 s.
 
 import { get, writable } from "svelte/store"
 import { uid } from "uid"
 import type { ProjectShowRef } from "../../types/Projects"
-import { activeFocus, activeProject, activeShow, contextActive, folders, loaded, outputs, projects, selected, special } from "../stores"
+import { OutputHelper } from "../components/helpers/OutputHelper"
+import { activeFocus, activeProject, activeRename, activeShow, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, selected, special, undoHistory } from "../stores"
+import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { garantirPastas } from "./aliancaPastas"
 import { sirvo, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
-import { papelDoItem, reconciliar, type MotivoPendente } from "./aliancaSirvoProjeto"
+import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
+import { papelDoItem, reconciliar, resumirPendencia, textoDaPendencia, type MotivoPendente } from "./aliancaSirvoProjeto"
 import { getAccess } from "./profile"
 
 export type EstadoMontagem = {
@@ -41,12 +48,14 @@ export type EstadoMontagem = {
     outroCulto: string
     /** a ordem nova não foi aplicada (só com situacao "ligado") */
     pendente: MotivoPendente | null
+    /** o que está pendente, em texto curto ("Louvor mudou de lugar · bloco novo: Avisos") */
+    resumo: string
     sumiram: number
     /** culto no ar ou algo na tela, com este projeto aberto: a ordem não muda agora */
     protegido: boolean
 }
 
-const VAZIO: EstadoMontagem = { projetoId: null, situacao: "nenhuma", motivo: null, eventId: null, titulo: "", blocos: 0, quantosNoDia: 0, outroCulto: "", pendente: null, sumiram: 0, protegido: false }
+const VAZIO: EstadoMontagem = { projetoId: null, situacao: "nenhuma", motivo: null, eventId: null, titulo: "", blocos: 0, quantosNoDia: 0, outroCulto: "", pendente: null, resumo: "", sumiram: 0, protegido: false }
 export const sirvoMontagem = writable<EstadoMontagem>(VAZIO)
 
 const CHAVE_MEMORIA = "aliancaSirvoMontados"
@@ -93,12 +102,39 @@ function protegido(projetoId: string) {
     return get(activeProject) === projetoId || naTela.some((o) => typeof o.out?.slide?.projectIndex === "number")
 }
 
+/** há na tela um slide que guardou a posição de um item de projeto (não dá para saber de qual) */
+function saidaComPosicao() {
+    return saidasComAlgo().some((o) => typeof o.out?.slide?.projectIndex === "number")
+}
+
 /** posições usadas por um ponteiro vivo neste projeto: o cabeçalho ativo nunca sai */
 function ativosNo(projetoId: string): number[] {
     if (get(activeProject) !== projetoId) return []
     const posicoes = [get(activeShow)?.index, get(activeFocus)?.index]
     Object.values(get(outputs) || {}).forEach((o: any) => posicoes.push(o?.out?.slide?.projectIndex))
     return posicoes.filter((i): i is number => typeof i === "number" && i >= 0)
+}
+
+/**
+ * Os ponteiros por posição do projeto aberto, lidos ANTES da conta (que muda o
+ * id de lápide e duplicata no próprio objeto). Só os coerentes: um ponteiro
+ * cujo item não bate com o id (ex.: slide de outro projeto, ou a posição já
+ * velha) não é tocado; trocar o id dele abriria outro item no centro.
+ */
+function lerPonteiros(projetoId: string, itens: ProjectShowRef[]): PonteirosDoProjeto | null {
+    if (get(activeProject) !== projetoId) return null
+    const coerente = (p: { index?: number; id?: string } | null | undefined) => (p && typeof p.index === "number" && p.index >= 0 && itens[p.index]?.id === p.id ? { index: p.index, id: p.id } : null)
+    const saidas: { [id: string]: number } = {}
+    Object.entries(get(outputs) || {}).forEach(([id, o]: [string, any]) => {
+        const s = o?.out?.slide
+        if (s && typeof s.projectIndex === "number" && s.projectIndex >= 0 && itens[s.projectIndex]?.id === s.id) saidas[id] = s.projectIndex
+    })
+    // o slide guardado ao limpar a tela (clear.ts): o "próximo" volta a usá-lo
+    const limpos: { [id: string]: number } = {}
+    Object.entries(get(outputSlideCache) || {}).forEach(([id, s]: [string, any]) => {
+        if (s && typeof s.projectIndex === "number" && s.projectIndex >= 0 && itens[s.projectIndex]?.id === s.id) limpos[id] = s.projectIndex
+    })
+    return { ativo: coerente(get(activeShow)), foco: coerente(get(activeFocus)), saidas, limpos }
 }
 
 // Durante um arrasto a ordem espera: o "soltar" usa a posição de quando começou.
@@ -115,15 +151,16 @@ function fimDoArrasto() {
 // ---------------------------------------------------------------- escrita
 
 /**
- * Escreve no store numa passada só, fora do history. Com a ordem mudada (só
- * fora do momento protegido), o item ativo e o foco seguem o MESMO objeto, e a
- * seleção e o menu de contexto do projeto são fechados.
+ * Escreve no store numa passada só, fora do history, e na mesma passada (sem
+ * `await`) leva cada ponteiro por posição para onde o MESMO objeto foi parar:
+ * item aberto, foco e a posição guardada em cada saída. A saída só é tocada se
+ * a posição dela mudou (e trocar só a posição não reenvia o slide: ver
+ * Output.svelte). Com a ordem mudada, a seleção, o menu de contexto e o
+ * renomear de um item do projeto são fechados, o cache de 50 ms do item ativo
+ * (OutputHelper) é esquecido e o celular é avisado.
  */
-function escrever(projetoId: string, antes: ProjectShowRef[], depois: ProjectShowRef[], extra: { ligar?: { eventId: string } } = {}) {
+function escrever(projetoId: string, antes: ProjectShowRef[], depois: ProjectShowRef[], extra: { ligar?: { eventId: string }; ponteiros?: PonteirosDoProjeto | null } = {}) {
     const estrutura = depois !== antes
-    const aberto = get(activeProject) === projetoId
-    const mostrado = aberto ? antes[get(activeShow)?.index ?? -1] : undefined
-    const focado = aberto ? antes[get(activeFocus)?.index ?? -1] : undefined
 
     projects.update((a) => {
         const p = a[projetoId]
@@ -134,13 +171,61 @@ function escrever(projetoId: string, antes: ProjectShowRef[], depois: ProjectSho
         return a
     })
 
-    if (!estrutura || !aberto) return
-    const novoMostrado = mostrado ? depois.indexOf(mostrado) : -1
-    if (novoMostrado >= 0 && novoMostrado !== get(activeShow)?.index) activeShow.update((s) => (s ? { ...s, index: novoMostrado } : s))
-    const novoFocado = focado ? depois.indexOf(focado) : -1
-    if (novoFocado >= 0 && novoFocado !== get(activeFocus)?.index) activeFocus.update((f) => ({ ...f, index: novoFocado }))
+    // A ordem mudou: o Ctrl+Z das mudanças anteriores na lista devolveria a
+    // ordem velha (vale também fora do culto: o culto pode começar depois).
+    if (estrutura) esquecerDesfazerDaLista(projetoId)
+
+    // os ponteiros só existem no projeto aberto, e só se ainda são do projeto aberto
+    const ponteiros = extra.ponteiros
+    if (!ponteiros || get(activeProject) !== projetoId) return
+
+    const r = remapearPonteiros(antes, depois, ponteiros)
+    if (r.perdidos) console.warn("Sirvo: um ponteiro do projeto apontava para um item que saiu da lista", r.perdidos)
+    const { ativo, foco } = r
+    if (ativo) activeShow.update((s) => (s && s.id === ponteiros.ativo?.id ? { ...s, index: ativo.index, id: ativo.id } : s))
+    if (foco) activeFocus.update((f) => (f && f.id === ponteiros.foco?.id ? { ...f, index: foco.index, id: foco.id } : f))
+    const saidas = Object.entries(r.saidas)
+    if (saidas.length) {
+        outputs.update((a) => {
+            for (const [id, i] of saidas) {
+                const slide = a[id]?.out?.slide
+                if (slide) a[id].out!.slide = { ...slide, projectIndex: i }
+            }
+            return a
+        })
+    }
+    const limpos = Object.entries(remapearPonteiros(antes, depois, { saidas: ponteiros.limpos }).saidas)
+    if (limpos.length) {
+        outputSlideCache.update((a) => {
+            for (const [id, i] of limpos) if (a?.[id]) a[id] = { ...a[id], projectIndex: i }
+            return a
+        })
+    }
+
+    if (!estrutura) return
+    OutputHelper.esquecerItemAtivo()
     if (get(selected)?.id === "show") selected.set({ id: null, data: [] })
     if (get(contextActive)) contextActive.set(false)
+    if (String(get(activeRename) || "").startsWith("show_")) activeRename.set(null)
+    try {
+        estruturaDoProjetoMudou()
+    } catch (erro) {
+        console.error("Sirvo: falha ao avisar o celular da ordem nova", erro)
+    }
+}
+
+/**
+ * O Sirvo mudou a ordem: o Ctrl+Z das mudanças anteriores na lista deste
+ * projeto devolveria a ordem VELHA (a lista inteira, clonada), e com o culto
+ * no ar o item aberto e o telão ficariam apontando para outro item. Essas
+ * entradas saem; o resto do desfazer (slides, textos, outros projetos) fica.
+ */
+function esquecerDesfazerDaLista(projetoId: string) {
+    const antes = get(undoHistory).length + get(redoHistory).length
+    undoHistory.update((a) => a.filter((h) => !desfazListaDoProjeto(h, projetoId)))
+    redoHistory.update((a) => a.filter((h) => !desfazListaDoProjeto(h, projetoId)))
+    const tiradas = antes - get(undoHistory).length - get(redoHistory).length
+    if (tiradas) console.info(`Sirvo: a ordem do culto mudou no ar; ${tiradas} passo(s) do Ctrl+Z da lista deste projeto foram esquecidos`)
 }
 
 // trava contra laço: se a conta deixar de ser idempotente, o Show não reescreve o projeto a cada segundo
@@ -168,31 +253,47 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
     // era do operador fica todo no topo): nenhuma posição muda, nem no ar. Com
     // cabeçalhos de outro culto, ela mexeria na ordem: só fora do culto.
     if (protegido(projetoId) && itens.some((i) => papelDoItem(i))) return "Com o culto no ar ou algo na tela, este projeto não pode ser remontado agora. Limpe a tela e tente de novo."
+    const ponteiros = lerPonteiros(projetoId, itens)
     const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: r.comeca_em })
-    escrever(projetoId, itens, res.itens, { ligar: { eventId: r.event_id } })
+    escrever(projetoId, itens, res.itens, { ligar: { eventId: r.event_id }, ponteiros })
     lembrarMontado(r.event_id, projetoId)
     dispensados.delete(chaveDispensa(r.event_id, projetoId))
     return null
 }
 
-/** o projeto já ligado: campos sempre; ordem só fora do momento protegido e fora de um arrasto */
+/**
+ * O projeto já ligado: campos sempre. A ordem: fora do momento protegido,
+ * sempre; nele, sozinha só depois de todo ponteiro vivo (a conta decide pelos
+ * `ativos`), ou com Aplicar (`forcar`). Nunca no meio de um arrasto.
+ */
 function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     const itens = get(projects)[projetoId]?.shows || []
+    const aberto = get(activeProject) === projetoId
     const prot = protegido(projetoId)
+    // daqui até o fim do `escrever` é tudo síncrono: lido, contado e escrito sem pausa
+    const ponteiros = lerPonteiros(projetoId, itens)
     const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: r.comeca_em })
 
     let depois = res.itens
     let pendente = res.motivo
-    if (res.mudouEstrutura && (prot || (arrastando && get(activeProject) === projetoId))) {
-        // passo 6 (remapear saída e próximo) ainda não existe: nem "depois do que está no ar" muda sozinho
-        depois = itens
-        pendente = prot ? "no_ar" : null // no arrasto, tenta de novo no dragend
+    if (depois !== itens) {
+        if (aberto && arrastando) {
+            // o "soltar" usa a posição de quando o arrasto começou: tenta de novo no dragend
+            depois = itens
+            pendente = null
+        } else if (!aberto && prot && saidaComPosicao()) {
+            // projeto fechado e um slide na tela que guardou uma posição: não dá
+            // para saber se é deste projeto; espera o projeto ser aberto
+            depois = itens
+            pendente = "no_ar"
+        }
     }
 
     // a conta já mexeu nos objetos (campos, lápide, duplicata): grava mesmo com a ordem pendente
-    if ((res.mudouCampos || depois !== itens) && podeEscrever()) escrever(projetoId, itens, depois)
+    if ((res.mudouCampos || depois !== itens) && podeEscrever()) escrever(projetoId, itens, depois, { ponteiros })
 
-    return { pendente, sumiram: res.sumiram, protegido: prot }
+    const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos)) : ""
+    return { pendente, resumo, sumiram: res.sumiram, protegido: prot }
 }
 
 function passada(pedido: Pedido = {}): string | null {
@@ -262,7 +363,7 @@ function passada(pedido: Pedido = {}): string | null {
             const id = decisao.projetoId
             const res = atualizarLigado(id, r, pedido.forcar === id)
             lembrarMontado(r.event_id, id)
-            publicar({ ...base, projetoId: id, situacao: "ligado", pendente: res.pendente, sumiram: res.sumiram, protegido: res.protegido })
+            publicar({ ...base, projetoId: id, situacao: "ligado", pendente: res.pendente, resumo: res.resumo, sumiram: res.sumiram, protegido: res.protegido })
             return null
         }
     }
@@ -355,9 +456,14 @@ export function montarSirvoAqui(projetoId: string): string | null {
     }
 }
 
-/** "Aplicar": a ordem nova (ou a remoção de muitos blocos), fora do momento protegido */
+/**
+ * "Aplicar": a ordem nova (ou a remoção de muitos blocos), inclusive com o culto
+ * no ar. Uma passada síncrona: lê o projeto de agora e o roteiro mais novo,
+ * conta, escreve e leva os ponteiros junto. O que está no telão continua no ar.
+ */
 export function aplicarOrdemSirvo(projetoId: string): string | null {
-    if (protegido(projetoId)) return "Com o culto no ar ou algo na tela, a ordem nova espera."
+    if (get(activeProject) !== projetoId) return "Abra o projeto do culto para aplicar a ordem nova."
+    if (arrastando) return "Termine de arrastar e aplique de novo."
     try {
         return passada({ forcar: projetoId })
     } catch (erro) {

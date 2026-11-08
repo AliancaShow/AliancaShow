@@ -369,3 +369,73 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
 
     return { itens: novos, mudouCampos, mudouEstrutura: true, pendente: false, motivo: null, sumiram: sumidas.length }
 }
+
+// ---------------------------------------------------------------- o que está pendente
+
+export type ResumoPendencia = { movidos: string[]; novos: string[]; sumidos: string[] }
+
+/**
+ * O que o Sirvo mudou e o projeto ainda não tem, para a faixa dizer em vez de
+ * só avisar (o pendente nunca é silencioso). Movidos são os blocos fora da
+ * maior sequência que já está na ordem certa: mover um bloco aparece como um
+ * bloco só, não como todos os que ficaram entre as duas posições.
+ */
+export function resumirPendencia(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): ResumoPendencia {
+    const vistos = new Set<string>()
+    const cabecalhos: { blocoId: string; nome: string }[] = []
+    for (const item of itens || []) {
+        if (papelDoItem(item) !== "cabecalho" || vistos.has(item.id)) continue
+        vistos.add(item.id)
+        cabecalhos.push({ blocoId: item.id.slice(PREFIXO_SIRVO.length), nome: item.name || "" })
+    }
+
+    const posicaoNoSirvo = new Map<string, number>()
+    const titulo = new Map<string, string>()
+    ;(blocos || []).forEach((b, i) => {
+        if (!b?.id || posicaoNoSirvo.has(b.id)) return
+        posicaoNoSirvo.set(b.id, i)
+        titulo.set(b.id, texto(b.titulo))
+    })
+
+    const noProjeto = new Set(cabecalhos.map((c) => c.blocoId))
+    const sumidos = cabecalhos.filter((c) => !posicaoNoSirvo.has(c.blocoId)).map((c) => c.nome)
+    const novos = [...posicaoNoSirvo.keys()].filter((id) => !noProjeto.has(id)).map((id) => titulo.get(id) || "")
+
+    // maior subsequência crescente das posições no Sirvo, na ordem do projeto
+    const comuns = cabecalhos.filter((c) => posicaoNoSirvo.has(c.blocoId))
+    const seq = comuns.map((c) => posicaoNoSirvo.get(c.blocoId)!)
+    const fim: number[] = [] // fim[k]: índice em seq do menor final de uma subsequência de tamanho k+1
+    const anterior: number[] = seq.map(() => -1)
+    seq.forEach((v, i) => {
+        let lo = 0
+        let hi = fim.length
+        while (lo < hi) {
+            const meio = (lo + hi) >> 1
+            if (seq[fim[meio]] < v) lo = meio + 1
+            else hi = meio
+        }
+        if (lo > 0) anterior[i] = fim[lo - 1]
+        fim[lo] = i
+    })
+    const ficam = new Set<number>()
+    for (let i = fim.length ? fim[fim.length - 1] : -1; i >= 0; i = anterior[i]) ficam.add(i)
+    const movidos = comuns.filter((_c, i) => !ficam.has(i)).map((c) => titulo.get(c.blocoId) || c.nome)
+
+    return { movidos, novos, sumidos }
+}
+
+const lista = (nomes: string[]) => {
+    const n = nomes.map((x) => x || "sem nome")
+    if (n.length === 1) return n[0]
+    if (n.length === 2) return `${n[0]} e ${n[1]}`
+    return `${n.length} blocos`
+}
+
+/** "Louvor mudou de lugar · bloco novo: Avisos" — curto, para caber numa linha da faixa */
+export function textoDaPendencia(r: ResumoPendencia) {
+    const partes: string[] = []
+    if (r.movidos.length) partes.push(`${lista(r.movidos)} ${r.movidos.length === 1 ? "mudou" : "mudaram"} de lugar`)
+    if (r.novos.length) partes.push(r.novos.length <= 2 ? `${r.novos.length === 1 ? "bloco novo" : "blocos novos"}: ${lista(r.novos)}` : `${r.novos.length} blocos novos`)
+    if (r.sumidos.length) partes.push(r.sumidos.length <= 2 ? `${r.sumidos.length === 1 ? "saiu do Sirvo" : "saíram do Sirvo"}: ${lista(r.sumidos)}` : `${r.sumidos.length} blocos saíram do Sirvo`)
+    return partes.join(" · ")
+}

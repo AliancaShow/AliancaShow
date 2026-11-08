@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { cabecalhoTrancado, COR_LAPIDE, horaDoBloco, ID_RODAPE, linkSeguro, NOME_RODAPE, papelDoItem, quantosDoOperador, reconciliar, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
+import { cabecalhoTrancado, COR_LAPIDE, horaDoBloco, ID_RODAPE, linkSeguro, NOME_RODAPE, papelDoItem, quantosDoOperador, reconciliar, resumirPendencia, textoDaPendencia, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
 
 // 10:00 em Sao Paulo, e cada bloco 15 min depois do anterior
 const INICIO = "2026-11-08T13:00:00Z"
@@ -389,5 +389,35 @@ describe("linkSeguro", () => {
         expect(linkSeguro("https://user:senha@a.com")).toBe("")
         expect(linkSeguro("a.com")).toBe("")
         expect(linkSeguro(null)).toBe("")
+    })
+})
+
+describe("resumirPendencia (a faixa diz o que mudou)", () => {
+    it("um bloco movido aparece sozinho, nao todos os do meio", () => {
+        const r = resumirPendencia(montado("a", "b", "c", "d"), roteiro("b", "c", "d", "a"))
+        expect(r).toEqual({ movidos: ["A"], novos: [], sumidos: [] })
+        expect(textoDaPendencia(r)).toBe("A mudou de lugar")
+    })
+
+    it("bloco novo e bloco que saiu", () => {
+        const itens = montado("a", "b")
+        itens.splice(2, 0, musica("m1")) // b tem conteudo
+        const r = resumirPendencia(itens, roteiro("a", "n"))
+        expect(r).toEqual({ movidos: [], novos: ["N"], sumidos: ["B"] })
+        expect(textoDaPendencia(r)).toBe("bloco novo: N · saiu do Sirvo: B")
+    })
+
+    it("muitos: conta em vez de listar", () => {
+        const r = resumirPendencia(montado("a", "b", "c", "d"), roteiro("d", "c", "b", "a", "x", "y", "z"))
+        expect(r.movidos).toHaveLength(3)
+        expect(textoDaPendencia(r)).toBe("3 blocos mudaram de lugar · 3 blocos novos")
+    })
+
+    it("dois trocados de lugar", () => {
+        expect(textoDaPendencia(resumirPendencia(montado("a", "b"), roteiro("b", "a")))).toMatch(/^(A|B) mudou de lugar$/)
+    })
+
+    it("nada mudou: texto vazio", () => {
+        expect(textoDaPendencia(resumirPendencia(montado("a", "b"), roteiro("a", "b")))).toBe("")
     })
 })

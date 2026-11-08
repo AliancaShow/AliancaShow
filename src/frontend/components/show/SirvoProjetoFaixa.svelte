@@ -1,15 +1,22 @@
 <script lang="ts">
-    // Faixa do Sirvo no topo do projeto aberto (F0b, passo 4).
+    // Faixa do Sirvo no topo do projeto aberto (F0b, passos 4 e 6).
     //
-    // - Projeto ligado: UMA linha de altura fixa ("Roteiro do Sirvo · culto" e
-    //   Desligar). A ordem pendente troca o texto DESSA linha em vez de abrir
-    //   outra: a lista não desce debaixo do mouse no meio do culto.
+    // Fica FORA da área que rola (#projectArea, antes do Autoscroll): não rola
+    // com a lista e não muda de altura.
+    // - Projeto ligado: DUAS linhas de altura fixa, sempre. A de cima diz o que
+    //   está acontecendo; a de baixo tem os botões. A ordem pendente troca o
+    //   texto em vez de abrir outra linha: a lista não desce debaixo do mouse no
+    //   meio do culto. Antes era uma linha só, e no painel de 290px o aviso
+    //   ficava espremido entre dois botões (sobravam ~10 letras): o pendente
+    //   ficava mudo. O pendente nunca é silencioso: a linha de cima diz o que
+    //   mudou ("Louvor mudou de lugar").
     // - Projeto não ligado: "Montar os blocos aqui?", "Montar de novo?", "ligado
     //   a outro culto" ou "mais de um culto neste dia".
     // - Desligar pede confirmação na própria linha.
     // - Não pega foco: o operador passa slide pelo teclado.
     // Texto do Sirvo só por interpolação {…}, nunca {@html}.
     import { activeProject, projects } from "../../stores"
+    import { dicaSegura } from "../../utils/aliancaDica"
     import { aplicarOrdemSirvo, desligarDoSirvo, dispensarFaixaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
 
     $: projetoId = $activeProject
@@ -30,17 +37,19 @@
 
     const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
 
-    // a linha do projeto ligado: o texto muda, a altura não
+    // o projeto ligado: o texto muda, a altura não
+    type Linhas = { titulo: string; detalhe: string; aplicar: boolean; dicaAplicar: string }
     $: linha = textoLigado(estado, desteCulto)
-    function textoLigado(e: typeof estado, deste: boolean): { texto: string; aplicar: boolean; dicaAplicar: string } {
-        const base = { texto: deste && e?.titulo ? `Roteiro do Sirvo · ${e.titulo}` : "Ligado a um culto do Sirvo", aplicar: false, dicaAplicar: "" }
+    function textoLigado(e: typeof estado, deste: boolean): Linhas {
+        const base: Linhas = { titulo: deste && e?.titulo ? `Roteiro do Sirvo · ${e.titulo}` : "Ligado a um culto do Sirvo", detalhe: deste && e?.blocos ? `${plural(e.blocos, "bloco", "blocos")} · cabeçalhos trancados` : "Cabeçalhos trancados", aplicar: false, dicaAplicar: "" }
         if (!e || !deste || e.situacao !== "ligado" || !e.pendente) return base
-        if (e.pendente === "no_ar") return { texto: "O Sirvo mudou a ordem dos blocos. A ordem nova entra quando o culto não estiver no ar e a tela estiver limpa.", aplicar: true, dicaAplicar: "Aplicar com o culto no ar chega no próximo passo." }
-        const dica = e.protegido ? "Com o culto no ar ou algo na tela, espere a tela ficar limpa." : ""
-        if (e.pendente === "roteiro_vazio") return { texto: "O Sirvo mandou o roteiro sem blocos. Aplicar?", aplicar: true, dicaAplicar: dica }
-        return { texto: `O Sirvo tirou ${plural(e.sumiram, "bloco", "blocos")} de uma vez. Aplicar?`, aplicar: true, dicaAplicar: dica }
+        const dicaNoAr = e.protegido ? "O que está no telão continua no ar, e o próximo segue a ordem nova." : ""
+        if (e.pendente === "no_ar") return { titulo: `Sirvo: ${e.resumo || "a ordem dos blocos mudou"}`, detalhe: "A lista não muda até você aplicar.", aplicar: true, dicaAplicar: dicaNoAr }
+        if (e.pendente === "roteiro_vazio") return { titulo: "O Sirvo mandou o roteiro sem blocos", detalhe: "Aplicar tira os cabeçalhos vazios.", aplicar: true, dicaAplicar: dicaNoAr }
+        return { titulo: `O Sirvo tirou ${plural(e.sumiram, "bloco", "blocos")} de uma vez`, detalhe: e.resumo || "Os que têm conteúdo ficam no lugar.", aplicar: true, dicaAplicar: dicaNoAr }
     }
-    $: aplicarBloqueado = !estado || estado.pendente === "no_ar" || estado.protegido
+    $: aplicarBloqueado = !estado || !estado.pendente
+    $: pendente = !!(desteCulto && estado?.pendente)
 
     function montar() {
         if (!projetoId) return
@@ -91,25 +100,33 @@
         {/if}
 
         {#if ligado}
-            <div class="linha" class:aviso={!!(desteCulto && estado?.pendente)}>
-                <span class="ponto" />
-                {#if confirmando}
-                    <span class="texto">Desligar do Sirvo? Os cabeçalhos viram seções comuns e nada sai do lugar.</span>
+            {#if confirmando}
+                <div class="linha aviso">
+                    <span class="ponto" />
+                    <span class="texto" data-title="Os cabeçalhos viram seções comuns, destrancadas, e nada sai do lugar.">Desligar do Sirvo? Os cabeçalhos viram seções comuns e nada sai do lugar.</span>
+                </div>
+                <div class="linha botoes">
                     <button tabindex="-1" on:click={desligar}>Desligar</button>
                     <button class="fraco" tabindex="-1" on:click={() => (confirmando = false)}>Cancelar</button>
-                {:else}
-                    <span class="texto" data-title={linha.texto}>{linha.texto}</span>
+                </div>
+            {:else}
+                <div class="linha" class:aviso={pendente}>
+                    <span class="ponto" />
+                    <span class="texto titulo" data-title={dicaSegura(linha.titulo)}>{linha.titulo}</span>
+                </div>
+                <div class="linha botoes" class:aviso={pendente}>
+                    <span class="texto detalhe" data-title={dicaSegura(linha.detalhe)}>{linha.detalhe}</span>
                     {#if linha.aplicar}
                         <button tabindex="-1" disabled={aplicarBloqueado} data-title={linha.dicaAplicar} on:click={aplicar}>Aplicar</button>
                     {/if}
-                    <button class="fraco" tabindex="-1" on:click={desligar}>Desligar do Sirvo</button>
-                {/if}
-            </div>
+                    <button class="fraco" tabindex="-1" data-title="Desligar do Sirvo: os cabeçalhos viram seções comuns" on:click={desligar}>{pendente ? "Desligar" : "Desligar do Sirvo"}</button>
+                </div>
+            {/if}
         {/if}
 
         {#if erro}
             <div class="linha erro">
-                <span class="texto" data-title={erro}>{erro}</span>
+                <span class="texto" data-title={dicaSegura(erro)}>{erro}</span>
                 <button class="fraco" tabindex="-1" on:click={() => (erro = "")}>Ok</button>
             </div>
         {/if}
@@ -134,6 +151,17 @@
         gap: 8px;
         height: 26px;
         min-width: 0;
+    }
+    /* a segunda linha do projeto ligado: o detalhe recuado na altura do texto de cima */
+    .linha.botoes {
+        gap: 6px;
+        padding-inline-start: 15px;
+    }
+    .titulo {
+        font-weight: 600;
+    }
+    .detalhe {
+        opacity: 0.7;
     }
     .ponto {
         flex: none;
