@@ -3,6 +3,10 @@
     // o último bloco que ESTE Show encerrou: o "Desfazer" vive 30 s, mesmo se o
     // operador trocar de projeto e voltar
     const ultimoEncerrado = writable<{ blocoId: string; titulo: string; ate: number } | null>(null)
+    /** o avanço sugerido da faixa também oferece o Desfazer (quando encerra um bloco só) */
+    export function marcarEncerrado(blocoId: string, titulo: string) {
+        ultimoEncerrado.set({ blocoId, titulo, ate: Date.now() + 30_000 })
+    }
 </script>
 
 <script lang="ts">
