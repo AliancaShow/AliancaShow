@@ -173,6 +173,36 @@ describe("reconciliar: apagar", () => {
         expect(desenho(passo3.itens)).toEqual(["[d]", "[c]", "[a]", "[fim]", "[x:b]", "m1", "remote1"])
     })
 
+    it("o bloco volta (restaurado no Sirvo): a lapide revive no lugar, com o conteudo", () => {
+        const itens = montado("a", "b", "c")
+        itens.splice(2, 0, musica("m1"))
+        const passo1 = reconciliar(itens, roteiro("a", "c")).itens
+        const lapide = passo1[1]
+
+        // mesmo no ar e protegido: nada se move, entao nao fica pendente
+        const r = reconciliar(passo1, roteiro("a", "b", "c"), { ativos: [2], protegido: true, comecaEm: INICIO })
+        expect(desenho(r.itens)).toEqual(["[a]", "[b]", "m1", "[c]", "[fim]"])
+        expect(r.pendente).toBe(false)
+        expect(r.itens[1]).toBe(lapide)
+        expect(lapide).toMatchObject({ id: "sirvo_b", name: "B", color: "#3366ff", data: { sirvo: { blocoId: "b" } } })
+    })
+
+    it("o bloco volta depois que a lapide ja desceu: ela sobe com o conteudo", () => {
+        const itens = montado("a", "b", "c")
+        itens.splice(2, 0, musica("m1"))
+        const passo1 = reconciliar(itens, roteiro("a", "c")).itens
+        const passo2 = reconciliar(passo1, roteiro("c", "a")).itens
+        expect(desenho(passo2)).toEqual(["[c]", "[a]", "[fim]", "[x:b]", "m1"])
+        const r = reconciliar(passo2, roteiro("c", "b", "a"))
+        expect(desenho(r.itens)).toEqual(["[c]", "[b]", "m1", "[a]", "[fim]"])
+    })
+
+    it("se ja existe cabecalho do bloco, a lapide fica como esta", () => {
+        const itens = [...montado("a", "b"), secao("sirvo_x_b", "(removido no Sirvo) B")]
+        const r = reconciliar(itens, roteiro("a", "b"))
+        expect(desenho(r.itens)).toEqual(["[a]", "[b]", "[fim]", "[x:b]"])
+    })
+
     it("lapide e destrancada: seu id nao e de cabecalho", () => {
         expect(papelDoItem({ id: "sirvo_x_b", type: "section" })).toBe("lapide")
         expect(papelDoItem({ id: "sirvo_b", type: "section" })).toBe("cabecalho")
