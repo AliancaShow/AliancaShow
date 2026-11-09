@@ -420,8 +420,21 @@ describe("resumirPendencia (a faixa diz o que mudou)", () => {
         expect(textoDaPendencia(r)).toBe("3 blocos mudaram de lugar · 3 blocos novos")
     })
 
-    it("dois trocados de lugar", () => {
-        expect(textoDaPendencia(resumirPendencia(montado("a", "b"), roteiro("b", "a")))).toMatch(/^(A|B) mudou de lugar$/)
+    it("dois vizinhos trocados: nomeia os dois, na ordem nova (nao chuta qual foi movido)", () => {
+        expect(textoDaPendencia(resumirPendencia(montado("a", "b"), roteiro("b", "a")))).toBe("B e A trocaram de lugar")
+        // o caso do André: aviso subiu por cima da palavra
+        const r = resumirPendencia(montado("t", "l", "p", "v"), roteiro("t", "l", "v", "p"))
+        expect(r).toEqual({ movidos: [], novos: [], sumidos: [], trocados: ["V", "P"] })
+        expect(textoDaPendencia(r)).toBe("V e P trocaram de lugar")
+    })
+
+    it("um bloco que andou duas casas continua 'mudou de lugar'", () => {
+        const r = resumirPendencia(montado("a", "b", "c"), roteiro("c", "a", "b"))
+        expect(r).toEqual({ movidos: ["C"], novos: [], sumidos: [] })
+    })
+
+    it("troca junto com bloco novo", () => {
+        expect(textoDaPendencia(resumirPendencia(montado("a", "b"), roteiro("b", "a", "n")))).toBe("B e A trocaram de lugar · bloco novo: N")
     })
 
     it("nada mudou: texto vazio", () => {

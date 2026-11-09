@@ -385,13 +385,17 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
 
 // ---------------------------------------------------------------- o que está pendente
 
-export type ResumoPendencia = { movidos: string[]; novos: string[]; sumidos: string[] }
+export type ResumoPendencia = { movidos: string[]; novos: string[]; sumidos: string[]; trocados?: [string, string] }
 
 /**
  * O que o Sirvo mudou e o projeto ainda não tem, para a faixa dizer em vez de
  * só avisar (o pendente nunca é silencioso). Movidos são os blocos fora da
  * maior sequência que já está na ordem certa: mover um bloco aparece como um
  * bloco só, não como todos os que ficaram entre as duas posições.
+ *
+ * Dois vizinhos que trocaram de lugar não têm "o que mudou": "aviso subiu" e
+ * "palavra desceu" são a mesma mudança, e a escolha da subsequência era sorte
+ * (o André moveu o aviso e a faixa disse palavra). Aí vira `trocados`.
  */
 export function resumirPendencia(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): ResumoPendencia {
     const vistos = new Set<string>()
@@ -432,9 +436,21 @@ export function resumirPendencia(itens: ProjectShowRef[], blocos: BlocoParaProje
     })
     const ficam = new Set<number>()
     for (let i = fim.length ? fim[fim.length - 1] : -1; i >= 0; i = anterior[i]) ficam.add(i)
-    const movidos = comuns.filter((_c, i) => !ficam.has(i)).map((c) => titulo.get(c.blocoId) || c.nome)
+    const nomeDe = (c: { blocoId: string; nome: string }) => titulo.get(c.blocoId) || c.nome
+    const fora = comuns.map((_c, i) => i).filter((i) => !ficam.has(i))
 
-    return { movidos, novos, sumidos }
+    if (fora.length === 1) {
+        // posição de cada um na ordem nova, contando só os que estão nos dois lados
+        const rank = new Map([...seq].sort((a, b) => a - b).map((v, k) => [v, k]))
+        const i = fora[0]
+        const j = rank.get(seq[i])!
+        if (Math.abs(i - j) === 1 && rank.get(seq[j]) === i) {
+            const [primeiro, segundo] = i < j ? [comuns[j], comuns[i]] : [comuns[i], comuns[j]]
+            return { movidos: [], novos, sumidos, trocados: [nomeDe(primeiro), nomeDe(segundo)] }
+        }
+    }
+
+    return { movidos: fora.map((i) => nomeDe(comuns[i])), novos, sumidos }
 }
 
 const lista = (nomes: string[]) => {
@@ -447,6 +463,7 @@ const lista = (nomes: string[]) => {
 /** "Louvor mudou de lugar · bloco novo: Avisos" — curto, para caber numa linha da faixa */
 export function textoDaPendencia(r: ResumoPendencia) {
     const partes: string[] = []
+    if (r.trocados) partes.push(`${lista(r.trocados)} trocaram de lugar`)
     if (r.movidos.length) partes.push(`${lista(r.movidos)} ${r.movidos.length === 1 ? "mudou" : "mudaram"} de lugar`)
     if (r.novos.length) partes.push(r.novos.length <= 2 ? `${r.novos.length === 1 ? "bloco novo" : "blocos novos"}: ${lista(r.novos)}` : `${r.novos.length} blocos novos`)
     if (r.sumidos.length) partes.push(r.sumidos.length <= 2 ? `${r.sumidos.length === 1 ? "saiu do Sirvo" : "saíram do Sirvo"}: ${lista(r.sumidos)}` : `${r.sumidos.length} blocos saíram do Sirvo`)
