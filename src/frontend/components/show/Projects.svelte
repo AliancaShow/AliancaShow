@@ -27,6 +27,7 @@
     import ProjectList from "./ProjectList.svelte"
     import ProjectStrip from "./ProjectStrip.svelte"
     import { AGENDAS } from "../../utils/agendas"
+    import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
 
     let tree: Tree[] = []
 
@@ -256,6 +257,8 @@
 
         let project = clone($projectTemplates[id])
         if (!project) return
+        // AliançaShow: modelo antigo com cabeçalhos do Sirvo nasce sem ligação a culto nenhum
+        copiaSemSirvo(project, () => uid(5))
 
         project.parent = interactedFolder || ($folders[currentProject?.parent || ""] ? currentProject?.parent || "/" : "/")
 

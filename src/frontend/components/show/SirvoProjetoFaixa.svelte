@@ -1,0 +1,219 @@
+<script lang="ts">
+    // Faixa do Sirvo no topo do projeto aberto (F0b, passos 4 e 6).
+    //
+    // Fica FORA da área que rola (#projectArea, antes do Autoscroll): não rola
+    // com a lista e não muda de altura.
+    // - Projeto ligado: DUAS linhas de altura fixa, sempre. A de cima diz o que
+    //   está acontecendo; a de baixo tem os botões. A ordem pendente troca o
+    //   texto em vez de abrir outra linha: a lista não desce debaixo do mouse no
+    //   meio do culto. Antes era uma linha só, e no painel de 290px o aviso
+    //   ficava espremido entre dois botões (sobravam ~10 letras): o pendente
+    //   ficava mudo. O pendente nunca é silencioso: a linha de cima diz o que
+    //   mudou ("Louvor mudou de lugar").
+    // - Projeto não ligado: "Montar os blocos aqui?", "Montar de novo?", "ligado
+    //   a outro culto" ou "mais de um culto neste dia".
+    // - Desligar pede confirmação na própria linha.
+    // - Não pega foco: o operador passa slide pelo teclado.
+    // Texto do Sirvo só por interpolação {…}, nunca {@html}.
+    import { activeProject, projects } from "../../stores"
+    import { dicaSegura } from "../../utils/aliancaDica"
+    import { aplicarOrdemSirvo, desligarDoSirvo, dispensarFaixaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
+
+    $: projetoId = $activeProject
+    $: projeto = projetoId ? $projects[projetoId] : null
+    $: ligado = !!projeto?.sirvo?.eventId
+    $: estado = projetoId && $sirvoMontagem.projetoId === projetoId ? $sirvoMontagem : null
+    // o estado é do culto SEGUIDO; o projeto aberto pode estar ligado a outro
+    $: desteCulto = !!estado && ligado && projeto?.sirvo?.eventId === estado.eventId
+
+    let erro = ""
+    let confirmando = false
+    let vistoProjeto: string | null = null
+    $: if (projetoId !== vistoProjeto) {
+        vistoProjeto = projetoId
+        erro = ""
+        confirmando = false
+    }
+
+    const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
+
+    // o projeto ligado: o texto muda, a altura não
+    type Linhas = { titulo: string; detalhe: string; aplicar: boolean; dicaAplicar: string }
+    $: linha = textoLigado(estado, desteCulto)
+    function textoLigado(e: typeof estado, deste: boolean): Linhas {
+        const base: Linhas = { titulo: deste && e?.titulo ? `Roteiro do Sirvo · ${e.titulo}` : "Ligado a um culto do Sirvo", detalhe: deste && e?.blocos ? `${plural(e.blocos, "bloco", "blocos")} · cabeçalhos trancados` : "Cabeçalhos trancados", aplicar: false, dicaAplicar: "" }
+        if (!e || !deste || e.situacao !== "ligado" || !e.pendente) return base
+        const dicaNoAr = e.protegido ? "O que está no telão continua no ar, e o próximo segue a ordem nova." : ""
+        if (e.pendente === "no_ar") return { titulo: `Sirvo: ${e.resumo || "a ordem dos blocos mudou"}`, detalhe: "A lista não muda até você aplicar.", aplicar: true, dicaAplicar: dicaNoAr }
+        if (e.pendente === "roteiro_vazio") return { titulo: "O Sirvo mandou o roteiro sem blocos", detalhe: "Aplicar tira os cabeçalhos vazios.", aplicar: true, dicaAplicar: dicaNoAr }
+        return { titulo: `O Sirvo tirou ${plural(e.sumiram, "bloco", "blocos")} de uma vez`, detalhe: e.resumo || "Os que têm conteúdo ficam no lugar.", aplicar: true, dicaAplicar: dicaNoAr }
+    }
+    $: aplicarBloqueado = !estado || !estado.pendente
+    $: pendente = !!(desteCulto && estado?.pendente)
+
+    function montar() {
+        if (!projetoId) return
+        erro = montarSirvoAqui(projetoId) || ""
+    }
+    function aplicar() {
+        if (!projetoId || aplicarBloqueado) return
+        erro = aplicarOrdemSirvo(projetoId) || ""
+    }
+    function dispensar() {
+        if (!projetoId || !estado) return
+        dispensarFaixaSirvo(estado.eventId, projetoId)
+    }
+    function desligar() {
+        if (!projetoId) return
+        if (!confirmando) {
+            confirmando = true
+            return
+        }
+        confirmando = false
+        desligarDoSirvo(projetoId)
+    }
+</script>
+
+{#if projetoId && (ligado || (estado && estado.situacao !== "nenhuma" && estado.situacao !== "ligado"))}
+    <div class="faixa" role="status">
+        {#if estado?.situacao === "varios_no_dia"}
+            <div class="linha aviso">
+                <span class="ponto" />
+                <span class="texto" data-title="O nome do projeto quando há dois cultos no mesmo dia ainda está sendo combinado. Monte este projeto à mão por enquanto.">Há mais de um culto neste dia — a montagem automática ainda não cobre esse caso.</span>
+                <button tabindex="-1" on:click={dispensar}>Entendi</button>
+            </div>
+        {:else if estado?.situacao === "perguntar"}
+            <div class="linha aviso">
+                <span class="ponto" />
+                {#if estado.motivo === "outro_culto"}
+                    <span class="texto" data-title="Montar aqui troca os cabeçalhos do outro culto pelos deste. Os que tinham conteúdo ficam no lugar, marcados como removidos.">Este projeto já está ligado a outro culto do Sirvo{estado.outroCulto ? ` (${estado.outroCulto})` : ""}. Montar {estado.titulo || "o culto seguido"} aqui?</span>
+                    <button tabindex="-1" on:click={montar}>Montar aqui</button>
+                {:else if estado.motivo === "montado_antes"}
+                    <span class="texto" data-title="Os blocos deste culto já foram montados uma vez e o projeto foi apagado ou desligado.">Os blocos de {estado.titulo || "este culto"} já foram montados uma vez. Montar de novo?</span>
+                    <button tabindex="-1" on:click={montar}>Montar de novo</button>
+                {:else}
+                    <span class="texto" data-title="O que já está no projeto fica todo no topo; arraste cada item para debaixo do bloco dele.">Este culto tem roteiro no Sirvo ({plural(estado.blocos, "bloco", "blocos")}). Montar os blocos aqui?</span>
+                    <button tabindex="-1" on:click={montar}>Montar</button>
+                {/if}
+                <button class="fraco" tabindex="-1" on:click={dispensar}>Agora não</button>
+            </div>
+        {/if}
+
+        {#if ligado}
+            {#if confirmando}
+                <div class="linha aviso">
+                    <span class="ponto" />
+                    <span class="texto" data-title="Os cabeçalhos viram seções comuns, destrancadas, e nada sai do lugar.">Desligar do Sirvo? Os cabeçalhos viram seções comuns e nada sai do lugar.</span>
+                </div>
+                <div class="linha botoes">
+                    <button tabindex="-1" on:click={desligar}>Desligar</button>
+                    <button class="fraco" tabindex="-1" on:click={() => (confirmando = false)}>Cancelar</button>
+                </div>
+            {:else}
+                <div class="linha" class:aviso={pendente}>
+                    <span class="ponto" />
+                    <span class="texto titulo" data-title={dicaSegura(linha.titulo)}>{linha.titulo}</span>
+                </div>
+                <div class="linha botoes" class:aviso={pendente}>
+                    <span class="texto detalhe" data-title={dicaSegura(linha.detalhe)}>{linha.detalhe}</span>
+                    {#if linha.aplicar}
+                        <button tabindex="-1" disabled={aplicarBloqueado} data-title={linha.dicaAplicar} on:click={aplicar}>Aplicar</button>
+                    {/if}
+                    <button class="fraco" tabindex="-1" data-title="Desligar do Sirvo: os cabeçalhos viram seções comuns" on:click={desligar}>{pendente ? "Desligar" : "Desligar do Sirvo"}</button>
+                </div>
+            {/if}
+        {/if}
+
+        {#if erro}
+            <div class="linha erro">
+                <span class="texto" data-title={dicaSegura(erro)}>{erro}</span>
+                <button class="fraco" tabindex="-1" on:click={() => (erro = "")}>Ok</button>
+            </div>
+        {/if}
+    </div>
+{/if}
+
+<style>
+    .faixa {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--primary-lighter);
+        font-size: 12px;
+        user-select: none;
+    }
+
+    .linha {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 26px;
+        min-width: 0;
+    }
+    /* a segunda linha do projeto ligado: o detalhe recuado na altura do texto de cima */
+    .linha.botoes {
+        gap: 6px;
+        padding-inline-start: 15px;
+    }
+    .titulo {
+        font-weight: 600;
+    }
+    .detalhe {
+        opacity: 0.7;
+    }
+    .ponto {
+        flex: none;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--connected);
+    }
+    .aviso .ponto {
+        background: #ff8000;
+    }
+    .aviso .texto {
+        color: #ffb066;
+    }
+    .erro .texto {
+        color: #ff8f97;
+    }
+
+    .texto {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    button {
+        flex: none;
+        padding: 3px 10px;
+        border: 0;
+        border-radius: 14px;
+        background: rgb(255 128 0 / 0.18);
+        color: #ffb066;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    button:hover:not(:disabled) {
+        background: rgb(255 128 0 / 0.3);
+    }
+    button.fraco {
+        background: rgb(255 255 255 / 0.06);
+        color: var(--text);
+        font-weight: normal;
+        opacity: 0.8;
+    }
+    button.fraco:hover {
+        background: rgb(255 255 255 / 0.12);
+    }
+    button:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+</style>

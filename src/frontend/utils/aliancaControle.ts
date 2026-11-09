@@ -34,6 +34,12 @@ const POSTO_LIVRE_MS = 150_000
 // comando mais velho que isso e de antes de este computador ouvir: um
 // "proximo" esquecido no banco nao pode passar slide quando o app abre
 const COMANDO_VALE_MS = 30_000
+// AliançaShow/Sirvo: o "abrir" do celular é por POSIÇÃO na lista. Depois que a
+// ordem do projeto aberto muda (o Sirvo aplicou a ordem nova dos blocos), a
+// posição que o celular tinha na tela pode ser de outro item: recusa por 30s,
+// e o estado novo é republicado na hora. Até o celular mandar o id junto.
+const ABRIR_RECUSADO_MS = 30_000
+let estruturaMudouEm = 0
 
 let db: Database | null = null
 let meuId = ""
@@ -150,12 +156,23 @@ function executar(agenda: Agenda, comando: any) {
     if (comando.acao === "proximo") OutputHelper.advanceOutputs("next")
     else if (comando.acao === "anterior") OutputHelper.advanceOutputs("previous")
     else if (comando.acao === "limpar") clearAll()
-    else if (comando.acao === "abrir" && Number.isInteger(comando.indice)) OutputHelper.playProjectItem(comando.indice)
+    else if (comando.acao === "abrir" && Number.isInteger(comando.indice)) {
+        if (Date.now() - estruturaMudouEm < ABRIR_RECUSADO_MS) {
+            console.warn("AliançaShow Remote: 'abrir' recusado: a ordem do culto acabou de mudar")
+            publicarEstado(true)
+        } else OutputHelper.playProjectItem(comando.indice)
+    }
 
     limpar()
 }
 
 // ---------------------------------------------------------------- estado
+
+/** A ordem do projeto aberto mudou por fora do operador (Sirvo): recusa o "abrir" por posição e republica já. */
+export function estruturaDoProjetoMudou() {
+    estruturaMudouEm = Date.now()
+    publicarEstado(true)
+}
 
 let tEstado: ReturnType<typeof setTimeout> | undefined
 let ultimoEstado = ""

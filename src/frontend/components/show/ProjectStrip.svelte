@@ -16,6 +16,7 @@
     import type { Tree } from "../../../types/Projects"
     import { activeProject, projects, projectView } from "../../stores"
     import { openProject } from "./project"
+    import { quantosDoOperador } from "../../utils/aliancaSirvoProjeto"
 
     export let tree: Tree[] = []
 
@@ -56,8 +57,9 @@
         return nome.match(/^(\d{1,2}) - /)?.[1] || nome
     }
 
+    // AliançaShow: cabeçalhos, lápides e o rodapé do Sirvo não são material do culto
     function contarItens(id: string) {
-        return $projects[id]?.shows?.length || 0
+        return quantosDoOperador($projects[id]?.shows)
     }
 
     function abrir(id: string) {

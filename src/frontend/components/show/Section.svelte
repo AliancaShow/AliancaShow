@@ -1,5 +1,9 @@
 <script lang="ts">
     import { actions, activeProject, activeShow, editingProjectTemplate, projects, projectTemplates, special } from "../../stores"
+    import { Main } from "../../../types/IPC/Main"
+    import { sendMain } from "../../IPC/main"
+    import { dicaSegura } from "../../utils/aliancaDica"
+    import { cabecalhoTrancado, linkSeguro } from "../../utils/aliancaSirvoProjeto"
     import { translateText } from "../../utils/language"
     import { getActionIcon, runAction } from "../actions/actions"
     import { keysToID, sortByName } from "../helpers/array"
@@ -90,7 +94,21 @@
     $: currentActionId = localAction || $special.sectionTriggerAction
     $: currentAction = currentActionId ? { ...$actions[currentActionId], id: currentActionId } : null
 
-    $: isLocked = !!currentProject?.sectionsLocked
+    // AliançaShow: cabeçalho de um bloco do Sirvo. Nome, hora e nota vêm do
+    // Sirvo e ficam só para leitura; a nota NÃO vai para `notes` (lá ela vira
+    // uma parada a mais no "próximo"). Texto do Sirvo só por interpolação {…}.
+    $: doSirvo = !isTemplate && cabecalhoTrancado(currentProject, sectionUpdated)
+    $: sirvoDados = doSirvo ? sectionUpdated?.data?.sirvo || {} : null
+    $: sirvoLink = sirvoDados ? linkSeguro(sirvoDados.link) : ""
+    $: sirvoHost = sirvoLink ? new URL(sirvoLink).hostname : ""
+
+    // abre no navegador do PC, pelo processo principal (shell.openExternal); só https://
+    function abrirLink() {
+        const url = linkSeguro(sirvoDados?.link)
+        if (url) sendMain(Main.URL, url)
+    }
+
+    $: isLocked = !!currentProject?.sectionsLocked || doSirvo
 </script>
 
 {#if settingsOpened}
@@ -114,7 +132,50 @@
             <MaterialTimePicker label="calendar.time" value={sectionUpdated?.data?.time} disabled={isLocked} style="flex: 1;height: 100%;" on:change={(e) => updateSectionData("time", e.detail)} />
         </InputRow>
 
-        <Notes value={note} disabled={isLocked} on:edit={edit} />
+        {#if sirvoDados}
+            <div class="sirvo">
+                <p class="origem">Vem do roteiro do Sirvo. Para mudar, mude no Sirvo.</p>
+
+                {#if sirvoDados.responsavel}
+                    <div class="campo">
+                        <span class="rotulo">Responsável</span>
+                        <span class="valor">{sirvoDados.responsavel}</span>
+                    </div>
+                {/if}
+                {#if sirvoDados.duracaoMin}
+                    <div class="campo">
+                        <span class="rotulo">Duração</span>
+                        <span class="valor">{sirvoDados.duracaoMin} min</span>
+                    </div>
+                {/if}
+                {#if sirvoDados.nota}
+                    <div class="campo nota">
+                        <span class="rotulo">Nota</span>
+                        <p class="valor">{sirvoDados.nota}</p>
+                    </div>
+                {/if}
+                {#if sirvoLink}
+                    <div class="campo">
+                        <span class="rotulo">Link</span>
+                        <MaterialButton variant="outlined" on:click={abrirLink}>
+                            <Icon id="launch" white />
+                            <span>Abrir link</span>
+                        </MaterialButton>
+                        <span class="host" data-title={dicaSegura(sirvoLink)}>{sirvoHost}</span>
+                    </div>
+                {:else if sirvoDados.link}
+                    <div class="campo">
+                        <span class="rotulo">Link</span>
+                        <span class="valor fraco">O link do Sirvo não começa com https:// e não abre por aqui.</span>
+                    </div>
+                {/if}
+                {#if !sirvoDados.responsavel && !sirvoDados.nota && !sirvoDados.link}
+                    <p class="fraco">Sem responsável, nota ou link neste bloco.</p>
+                {/if}
+            </div>
+        {:else}
+            <Notes value={note} disabled={isLocked} on:edit={edit} />
+        {/if}
     {/key}
 {/if}
 
@@ -144,6 +205,56 @@
     /* ::placeholder opacity does not work for some reason */
     h4.empty :global(input::placeholder) {
         color: rgb(255 255 255 / 0.4);
+    }
+
+    .sirvo {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--primary-lighter);
+        border-radius: 8px;
+        background-color: var(--primary-darker);
+        user-select: text;
+    }
+    .sirvo .origem,
+    .sirvo .fraco {
+        opacity: 0.6;
+        font-size: 0.85em;
+    }
+    .sirvo .campo {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        min-width: 0;
+    }
+    .sirvo .campo.nota {
+        flex-direction: column;
+        gap: 4px;
+    }
+    .sirvo .rotulo {
+        flex: none;
+        min-width: 90px;
+        opacity: 0.6;
+        font-size: 0.85em;
+    }
+    .sirvo .valor {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .sirvo .nota .valor {
+        white-space: pre-wrap;
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+    .sirvo .host {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        opacity: 0.6;
+        font-size: 0.85em;
     }
 
     .settings {

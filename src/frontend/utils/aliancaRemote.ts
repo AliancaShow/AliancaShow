@@ -5,8 +5,9 @@ import { get } from "svelte/store"
 import { uid } from "uid"
 import { Main } from "../../types/IPC/Main"
 import { requestMain, sendMain } from "../IPC/main"
-import { activeProject, folders, media, mediaFolders, projects, shows } from "../stores"
+import { activeProject, media, mediaFolders, projects, shows } from "../stores"
 import { AGENDAS, caminhoDoCulto, diasDoMes, MESES } from "./agendas"
+import { acharProjeto, garantirPastas } from "./aliancaPastas"
 import { iniciarControle, pararControle } from "./aliancaControle"
 import { showDoVersiculo } from "./aliancaVersiculo"
 import { sincronizarLocais } from "./aliancaLocais"
@@ -208,38 +209,6 @@ function ouvirCultos() {
         }, 3000)
     }
     pararOuvintes.push(projects.subscribe(reagendar), activeProject.subscribe(reagendar), () => clearTimeout(espera))
-}
-
-/** garante uma pasta pelo caminho, devolvendo o id da ultima */
-function garantirPastas(caminho: string[]) {
-    let pai = "/"
-    let mudou = false
-
-    for (const nome of caminho) {
-        const atuais = get(folders)
-        const existente = Object.entries(atuais).find(([, f]: any) => f.name === nome && f.parent === pai)
-
-        if (existente) {
-            pai = existente[0]
-            continue
-        }
-
-        const id = uid()
-        folders.update((a) => {
-            a[id] = { name: nome, parent: pai, created: Date.now() }
-            return a
-        })
-        pai = id
-        mudou = true
-    }
-
-    return { id: pai, mudou }
-}
-
-/** o projeto do dia nesta pasta: "06", ou "07 - Rede de Mulheres" no Extra */
-function acharProjeto(pastaId: string, dia: string) {
-    const achado = Object.entries(get(projects)).find(([, p]: any) => p.parent === pastaId && (p.name === dia || String(p.name).startsWith(`${dia} - `)))
-    return achado?.[0] || null
 }
 
 function garantirProjeto(nome: string, pastaId: string, dia: string) {

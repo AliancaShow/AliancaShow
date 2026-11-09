@@ -25,6 +25,9 @@
     import DropArea from "../system/DropArea.svelte"
     import SelectElem from "../system/SelectElem.svelte"
     import { clipboardToProject } from "./project"
+    import SirvoProjetoFaixa from "./SirvoProjetoFaixa.svelte"
+    // AliançaShow: o cabeçalho de um bloco do Sirvo tranca sozinho (isLocked); o resto do projeto continua livre
+    import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 
     export let tree: Tree[]
     export let recentlyUsedList: any[] = []
@@ -196,6 +199,8 @@
     $: {
         closestTime = 0
         projectItemsList?.find((a) => {
+            // AliançaShow: a hora de um bloco do Sirvo é o PLANO; com um bloco estourado, o relógio apontava como "o próximo" um bloco que ainda nem começou (teste do André, 08/nov). Quem diz o bloco ao vivo é o timer sirvo_live.
+            if (!isTemplate && cabecalhoTrancado(currentProject, a)) return
             const timeLeft = getTimeUntilClock(a.data?.time, today)
             if (timeLeft > 0 && (!closestTime || timeLeft < closestTime)) closestTime = timeLeft
         })
@@ -255,6 +260,11 @@
 <svelte:window on:mousedown={mousedown} on:keydown|capture={handleKeydown} />
 
 <div id="projectArea" class="list {projectReadOnly ? '' : 'context #project'}">
+    <!-- AliançaShow: o roteiro do Sirvo neste projeto (montar, ordem nova, desligar) -->
+    {#if !isTemplate}
+        <SirvoProjetoFaixa />
+    {/if}
+
     <Autoscroll {offset} bind:scrollElem timeout={150}>
         <!-- WIP dragging content to this sometimes does not drop it -->
         <DropArea id="project" selectChildren hoverTimeout={150} let:fileOver file>
@@ -270,7 +280,7 @@
                             {@const borderRadiusStyle = `${isFirst ? "border-top-right-radius: 10px;" : ""}${isLast ? "border-bottom-right-radius: 10px;" : ""}`}
                             {@const sectionTime = show.data?.time ? getTimeUntilClock(show.data.time, today) : 0}
                             {@const isActive = show.type === "section" ? ($focusMode ? $activeFocus.id === show.id : $activeShow?.id === show.id) : false}
-                            {@const isLocked = show.type === "section" && currentProject?.sectionsLocked}
+                            {@const isLocked = show.type === "section" && (currentProject?.sectionsLocked || (!isTemplate && cabecalhoTrancado(currentProject, show)))}
 
                             {#if show.type === "DIVIDER"}
                                 <div style="border-top: 1px solid var(--primary-lighter);margin: 5px 0;"></div>
@@ -330,7 +340,6 @@
                         {/each}
                     </div>
                 {/each}
-
             {:else}
                 <Center absolute>
                     <span style="opacity: 0.5;"><T id="empty.general" /></span>
@@ -611,5 +620,4 @@
     :global(.addButton svg) {
         transition: transform 0.2s ease !important;
     }
-
 </style>

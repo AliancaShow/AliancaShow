@@ -17,6 +17,8 @@ export interface Project {
     archived?: boolean
     sectionsLocked?: boolean // if true, sections cannot be edited or removed
     sourcePath?: string // used to save directly to file import location
+    // AliançaShow: o projeto foi montado a partir deste culto do Sirvo (utils/aliancaPastas.ts)
+    sirvo?: { eventId: string; montadoEm?: number } | null
 }
 
 export interface ProjectShowRef extends ShowRef {

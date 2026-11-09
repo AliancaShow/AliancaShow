@@ -18,6 +18,7 @@ import { destroy, receive, send } from "./request"
 import { save, unsavedUpdater } from "./save"
 import { entrarSalvo } from "./aliancaRemote"
 import { iniciarSirvo } from "./aliancaSirvo"
+import { iniciarMontagemSirvo } from "./aliancaSirvoMontar"
 
 let initialized = false
 let startupProfile = ""
@@ -81,6 +82,8 @@ async function startupMain() {
 
     // liga a ponte com o Sirvo (roteiro do culto), se já houver chave guardada
     iniciarSirvo()
+    // e monta os blocos do roteiro no projeto do culto (F0b)
+    iniciarMontagemSirvo()
 
     // custom alert
     // if (Math.random() < 0.01) {

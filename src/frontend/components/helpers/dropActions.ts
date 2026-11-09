@@ -26,6 +26,7 @@ import { addToPos, getIndexes, mover } from "./mover"
 import { getLayoutRef } from "./show"
 import { getVariableNameId } from "./showActions"
 import { _show } from "./shows"
+import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 
 function getId(drag: Selected): string {
     const id = ""
@@ -144,7 +145,9 @@ export const dropActions = {
             if (projectShows[index]?.type !== "section") return
 
             const actionId: string = drag.data?.[0]?.id || ""
-            projectShows[index].data = { settings: { triggerAction: actionId } }
+            // AliançaShow: mescla em vez de trocar o `data` inteiro (a hora e o `data.sirvo` do cabeçalho ficam)
+            const dataAtual = projectShows[index].data && typeof projectShows[index].data === "object" ? projectShows[index].data : {}
+            projectShows[index].data = { ...dataAtual, settings: { ...(dataAtual.settings || {}), triggerAction: actionId } }
             h.newData = { key: "shows", data: projectShows }
             return h
         }
@@ -273,8 +276,12 @@ export const dropActions = {
                 })
             }
         } else {
-            if (drag.id === "show") h.newData.data = mover(projectShows, getIndexes(data), drop.index)
-            else h.newData.data = addToPos(projectShows, data, drop.index)
+            if (drag.id === "show") {
+                // AliançaShow: com vários itens selecionados (Ctrl+A), o cabeçalho trancado do Sirvo fica onde está
+                const indexes = getIndexes(data).filter((i) => isTemplate || !cabecalhoTrancado(currentProject, projectShows[i]))
+                if (!indexes.length) return
+                h.newData.data = mover(projectShows, indexes, drop.index)
+            } else h.newData.data = addToPos(projectShows, data, drop.index)
         }
 
         return h

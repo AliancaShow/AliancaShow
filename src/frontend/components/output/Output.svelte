@@ -81,9 +81,18 @@
         }
     }
 
+    // AliançaShow: `projectIndex` é só a posição do item na lista do projeto, não
+    // conteúdo. Quando o Sirvo aplica a ordem nova dos blocos, ela é corrigida na
+    // saída para o "próximo" seguir certo; isso sozinho não pode reenviar o slide
+    // (com transição, o telão piscava o mesmo slide).
+    const semPosicaoNoProjeto = (s: any) => {
+        if (!s || typeof s !== "object") return s || null
+        const { projectIndex: _posicao, ...resto } = s
+        return resto
+    }
     let cachedSlideStr = ""
     $: {
-        const newSlideStr = JSON.stringify(out.slide || null)
+        const newSlideStr = JSON.stringify(semPosicaoNoProjeto(out.slide))
         if (newSlideStr !== cachedSlideStr) {
             cachedSlideStr = newSlideStr
             updateOutData("slide")
