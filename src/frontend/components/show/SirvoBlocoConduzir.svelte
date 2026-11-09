@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
-    // rascunhos por bloco: o painel é remontado a cada reconciliação ({#key
-    // section}), e o que o operador digita não pode sumir no meio
+    // rascunhos POR BLOCO: o que o operador digita não pode sumir se o painel
+    // for remontado, nem passar para outro bloco quando ele troca de seção (o
+    // painel NÃO é remontado ao trocar de seção: só muda o `blocoId`)
     type Rascunho = { titulo: string; nota: string; link: string; cor: string }
     type Novo = { titulo: string; minutos: number }
     const rascunhos = new Map<string, { editar: Rascunho | null; novo: Novo | null }>()
@@ -33,8 +34,14 @@
     $: podeSubir = !!bloco && !passou && !noAr && !travaAnterior
     $: podeDescer = !!bloco && !passou && !noAr && i < (r?.blocos.length || 0) - 1
 
+    let blocoDoEstado = blocoId
     let estado = rascunhos.get(blocoId) || { editar: null, novo: null }
-    $: rascunhos.set(blocoId, estado)
+    $: if (blocoId !== blocoDoEstado) {
+        rascunhos.set(blocoDoEstado, estado)
+        blocoDoEstado = blocoId
+        estado = rascunhos.get(blocoId) || { editar: null, novo: null }
+    }
+    $: rascunhos.set(blocoDoEstado, estado)
 
     async function pedir(funcao: FuncaoDeEscrita, args: { [key: string]: any }) {
         const res = await pedirAoSirvo(funcao, args)
@@ -129,10 +136,10 @@
 
         {#if estado.editar}
             <div class="form">
-                <label>Título <input maxlength="120" bind:value={estado.editar.titulo} /></label>
-                <label>Nota <textarea maxlength="2000" rows="3" bind:value={estado.editar.nota} /></label>
-                <label>Link <input maxlength="500" placeholder="https://" bind:value={estado.editar.link} /></label>
-                <label class="linhaCor">Cor <input type="color" bind:value={estado.editar.cor} /></label>
+                <label>Título <input class="edit" maxlength="120" bind:value={estado.editar.titulo} /></label>
+                <label>Nota <textarea class="edit" maxlength="2000" rows="3" bind:value={estado.editar.nota} /></label>
+                <label>Link <input class="edit" maxlength="500" placeholder="https://" bind:value={estado.editar.link} /></label>
+                <label class="linhaCor">Cor <input class="edit" type="color" bind:value={estado.editar.cor} /></label>
                 <div class="grupo">
                     <button class="forte" tabindex="-1" disabled={!!motivo} on:click={salvarEdicao}>Salvar no Sirvo</button>
                     <button tabindex="-1" on:click={() => (estado = { ...estado, editar: null })}>Cancelar</button>
@@ -140,8 +147,8 @@
             </div>
         {:else if estado.novo}
             <div class="form">
-                <label>Bloco novo depois de “{bloco.titulo}” <input maxlength="120" placeholder="Nome" bind:value={estado.novo.titulo} /></label>
-                <label class="linhaCor">Minutos <input type="number" min="0" max="600" bind:value={estado.novo.minutos} /></label>
+                <label>Bloco novo depois de “{bloco.titulo}” <input class="edit" maxlength="120" placeholder="Nome" bind:value={estado.novo.titulo} /></label>
+                <label class="linhaCor">Minutos <input class="edit" type="number" min="0" max="600" bind:value={estado.novo.minutos} /></label>
                 <div class="grupo">
                     <button class="forte" tabindex="-1" disabled={!!motivo} on:click={criar}>Criar no Sirvo</button>
                     <button tabindex="-1" on:click={() => (estado = { ...estado, novo: null })}>Cancelar</button>

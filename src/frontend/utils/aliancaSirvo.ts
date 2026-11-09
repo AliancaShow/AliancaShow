@@ -27,6 +27,7 @@ import type { Variable } from "../../types/Main"
 import { requestMain } from "../IPC/main"
 import { activeTimers, timers, variables } from "../stores"
 import { send } from "./request"
+import { newToast } from "./common"
 import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./aliancaSirvoAvisos"
 
 // ---------------------------------------------------------------- tipos
@@ -551,6 +552,13 @@ export type FuncaoDeEscrita = "show_iniciar" | "show_encerrar" | "show_reabrir" 
 export type RespostaPedido = { ok: true; dados: any } | { ok: false; mensagem: string }
 
 const forcarAte = new Map<string, number>()
+// A montagem diz se há uma ordem ALHEIA esperando "Aplicar" (registrada por
+// aliancaSirvoMontar, que importa este módulo: assim não há import circular).
+let haPendencia: (eventId: string) => boolean = () => false
+export function registrarPendenciaSirvo(fn: (eventId: string) => boolean) {
+    haPendencia = fn
+}
+const MUDA_ORDEM = new Set<FuncaoDeEscrita>(["show_mover_bloco", "show_criar_bloco", "show_apagar_bloco"])
 /** Até que rev a montagem deste culto aplica a ordem mesmo no momento protegido. */
 export function sirvoForcarAte(eventId: string): number {
     return forcarAte.get(eventId) ?? -1
@@ -572,18 +580,27 @@ export async function pedirAoSirvo(funcao: FuncaoDeEscrita, args: { [key: string
     if (motivo) return { ok: false, mensagem: motivo }
     const eventId = e.cultoId!
     const g = geracao
+    // Com uma ordem alheia já esperando "Aplicar", forçar o rev do pedido
+    // aplicaria a alheia junto, sem ninguém aplicar. Aí o pedido vale no Sirvo
+    // e entra no projeto com o próximo "Aplicar", como a outra.
+    const pendiaAntes = haPendencia(eventId)
     atualizar({ enviando: true })
     try {
         const r = ((await requestMain(Main.SIRVO_CHAMAR, { funcao, args })) as Resposta | undefined) || { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
         if (g !== geracao) return { ok: false, mensagem: "A conexão com o Sirvo foi refeita. Confira e tente de novo." }
         const rev = Number(r.ok ? r.dados?.rev : NaN)
-        if (Number.isFinite(rev)) forcarAte.set(eventId, Math.max(sirvoForcarAte(eventId), rev))
+        if (Number.isFinite(rev) && !pendiaAntes) forcarAte.set(eventId, Math.max(sirvoForcarAte(eventId), rev))
         // sucesso, recusa ou dúvida: quem diz o estado de verdade é o roteiro
         if (get(sirvo).cultoId === eventId) await buscarRoteiro(eventId)
-        if (r.ok) return { ok: true, dados: r.dados }
+        if (r.ok) {
+            if (pendiaAntes && MUDA_ORDEM.has(funcao)) newToast("Feito no Sirvo. A ordem nova entra no projeto quando você aplicar.")
+            return { ok: true, dados: r.dados }
+        }
         if (r.codigo === "chave_invalida") return { ok: false, mensagem: "A chave do Sirvo foi recusada." }
         return { ok: false, mensagem: r.mensagem || "O Sirvo não aceitou." }
     } finally {
-        if (g === geracao) atualizar({ enviando: false })
+        // sempre: se a conexão foi refeita no meio, ninguém mais zeraria e os
+        // botões ficariam presos em "Esperando o Sirvo responder…"
+        atualizar({ enviando: false })
     }
 }

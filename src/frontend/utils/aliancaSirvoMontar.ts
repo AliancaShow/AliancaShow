@@ -29,7 +29,7 @@ import { OutputHelper } from "../components/helpers/OutputHelper"
 import { activeFocus, activeProject, activeRename, activeShow, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, selected, special, undoHistory } from "../stores"
 import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { garantirPastas } from "./aliancaPastas"
-import { sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
+import { registrarPendenciaSirvo, sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
 import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
 import { papelDoItem, reconciliar, resumirPendencia, textoDaPendencia, type MotivoPendente } from "./aliancaSirvoProjeto"
@@ -57,6 +57,11 @@ export type EstadoMontagem = {
 
 const VAZIO: EstadoMontagem = { projetoId: null, situacao: "nenhuma", motivo: null, eventId: null, titulo: "", blocos: 0, quantosNoDia: 0, outroCulto: "", pendente: null, resumo: "", sumiram: 0, protegido: false }
 export const sirvoMontagem = writable<EstadoMontagem>(VAZIO)
+// F2: o pedido do operador não força o rev se já havia ordem alheia pendente
+registrarPendenciaSirvo((eventId) => {
+    const m = get(sirvoMontagem)
+    return m.eventId === eventId && !!m.pendente
+})
 
 const CHAVE_MEMORIA = "aliancaSirvoMontados"
 
