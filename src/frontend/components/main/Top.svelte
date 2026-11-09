@@ -10,6 +10,7 @@
     import Button from "../inputs/Button.svelte"
     import TopButton from "../inputs/TopButton.svelte"
     import { DEFAULT_DISPLAY_NAME } from "../../utils/SocketHelper"
+    import SirvoIndicador from "./SirvoIndicador.svelte"
 
     export let isWindows = false
 
@@ -144,6 +145,8 @@
             <span class="marcaTexto">Aliança<span class="marcaShow">Show</span></span>
         </div>
         <span class="divisor" />
+        <!-- AliancaShow: qual culto do Sirvo o Show segue (some sem chave do Sirvo) -->
+        <span class="sirvoLugar"><SirvoIndicador /></span>
         <!-- <div class="logo">
             <img style="height: 35px;" src="./import-logos/aliancashow.webp" alt="AliançaShow-logo" draggable={false} />
             <h1 style="color: var(--text);font-size: 1.7em;">AliançaShow</h1>
@@ -235,6 +238,7 @@
     /* Marca: quadrado da cor da marca mais o wordmark. Substitui o titulo de
        1.8em, que competia com o conteudo da tela. */
     .marca {
+        flex: none;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -258,7 +262,13 @@
     .marcaShow {
         color: var(--secondary);
     }
+    .sirvoLugar {
+        flex: 1;
+        min-width: 0;
+        padding-inline-start: 10px;
+    }
     .divisor {
+        flex: none;
         width: 1px;
         height: 22px;
         background: rgb(255 255 255 / 0.08);

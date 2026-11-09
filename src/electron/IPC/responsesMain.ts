@@ -36,6 +36,7 @@ import { closeMidiInPorts, getMidiInputs, getMidiOutputs, receiveMidi, sendMidi 
 import { deleteShows, deleteShowsNotIndexed, getAllShows, getEmptyShows, refreshAllShows } from "../utils/shows"
 import { correctSpelling } from "../utils/spellcheck"
 import { executeSpotifyCommand, getSpotifyState } from "../utils/spotify"
+import { sirvoAmbiente, sirvoApagarChave, sirvoChamar, sirvoSalvarChave, sirvoTemChave } from "../sirvo/sirvo"
 import { sendToMain } from "./main"
 
 // no need to await Promise returns here
@@ -195,6 +196,12 @@ export const mainResponses: MainResponses = {
     [Main.PROVIDER_FETCH_FOLDERS]: (data) => ContentProviderRegistry.fetchFolderTree(data.providerId),
     [Main.PCO_FETCH_SERVICE_TREE]: () => ContentProviderRegistry.fetchServiceTree("planningcenter"),
     [Main.PCO_LOAD_PLAN]: (data) => ContentProviderRegistry.loadSinglePlan(data.serviceTypeId, data.planId),
+    // Sirvo (AliançaShow): a chave nunca volta para o renderer
+    [Main.SIRVO_TEM_CHAVE]: () => sirvoTemChave(),
+    [Main.SIRVO_AMBIENTE]: () => sirvoAmbiente(),
+    [Main.SIRVO_SALVAR_CHAVE]: (data) => sirvoSalvarChave(data.chave),
+    [Main.SIRVO_APAGAR_CHAVE]: () => sirvoApagarChave(),
+    [Main.SIRVO_CHAMAR]: (data) => sirvoChamar(data.funcao, data.args || {}),
     [Main.PCO_LIVE_GET]: (data) => ContentProviderRegistry.getPcoLiveData(data.serviceTypeId, data.planId).catch(() => null),
     [Main.PCO_PUSHER_AUTH]: (data) => ContentProviderRegistry.getPcoPusherAuth(data.socketId, data.channelName, data.serviceTypeId),
     // Content Library

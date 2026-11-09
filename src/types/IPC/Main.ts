@@ -1,3 +1,4 @@
+import type { RespostaSirvo } from "../../electron/sirvo/sirvo"
 import type { Display } from "electron"
 import type { EncoderDetection } from "../../electron/streaming/encoderDetection"
 import type { ExifData } from "exif"
@@ -161,6 +162,12 @@ export enum Main {
     PCO_PUSHER_AUTH = "PCO_PUSHER_AUTH",
     PCO_FETCH_SERVICE_TREE = "PCO_FETCH_SERVICE_TREE",
     PCO_LOAD_PLAN = "PCO_LOAD_PLAN",
+    // Sirvo (AliançaShow)
+    SIRVO_TEM_CHAVE = "SIRVO_TEM_CHAVE",
+    SIRVO_AMBIENTE = "SIRVO_AMBIENTE",
+    SIRVO_SALVAR_CHAVE = "SIRVO_SALVAR_CHAVE",
+    SIRVO_APAGAR_CHAVE = "SIRVO_APAGAR_CHAVE",
+    SIRVO_CHAMAR = "SIRVO_CHAMAR",
     // Content Library
     GET_CONTENT_PROVIDERS = "GET_CONTENT_PROVIDERS",
     GET_CONTENT_LIBRARY = "GET_CONTENT_LIBRARY",
@@ -271,6 +278,8 @@ export interface MainSendPayloads {
     [Main.PCO_PUSHER_AUTH]: { socketId: string; channelName: string; serviceTypeId: string }
     [Main.PCO_FETCH_SERVICE_TREE]: undefined
     [Main.PCO_LOAD_PLAN]: { serviceTypeId: string; planId: string }
+    [Main.SIRVO_SALVAR_CHAVE]: { chave: string }
+    [Main.SIRVO_CHAMAR]: { funcao: "show_cultos" | "show_rev" | "show_roteiro"; args?: { [key: string]: any } }
     // Content Library
     [Main.GET_CONTENT_LIBRARY]: { providerId: ContentProviderId }
     [Main.GET_PROVIDER_CONTENT]: { providerId: ContentProviderId; key: string }
@@ -374,6 +383,11 @@ export interface MainReturnPayloads {
     [Main.PCO_FETCH_SERVICE_TREE]: Promise<PCOFolderTreeNode[]>
     [Main.PCO_LIVE_GET]: Promise<{ liveId: string | null; liveChannel: string | null; orgId: string | null; liveStartAt: string | null; liveEndAt: string | null; length: number | null; isPreService: boolean; serviceStartAt: string | null; serviceEndAt: string | null } | null>
     [Main.PCO_PUSHER_AUTH]: Promise<{ auth: string; channel_data?: string } | null>
+    [Main.SIRVO_TEM_CHAVE]: boolean
+    [Main.SIRVO_AMBIENTE]: "producao" | "staging"
+    [Main.SIRVO_APAGAR_CHAVE]: { ok: true }
+    [Main.SIRVO_SALVAR_CHAVE]: { ok: boolean; erro?: string }
+    [Main.SIRVO_CHAMAR]: Promise<RespostaSirvo>
     // Content Library
     [Main.GET_CONTENT_PROVIDERS]: { providerId: ContentProviderId; displayName: string; hasContentLibrary: boolean }[]
     [Main.GET_CONTENT_LIBRARY]: Promise<ContentLibraryCategory[]>

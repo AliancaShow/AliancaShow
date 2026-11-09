@@ -7,6 +7,7 @@
     import ProfileChangerMenu from "./components/main/ProfileChangerMenu.svelte"
     import Tipbar from "./components/main/Tipbar.svelte"
     import Top from "./components/main/Top.svelte"
+    import SirvoAviso from "./components/main/SirvoAviso.svelte"
     import Preview from "./components/output/preview/Preview.svelte"
     import SettingsTabs from "./components/settings/SettingsTabs.svelte"
     import Projects from "./components/show/Projects.svelte"
@@ -122,6 +123,12 @@
                     <LazyLoad component={() => import("./components/settings/SettingsTools.svelte")} show={page === "settings"} />
                 {/if}
 
+                <!-- AliancaShow: "o roteiro mudou" (Sirvo). No rodape, logo acima do relogio:
+                     crescer aqui nao empurra nada que esteja debaixo do mouse. -->
+                {#if page !== "settings"}
+                    <SirvoAviso />
+                {/if}
+
                 <!-- Layout D: relogio fixo no rodape da coluna direita. Saiu do painel
                      Info do drawer, que gastava ~365px de largura so para mostrar a hora. -->
                 {#if !$focusMode}
@@ -206,6 +213,10 @@
         padding: 10px 8px 14px;
 
         border-top: 1px solid var(--primary-darkest);
+    }
+    /* com o aviso do Sirvo aberto, ele ja ocupa o "margin-top: auto": o relogio cola nele */
+    .right :global(.sirvoAviso ~ .clockArea) {
+        margin-top: 0;
     }
 
     /* Layout D: divisao explicita 50/50 — Projetos na metade de cima,

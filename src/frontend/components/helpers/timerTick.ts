@@ -57,15 +57,15 @@ export function startTimerById(id: string) {
 export function stopTimers() {
     // timeout so timer_end action don't clear at the same time as next timer tick starts
     setTimeout(() => {
-        // don't clear pcoLive entries
-        activeTimers.update((a) => a.filter((t) => t.pcoLive))
+        // don't clear pcoLive / sirvoLive entries
+        activeTimers.update((a) => a.filter((t) => t.pcoLive || t.sirvoLive))
         customInterval = INTERVAL
     }, 50)
 }
 
 function increment(timer: { id: string; start: number; end: number; [key: string]: any }, i: number) {
-    // PCO Live timers update via pcoLiveSync
-    if (timer.pcoLive) return timer
+    // PCO Live timers update via pcoLiveSync; Sirvo via aliancaSirvo
+    if (timer.pcoLive || timer.sirvoLive) return timer
 
     if (timer.paused) {
         // has ended
@@ -237,7 +237,7 @@ export function checkTimers() {
     initPcoLiveSync(get(timers))
 
     Object.entries(get(timers)).forEach(([id, timer]) => {
-        if (timer.type === "counter" || timer.type === "pco_live") return
+        if (timer.type === "counter" || timer.type === "pco_live" || timer.type === "sirvo_live") return
 
         const time = getCurrentTimerValue({ ...timer, overflow: true }, {}, new Date())
 
