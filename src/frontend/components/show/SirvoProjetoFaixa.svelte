@@ -18,6 +18,7 @@
     import { activeProject, projects } from "../../stores"
     import { dicaSegura } from "../../utils/aliancaDica"
     import { aplicarOrdemSirvo, desligarDoSirvo, dispensarFaixaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
+    import SirvoConduzir from "./SirvoConduzir.svelte"
 
     $: projetoId = $activeProject
     $: projeto = projetoId ? $projects[projetoId] : null
@@ -121,6 +122,10 @@
                     {/if}
                     <button class="fraco" tabindex="-1" data-title="Desligar do Sirvo: os cabeçalhos viram seções comuns" on:click={desligar}>{pendente ? "Desligar" : "Desligar do Sirvo"}</button>
                 </div>
+                {#if desteCulto}
+                    <!-- F2: só com a chave que conduz; uma linha a mais, de altura fixa -->
+                    <SirvoConduzir />
+                {/if}
             {/if}
         {/if}
 

@@ -29,7 +29,7 @@ import { OutputHelper } from "../components/helpers/OutputHelper"
 import { activeFocus, activeProject, activeRename, activeShow, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, selected, special, undoHistory } from "../stores"
 import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { garantirPastas } from "./aliancaPastas"
-import { sirvo, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
+import { sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
 import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
 import { papelDoItem, reconciliar, resumirPendencia, textoDaPendencia, type MotivoPendente } from "./aliancaSirvoProjeto"
@@ -369,7 +369,8 @@ function passada(pedido: Pedido = {}): string | null {
 
         case "reconciliar": {
             const id = decisao.projetoId
-            const res = atualizarLigado(id, r, pedido.forcar === id)
+            // o próprio pedido do operador (F2) entra mesmo no momento protegido
+            const res = atualizarLigado(id, r, pedido.forcar === id || Number(r.rev) <= sirvoForcarAte(r.event_id))
             lembrarMontado(r.event_id, id)
             publicar({ ...base, projetoId: id, situacao: "ligado", pendente: res.pendente, resumo: res.resumo, sumiram: res.sumiram, protegido: res.protegido })
             return null
