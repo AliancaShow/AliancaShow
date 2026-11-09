@@ -8,6 +8,8 @@
     //   no meio do culto, não pode tirar o operador da grade de slides.
     // - "Sem conexão" mede a idade da última resposta do ROTEIRO (show_rev /
     //   show_roteiro), com folga para um soluço do Wi-Fi não piscar laranja.
+    // - Culto de um dia que já passou fica laranja e clicável: em 08/nov o Show
+    //   seguia o teste de 05/nov (escolhido à mão) e "o Show não bate com o Sirvo".
     // Texto do Sirvo só por interpolação {…} (escapada pelo Svelte), nunca {@html}.
     import { onDestroy } from "svelte"
     import { activePage, settingsTab } from "../../stores"
@@ -25,6 +27,14 @@
         if (isNaN(d.getTime())) return ""
         const [h, m] = fmtHora.format(d).split(":")
         return `${fmtDia.format(d).replace(/\.,?/g, "").replace(",", "")} ${h}h${m === "00" ? "" : m}`
+    }
+
+    // dia no fuso da igreja, "2026-11-08", para comparar só a data
+    const fmtDiaIso = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" })
+    function jaPassou(iso: string, t: number): boolean {
+        const d = new Date(iso)
+        if (isNaN(d.getTime())) return false
+        return fmtDiaIso.format(d) < fmtDiaIso.format(new Date(t))
     }
 
     function minutos(ms: number): string {
@@ -53,6 +63,10 @@
         }
 
         if (!c) return { tom: "cinza", texto: "Sirvo · nenhum culto por perto", dica: "", clicavel: false }
+        if (jaPassou(c.comeca_em, t) && !e.roteiroNoAr) {
+            const como = e.escolhaManual ? "escolhido à mão" : "escolhido automaticamente"
+            return { tom: "laranja", texto: `${quando(c.comeca_em)} · já passou`, dica: `Seguindo ${c.titulo}, um culto que já passou (${como}). Clique para escolher outro em Conexão.`, clicavel: true }
+        }
         const estado = e.roteiroNoAr ? " · no ar" : e.roteiroEncerrado ? " · encerrado" : ""
         const dica = `Seguindo ${c.titulo} · ${quando(c.comeca_em)}${estado}${e.escolhaManual ? " · escolhido à mão" : " · escolhido automaticamente"}`
         return { tom: "verde", texto: `${quando(c.comeca_em)}${estado}`, dica, clicavel: false }
