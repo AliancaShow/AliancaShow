@@ -17,6 +17,8 @@
     import TextInput from "../inputs/TextInput.svelte"
     import Tip from "../main/Tip.svelte"
     import Notes from "./tools/Notes.svelte"
+    import SirvoBlocoConduzir from "./SirvoBlocoConduzir.svelte"
+    import { sirvo } from "../../utils/aliancaSirvo"
 
     export let section: any
 
@@ -134,7 +136,7 @@
 
         {#if sirvoDados}
             <div class="sirvo">
-                <p class="origem">Vem do roteiro do Sirvo. Para mudar, mude no Sirvo.</p>
+                <p class="origem">{$sirvo.podeConduzir ? "Vem do roteiro do Sirvo. O que você muda aqui embaixo vai para o Sirvo." : "Vem do roteiro do Sirvo. Para mudar, mude no Sirvo."}</p>
 
                 {#if sirvoDados.responsavel}
                     <div class="campo">
@@ -142,7 +144,7 @@
                         <span class="valor">{sirvoDados.responsavel}</span>
                     </div>
                 {/if}
-                {#if sirvoDados.duracaoMin}
+                {#if sirvoDados.duracaoMin && !$sirvo.podeConduzir}
                     <div class="campo">
                         <span class="rotulo">Duração</span>
                         <span class="valor">{sirvoDados.duracaoMin} min</span>
@@ -171,6 +173,9 @@
                 {/if}
                 {#if !sirvoDados.responsavel && !sirvoDados.nota && !sirvoDados.link}
                     <p class="fraco">Sem responsável, nota ou link neste bloco.</p>
+                {/if}
+                {#if sirvoDados.blocoId}
+                    <SirvoBlocoConduzir blocoId={sirvoDados.blocoId} />
                 {/if}
             </div>
         {:else}

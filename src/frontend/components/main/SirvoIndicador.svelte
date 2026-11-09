@@ -68,8 +68,10 @@
             return { tom: "laranja", texto: `${quando(c.comeca_em)} · já passou`, dica: `Seguindo ${c.titulo}, um culto que já passou (${como}). Clique para escolher outro em Conexão.`, clicavel: true }
         }
         const estado = e.roteiroNoAr ? " · no ar" : e.roteiroEncerrado ? " · encerrado" : ""
-        const dica = `Seguindo ${c.titulo} · ${quando(c.comeca_em)}${estado}${e.escolhaManual ? " · escolhido à mão" : " · escolhido automaticamente"}`
-        return { tom: "verde", texto: `${quando(c.comeca_em)}${estado}`, dica, clicavel: false }
+        const papel = e.podeConduzir ? " · conduz" : " · só lê"
+        const dicaPapel = e.podeConduzir ? " Esta chave conduz: o Show pode encerrar blocos e mexer no roteiro." : " Esta chave só lê o roteiro."
+        const dica = `Seguindo ${c.titulo} · ${quando(c.comeca_em)}${estado}${e.escolhaManual ? " · escolhido à mão" : " · escolhido automaticamente"}.${dicaPapel}`
+        return { tom: "verde", texto: `${quando(c.comeca_em)}${estado}${papel}`, dica, clicavel: false }
     }
 
     function abrirConexao() {

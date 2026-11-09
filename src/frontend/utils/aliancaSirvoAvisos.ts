@@ -9,7 +9,7 @@
 //   - Mudança de bloco só avisa se aconteceu com o culto JÁ no ar (`em >= iniciado_em`).
 //     Sem isso, abrir o Show com o culto no ar despejaria as edições da semana.
 
-export type Mudanca = { rev: number; tipo: string; bloco_id: string | null; bloco_titulo: string | null; antes: unknown; depois: unknown; autor: string | null; em: string }
+export type Mudanca = { rev: number; tipo: string; bloco_id: string | null; bloco_titulo: string | null; antes: unknown; depois: unknown; autor: string | null; em: string; /** feita por ESTA chave (F2): quem fez não recebe o aviso */ minha?: boolean }
 
 /** O mínimo do roteiro que a regra precisa: ordem atual e o que já foi concluído. */
 export type BlocoParaAviso = { id: string; titulo: string; concluido_em: string | null }
@@ -26,6 +26,7 @@ const DO_BLOCO = new Set(["duracao", "mover", "criar", "apagar"])
  * são o fluxo normal e todo mundo vê acontecer.
  */
 export function mereceAviso(m: Mudanca, blocos: BlocoParaAviso[], iniciadoEm: string | null, encerradoEm: string | null): boolean {
+    if (m.minha) return false
     if (DO_CULTO.has(m.tipo)) return true
     if (!DO_BLOCO.has(m.tipo)) return false
     if (!iniciadoEm || encerradoEm) return false

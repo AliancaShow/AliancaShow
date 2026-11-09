@@ -27,6 +27,7 @@ import type { Variable } from "../../types/Main"
 import { requestMain } from "../IPC/main"
 import { activeTimers, timers, variables } from "../stores"
 import { send } from "./request"
+import { newToast } from "./common"
 import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./aliancaSirvoAvisos"
 
 // ---------------------------------------------------------------- tipos
@@ -65,6 +66,8 @@ export type Roteiro = {
     blocos: Bloco[]
     mensagem_palco: { id: string; texto: string; ate: string } | null
     mudancas?: Mudanca[]
+    /** a chave deste Show pode conduzir (F2, migration 0081 do Sirvo) */
+    pode_conduzir?: boolean
 }
 // os dois lados declaram todos os campos: o tsconfig do Show não é strict e não estreita a união por `ok`
 type Resposta = { ok: true; dados: any; codigo?: undefined } | { ok: false; codigo: string; mensagem: string; dados?: undefined }
@@ -81,6 +84,10 @@ export type EstadoSirvo = {
     /** o culto seguido já começou e não terminou, segundo o roteiro */
     roteiroNoAr: boolean
     roteiroEncerrado: boolean
+    /** F2: a chave conduz (lido a cada show_rev — o admin pode desligar no meio do culto) */
+    podeConduzir: boolean
+    /** F2: um pedido ao Sirvo está em voo (os botões ficam parados até o rev voltar) */
+    enviando: boolean
 }
 
 // ---------------------------------------------------------------- nomes fixos
@@ -92,7 +99,7 @@ const VARIAVEIS = ["sirvo_bloco", "sirvo_proximo", "sirvo_mensagem", "sirvo_fim"
 
 // ---------------------------------------------------------------- estado
 
-export const sirvo = writable<EstadoSirvo>({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0, ultimoRoteiroOk: 0, roteiroNoAr: false, roteiroEncerrado: false })
+export const sirvo = writable<EstadoSirvo>({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0, ultimoRoteiroOk: 0, roteiroNoAr: false, roteiroEncerrado: false, podeConduzir: false, enviando: false })
 // nome do bloco no ar, para o controle do timer ao lado da prévia ("" fora do culto)
 export const sirvoBlocoNoAr = writable("")
 
@@ -115,6 +122,8 @@ let timerTick: ReturnType<typeof setInterval> | null = null
 let cultosEmVoo: { g: number; p: Promise<void> } | null = null
 
 const agora = () => Date.now() + (desvioMs || 0)
+/** o relógio do Sirvo (o do PC corrigido pelo desvio medido) */
+export const sirvoAgora = agora
 const ms = (iso: string | null | undefined) => (iso ? Date.parse(iso) : NaN)
 
 function anunciar() {
@@ -233,7 +242,7 @@ async function buscarRoteiro(eventId: string) {
         revVisto = roteiro.rev
         msgVista = roteiro.mensagem_palco?.id || null
         publicar()
-        atualizar({ roteiroNoAr: !!roteiro.iniciado_em && !roteiro.encerrado_em, roteiroEncerrado: !!roteiro.encerrado_em })
+        atualizar({ roteiroNoAr: !!roteiro.iniciado_em && !roteiro.encerrado_em, roteiroEncerrado: !!roteiro.encerrado_em, podeConduzir: roteiro.pode_conduzir === true })
         // depois do palco, e isolado: um erro no aviso não pode parar o roteiro
         try {
             processarAvisos(roteiro)
@@ -273,6 +282,8 @@ async function cicloRev(g: number) {
             if (g !== geracao) return
             if (r?.ok) {
                 const msgId = r.dados?.msg_id || null
+                const pode = r.dados?.pode_conduzir === true
+                if (pode !== get(sirvo).podeConduzir) atualizar({ podeConduzir: pode })
                 // na volta da conexão, busca o roteiro inteiro de qualquer jeito (§5.3)
                 if (caidoAntes || r.dados?.rev !== revVisto || msgId !== msgVista) await buscarRoteiro(e.cultoId)
             } else if (r?.codigo === "culto_inexistente") {
@@ -518,7 +529,7 @@ export async function salvarChaveSirvo(chave: string): Promise<string | null> {
 export async function desconectarSirvo() {
     parar()
     zerar()
-    atualizar({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0, ultimoRoteiroOk: 0 })
+    atualizar({ status: "sem_chave", cultos: [], cultoId: null, cultoTitulo: "", escolhaManual: null, ultimaResposta: 0, ultimoRoteiroOk: 0, podeConduzir: false, enviando: false })
     await requestMain(Main.SIRVO_APAGAR_CHAVE)
 }
 
@@ -527,4 +538,69 @@ export function escolherCultoSirvo(eventId: string | null) {
     atualizar({ escolhaManual: eventId })
     // se houver uma busca em voo, ela leu a escolha antiga: busca de novo depois dela
     if (timerTick) (cultosEmVoo?.p || Promise.resolve()).then(() => cicloCultos())
+}
+
+// ---------------------------------------------------------------- F2: o Show pede
+//
+// O Show PEDE; o Sirvo decide; o resultado chega pela mesma busca do roteiro
+// (SHOW-DESIGN.md §13 no repo do Sirvo). Nada é aplicado aqui antes da resposta.
+// Depois do pedido, o roteiro é buscado NA HORA (não espera o ciclo de 2 s), e
+// a montagem aplica o próprio pedido até o rev que o Sirvo devolveu mesmo com
+// o culto no ar (`sirvoForcarAte`): a pendência existe para a mudança ALHEIA.
+
+export type FuncaoDeEscrita = "show_iniciar" | "show_encerrar" | "show_reabrir" | "show_avancar" | "show_desfazer_bloco" | "show_ajustar_duracao" | "show_mover_bloco" | "show_criar_bloco" | "show_apagar_bloco" | "show_editar_bloco"
+export type RespostaPedido = { ok: true; dados: any } | { ok: false; mensagem: string }
+
+const forcarAte = new Map<string, number>()
+// A montagem diz se há uma ordem ALHEIA esperando "Aplicar" (registrada por
+// aliancaSirvoMontar, que importa este módulo: assim não há import circular).
+let haPendencia: (eventId: string) => boolean = () => false
+export function registrarPendenciaSirvo(fn: (eventId: string) => boolean) {
+    haPendencia = fn
+}
+const MUDA_ORDEM = new Set<FuncaoDeEscrita>(["show_mover_bloco", "show_criar_bloco", "show_apagar_bloco"])
+/** Até que rev a montagem deste culto aplica a ordem mesmo no momento protegido. */
+export function sirvoForcarAte(eventId: string): number {
+    return forcarAte.get(eventId) ?? -1
+}
+
+/** Por que o Show não pode pedir agora ("" = pode). */
+export function porQueNaoConduz(e: EstadoSirvo = get(sirvo)): string {
+    if (e.status === "sem_chave" || e.status === "chave_invalida") return "Sem chave do Sirvo."
+    if (!e.cultoId) return "Nenhum culto do Sirvo sendo seguido."
+    if (e.status !== "conectado") return "Sem Sirvo agora — mexa no roteiro pela régia."
+    if (!e.podeConduzir) return "Esta chave só lê o roteiro. Um admin liga “conduz” no Sirvo (Perfil → chaves do AliançaShow)."
+    if (e.enviando) return "Esperando o Sirvo responder…"
+    return ""
+}
+
+export async function pedirAoSirvo(funcao: FuncaoDeEscrita, args: { [key: string]: any }): Promise<RespostaPedido> {
+    const e = get(sirvo)
+    const motivo = porQueNaoConduz(e)
+    if (motivo) return { ok: false, mensagem: motivo }
+    const eventId = e.cultoId!
+    const g = geracao
+    // Com uma ordem alheia já esperando "Aplicar", forçar o rev do pedido
+    // aplicaria a alheia junto, sem ninguém aplicar. Aí o pedido vale no Sirvo
+    // e entra no projeto com o próximo "Aplicar", como a outra.
+    const pendiaAntes = haPendencia(eventId)
+    atualizar({ enviando: true })
+    try {
+        const r = ((await requestMain(Main.SIRVO_CHAMAR, { funcao, args })) as Resposta | undefined) || { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
+        if (g !== geracao) return { ok: false, mensagem: "A conexão com o Sirvo foi refeita. Confira e tente de novo." }
+        const rev = Number(r.ok ? r.dados?.rev : NaN)
+        if (Number.isFinite(rev) && !pendiaAntes) forcarAte.set(eventId, Math.max(sirvoForcarAte(eventId), rev))
+        // sucesso, recusa ou dúvida: quem diz o estado de verdade é o roteiro
+        if (get(sirvo).cultoId === eventId) await buscarRoteiro(eventId)
+        if (r.ok) {
+            if (pendiaAntes && MUDA_ORDEM.has(funcao)) newToast("Feito no Sirvo. A ordem nova entra no projeto quando você aplicar.")
+            return { ok: true, dados: r.dados }
+        }
+        if (r.codigo === "chave_invalida") return { ok: false, mensagem: "A chave do Sirvo foi recusada." }
+        return { ok: false, mensagem: r.mensagem || "O Sirvo não aceitou." }
+    } finally {
+        // sempre: se a conexão foi refeita no meio, ninguém mais zeraria e os
+        // botões ficariam presos em "Esperando o Sirvo responder…"
+        atualizar({ enviando: false })
+    }
 }

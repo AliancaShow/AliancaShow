@@ -24,8 +24,16 @@ export function sirvoAmbiente(): keyof typeof AMBIENTES {
     return isProd === false ? "staging" : "producao"
 }
 
-// Só as funções de leitura da F0a. Qualquer outro nome é recusado aqui mesmo.
-const FUNCOES = new Set(["show_cultos", "show_rev", "show_roteiro"])
+// Leitura (F0a) e escrita (F2, migration 0081 do Sirvo). Qualquer outro nome é
+// recusado aqui mesmo.
+const LEITURA = ["show_cultos", "show_rev", "show_roteiro"]
+const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco"]
+const FUNCOES = new Set([...LEITURA, ...ESCRITA])
+const DE_ESCRITA = new Set(ESCRITA)
+// No máximo uma escrita a cada 500 ms, venha de onde vier no renderer: protege
+// contra duplo clique e contra um renderer que enlouqueça (o Sirvo também limita).
+const ESCRITA_MIN_MS = 500
+let ultimaEscrita = 0
 const TEMPO_LIMITE_MS = 8_000
 // cofre separado por ambiente: a chave do staging nunca é usada contra a produção
 const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "sirvo")
@@ -74,6 +82,12 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
     if (!FUNCOES.has(funcao)) return { ok: false, codigo: "erro", mensagem: "Função do Sirvo não permitida." }
     const chave = lerDoCofre()
     if (!chave) return { ok: false, codigo: "sem_chave", mensagem: "Sem chave do Sirvo." }
+    const escrita = DE_ESCRITA.has(funcao)
+    if (escrita) {
+        const agora = Date.now()
+        if (agora - ultimaEscrita < ESCRITA_MIN_MS) return { ok: false, codigo: "erro", mensagem: "Calma: um pedido de cada vez." }
+        ultimaEscrita = agora
+    }
 
     const controle = new AbortController()
     const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE_MS)
@@ -94,8 +108,13 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         // resto vira erro comum: o Show segue tentando em vez de se desligar.
         if (codigo === "42501" && String(corpo?.message || "").startsWith("Chave do Sirvo")) return { ok: false, codigo: "chave_invalida", mensagem: "Chave do Sirvo inválida ou revogada." }
         if (codigo === "P0002") return { ok: false, codigo: "culto_inexistente", mensagem: "Culto não encontrado no Sirvo." }
+        // Numa escrita, a recusa do Sirvo é a frase que o operador precisa ler
+        // ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
+        if (escrita && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200) }
         return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.` }
     } catch {
+        // Escrita que estourou o tempo pode ter chegado: quem diz é o próximo rev.
+        if (escrita) return { ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" }
         return { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
     } finally {
         clearTimeout(limite)

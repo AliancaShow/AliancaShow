@@ -15,9 +15,14 @@
     // - Desligar pede confirmação na própria linha.
     // - Não pega foco: o operador passa slide pelo teclado.
     // Texto do Sirvo só por interpolação {…}, nunca {@html}.
-    import { activeProject, projects } from "../../stores"
+    import { onDestroy } from "svelte"
+    import { activeProject, outputs, projects } from "../../stores"
+    import { newToast } from "../../utils/common"
+    import { pedirAoSirvo, sirvo, sirvoRoteiro } from "../../utils/aliancaSirvo"
+    import { sugerirAvanco, type Sugestao } from "../../utils/aliancaSirvoSugestao"
     import { dicaSegura } from "../../utils/aliancaDica"
     import { aplicarOrdemSirvo, desligarDoSirvo, dispensarFaixaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
+    import SirvoConduzir, { marcarEncerrado } from "./SirvoConduzir.svelte"
 
     $: projetoId = $activeProject
     $: projeto = projetoId ? $projects[projetoId] : null
@@ -50,6 +55,46 @@
     }
     $: aplicarBloqueado = !estado || !estado.pendente
     $: pendente = !!(desteCulto && estado?.pendente)
+
+    // F2: avanço sugerido (SHOW-DESIGN.md §13.4). Atalho, não caminho principal:
+    // só aparece com o MESMO bloco na saída por 5 s, e o botão nasce inerte 3 s.
+    // Some sozinho se o slide volta ou se a régia avança (é conta do estado).
+    const ESTAVEL_MS = 5000
+    const INERTE_MS = 3000
+    let agoraMs = Date.now()
+    const relogio = setInterval(() => (agoraMs = Date.now()), 500)
+    onDestroy(() => clearInterval(relogio))
+
+    $: rot = $sirvoRoteiro
+    $: bruta = calcularSugestao(desteCulto && $sirvo.podeConduzir && !pendente && !confirmando, projeto?.shows || [], $outputs, rot)
+    function calcularSugestao(pode: boolean, itens: any[], outs: any, r: typeof rot): Sugestao | null {
+        if (!pode || !r) return null
+        const slides = Object.values(outs || {})
+            .filter((o: any) => o && o.enabled && !o.stageOutput)
+            .map((o: any) => o.out?.slide)
+        return sugerirAvanco(itens, slides, { noAr: !!r.iniciado_em && !r.encerrado_em, blocoNoAr: r.bloco_no_ar, ordem: r.blocos.map((b) => ({ id: b.id, feito: !!b.concluido_em })) })
+    }
+    let vista = { chave: "", desde: 0 }
+    $: chave = bruta && rot ? `${bruta.destino}|${rot.bloco_no_ar}` : ""
+    $: if (chave !== vista.chave) vista = { chave, desde: Date.now() }
+    $: sugestao = bruta && agoraMs - vista.desde >= ESTAVEL_MS ? bruta : null
+    $: sugestaoInerte = !!sugestao && agoraMs - vista.desde < ESTAVEL_MS + INERTE_MS
+    $: destinoId = sugestao?.destino || ""
+    $: tituloDestino = (destinoId && rot?.blocos.find((b) => b.id === destinoId)?.titulo) || ""
+    let avancando = false
+
+    async function avancar() {
+        const s = sugestao
+        const r = rot
+        if (!s || !r || !r.bloco_no_ar || sugestaoInerte || avancando || $sirvo.enviando) return
+        const noAr = r.blocos.find((b) => b.id === r.bloco_no_ar)
+        avancando = true
+        vista = { chave: vista.chave, desde: Date.now() - ESTAVEL_MS } // inerte de novo enquanto pede
+        const res = await pedirAoSirvo("show_avancar", { p_event: r.event_id, p_ao_vivo_esperado: r.bloco_no_ar, p_destino: s.destino })
+        avancando = false
+        if (!res.ok) return newToast(res.mensagem)
+        if (!res.dados?.ja_estava && s.pulados === 1 && noAr) marcarEncerrado(noAr.id, noAr.titulo)
+    }
 
     function montar() {
         if (!projetoId) return
@@ -110,10 +155,18 @@
                     <button class="fraco" tabindex="-1" on:click={() => (confirmando = false)}>Cancelar</button>
                 </div>
             {:else}
-                <div class="linha" class:aviso={pendente}>
-                    <span class="ponto" />
-                    <span class="texto titulo" data-title={dicaSegura(linha.titulo)}>{linha.titulo}</span>
-                </div>
+                {#if sugestao}
+                    <div class="linha sugestao">
+                        <span class="ponto" />
+                        <span class="texto titulo" data-title={dicaSegura(`A saída já está em ${tituloDestino}. Avançar encerra no Sirvo ${sugestao.pulados === 1 ? "o bloco no ar" : `os ${sugestao.pulados} blocos antes dele`}.`)}>Na saída: {tituloDestino}{sugestao.pulados > 1 ? ` · pula ${sugestao.pulados - 1}` : ""}</span>
+                        <button tabindex="-1" disabled={sugestaoInerte || avancando || $sirvo.enviando} on:mousedown|preventDefault on:click={avancar}>Avançar</button>
+                    </div>
+                {:else}
+                    <div class="linha" class:aviso={pendente}>
+                        <span class="ponto" />
+                        <span class="texto titulo" data-title={dicaSegura(linha.titulo)}>{linha.titulo}</span>
+                    </div>
+                {/if}
                 <div class="linha botoes" class:aviso={pendente}>
                     <span class="texto detalhe" data-title={dicaSegura(linha.detalhe)}>{linha.detalhe}</span>
                     {#if linha.aplicar}
@@ -121,6 +174,10 @@
                     {/if}
                     <button class="fraco" tabindex="-1" data-title="Desligar do Sirvo: os cabeçalhos viram seções comuns" on:click={desligar}>{pendente ? "Desligar" : "Desligar do Sirvo"}</button>
                 </div>
+                {#if desteCulto}
+                    <!-- F2: só com a chave que conduz; uma linha a mais, de altura fixa -->
+                    <SirvoConduzir />
+                {/if}
             {/if}
         {/if}
 
@@ -169,6 +226,9 @@
         height: 7px;
         border-radius: 50%;
         background: var(--connected);
+    }
+    .sugestao .ponto {
+        background: #3b9eff;
     }
     .aviso .ponto {
         background: #ff8000;

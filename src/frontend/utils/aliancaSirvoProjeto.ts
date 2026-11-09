@@ -282,6 +282,20 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         mudouCampos = true
     }
 
+    // O bloco da lápide voltou (a régia restaurou, Sirvo 0082, com o mesmo id):
+    // a lápide revive no lugar, com o conteúdo embaixo dela. Sem isto, entraria
+    // um cabeçalho novo vazio e a lápide ficaria órfã ao lado. Nome, cor e dados
+    // voltam no passo 2, como em qualquer cabeçalho.
+    const cabecalhos = new Set(itens.filter((i) => papelDoItem(i) === "cabecalho").map((i) => i.id))
+    for (const item of itens) {
+        if (papelDoItem(item) !== "lapide") continue
+        const blocoId = item.id.slice(PREFIXO_LAPIDE.length)
+        if (!doRoteiro.has(blocoId) || cabecalhos.has(idDoCabecalho(blocoId))) continue
+        item.id = idDoCabecalho(blocoId)
+        cabecalhos.add(item.id)
+        mudouCampos = true
+    }
+
     // 1. recortar
     const segmentos: Segmento[] = [{ papel: "cabeca", itens: [], depoisDoRodape: false }]
     let vistoRodape = false
