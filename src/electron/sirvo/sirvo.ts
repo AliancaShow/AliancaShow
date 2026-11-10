@@ -8,6 +8,7 @@
 import { safeStorage } from "electron"
 import { isProd } from ".."
 import { _store } from "../data/store"
+import { enriquecerCatalogo } from "./catalogo"
 
 // Endereço e chave PÚBLICA de cada projeto (as mesmas que vão no app web do
 // Sirvo). Quem dá acesso é a chave do dispositivo, não esta.
@@ -28,7 +29,12 @@ export function sirvoAmbiente(): keyof typeof AMBIENTES {
 // recusado aqui mesmo.
 const LEITURA = ["show_cultos", "show_rev", "show_roteiro"]
 const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco"]
-const FUNCOES = new Set([...LEITURA, ...ESCRITA])
+// F3 (migration 0085 do Sirvo): o catálogo de músicas. Fica FORA das escritas
+// de propósito: não disputa o intervalo de 500 ms com o operador (uma
+// publicação em segundo plano não pode fazer o "avançar" responder "Calma"), e
+// a recusa dele nunca é lida como chave recusada (não derruba a ponte).
+const CATALOGO = "show_publicar_catalogo"
+const FUNCOES = new Set([...LEITURA, ...ESCRITA, CATALOGO])
 const DE_ESCRITA = new Set(ESCRITA)
 // No máximo uma escrita a cada 500 ms, venha de onde vier no renderer: protege
 // contra duplo clique e contra um renderer que enlouqueça (o Sirvo também limita).
@@ -39,7 +45,7 @@ const TEMPO_LIMITE_MS = 8_000
 const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "sirvo")
 const FORMATO_DA_CHAVE = /^sirvo_show_[A-Za-z0-9_-]{20,100}$/
 
-export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "rede" | "erro"; mensagem: string }
+export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "nao_publica" | "rede" | "erro"; mensagem: string }
 
 let chaveEmMemoria: string | null = null
 
@@ -89,6 +95,9 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         ultimaEscrita = agora
     }
 
+    // o catálogo leva o que só o arquivo tem (primeira linha, artista, tom…)
+    if (funcao === CATALOGO && Array.isArray(args.p_musicas)) args = { ...args, p_musicas: await enriquecerCatalogo(args.p_musicas) }
+
     const controle = new AbortController()
     const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE_MS)
     try {
@@ -107,10 +116,11 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         // migration). Só é chave recusada com a mensagem do próprio Sirvo; o
         // resto vira erro comum: o Show segue tentando em vez de se desligar.
         if (codigo === "42501" && String(corpo?.message || "").startsWith("Chave do Sirvo")) return { ok: false, codigo: "chave_invalida", mensagem: "Chave do Sirvo inválida ou revogada." }
+        if (funcao === CATALOGO && codigo === "42501" && String(corpo?.message || "").startsWith("Esta chave não publica")) return { ok: false, codigo: "nao_publica", mensagem: "Esta chave não publica as músicas." }
         if (codigo === "P0002") return { ok: false, codigo: "culto_inexistente", mensagem: "Culto não encontrado no Sirvo." }
         // Numa escrita, a recusa do Sirvo é a frase que o operador precisa ler
         // ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
-        if (escrita && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200) }
+        if ((escrita || funcao === CATALOGO) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200) }
         return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.` }
     } catch {
         // Escrita que estourou o tempo pode ter chegado: quem diz é o próximo rev.
