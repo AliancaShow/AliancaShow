@@ -13,6 +13,9 @@
     // - Projeto não ligado: "Montar os blocos aqui?", "Montar de novo?", "ligado
     //   a outro culto" ou "mais de um culto neste dia".
     // - Desligar pede confirmação na própria linha.
+    // - F3 "é esta?": música nova do Sirvo com o mesmo nome de uma da
+    //   biblioteca. Uma linha a mais, só fora do momento protegido (a lista não
+    //   desce no meio do culto).
     // - Não pega foco: o operador passa slide pelo teclado.
     // Texto do Sirvo só por interpolação {…}, nunca {@html}.
     import { onDestroy } from "svelte"
@@ -21,7 +24,7 @@
     import { pedirAoSirvo, sirvo, sirvoRoteiro } from "../../utils/aliancaSirvo"
     import { sugerirAvanco, type Sugestao } from "../../utils/aliancaSirvoSugestao"
     import { dicaSegura } from "../../utils/aliancaDica"
-    import { aplicarOrdemSirvo, desligarDoSirvo, dispensarFaixaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
+    import { aplicarOrdemSirvo, desligarDoSirvo, dispensarEEstaSirvo, dispensarFaixaSirvo, ligarMusicaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
     import SirvoConduzir, { marcarEncerrado } from "./SirvoConduzir.svelte"
 
     $: projetoId = $activeProject
@@ -54,6 +57,8 @@
         return { titulo: `O Sirvo tirou ${plural(e.sumiram, "bloco", "blocos")} de uma vez`, detalhe: e.resumo || "Os que têm conteúdo ficam no lugar.", aplicar: true, dicaAplicar: dicaNoAr }
     }
     $: aplicarBloqueado = !estado || !estado.pendente
+    // F3: "é esta?" só fora do momento protegido
+    $: eEsta = desteCulto && !confirmando && estado?.eEsta && !estado.protegido ? estado.eEsta : null
     $: pendente = !!(desteCulto && estado?.pendente)
 
     // F2: avanço sugerido (SHOW-DESIGN.md §13.4). Atalho, não caminho principal:
@@ -179,6 +184,15 @@
                     <SirvoConduzir />
                 {/if}
             {/if}
+        {/if}
+
+        {#if eEsta}
+            <div class="linha aviso">
+                <span class="ponto" />
+                <span class="texto" data-title={dicaSegura(`O Sirvo pediu a música nova "${eEsta.nome}". "${eEsta.showNome}" da biblioteca é esta? Se for, ela entra no lugar do aviso, e o Sirvo passa a usá-la.`)}>Música nova do Sirvo: é “{eEsta.showNome}”?</span>
+                <button tabindex="-1" on:click={() => eEsta && ligarMusicaSirvo(eEsta.rmId, eEsta.showId)}>É esta</button>
+                <button class="fraco" tabindex="-1" on:click={() => eEsta && dispensarEEstaSirvo(eEsta.rmId)}>Não é</button>
+            </div>
         {/if}
 
         {#if erro}

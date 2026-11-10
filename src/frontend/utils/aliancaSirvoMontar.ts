@@ -26,12 +26,16 @@ import { get, writable } from "svelte/store"
 import { uid } from "uid"
 import type { ProjectShowRef } from "../../types/Projects"
 import { OutputHelper } from "../components/helpers/OutputHelper"
-import { activeFocus, activeProject, activeRename, activeShow, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, selected, special, undoHistory } from "../stores"
+import type { Show } from "../../types/Show"
+import { DEFAULT_ITEM_STYLE } from "../components/edit/scripts/itemHelpers"
+import { setShow } from "../components/helpers/setShow"
+import { activeFocus, activeProject, activeRename, activeShow, categories, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, saved, selected, shows, special, undoHistory } from "../stores"
 import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { garantirPastas } from "./aliancaPastas"
 import { registrarPendenciaSirvo, sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
 import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
+import { CATEGORIA_NOVAS, NOME_CATEGORIA_NOVAS, idDoRascunho, perguntasEEsta, rascunhoDaLetra, type ContextoMusicas, type MusicaDoSirvo, type PerguntaEEsta } from "./aliancaSirvoMusicas"
 import { papelDoItem, reconciliar, resumirPendencia, textoDaPendencia, type MotivoPendente } from "./aliancaSirvoProjeto"
 import { getAccess } from "./profile"
 
@@ -53,9 +57,11 @@ export type EstadoMontagem = {
     sumiram: number
     /** culto no ar ou algo na tela, com este projeto aberto: a ordem não muda agora */
     protegido: boolean
+    /** F3: uma música nova do Sirvo tem o mesmo nome de uma da biblioteca — "é esta?" */
+    eEsta: PerguntaEEsta | null
 }
 
-const VAZIO: EstadoMontagem = { projetoId: null, situacao: "nenhuma", motivo: null, eventId: null, titulo: "", blocos: 0, quantosNoDia: 0, outroCulto: "", pendente: null, resumo: "", sumiram: 0, protegido: false }
+const VAZIO: EstadoMontagem = { projetoId: null, situacao: "nenhuma", motivo: null, eventId: null, titulo: "", blocos: 0, quantosNoDia: 0, outroCulto: "", pendente: null, resumo: "", sumiram: 0, protegido: false, eEsta: null }
 export const sirvoMontagem = writable<EstadoMontagem>(VAZIO)
 // F2: o pedido do operador não força o rev se já havia ordem alheia pendente
 registrarPendenciaSirvo((eventId) => {
@@ -83,6 +89,79 @@ function lembrarMontado(eventId: string, projetoId: string) {
         a[CHAVE_MEMORIA] = { ...(a[CHAVE_MEMORIA] || {}), [eventId]: projetoId }
         return a
     })
+}
+
+// ---------------------------------------------------------------- músicas (F3)
+// "É esta?": a linha de música nova do Sirvo → o show que o operador disse que
+// ela é. Fica no `special` (salvo com as configurações) e vai no catálogo como
+// `sirvo_musicas` (aliancaCatalogo.ts): o Sirvo troca a nova pelo show_id real.
+
+const CHAVE_LIGACOES = "aliancaSirvoNovas"
+const eEstaDispensadas = new Set<string>()
+
+export function lerLigacoesSirvo(): { [rmId: string]: string } {
+    const m = get(special)?.[CHAVE_LIGACOES]
+    return m && typeof m === "object" ? m : {}
+}
+
+function contextoMusicas(): ContextoMusicas {
+    const biblioteca = get(shows)
+    return {
+        existe: (id) => !!biblioteca[id],
+        rascunho: (id) => biblioteca[id]?.category === CATEGORIA_NOVAS,
+        ligacoes: lerLigacoesSirvo()
+    }
+}
+
+const todasAsMusicas = (r: Roteiro): MusicaDoSirvo[] => r.blocos.flatMap((b) => (Array.isArray(b.musicas) ? b.musicas : []))
+
+/**
+ * Música nova com letra e sem show: o Show cria o RASCUNHO na categoria
+ * "Novas do Sirvo" (id fixo `sn_<linha>`: dois passes não criam dois). Nunca
+ * vai direto para a saída — no projeto aparece o aviso até o operador revisar
+ * e mudar a categoria. Não fica salvo sozinho no disco: se o Show fechar sem
+ * salvar, a passada seguinte cria de novo.
+ */
+function criarRascunhos(r: Roteiro) {
+    if (getAccess("shows")?.global === "read") return
+    const ctx = contextoMusicas()
+    const faltam = todasAsMusicas(r).filter((m) => !m.show_id && m.letra && !ctx.ligacoes[m.id] && !ctx.existe(idDoRascunho(m.id)))
+    if (!faltam.length) return
+    if (!get(categories)[CATEGORIA_NOVAS]) {
+        categories.update((c) => ({ ...c, [CATEGORIA_NOVAS]: { name: NOME_CATEGORIA_NOVAS, icon: "song" } }))
+    }
+    for (const m of faltam) {
+        setShow(idDoRascunho(m.id), rascunhoDaLetra(m.nome, m.letra, Date.now(), DEFAULT_ITEM_STYLE) as unknown as Show)
+        console.info(`Sirvo: rascunho criado em "${NOME_CATEGORIA_NOVAS}": ${m.nome}`)
+    }
+    saved.set(false)
+}
+
+/** a primeira pergunta "é esta?" do culto seguido (uma de cada vez) */
+function primeiraEEsta(r: Roteiro): PerguntaEEsta | null {
+    const cats = get(categories)
+    const deMusica = new Set(
+        Object.entries(cats || {})
+            .filter(([, c]) => c?.icon === "song")
+            .map(([id]) => id)
+    )
+    return perguntasEEsta(todasAsMusicas(r), get(shows) as any, deMusica, lerLigacoesSirvo(), eEstaDispensadas)[0] || null
+}
+
+/** "É esta": liga a música nova do Sirvo a este show (vale no projeto já, e no Sirvo na próxima publicação do catálogo) */
+export function ligarMusicaSirvo(rmId: string, showId: string) {
+    if (!rmId || !showId || !get(shows)[showId]) return
+    special.update((a) => {
+        a[CHAVE_LIGACOES] = { ...(a[CHAVE_LIGACOES] || {}), [rmId]: showId }
+        return a
+    })
+    agendar(0)
+}
+
+/** "Não é": não pergunta de novo desta linha até o Show reabrir */
+export function dispensarEEstaSirvo(rmId: string) {
+    eEstaDispensadas.add(rmId)
+    publicar({ ...get(sirvoMontagem), eEsta: null })
 }
 
 // ---------------------------------------------------------------- o que está no ar
@@ -267,7 +346,7 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
     // cabeçalhos de outro culto, ela mexeria na ordem: só fora do culto.
     if (protegido(projetoId) && itens.some((i) => papelDoItem(i))) return "Com o culto no ar ou algo na tela, este projeto não pode ser remontado agora. Limpe a tela e tente de novo."
     const ponteiros = lerPonteiros(projetoId, itens)
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: inicioDoPlano(r) })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: inicioDoPlano(r), musicas: contextoMusicas() })
     escrever(projetoId, itens, res.itens, { ligar: { eventId: r.event_id }, ponteiros })
     lembrarMontado(r.event_id, projetoId)
     dispensados.delete(chaveDispensa(r.event_id, projetoId))
@@ -285,7 +364,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     const prot = protegido(projetoId)
     // daqui até o fim do `escrever` é tudo síncrono: lido, contado e escrito sem pausa
     const ponteiros = lerPonteiros(projetoId, itens)
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: inicioDoPlano(r) })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: inicioDoPlano(r), musicas: contextoMusicas() })
 
     let depois = res.itens
     let pendente = res.motivo
@@ -323,7 +402,13 @@ function passada(pedido: Pedido = {}): string | null {
         return null
     }
 
-    const base: EstadoMontagem = { ...VAZIO, eventId: r.event_id, titulo: r.titulo || e.cultoTitulo || "", blocos: r.blocos.length }
+    // F3: os rascunhos das músicas novas existem antes da conta (aparecem como aviso)
+    try {
+        criarRascunhos(r)
+    } catch (erro) {
+        console.error("Sirvo: falha ao criar o rascunho de uma música nova", erro)
+    }
+    const base: EstadoMontagem = { ...VAZIO, eventId: r.event_id, titulo: r.titulo || e.cultoTitulo || "", blocos: r.blocos.length, eEsta: primeiraEEsta(r) }
     const decisao = decidirProjeto({ eventId: r.event_id, comecaEm: r.comeca_em, blocos: r.blocos.length, cultos: e.cultos, projetos: get(projects), pastas: get(folders), montados: lerMontados() })
 
     switch (decisao.acao) {
@@ -341,7 +426,7 @@ function passada(pedido: Pedido = {}): string | null {
             // a lista vem pronta da conta: o projeto nasce montado, numa escrita só
             const pasta = garantirPastas(decisao.pastas).id
             const id = uid()
-            const itens = reconciliar([], r.blocos, { forcar: true, comecaEm: inicioDoPlano(r) }).itens
+            const itens = reconciliar([], r.blocos, { forcar: true, comecaEm: inicioDoPlano(r), musicas: contextoMusicas() }).itens
             projects.update((a) => {
                 a[id] = { name: decisao.nome, parent: pasta, created: Date.now(), modified: Date.now(), shows: itens, sirvo: { eventId: r.event_id, montadoEm: Date.now() } }
                 return a
@@ -395,7 +480,8 @@ function publicarPergunta(base: EstadoMontagem, projetoId: string, motivo: Motiv
 
 function publicar(novo: EstadoMontagem) {
     const atual = get(sirvoMontagem)
-    if ((Object.keys(novo) as (keyof EstadoMontagem)[]).every((k) => atual[k] === novo[k])) return
+    const igual = (k: keyof EstadoMontagem) => (k === "eEsta" ? JSON.stringify(atual.eEsta) === JSON.stringify(novo.eEsta) : atual[k] === novo[k])
+    if ((Object.keys(novo) as (keyof EstadoMontagem)[]).every(igual)) return
     sirvoMontagem.set(novo)
 }
 
@@ -435,6 +521,8 @@ export function iniciarMontagemSirvo() {
     sirvoRoteiro.subscribe(seguro(0))
     projects.subscribe(seguro(1_000))
     activeProject.subscribe(seguro(1_000))
+    // F3: a música apareceu (criada, importada, rascunho aprovado): o aviso vira ela
+    shows.subscribe(seguro(1_000))
     // a tela limpou ou o culto encerrou: a ordem pendente pode entrar
     outputs.subscribe(() => {
         try {
@@ -509,9 +597,9 @@ export function desligarDoSirvo(projetoId: string) {
     projects.update((a) => {
         const p = a[projetoId]
         if (!p) return a
-        const shows = p.shows || []
-        soltarDoSirvo(shows, () => uid(5))
-        p.shows = [...shows]
+        const lista = p.shows || []
+        soltarDoSirvo(lista, () => uid(5))
+        p.shows = [...lista]
         p.sirvo = null
         p.modified = Date.now()
         return a

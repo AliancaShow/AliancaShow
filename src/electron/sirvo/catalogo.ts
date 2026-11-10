@@ -1,7 +1,7 @@
 // ----- AliançaShow · catálogo para o Sirvo (processo principal) -----
 //
 // Antes de mandar `show_publicar_catalogo`, o main acrescenta a cada música o
-// que só o arquivo tem (primeira linha, artista, tom, CCLI, slides). Lê a
+// que só o arquivo tem (primeira linha, artista, CCLI, trecho). Lê a
 // pasta de shows com cache por data de modificação do arquivo: depois da
 // primeira vez, só relê o que mudou. Tudo assíncrono — o main não trava.
 

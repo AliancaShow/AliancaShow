@@ -6,7 +6,9 @@
 //   - o Sirvo (`show_publicar_catalogo`, migration 0085 do Sirvo), que só a
 //     CHAVE marcada "publica as músicas" publica (aliancaSirvoCatalogo.ts).
 // Música = show de categoria com ícone `song` (Músicas, Impulso,
-// ProPresenter), que não seja privado.
+// ProPresenter), que não seja privado nem rascunho ("Novas do Sirvo", F3).
+
+import { CATEGORIA_NOVAS, PREFIXO_RASCUNHO } from "./aliancaSirvoMusicas"
 
 export type MusicaDaBiblioteca = { id: string; nome: string; categoria: string; modificado: number | null }
 
@@ -17,7 +19,7 @@ type CategoriasLike = { [id: string]: { name?: string; icon?: string | null } | 
 export function musicasDaBiblioteca(shows: ShowsLike, categorias: CategoriasLike): MusicaDaBiblioteca[] {
     const lista: MusicaDaBiblioteca[] = []
     for (const [id, show] of Object.entries(shows || {})) {
-        if (!show?.name || show.private) continue
+        if (!show?.name || show.private || show.category === CATEGORIA_NOVAS) continue
         const cat = categorias?.[show.category || ""]
         if (cat?.icon !== "song") continue
         const modificado = Number(show.timestamps?.modified)
@@ -31,11 +33,46 @@ export function musicasDaBiblioteca(shows: ShowsLike, categorias: CategoriasLike
     return lista.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
 }
 
-/** O que vai para o Sirvo. Primeira linha, artista, tom, CCLI e slides o processo principal acrescenta (lê dos arquivos). */
-export type MusicaParaSirvo = { show_id: string; nome: string; categoria: string; modificado_em: number | null }
+/**
+ * O que vai para o Sirvo. Primeira linha, artista, CCLI e o trecho o processo
+ * principal acrescenta (lê dos arquivos). `sirvo_musicas` (F3, migration 0086):
+ * as linhas de "música nova" do Sirvo que ESTA música é — o Sirvo troca a nova
+ * pelo show_id real.
+ */
+export type MusicaParaSirvo = { show_id: string; nome: string; categoria: string; modificado_em: number | null; sirvo_musicas?: string[] }
 
-export function itensParaSirvo(lista: MusicaDaBiblioteca[]): MusicaParaSirvo[] {
-    return lista.map((m) => ({ show_id: m.id, nome: m.nome, categoria: m.categoria, modificado_em: m.modificado }))
+const UUID_SEM_HIFEN = /^[0-9a-f]{32}$/i
+
+/** o rascunho `sn_<uuid sem hífen>` diz de qual linha do Sirvo ele nasceu */
+export function linhaDoRascunho(showId: string): string | null {
+    if (!showId.startsWith(PREFIXO_RASCUNHO)) return null
+    const h = showId.slice(PREFIXO_RASCUNHO.length)
+    if (!UUID_SEM_HIFEN.test(h)) return null
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`.toLowerCase()
+}
+
+/**
+ * @param ligacoes "é esta?": linha do Sirvo → show que o operador ligou. O
+ *   rascunho aprovado (saiu de "Novas do Sirvo") se liga sozinho pelo id.
+ */
+export function itensParaSirvo(lista: MusicaDaBiblioteca[], ligacoes: { [rmId: string]: string } = {}): MusicaParaSirvo[] {
+    const porShow = new Map<string, string[]>()
+    const ligar = (showId: string, rmId: string) => {
+        const l = porShow.get(showId) || []
+        if (!l.includes(rmId) && l.length < 20) l.push(rmId)
+        porShow.set(showId, l)
+    }
+    for (const [rmId, showId] of Object.entries(ligacoes || {})) if (rmId && typeof showId === "string" && showId) ligar(showId, rmId)
+    for (const m of lista) {
+        const rm = linhaDoRascunho(m.id)
+        if (rm) ligar(m.id, rm)
+    }
+    return lista.map((m) => {
+        const item: MusicaParaSirvo = { show_id: m.id, nome: m.nome, categoria: m.categoria, modificado_em: m.modificado }
+        const ligadas = porShow.get(m.id)
+        if (ligadas?.length) item.sirvo_musicas = [...ligadas].sort()
+        return item
+    })
 }
 
 /**
@@ -43,7 +80,7 @@ export function itensParaSirvo(lista: MusicaDaBiblioteca[]): MusicaParaSirvo[] {
  * Sirvo dizer "o que eu tenho é isso mesmo" no ping de 6 h, sem a lista ir.
  */
 export function hashDoCatalogo(itens: MusicaParaSirvo[]): string {
-    const texto = JSON.stringify(itens.map((i) => [i.show_id, i.nome, i.categoria, i.modificado_em]))
+    const texto = JSON.stringify(itens.map((i) => (i.sirvo_musicas?.length ? [i.show_id, i.nome, i.categoria, i.modificado_em, i.sirvo_musicas] : [i.show_id, i.nome, i.categoria, i.modificado_em])))
     let h1 = 0xdeadbeef
     let h2 = 0x41c6ce57
     for (let i = 0; i < texto.length; i++) {

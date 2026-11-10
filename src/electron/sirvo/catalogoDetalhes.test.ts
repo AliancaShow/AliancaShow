@@ -4,24 +4,46 @@ import { detalhesDoShow, textoCurto } from "./catalogoDetalhes"
 const linha = (value: string) => ({ align: "", text: [{ value, style: "" }] })
 
 describe("detalhes da música para o catálogo", () => {
-    it("primeira linha do layout ativo, artista, tom, CCLI e slides", () => {
+    it("primeira linha do layout ativo, artista, CCLI e o trecho (2 linhas do verso + 1 do refrão)", () => {
         const show = {
             meta: { artist: "Hillsong", key: "D", CCLI: "6428767" },
             settings: { activeLayout: "L1" },
-            layouts: { L1: { slides: [{ id: "s0", disabled: true }, { id: "s1" }, { id: "s2" }] } },
+            layouts: { L1: { slides: [{ id: "s0", disabled: true }, { id: "s1" }, { id: "s2" }, { id: "s3" }] } },
             slides: {
-                s0: { items: [{ lines: [linha("Desativado")] }] },
-                s1: { items: [{ lines: [linha(""), linha("Tu me chamas sobre as <b>águas</b>")] }], children: ["s1a"] },
-                s1a: { items: [{ lines: [linha("filho")] }] },
-                s2: { items: [{ lines: [linha("Segundo")] }] }
+                s0: { group: "Verso", globalGroup: "verse", items: [{ lines: [linha("Desativado")] }] },
+                s1: { group: "Intro", items: [{ lines: [linha("")] }] },
+                s2: { group: "Verso 1", globalGroup: "verse", items: [{ lines: [linha(""), linha("Tu me chamas sobre as <b>águas</b>")] }], children: ["s2a"] },
+                s2a: { items: [{ lines: [linha("onde os pés podem falhar"), linha("terceira")] }] },
+                s3: { group: "", globalGroup: "chorus", items: [{ lines: [linha("E ao Teu nome clamarei"), linha("segunda")] }] }
             }
         }
-        expect(detalhesDoShow(show)).toEqual({ primeira_linha: "Tu me chamas sobre as águas", artista: "Hillsong", tom: "D", ccli: "6428767", slides: 3 })
+        expect(detalhesDoShow(show)).toEqual({
+            primeira_linha: "Tu me chamas sobre as águas",
+            artista: "Hillsong",
+            ccli: "6428767",
+            trecho: [
+                { grupo: "Verso 1", linhas: ["Tu me chamas sobre as águas", "onde os pés podem falhar"] },
+                { grupo: "Refrão", linhas: ["E ao Teu nome clamarei"] }
+            ]
+        })
+    })
+
+    it("sem grupo global: verso e refrão pelo nome escrito; sem verso, o primeiro slide faz de verso", () => {
+        const show = {
+            layouts: { L: { slides: [{ id: "a" }, { id: "b" }] } },
+            slides: { a: { group: "Coro", items: [{ lines: [linha("Santo")] }] }, b: { group: "Estrofe", items: [{ lines: [linha("um"), linha("dois")] }] } }
+        }
+        expect(detalhesDoShow(show).trecho).toEqual([
+            { grupo: "Estrofe", linhas: ["um", "dois"] },
+            { grupo: "Coro", linhas: ["Santo"] }
+        ])
+        const soUm = { layouts: { L: { slides: [{ id: "a" }] } }, slides: { a: { items: [{ lines: [linha("só isso")] }] } } }
+        expect(detalhesDoShow(soUm).trecho).toEqual([{ grupo: "Verso", linhas: ["só isso"] }])
     })
 
     it("show sem nada vira tudo nulo", () => {
-        expect(detalhesDoShow({})).toEqual({ primeira_linha: null, artista: null, tom: null, ccli: null, slides: null })
-        expect(detalhesDoShow(null)).toEqual({ primeira_linha: null, artista: null, tom: null, ccli: null, slides: null })
+        expect(detalhesDoShow({})).toEqual({ primeira_linha: null, artista: null, ccli: null, trecho: null })
+        expect(detalhesDoShow(null)).toEqual({ primeira_linha: null, artista: null, ccli: null, trecho: null })
     })
 
     it("texto curto: corta, tira controle e marcação", () => {

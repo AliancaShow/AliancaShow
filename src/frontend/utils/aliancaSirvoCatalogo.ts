@@ -14,9 +14,10 @@
 import { get } from "svelte/store"
 import { Main } from "../../types/IPC/Main"
 import { requestMain } from "../IPC/main"
-import { categories, shows } from "../stores"
+import { categories, shows, special } from "../stores"
 import { hashDoCatalogo, itensParaSirvo, lerRespostaDoCatalogo, musicasDaBiblioteca } from "./aliancaCatalogo"
 import { sirvo } from "./aliancaSirvo"
+import { lerLigacoesSirvo } from "./aliancaSirvoMontar"
 
 const DEPOIS_DE_MUDAR_MS = 10_000
 const AO_CONECTAR_MS = 3_000
@@ -47,7 +48,8 @@ export function iniciarCatalogoSirvo() {
         conectadoAntes = conectado
     })
     let primeira = true
-    for (const store of [shows, categories]) {
+    // `special`: o "é esta?" (F3) muda as ligações, que vão no catálogo
+    for (const store of [shows, categories, special]) {
         store.subscribe(() => {
             if (primeira) return
             agendar(DEPOIS_DE_MUDAR_MS)
@@ -80,7 +82,7 @@ async function publicar() {
     if (Date.now() < naoPublicaAte) return
     if (get(sirvo).status !== "conectado") return // ao conectar, volta sozinho
 
-    const itens = itensParaSirvo(musicasDaBiblioteca(get(shows) as any, get(categories) as any))
+    const itens = itensParaSirvo(musicasDaBiblioteca(get(shows) as any, get(categories) as any), lerLigacoesSirvo())
     if (!itens.length) return // lista vazia nunca é publicada
     const hash = hashDoCatalogo(itens)
     if (hash === hashConfirmado) return

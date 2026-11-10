@@ -28,6 +28,7 @@ import { requestMain } from "../IPC/main"
 import { activeTimers, timers, variables } from "../stores"
 import { send } from "./request"
 import { newToast } from "./common"
+import type { MusicaDoSirvo } from "./aliancaSirvoMusicas"
 import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./aliancaSirvoAvisos"
 
 // ---------------------------------------------------------------- tipos
@@ -50,6 +51,8 @@ export type Bloco = {
     responsavel: string | null
     nota: string | null
     link: string | null
+    /** as músicas que o Sirvo escolheu para o bloco (F3, migration 0086; ausente antes dela) */
+    musicas?: MusicaDoSirvo[]
 }
 export type Roteiro = {
     event_id: string

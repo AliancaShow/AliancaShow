@@ -34,6 +34,20 @@ describe("catálogo de músicas", () => {
         expect(hashDoCatalogo(a).length).toBeLessThanOrEqual(128)
     })
 
+    it("F3: rascunho fica fora; aprovado e 'é esta?' levam sirvo_musicas, e o hash muda", () => {
+        const rm = "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0"
+        const sn = "sn_0f1e2d3c4b5a69788796a5b4c3d2e1f0"
+        const cats = { ...categorias, sirvo_novas: { name: "Novas do Sirvo", icon: "song" } }
+        expect(musicasDaBiblioteca({ ...shows, [sn]: { name: "Canção Nova", category: "sirvo_novas" } }, cats).map((m) => m.id)).toEqual(["a1", "b2"])
+        const aprovado = itensParaSirvo(musicasDaBiblioteca({ ...shows, [sn]: { name: "Canção Nova", category: "musicas" } }, cats))
+        expect(aprovado.find((i) => i.show_id === sn)?.sirvo_musicas).toEqual([rm])
+        const sem = itensParaSirvo(musicasDaBiblioteca(shows, categorias))
+        const ligado = itensParaSirvo(musicasDaBiblioteca(shows, categorias), { "r-2": "a1", "r-1": "a1" })
+        expect(ligado[0].sirvo_musicas).toEqual(["r-1", "r-2"])
+        expect(ligado[1].sirvo_musicas).toBeUndefined()
+        expect(hashDoCatalogo(ligado)).not.toBe(hashDoCatalogo(sem))
+    })
+
     it("lê cada resposta do Sirvo", () => {
         expect(lerRespostaDoCatalogo({ ok: true, dados: { ok: true, igual: true } })).toEqual({ acao: "em_dia" })
         expect(lerRespostaDoCatalogo({ ok: true, dados: { ok: true, desatualizado: true } })).toEqual({ acao: "mandar_lista" })

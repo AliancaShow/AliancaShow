@@ -1,5 +1,6 @@
 import { uid } from "uid"
 import type { ProjectShowRef } from "../../types/Projects"
+import { musicasDiferem, musicasNaFamilia, tirarMarcasRepetidas, type ContextoMusicas, type MusicaDoSirvo } from "./aliancaSirvoMusicas"
 
 // ----- AliançaShow · o roteiro do Sirvo dentro do projeto do culto (F0b) -----
 //
@@ -30,6 +31,8 @@ export type BlocoParaProjeto = {
     responsavel?: string | null
     nota?: string | null
     link?: string | null
+    /** as músicas que o Sirvo escolheu para o bloco (F3, migration 0086) */
+    musicas?: MusicaDoSirvo[] | null
 }
 
 /** o que fica guardado em `data.sirvo` de cada cabeçalho (o `estado` não: mudaria a cada bloco concluído) */
@@ -53,6 +56,11 @@ export type OpcoesReconciliar = {
      * Sem ele, a hora do cabeçalho não é tocada.
      */
     comecaEm?: string | null
+    /**
+     * F3: põe as músicas de cada bloco debaixo do cabeçalho (aliancaSirvoMusicas.ts).
+     * Sem ele, item com a marca `sirvoMusica` não é tocado.
+     */
+    musicas?: ContextoMusicas
 }
 
 /** "HH:MM" planejado de cada bloco: início do culto + soma das durações de cima */
@@ -267,6 +275,12 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     })
     const doRoteiro = new Map(roteiro.map((b) => [b.id, b]))
     const horas = horasPlanejadas(roteiro, opcoes.comecaEm)
+    const ctxMusicas = opcoes.musicas
+    /** a família de um bloco que ainda não está no projeto: o cabeçalho e as músicas dele */
+    const familiaNova = (b: BlocoParaProjeto) => {
+        const cab = novoCabecalho(b, horas.get(b.id) || "")
+        return ctxMusicas ? musicasNaFamilia([cab], b.musicas, ctxMusicas).itens : [cab]
+    }
 
     // Duplicata de um id do Sirvo (copiar e colar): a primeira é a oficial; as
     // outras viram seção comum, com id novo, e nunca são apagadas.
@@ -281,6 +295,8 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         tirarSirvoDoData(item)
         mudouCampos = true
     }
+    // o mesmo para a marca de música do Sirvo (C2)
+    if (ctxMusicas && tirarMarcasRepetidas(itens, novoId)) mudouCampos = true
 
     // O bloco da lápide voltou (a régia restaurou, Sirvo 0082, com o mesmo id):
     // a lápide revive no lugar, com o conteúdo embaixo dela. Sem isto, entraria
@@ -336,6 +352,20 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         mudouCampos = true
     }
 
+    // 3b. as músicas de cada bloco, só nas famílias vivas (lápide, cabeça e
+    // cauda nunca são tocadas: B3). Item em uso (ponteiro) não sai nem troca.
+    if (ctxMusicas) {
+        const emUso = (item: ProjectShowRef) => ativos.has(itens.indexOf(item))
+        for (const f of segmentos) {
+            if (f.papel !== "familia") continue
+            const bloco = doRoteiro.get(f.blocoId!)
+            if (!bloco) continue
+            const r = musicasNaFamilia(f.itens, bloco.musicas, ctxMusicas, emUso)
+            f.itens = r.itens
+            if (r.mudouCampos) mudouCampos = true
+        }
+    }
+
     // 4. ordem
     const vivas = segmentos.filter((s) => s.papel === "familia")
     const porBloco = new Map(vivas.map((f) => [f.blocoId!, f]))
@@ -347,7 +377,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     if (reorganizar) {
         const rodape = segmentos.find((s) => s.papel === "rodape")
         novos = [...segmentos[0].itens]
-        for (const b of roteiro) novos.push(...(porBloco.get(b.id)?.itens || [novoCabecalho(b, horas.get(b.id) || "")]))
+        for (const b of roteiro) novos.push(...(porBloco.get(b.id)?.itens || familiaNova(b)))
         novos.push(rodape ? rodape.itens[0] : novoRodape())
         // as lápides de cima descem agora, com o conteúdo delas
         for (const s of segmentos) if (s.papel === "lapide" && !s.depoisDoRodape) novos.push(...s.itens)
@@ -362,7 +392,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         const posicaoDoBloco = new Map<string, Segmento>(vivas.map((f) => [f.blocoId!, f]))
         roteiro.forEach((b, i) => {
             if (posicaoDoBloco.has(b.id)) return
-            const seg: Segmento = { papel: "familia", itens: [novoCabecalho(b, horas.get(b.id) || "")], blocoId: b.id, depoisDoRodape: false }
+            const seg: Segmento = { papel: "familia", itens: familiaNova(b), blocoId: b.id, depoisDoRodape: false }
             posicaoDoBloco.set(b.id, seg)
 
             // logo depois do bloco anterior que já está no projeto
@@ -399,7 +429,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
 
 // ---------------------------------------------------------------- o que está pendente
 
-export type ResumoPendencia = { movidos: string[]; novos: string[]; sumidos: string[]; trocados?: [string, string] }
+export type ResumoPendencia = { movidos: string[]; novos: string[]; sumidos: string[]; trocados?: [string, string]; /** blocos cujas músicas (F3) mudaram no Sirvo */ musicas?: string[] }
 
 /**
  * O que o Sirvo mudou e o projeto ainda não tem, para a faixa dizer em vez de
@@ -412,6 +442,33 @@ export type ResumoPendencia = { movidos: string[]; novos: string[]; sumidos: str
  * (o André moveu o aviso e a faixa disse palavra). Aí vira `trocados`.
  */
 export function resumirPendencia(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): ResumoPendencia {
+    const r = resumirOrdem(itens, blocos)
+    const musicas = blocosComMusicaMudada(itens, blocos)
+    return musicas.length ? { ...r, musicas } : r
+}
+
+/** os blocos cuja lista de músicas no projeto não é a do Sirvo (só famílias vivas) */
+function blocosComMusicaMudada(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): string[] {
+    const porId = new Map((blocos || []).filter((b) => b?.id).map((b) => [b.id, b]))
+    const nomes: string[] = []
+    let atual: BlocoParaProjeto | undefined
+    let familia: ProjectShowRef[] = []
+    const fechar = () => {
+        if (atual && Array.isArray(atual.musicas) && musicasDiferem(familia, atual.musicas)) nomes.push(texto(atual.titulo))
+    }
+    for (const item of itens || []) {
+        const papel = papelDoItem(item)
+        if (papel) {
+            fechar()
+            atual = papel === "cabecalho" ? porId.get(item.id.slice(PREFIXO_SIRVO.length)) : undefined
+            familia = []
+        } else familia.push(item)
+    }
+    fechar()
+    return nomes
+}
+
+function resumirOrdem(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): ResumoPendencia {
     const vistos = new Set<string>()
     const cabecalhos: { blocoId: string; nome: string }[] = []
     for (const item of itens || []) {
@@ -480,6 +537,7 @@ export function textoDaPendencia(r: ResumoPendencia) {
     if (r.trocados) partes.push(`${lista(r.trocados)} trocaram de lugar`)
     if (r.movidos.length) partes.push(`${lista(r.movidos)} ${r.movidos.length === 1 ? "mudou" : "mudaram"} de lugar`)
     if (r.novos.length) partes.push(r.novos.length <= 2 ? `${r.novos.length === 1 ? "bloco novo" : "blocos novos"}: ${lista(r.novos)}` : `${r.novos.length} blocos novos`)
+    if (r.musicas?.length) partes.push(r.musicas.length <= 2 ? `músicas de ${lista(r.musicas)} mudaram` : `músicas de ${r.musicas.length} blocos mudaram`)
     if (r.sumidos.length) partes.push(r.sumidos.length <= 2 ? `${r.sumidos.length === 1 ? "saiu do Sirvo" : "saíram do Sirvo"}: ${lista(r.sumidos)}` : `${r.sumidos.length} blocos saíram do Sirvo`)
     return partes.join(" · ")
 }
