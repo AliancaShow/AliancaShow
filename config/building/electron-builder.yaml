@@ -75,6 +75,10 @@ win:
     #     certificateProfileName: <perfil>
     #     codeSigningAccountName: <conta>
 
+nsis:
+    # recusa Windows 7/8/8.1 com mensagem clara (ver installer.nsh)
+    include: config/building/installer.nsh
+
 # linux
 
 linux:
