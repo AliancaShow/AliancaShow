@@ -35,7 +35,7 @@ import { garantirPastas } from "./aliancaPastas"
 import { registrarPendenciaSirvo, sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
 import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
-import { CATEGORIA_NOVAS, NOME_CATEGORIA_NOVAS, idDoRascunho, perguntasEEsta, rascunhoDaLetra, type ContextoMusicas, type MusicaDoSirvo, type PerguntaEEsta } from "./aliancaSirvoMusicas"
+import { CATEGORIA_NOVAS, NOME_CATEGORIA_NOVAS, acaoDoRascunho, hashDaLetra, idDoRascunho, ligacoesVivas, perguntasEEsta, rascunhoDaLetra, type ContextoMusicas, type MusicaDoSirvo, type PerguntaEEsta } from "./aliancaSirvoMusicas"
 import { papelDoItem, reconciliar, resumirPendencia, textoDaPendencia, type MotivoPendente } from "./aliancaSirvoProjeto"
 import { getAccess } from "./profile"
 
@@ -104,16 +104,28 @@ export function lerLigacoesSirvo(): { [rmId: string]: string } {
     return m && typeof m === "object" ? m : {}
 }
 
+/** o que a conta precisa da biblioteca; a ligação para um show apagado não conta (a linha volta a rascunho / pergunta) */
 function contextoMusicas(): ContextoMusicas {
     const biblioteca = get(shows)
+    const existe = (id: string) => !!biblioteca[id]
     return {
-        existe: (id) => !!biblioteca[id],
+        existe,
         rascunho: (id) => biblioteca[id]?.category === CATEGORIA_NOVAS,
-        ligacoes: lerLigacoesSirvo()
+        ligacoes: ligacoesVivas(lerLigacoesSirvo(), existe)
     }
 }
 
 const todasAsMusicas = (r: Roteiro): MusicaDoSirvo[] => r.blocos.flatMap((b) => (Array.isArray(b.musicas) ? b.musicas : []))
+
+// A memória dos rascunhos criados: linha → hash da letra com que o rascunho
+// nasceu. Fica no `special`. Sem ela, um rascunho que o operador apagou
+// voltaria a cada passada.
+const CHAVE_RASCUNHOS = "aliancaSirvoRascunhos"
+
+function lerRascunhosCriados(): { [rmId: string]: string } {
+    const m = get(special)?.[CHAVE_RASCUNHOS]
+    return m && typeof m === "object" ? m : {}
+}
 
 /**
  * Música nova com letra e sem show: o Show cria o RASCUNHO na categoria
@@ -121,20 +133,46 @@ const todasAsMusicas = (r: Roteiro): MusicaDoSirvo[] => r.blocos.flatMap((b) => 
  * vai direto para a saída — no projeto aparece o aviso até o operador revisar
  * e mudar a categoria. Não fica salvo sozinho no disco: se o Show fechar sem
  * salvar, a passada seguinte cria de novo.
+ *
+ * Só roda quando este Show monta o culto de verdade (situação "ligado"). O
+ * rascunho que o operador apagou não volta — só se a letra mudar no Sirvo. O
+ * rascunho que ainda está em "Novas do Sirvo", sem ninguém mexer, é
+ * reescrito quando a letra muda (aliancaSirvoMusicas.ts, `acaoDoRascunho`).
  */
 function criarRascunhos(r: Roteiro) {
     if (getAccess("shows")?.global === "read") return
     const ctx = contextoMusicas()
-    const faltam = todasAsMusicas(r).filter((m) => !m.show_id && m.letra && !ctx.ligacoes[m.id] && !ctx.existe(idDoRascunho(m.id)))
-    if (!faltam.length) return
-    if (!get(categories)[CATEGORIA_NOVAS]) {
-        categories.update((c) => ({ ...c, [CATEGORIA_NOVAS]: { name: NOME_CATEGORIA_NOVAS, icon: "song" } }))
+    const biblioteca = get(shows)
+    const memoria = lerRascunhosCriados()
+    const lembrar: { [rmId: string]: string } = {}
+    let escreveu = false
+    for (const m of todasAsMusicas(r)) {
+        if (m.show_id || !m.letra || ctx.ligacoes[m.id]) continue
+        const id = idDoRascunho(m.id)
+        const existente = biblioteca[id]
+        const datas = existente?.timestamps
+        const hash = hashDaLetra(m.letra)
+        const acao = acaoDoRascunho({ existe: !!existente, aindaRascunho: existente?.category === CATEGORIA_NOVAS, mexido: !!datas?.modified && datas.modified !== datas.created }, memoria[m.id], hash)
+        if (acao === "nada") continue
+        if (acao === "criar" || acao === "reescrever") {
+            if (!get(categories)[CATEGORIA_NOVAS]) {
+                categories.update((c) => ({ ...c, [CATEGORIA_NOVAS]: { name: NOME_CATEGORIA_NOVAS, icon: "song" } }))
+            }
+            // ao reescrever, nome e data de criação ficam os da biblioteca (os dois stores do show concordam)
+            const nome = acao === "reescrever" ? existente?.name || m.nome : m.nome
+            setShow(id, rascunhoDaLetra(nome, m.letra, (acao === "reescrever" && datas?.created) || Date.now(), DEFAULT_ITEM_STYLE) as unknown as Show)
+            console.info(`Sirvo: rascunho ${acao === "criar" ? "criado" : "reescrito (a letra mudou)"} em "${NOME_CATEGORIA_NOVAS}": ${m.nome}`)
+            escreveu = true
+        }
+        lembrar[m.id] = hash
     }
-    for (const m of faltam) {
-        setShow(idDoRascunho(m.id), rascunhoDaLetra(m.nome, m.letra, Date.now(), DEFAULT_ITEM_STYLE) as unknown as Show)
-        console.info(`Sirvo: rascunho criado em "${NOME_CATEGORIA_NOVAS}": ${m.nome}`)
+    if (escreveu) saved.set(false)
+    if (Object.keys(lembrar).length) {
+        special.update((a) => {
+            a[CHAVE_RASCUNHOS] = { ...(a[CHAVE_RASCUNHOS] || {}), ...lembrar }
+            return a
+        })
     }
-    saved.set(false)
 }
 
 /** a primeira pergunta "é esta?" do culto seguido (uma de cada vez) */
@@ -145,7 +183,7 @@ function primeiraEEsta(r: Roteiro): PerguntaEEsta | null {
             .filter(([, c]) => c?.icon === "song")
             .map(([id]) => id)
     )
-    return perguntasEEsta(todasAsMusicas(r), get(shows) as any, deMusica, lerLigacoesSirvo(), eEstaDispensadas)[0] || null
+    return perguntasEEsta(todasAsMusicas(r), get(shows) as any, deMusica, contextoMusicas().ligacoes, eEstaDispensadas)[0] || null
 }
 
 /** "É esta": liga a música nova do Sirvo a este show (vale no projeto já, e no Sirvo na próxima publicação do catálogo) */
@@ -402,14 +440,20 @@ function passada(pedido: Pedido = {}): string | null {
         return null
     }
 
-    // F3: os rascunhos das músicas novas existem antes da conta (aparecem como aviso)
-    try {
-        criarRascunhos(r)
-    } catch (erro) {
-        console.error("Sirvo: falha ao criar o rascunho de uma música nova", erro)
+    const decisao = decidirProjeto({ eventId: r.event_id, comecaEm: r.comeca_em, blocos: r.blocos.length, cultos: e.cultos, projetos: get(projects), pastas: get(folders), montados: lerMontados() })
+
+    // F3: os rascunhos das músicas novas existem antes da conta (aparecem como
+    // aviso) — mas só quando este Show monta o culto de verdade ("ligado"):
+    // o PC que só acompanha, ou que ainda está sendo perguntado, não cria nada.
+    const vaiLigar = decisao.acao === "criar" || decisao.acao === "montar" || decisao.acao === "reconciliar" || (decisao.acao === "perguntar" && pedido.montar === decisao.projetoId)
+    if (vaiLigar) {
+        try {
+            criarRascunhos(r)
+        } catch (erro) {
+            console.error("Sirvo: falha ao criar o rascunho de uma música nova", erro)
+        }
     }
     const base: EstadoMontagem = { ...VAZIO, eventId: r.event_id, titulo: r.titulo || e.cultoTitulo || "", blocos: r.blocos.length, eEsta: primeiraEEsta(r) }
-    const decisao = decidirProjeto({ eventId: r.event_id, comecaEm: r.comeca_em, blocos: r.blocos.length, cultos: e.cultos, projetos: get(projects), pastas: get(folders), montados: lerMontados() })
 
     switch (decisao.acao) {
         case "nada":

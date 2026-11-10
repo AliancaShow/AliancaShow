@@ -382,7 +382,57 @@ export function rascunhoDaLetra(nome: string, letra: string | null | undefined, 
     }
 }
 
+/** hash curto da letra (cyrb53, em hex): a memória de "já criei o rascunho desta letra" */
+export function hashDaLetra(letra: string | null | undefined): string {
+    const t = String(letra || "")
+    let h1 = 0xdeadbeef
+    let h2 = 0x41c6ce57
+    for (let i = 0; i < t.length; i++) {
+        const c = t.charCodeAt(i)
+        h1 = Math.imul(h1 ^ c, 2654435761)
+        h2 = Math.imul(h2 ^ c, 1597334677)
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+    return `l53_${t.length}_${(4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16)}`
+}
+
+export type EstadoDoRascunho = {
+    /** o show `sn_<linha>` existe na biblioteca deste PC */
+    existe: boolean
+    /** ainda está na categoria "Novas do Sirvo" */
+    aindaRascunho: boolean
+    /** o operador mexeu nele (timestamps.modified existe e difere do created) */
+    mexido: boolean
+}
+
+/**
+ * O que fazer com o rascunho de uma música nova (com letra, sem show), dada a
+ * memória do hash da letra com que ele foi criado (`hashGuardado`):
+ * - não existe: criar — salvo se já foi criado para ESTA letra (o operador
+ *   apagou; não ressuscita). A letra mudou no Sirvo: nasce de novo.
+ * - existe, ainda em "Novas do Sirvo", sem mexer, e a letra mudou: reescrever.
+ * - existe e a memória não tem o hash (criado por um Show antigo), ou o
+ *   operador já mexeu / aprovou: adotar — guardar o hash e não tocar.
+ */
+export function acaoDoRascunho(estado: EstadoDoRascunho, hashGuardado: string | undefined, hashAtual: string): "criar" | "reescrever" | "adotar" | "nada" {
+    if (!estado.existe) return hashGuardado === hashAtual ? "nada" : "criar"
+    if (hashGuardado === hashAtual) return "nada"
+    if (hashGuardado !== undefined && estado.aindaRascunho && !estado.mexido) return "reescrever"
+    return "adotar"
+}
+
 // ---------------------------------------------------------------- "é esta?"
+
+/**
+ * As ligações "é esta?" que ainda valem: a que aponta para um show que não
+ * existe mais (apagado) é ignorada, e a linha volta a rascunho / pergunta.
+ */
+export function ligacoesVivas(ligacoes: { [rmId: string]: string } | null | undefined, existe: (showId: string) => boolean): { [rmId: string]: string } {
+    const vivas: { [rmId: string]: string } = {}
+    for (const [rmId, showId] of Object.entries(ligacoes || {})) if (rmId && typeof showId === "string" && showId && existe(showId)) vivas[rmId] = showId
+    return vivas
+}
 
 export type PerguntaEEsta = { rmId: string; nome: string; showId: string; showNome: string }
 

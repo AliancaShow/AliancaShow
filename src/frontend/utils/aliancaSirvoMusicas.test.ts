@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { idDoAviso, idDoRascunho, perguntasEEsta, rascunhoDaLetra, slidesDaLetra, CATEGORIA_NOVAS, type ContextoMusicas, type MusicaDoSirvo } from "./aliancaSirvoMusicas"
+import { acaoDoRascunho, hashDaLetra, idDoAviso, idDoRascunho, ligacoesVivas, perguntasEEsta, rascunhoDaLetra, slidesDaLetra, CATEGORIA_NOVAS, type ContextoMusicas, type MusicaDoSirvo } from "./aliancaSirvoMusicas"
 import { papelDoItem, reconciliar, resumirPendencia, textoDaPendencia, type BlocoParaProjeto } from "./aliancaSirvoProjeto"
 
 const bloco = (id: string, musicas: MusicaDoSirvo[] = []): BlocoParaProjeto => ({ id, titulo: id.toUpperCase(), tipo: "louvor", cor: "#3366ff", duracao_min: 15, musicas })
@@ -329,5 +329,45 @@ describe("música nova: letra e rascunho", () => {
         const musicas = [mus("r1", null, 0, "nada além do SANGUE!"), mus("r2", null, 1, "Oceanos"), mus("r3", "a1", 2, "Nada Além do Sangue")]
         expect(perguntasEEsta(musicas, shows, new Set(["musicas"]), {})).toEqual([{ rmId: "r1", nome: "nada além do SANGUE!", showId: "a1", showNome: "Nada Além do Sangue" }])
         expect(perguntasEEsta(musicas, shows, new Set(["musicas"]), { r1: "a1" })).toEqual([])
+    })
+})
+
+describe("o rascunho não ressuscita", () => {
+    const intacto = { existe: true, aindaRascunho: true, mexido: false }
+
+    it("hash da letra: estável, sensível ao texto, e vazio tem hash", () => {
+        expect(hashDaLetra("a\nb")).toBe(hashDaLetra("a\nb"))
+        expect(hashDaLetra("a\nb")).not.toBe(hashDaLetra("a\nc"))
+        expect(hashDaLetra(null)).toBe(hashDaLetra(""))
+    })
+
+    it("não existe: cria uma vez; apagado pelo operador, só volta se a letra mudar", () => {
+        const h = hashDaLetra("letra")
+        expect(acaoDoRascunho({ existe: false, aindaRascunho: false, mexido: false }, undefined, h)).toBe("criar")
+        expect(acaoDoRascunho({ existe: false, aindaRascunho: false, mexido: false }, h, h)).toBe("nada")
+        expect(acaoDoRascunho({ existe: false, aindaRascunho: false, mexido: false }, h, hashDaLetra("letra nova"))).toBe("criar")
+    })
+
+    it("existe: a letra mudou e ninguém mexeu, reescreve; mexido ou aprovado, adota; sem memória, adota", () => {
+        const velho = hashDaLetra("letra")
+        const novo = hashDaLetra("letra nova")
+        expect(acaoDoRascunho(intacto, velho, velho)).toBe("nada")
+        expect(acaoDoRascunho(intacto, velho, novo)).toBe("reescrever")
+        expect(acaoDoRascunho({ ...intacto, mexido: true }, velho, novo)).toBe("adotar")
+        expect(acaoDoRascunho({ ...intacto, aindaRascunho: false }, velho, novo)).toBe("adotar")
+        // criado por um Show antigo, sem memória: não reescreve à toa
+        expect(acaoDoRascunho(intacto, undefined, novo)).toBe("adotar")
+    })
+})
+
+describe("'é esta?': ligação para show apagado não conta", () => {
+    it("só as ligações cujo show ainda existe", () => {
+        const existe = (id: string) => id === "a1"
+        expect(ligacoesVivas({ r1: "a1", r2: "apagado", r3: "" }, existe)).toEqual({ r1: "a1" })
+        expect(ligacoesVivas(null, existe)).toEqual({})
+        // sem a ligação viva, a linha volta a ser perguntada
+        const shows = { a1: { name: "Oceanos", category: "musicas" } }
+        const vivas = ligacoesVivas({ r1: "apagado" }, (id) => !!shows[id as keyof typeof shows])
+        expect(perguntasEEsta([mus("r1", null, 0, "Oceanos")], shows, new Set(["musicas"]), vivas)).toHaveLength(1)
     })
 })
