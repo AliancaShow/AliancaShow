@@ -8,6 +8,7 @@
     import Tipbar from "./components/main/Tipbar.svelte"
     import Top from "./components/main/Top.svelte"
     import SirvoAviso from "./components/main/SirvoAviso.svelte"
+    import SirvoChat from "./components/main/SirvoChat.svelte"
     import Preview from "./components/output/preview/Preview.svelte"
     import SettingsTabs from "./components/settings/SettingsTabs.svelte"
     import Projects from "./components/show/Projects.svelte"
@@ -126,6 +127,9 @@
                 <!-- AliancaShow: "o roteiro mudou" (Sirvo). No rodape, logo acima do relogio:
                      crescer aqui nao empurra nada que esteja debaixo do mouse. -->
                 {#if page !== "settings"}
+                    <!-- AliancaShow: chat do culto (Sirvo, so leitura). Altura fixa,
+                         recolhido ou aberto: chegar mensagem nao empurra nada. -->
+                    <SirvoChat />
                     <SirvoAviso />
                 {/if}
 
@@ -215,8 +219,13 @@
         border-top: 1px solid var(--primary-darkest);
     }
     /* com o aviso do Sirvo aberto, ele ja ocupa o "margin-top: auto": o relogio cola nele */
-    .right :global(.sirvoAviso ~ .clockArea) {
+    .right :global(.sirvoAviso ~ .clockArea),
+    .right :global(.sirvoChat ~ .clockArea) {
         margin-top: 0;
+    }
+    /* o chat ja empurrou o bloco para o rodape: o aviso fica logo abaixo dele */
+    .right :global(.sirvoChat ~ .sirvoAviso) {
+        margin-top: 8px;
     }
 
     /* Layout D: divisao explicita 50/50 — Projetos na metade de cima,

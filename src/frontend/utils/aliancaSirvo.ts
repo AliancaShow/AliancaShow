@@ -29,6 +29,7 @@ import { activeTimers, timers, variables } from "../stores"
 import { send } from "./request"
 import { newToast } from "./common"
 import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./aliancaSirvoAvisos"
+import { chatAoRev, zerarChat } from "./aliancaSirvoChat"
 
 // ---------------------------------------------------------------- tipos
 
@@ -220,6 +221,8 @@ async function buscarCultos() {
         limparAvisos()
         atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
         anunciar()
+        // o chat do culto antigo sai junto; o do novo chega no próximo show_rev
+        chatAoRev(novoId, null)
         if (novoId) {
             // o culto novo decide pelo que ficou guardado (com prazo), não por uma memória de dias atrás
             vistoEmMemoria.delete(novoId)
@@ -284,6 +287,9 @@ async function cicloRev(g: number) {
                 const msgId = r.dados?.msg_id || null
                 const pode = r.dados?.pode_conduzir === true
                 if (pode !== get(sirvo).podeConduzir) atualizar({ podeConduzir: pode })
+                // F4: o chat tem caminho próprio; aqui só entrega o pedaço `chat`
+                // (não aguarda a busca do retrato e nunca lança)
+                chatAoRev(e.cultoId, r.dados?.chat)
                 // na volta da conexão, busca o roteiro inteiro de qualquer jeito (§5.3)
                 if (caidoAntes || r.dados?.rev !== revVisto || msgId !== msgVista) await buscarRoteiro(e.cultoId)
             } else if (r?.codigo === "culto_inexistente") {
@@ -397,6 +403,7 @@ function zerar() {
     limparAvisos()
     atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
     anunciar()
+    zerarChat()
 }
 
 // ---------------------------------------------------------------- aviso "o roteiro mudou"
