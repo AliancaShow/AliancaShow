@@ -41,6 +41,8 @@ const DE_ESCRITA = new Set(ESCRITA)
 const ESCRITA_MIN_MS = 500
 let ultimaEscrita = 0
 const TEMPO_LIMITE_MS = 8_000
+// o catálogo vai com a biblioteca inteira (centenas de músicas, enriquecidas dos arquivos): mais folga
+const TEMPO_LIMITE_CATALOGO_MS = 30_000
 // cofre separado por ambiente: a chave do staging nunca é usada contra a produção
 const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "sirvo")
 const FORMATO_DA_CHAVE = /^sirvo_show_[A-Za-z0-9_-]{20,100}$/
@@ -99,7 +101,7 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
     if (funcao === CATALOGO && Array.isArray(args.p_musicas)) args = { ...args, p_musicas: await enriquecerCatalogo(args.p_musicas) }
 
     const controle = new AbortController()
-    const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE_MS)
+    const limite = setTimeout(() => controle.abort(), funcao === CATALOGO ? TEMPO_LIMITE_CATALOGO_MS : TEMPO_LIMITE_MS)
     try {
         const ambiente = AMBIENTES[sirvoAmbiente()]
         const resposta = await fetch(ambiente.url + funcao, {
