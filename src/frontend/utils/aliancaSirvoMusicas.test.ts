@@ -371,3 +371,72 @@ describe("'é esta?': ligação para show apagado não conta", () => {
         expect(perguntasEEsta([mus("r1", null, 0, "Oceanos")], shows, new Set(["musicas"]), vivas)).toHaveLength(1)
     })
 })
+
+describe("o operador tirou a música do projeto (dispensadas)", () => {
+    const blocos = [bloco("louvor", [mus("r1", "oceanos", 0), mus("r2", "terra", 1)]), bloco("palavra")]
+    const semOceanos = () => {
+        const itens = passar([], blocos).itens
+        return itens.filter((i) => i.data?.sirvoMusica !== "r1")
+    }
+
+    it("a linha dispensada não entra de novo, e nada muda na lista (a mesma)", () => {
+        const itens = semOceanos()
+        const r = passar(itens, blocos, { dispensadas: new Set(["r1"]) })
+        expect(r.itens).toBe(itens)
+        expect(r).toMatchObject({ mudouEstrutura: false, mudouCampos: false })
+        // sem a dispensa ela voltaria
+        expect(desenho(passar(itens, blocos).itens)).toEqual(["[louvor]", "♪oceanos", "♪terra", "[palavra]", "[fim]"])
+    })
+
+    it("não conta como 'músicas mudaram' na faixa", () => {
+        const itens = semOceanos()
+        expect(resumirPendencia(itens, blocos).musicas).toEqual(["LOUVOR"])
+        expect(resumirPendencia(itens, blocos, { dispensadas: new Set(["r1"]) }).musicas).toBeUndefined()
+    })
+
+    it("a marca dispensada voltou (Ctrl+Z) com a linha viva: fica onde está, sem mover nem duplicar", () => {
+        const itens = semOceanos()
+        const volta = { id: "oceanos", type: "show", data: { sirvoMusica: "r1" } } as ProjectShowRef
+        const lista = [...itens.slice(0, 2), volta, ...itens.slice(2)] // depois de ♪terra, antes de [palavra]
+        const r = passar(lista, blocos, { dispensadas: new Set(["r1"]) })
+        expect(r.itens).toBe(lista)
+        expect(desenho(r.itens)).toEqual(["[louvor]", "♪terra", "♪oceanos", "[palavra]", "[fim]"])
+        expect(resumirPendencia(r.itens, blocos, { dispensadas: new Set(["r1"]) }).musicas).toBeUndefined()
+    })
+
+    it("a marca dispensada voltou (Ctrl+Z) depois de enviada, com a linha já fora do Sirvo: não é apagada", () => {
+        const depois = [bloco("louvor", [mus("r2", "terra", 1)]), bloco("palavra")]
+        const itens = passar([], blocos).itens // tem ♪oceanos (r1)
+        expect(desenho(passar(itens, depois).itens)).toEqual(["[louvor]", "♪terra", "[palavra]", "[fim]"]) // sem a dispensa: saiu do Sirvo
+        const r = passar(itens, depois, { dispensadas: new Set(["r1"]) })
+        expect(r.itens).toBe(itens)
+        expect(desenho(r.itens)).toEqual(["[louvor]", "♪oceanos", "♪terra", "[palavra]", "[fim]"])
+    })
+
+    it("a marca dispensada fora da família (na cauda) também fica, com a linha viva ou não", () => {
+        const itens = passar([], blocos).itens
+        const oceanos = itens[1]
+        const lista = [...itens.filter((i) => i !== oceanos), oceanos] // depois do rodapé
+        const viva = passar(lista, blocos, { dispensadas: new Set(["r1"]) })
+        expect(viva.itens).toBe(lista)
+        const morta = passar(lista, [bloco("louvor", [mus("r2", "terra", 1)]), bloco("palavra")], { dispensadas: new Set(["r1"]) })
+        expect(morta.itens).toBe(lista)
+    })
+
+    it("bloco novo no roteiro nasce sem a linha dispensada", () => {
+        const itens = passar([], [bloco("palavra")]).itens
+        const r = passar(itens, [bloco("palavra"), bloco("louvor", [mus("r1", "oceanos", 0), mus("r2", "terra", 1)])], { dispensadas: new Set(["r1"]) })
+        expect(desenho(r.itens)).toEqual(["[palavra]", "[louvor]", "♪terra", "[fim]"])
+    })
+
+    it("o projeto montado do zero respeita a dispensa (Montar de novo)", () => {
+        expect(desenho(passar([], blocos, { dispensadas: new Set(["r2"]) }).itens)).toEqual(["[louvor]", "♪oceanos", "[palavra]", "[fim]"])
+    })
+
+    it("'é esta?' não pergunta da linha dispensada", () => {
+        const shows = { oceanos: { name: "Oceanos", category: "musicas" } }
+        const nova = [mus("r9", null, 0, "Oceanos")]
+        expect(perguntasEEsta(nova, shows, new Set(["musicas"]), {})).toHaveLength(1)
+        expect(perguntasEEsta(nova, shows, new Set(["musicas"]), {}, new Set(["r9"]))).toEqual([])
+    })
+})

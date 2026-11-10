@@ -61,6 +61,13 @@ export type OpcoesReconciliar = {
      * Sem ele, item com a marca `sirvoMusica` não é tocado.
      */
     musicas?: ContextoMusicas
+    /**
+     * F3: linhas que o OPERADOR tirou do projeto (aliancaSirvoDispensas.ts).
+     * Valem como já satisfeitas: não entram de novo, não contam como "músicas
+     * mudaram", e o item delas, se voltar (Ctrl+Z), fica onde está até o
+     * Sirvo responder.
+     */
+    dispensadas?: Set<string>
 }
 
 /** "HH:MM" planejado de cada bloco: início do culto + soma das durações de cima */
@@ -276,6 +283,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     const doRoteiro = new Map(roteiro.map((b) => [b.id, b]))
     const horas = horasPlanejadas(roteiro, opcoes.comecaEm)
     const ctxMusicas = opcoes.musicas
+    const dispensadas = opcoes.dispensadas || new Set<string>()
     // F3: linha de música → bloco que a lista; e as linhas já satisfeitas por um
     // item marcado fora da família do bloco (o operador levou: fica lá, não entra de novo)
     const linhas = linhasDoRoteiro(roteiro)
@@ -284,7 +292,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     /** a família de um bloco que ainda não está no projeto: o cabeçalho e as músicas dele */
     const familiaNova = (b: BlocoParaProjeto) => {
         const cab = novoCabecalho(b, horas.get(b.id) || "")
-        return ctxMusicas ? musicasNaFamilia([cab], b.musicas, ctxMusicas, { foraDaFamilia }).itens : [cab]
+        return ctxMusicas ? musicasNaFamilia([cab], b.musicas, ctxMusicas, { foraDaFamilia, dispensadas }).itens : [cab]
     }
 
     // Duplicata de um id do Sirvo (copiar e colar): a primeira é a oficial; as
@@ -374,14 +382,15 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     // lugar (aviso ↔ show, nome do aviso). Linha que saiu do Sirvo: o item sai
     // de onde estiver, salvo em uso. Debaixo de uma lápide nada sai (B3: a
     // lápide guarda o conteúdo do bloco e revive com ele). Item do operador
-    // nunca é tocado.
+    // nunca é tocado, nem o da linha dispensada que voltou (Ctrl+Z): fica
+    // onde está até o Sirvo responder (aliancaSirvoDispensas.ts).
     if (ctxMusicas) {
         for (const s of segmentos) {
             const blocoDaFamilia = s.papel === "familia" ? s.blocoId : null
             let mudou = false
             const novos = s.itens.map((item): ProjectShowRef | null => {
                 const marca = marcaDe(item)
-                if (!marca || papelDoItem(item)) return item
+                if (!marca || papelDoItem(item) || dispensadas.has(marca)) return item
                 const linha = linhas.get(marca)
                 if (linha && linha.blocoId === blocoDaFamilia) return item // na família certa: 3b cuida
                 if (!linha) {
@@ -408,7 +417,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
             if (f.papel !== "familia") continue
             const bloco = doRoteiro.get(f.blocoId!)
             if (!bloco) continue
-            const r = musicasNaFamilia(f.itens, bloco.musicas, ctxMusicas, { emUso, linhaViva, foraDaFamilia })
+            const r = musicasNaFamilia(f.itens, bloco.musicas, ctxMusicas, { emUso, linhaViva, foraDaFamilia, dispensadas })
             f.itens = r.itens
             if (r.mudouCampos) mudouCampos = true
         }
@@ -489,18 +498,19 @@ export type ResumoPendencia = { movidos: string[]; novos: string[]; sumidos: str
  * "palavra desceu" são a mesma mudança, e a escolha da subsequência era sorte
  * (o André moveu o aviso e a faixa disse palavra). Aí vira `trocados`.
  */
-export function resumirPendencia(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): ResumoPendencia {
+export function resumirPendencia(itens: ProjectShowRef[], blocos: BlocoParaProjeto[], opcoes: { dispensadas?: Set<string> } = {}): ResumoPendencia {
     const r = resumirOrdem(itens, blocos)
-    const musicas = blocosComMusicaMudada(itens, blocos)
+    const musicas = blocosComMusicaMudada(itens, blocos, opcoes.dispensadas)
     return musicas.length ? { ...r, musicas } : r
 }
 
 /**
  * Os blocos cuja lista de músicas no projeto não é a do Sirvo (só famílias
  * vivas). Item marcado que o operador levou para fora da família (ou trouxe de
- * outro bloco) fica onde está e não conta como diferença.
+ * outro bloco) fica onde está e não conta como diferença; a linha que ele
+ * tirou do projeto (`dispensadas`) tampouco.
  */
-function blocosComMusicaMudada(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): string[] {
+function blocosComMusicaMudada(itens: ProjectShowRef[], blocos: BlocoParaProjeto[], dispensadas?: Set<string>): string[] {
     const porId = new Map((blocos || []).filter((b) => b?.id).map((b) => [b.id, b]))
     const linhas = linhasDoRoteiro([...porId.values()])
     const familias: { bloco: BlocoParaProjeto; itens: ProjectShowRef[] }[] = []
@@ -526,7 +536,7 @@ function blocosComMusicaMudada(itens: ProjectShowRef[], blocos: BlocoParaProjeto
     for (const f of familias) {
         if (!Array.isArray(f.bloco.musicas)) continue
         const deOutroBloco = (rmId: string) => linhas.get(rmId)?.blocoId !== f.bloco.id
-        if (musicasDiferem(f.itens, f.bloco.musicas, { foraDaFamilia, deOutroBloco })) nomes.push(texto(f.bloco.titulo))
+        if (musicasDiferem(f.itens, f.bloco.musicas, { foraDaFamilia, deOutroBloco, dispensadas })) nomes.push(texto(f.bloco.titulo))
     }
     return nomes
 }

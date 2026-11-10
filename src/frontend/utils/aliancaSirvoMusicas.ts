@@ -159,6 +159,8 @@ export type OpcoesFamilia = {
     linhaViva?: (rmId: string) => boolean
     /** linhas deste bloco já satisfeitas por um item marcado FORA desta família: não entram aqui */
     foraDaFamilia?: Set<string>
+    /** linhas que o operador TIROU do projeto (aliancaSirvoDispensas.ts): não entram, e o item delas, se voltar, fica onde está */
+    dispensadas?: Set<string>
 }
 
 /**
@@ -174,7 +176,8 @@ export type OpcoesFamilia = {
  */
 export function musicasNaFamilia(itens: ProjectShowRef[], musicas: MusicaDoSirvo[] | null | undefined, ctx: ContextoMusicas, opcoes: OpcoesFamilia = {}): ResultadoFamilia {
     const emUso = opcoes.emUso || (() => false)
-    const fora = opcoes.foraDaFamilia || new Set<string>()
+    const dispensadas = opcoes.dispensadas || new Set<string>()
+    const fora = new Set([...(opcoes.foraDaFamilia || []), ...dispensadas])
     const desejados = musicasDoBloco(musicas)
         .map((m) => desejadoDe(m, ctx))
         .filter((d) => !fora.has(d.rmId))
@@ -182,12 +185,13 @@ export function musicasNaFamilia(itens: ProjectShowRef[], musicas: MusicaDoSirvo
     const linhaViva = opcoes.linhaViva || ((rmId: string) => querido.has(rmId))
     let mudouCampos = false
 
-    // o que fica: marcadas que o Sirvo ainda quer em algum bloco (ou em uso)
+    // o que fica: marcadas que o Sirvo ainda quer em algum bloco (ou em uso);
+    // a dispensada que voltou (Ctrl+Z) fica onde está, como item do operador
     const lista: ProjectShowRef[] = []
     const fica = new Set<ProjectShowRef>()
     for (const item of itens) {
         const marca = marcaDe(item)
-        if (marca && !linhaViva(marca) && !emUso(item)) continue // saiu do Sirvo
+        if (marca && !linhaViva(marca) && !emUso(item) && !dispensadas.has(marca)) continue // saiu do Sirvo
         lista.push(item)
         if (marca && querido.has(marca)) fica.add(item)
     }
@@ -222,13 +226,14 @@ export function musicasNaFamilia(itens: ProjectShowRef[], musicas: MusicaDoSirvo
 /**
  * A sequência de marcas da família difere da lista do Sirvo? (para a faixa
  * dizer "músicas do X mudaram"). O que o operador levou para fora da família
- * (`foraDaFamilia`) e o que ele trouxe de outro bloco (`deOutroBloco`) não
- * contam: ficam onde estão.
+ * (`foraDaFamilia`), o que ele trouxe de outro bloco (`deOutroBloco`) e o que
+ * ele tirou do projeto (`dispensadas`) não contam: ficam onde estão.
  */
-export function musicasDiferem(itens: ProjectShowRef[], musicas: MusicaDoSirvo[] | null | undefined, opcoes: { foraDaFamilia?: Set<string>; deOutroBloco?: (rmId: string) => boolean } = {}): boolean {
-    const fora = opcoes.foraDaFamilia || new Set<string>()
+export function musicasDiferem(itens: ProjectShowRef[], musicas: MusicaDoSirvo[] | null | undefined, opcoes: { foraDaFamilia?: Set<string>; deOutroBloco?: (rmId: string) => boolean; dispensadas?: Set<string> } = {}): boolean {
+    const dispensadas = opcoes.dispensadas || new Set<string>()
+    const fora = new Set([...(opcoes.foraDaFamilia || []), ...dispensadas])
     const deOutro = opcoes.deOutroBloco || (() => false)
-    const atuais = itens.map(marcaDe).filter((m): m is string => !!m && !deOutro(m))
+    const atuais = itens.map(marcaDe).filter((m): m is string => !!m && !deOutro(m) && !dispensadas.has(m))
     const querem = musicasDoBloco(musicas)
         .map((m) => m.id)
         .filter((id) => !fora.has(id))
