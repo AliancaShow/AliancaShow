@@ -17,7 +17,8 @@ export type BlocoParaAviso = { id: string; titulo: string; concluido_em: string 
 export type LinhaDeAviso = { chave: string; texto: string }
 
 const DO_CULTO = new Set(["encerrar", "reabrir", "reiniciar"])
-const DO_BLOCO = new Set(["duracao", "mover", "criar", "apagar", "musicas"])
+// "musica_tirada" (F3): um Show tirou do projeto uma música que o Sirvo pôs — vale como mudança das músicas do bloco
+const DO_BLOCO = new Set(["duracao", "mover", "criar", "apagar", "musicas", "musica_tirada"])
 
 /**
  * Encerrar/reabrir/reiniciar avisam sempre (já derrubaram culto, 09/ago).
@@ -62,6 +63,8 @@ function textoDe(m: Mudanca, antes: unknown, depois: unknown): string {
             return `${quem} tirou ${aspas(m.bloco_titulo)} do roteiro`
         case "musicas":
             return textoMusicas(quem, m.bloco_titulo || "um bloco", antes, depois)
+        case "musica_tirada":
+            return `${quem} tirou ${aspas(nomeDaMusica(antes, depois))} de ${aspas(m.bloco_titulo)}`
         case "encerrar":
             return `${quem} encerrou o culto`
         case "reabrir":
@@ -86,6 +89,21 @@ function textoMusicas(quem: string, bloco: string, antes: unknown, depois: unkno
     return `${quem} mudou as músicas de “${bloco}”: ${partes.join(" · ")}`
 }
 
+/**
+ * F3 ("musica_tirada"): o nome da música, onde o Sirvo o puser — texto, ou
+ * objeto com `nome`, em `depois` ou em `antes`. Tolerante: a forma é do Sirvo.
+ */
+function nomeDaMusica(antes: unknown, depois: unknown): string | null {
+    for (const x of [depois, antes]) {
+        if (typeof x === "string" && x.trim()) return x.trim()
+        if (x && typeof x === "object") {
+            const nome = (x as { nome?: unknown; name?: unknown }).nome ?? (x as { name?: unknown }).name
+            if (typeof nome === "string" && nome.trim()) return nome.trim()
+        }
+    }
+    return null
+}
+
 /** Quantos blocos a linha "mudou a ordem" lista antes de cortar com "…". */
 const ORDEM_MAX = 8
 
@@ -99,7 +117,8 @@ const ORDEM_MAX = 8
 export function juntarAvisos(ms: Mudanca[], blocos: BlocoParaAviso[] = []): LinhaDeAviso[] {
     const grupos = new Map<string, { m: Mudanca; antes: unknown; depois: unknown }>()
     for (const m of ms) {
-        const chave = `${m.autor || ""}|${m.tipo}|${m.bloco_id ?? m.rev}`
+        // duas músicas tiradas do mesmo bloco são duas notícias, não uma "antes → depois"
+        const chave = `${m.autor || ""}|${m.tipo}|${m.tipo === "musica_tirada" ? m.rev : (m.bloco_id ?? m.rev)}`
         const g = grupos.get(chave)
         if (g) {
             g.m = m
