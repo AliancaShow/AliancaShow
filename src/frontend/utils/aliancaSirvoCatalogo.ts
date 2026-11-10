@@ -6,7 +6,8 @@
 // chaves do AliançaShow), não o posto do Firebase: o PC de casa, com chave só
 // de leitura, nunca sobrescreve o catálogo da igreja.
 //
-// Quando: ao conectar, 10 s depois de mudar a biblioteca, e um ping a cada 6 h.
+// Quando: ao conectar, 10 s depois de mudar a biblioteca, e um ping a cada 6 h
+// — e nunca antes de a biblioteca terminar de carregar (`loaded`).
 // Sempre pergunta primeiro só com o hash; a lista só vai se o Sirvo disser que
 // está desatualizado. Tudo em segundo plano e por fora do `chamar` da ponte:
 // uma falha aqui nunca muda o estado da conexão do roteiro.
@@ -14,7 +15,7 @@
 import { get } from "svelte/store"
 import { Main } from "../../types/IPC/Main"
 import { requestMain } from "../IPC/main"
-import { categories, shows, special } from "../stores"
+import { categories, loaded, shows, special } from "../stores"
 import { hashDoCatalogo, itensParaSirvo, lerRespostaDoCatalogo, musicasDaBiblioteca } from "./aliancaCatalogo"
 import { sirvo } from "./aliancaSirvo"
 import { lerLigacoesSirvo } from "./aliancaSirvoMontar"
@@ -26,6 +27,8 @@ const PING_MS = 6 * 60 * 60_000
 // para o admin ligar e ver a lista chegar sem reiniciar o Show
 const NAO_PUBLICA_MS = 5 * 60_000
 const FALHOU_MS = 5 * 60_000
+// o Show ainda está carregando a biblioteca (`loaded`): a lista estaria pela metade
+const CARREGANDO_MS = 3_000
 
 let iniciado = false
 let timer: ReturnType<typeof setTimeout> | null = null
@@ -81,7 +84,15 @@ async function publicar() {
         deNovo = true
         return
     }
-    if (Date.now() < naoPublicaAte) return
+    if (Date.now() < naoPublicaAte) {
+        // uma mudança na biblioteca agendou por cima da tentativa de 5 min: não perde a volta
+        agendar(naoPublicaAte - Date.now() + 1000)
+        return
+    }
+    if (!get(loaded)) {
+        agendar(CARREGANDO_MS)
+        return
+    }
     if (get(sirvo).status !== "conectado") return // ao conectar, volta sozinho
 
     const itens = itensParaSirvo(musicasDaBiblioteca(get(shows) as any, get(categories) as any), lerLigacoesSirvo())
