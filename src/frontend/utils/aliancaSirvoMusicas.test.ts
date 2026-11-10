@@ -170,6 +170,23 @@ describe("música nova: letra e rascunho", () => {
         expect(slidesDaLetra("")).toEqual([])
     })
 
+    it("estrofe longa (ou letra sem linha em branco) quebra de 2 em 2; estrofe de até 4 fica", () => {
+        expect(slidesDaLetra("a\nb\nc\nd\ne")).toEqual([
+            { grupo: null, linhas: ["a", "b"] },
+            { grupo: null, linhas: ["c", "d"] },
+            { grupo: null, linhas: ["e"] }
+        ])
+        expect(slidesDaLetra("[Refrão]\n1\n2\n3\n4\n5")).toEqual([
+            { grupo: "Refrão", linhas: ["1", "2"] },
+            { grupo: null, linhas: ["3", "4"] },
+            { grupo: null, linhas: ["5"] }
+        ])
+        expect(slidesDaLetra("a\nb\nc\nd\n\ne")).toEqual([
+            { grupo: null, linhas: ["a", "b", "c", "d"] },
+            { grupo: null, linhas: ["e"] }
+        ])
+    })
+
     it("o rascunho é um show na categoria Novas do Sirvo, um slide por bloco, com grupo global", () => {
         const show = rascunhoDaLetra("Canção Nova", "a\nb\n\n[Refrão]\nc", 1, "estilo")
         expect(show.category).toBe(CATEGORIA_NOVAS)

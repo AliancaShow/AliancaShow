@@ -222,7 +222,23 @@ export function slidesDaLetra(letra: string | null | undefined): { grupo: string
             return { grupo, linhas }
         })
         .filter((s) => s.linhas.length > 0)
+        .flatMap(quebrarEstrofe)
         .slice(0, 100)
+}
+
+/**
+ * Estrofe longa vira slides de LINHAS_POR_SLIDE linhas (o LED da Aliança cabe 2).
+ * Estrofe curta (até MAX_LINHAS_ESTROFE) que quem colou separou com linha em
+ * branco fica como está. O nome do grupo vai só no primeiro pedaço.
+ * A MESMA regra do Sirvo (src/lib/musicas.ts).
+ */
+export const LINHAS_POR_SLIDE = 2
+export const MAX_LINHAS_ESTROFE = 4
+function quebrarEstrofe(s: { grupo: string | null; linhas: string[] }): { grupo: string | null; linhas: string[] }[] {
+    if (s.linhas.length <= MAX_LINHAS_ESTROFE) return [s]
+    const out: { grupo: string | null; linhas: string[] }[] = []
+    for (let i = 0; i < s.linhas.length; i += LINHAS_POR_SLIDE) out.push({ grupo: i === 0 ? s.grupo : null, linhas: s.linhas.slice(i, i + LINHAS_POR_SLIDE) })
+    return out
 }
 
 /** grupo da letra → grupo global do FreeShow (cor e atalho do grupo); null fica só com o nome */
