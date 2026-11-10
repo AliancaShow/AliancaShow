@@ -108,6 +108,7 @@ async function publicar() {
                 break
             case "nao_publica":
                 naoPublicaAte = Date.now() + NAO_PUBLICA_MS
+                agendar(NAO_PUBLICA_MS + 1000)
                 break
             case "recusado_metade":
                 // Some de uma vez mais da metade das músicas: ninguém força
