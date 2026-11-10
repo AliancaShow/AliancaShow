@@ -1863,8 +1863,9 @@ const clickActions = {
             const newValues1: string[][] = []
             itemValues1.forEach((value) => {
                 if (!id) value = []
-                else if (value.includes(id)) value.splice(value.indexOf(id, 1))
-                else value.push(id)
+                // cópia: o valor é o mesmo objeto do show (mexer nele estraga o desfazer)
+                else if (value.includes(id)) value = value.filter((a) => a !== id)
+                else value = [...value, id]
 
                 newValues1.push(value)
             })
@@ -1889,8 +1890,8 @@ const clickActions = {
         const newValues: string[][] = []
         itemValues.forEach((value) => {
             if (!id) value = []
-            else if (value.includes(id)) value.splice(value.indexOf(id, 1))
-            else value.push(id)
+            else if (value.includes(id)) value = value.filter((a) => a !== id)
+            else value = [...value, id]
 
             newValues.push(value)
         })
