@@ -28,7 +28,8 @@ export function sirvoAmbiente(): keyof typeof AMBIENTES {
 // Leitura (F0a) e escrita (F2, migration 0081 do Sirvo). Qualquer outro nome é
 // recusado aqui mesmo.
 const LEITURA = ["show_cultos", "show_rev", "show_roteiro"]
-const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco"]
+// show_tirar_musicas / show_devolver_musica (F3): o operador tirou do projeto uma música que o Sirvo pôs
+const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco", "show_tirar_musicas", "show_devolver_musica"]
 // F3 (migration 0085 do Sirvo): o catálogo de músicas. Fica FORA das escritas
 // de propósito: não disputa o intervalo de 500 ms com o operador (uma
 // publicação em segundo plano não pode fazer o "avançar" responder "Calma"), e
@@ -47,7 +48,8 @@ const TEMPO_LIMITE_CATALOGO_MS = 30_000
 const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "sirvo")
 const FORMATO_DA_CHAVE = /^sirvo_show_[A-Za-z0-9_-]{20,100}$/
 
-export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "nao_publica" | "rede" | "erro"; mensagem: string }
+// "ocupado": outra escrita saiu há menos de 500 ms — tente daqui a pouco (não é recusa do Sirvo)
+export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "nao_publica" | "rede" | "ocupado" | "erro"; mensagem: string }
 
 let chaveEmMemoria: string | null = null
 
@@ -93,7 +95,7 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
     const escrita = DE_ESCRITA.has(funcao)
     if (escrita) {
         const agora = Date.now()
-        if (agora - ultimaEscrita < ESCRITA_MIN_MS) return { ok: false, codigo: "erro", mensagem: "Calma: um pedido de cada vez." }
+        if (agora - ultimaEscrita < ESCRITA_MIN_MS) return { ok: false, codigo: "ocupado", mensagem: "Calma: um pedido de cada vez." }
         ultimaEscrita = agora
     }
 

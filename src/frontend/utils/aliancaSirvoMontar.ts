@@ -33,6 +33,7 @@ import { activeFocus, activeProject, activeRename, activeShow, categories, conte
 import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { garantirPastas } from "./aliancaPastas"
 import { registrarPendenciaSirvo, sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
+import { conferirDispensasSirvo, iniciarDispensasSirvo, marcasDispensadasSirvo } from "./aliancaSirvoDispensar"
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
 import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
 import { CATEGORIA_NOVAS, NOME_CATEGORIA_NOVAS, acaoDoRascunho, hashDaLetra, idDoRascunho, ligacoesVivas, perguntasEEsta, rascunhoDaLetra, type ContextoMusicas, type MusicaDoSirvo, type PerguntaEEsta } from "./aliancaSirvoMusicas"
@@ -183,7 +184,9 @@ function primeiraEEsta(r: Roteiro): PerguntaEEsta | null {
             .filter(([, c]) => c?.icon === "song")
             .map(([id]) => id)
     )
-    return perguntasEEsta(todasAsMusicas(r), get(shows) as any, deMusica, contextoMusicas().ligacoes, eEstaDispensadas)[0] || null
+    // "Não é" desta sessão, e a linha que o operador tirou do projeto (aliancaSirvoDispensar.ts): não pergunta
+    const dispensadas = new Set([...eEstaDispensadas, ...marcasDispensadasSirvo(r.event_id)])
+    return perguntasEEsta(todasAsMusicas(r), get(shows) as any, deMusica, contextoMusicas().ligacoes, dispensadas)[0] || null
 }
 
 /** "É esta": liga a música nova do Sirvo a este show (vale no projeto já, e no Sirvo na próxima publicação do catálogo) */
@@ -384,7 +387,7 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
     // cabeçalhos de outro culto, ela mexeria na ordem: só fora do culto.
     if (protegido(projetoId) && itens.some((i) => papelDoItem(i))) return "Com o culto no ar ou algo na tela, este projeto não pode ser remontado agora. Limpe a tela e tente de novo."
     const ponteiros = lerPonteiros(projetoId, itens)
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: inicioDoPlano(r), musicas: contextoMusicas() })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), forcar: true, comecaEm: inicioDoPlano(r), musicas: contextoMusicas(), dispensadas: marcasDispensadasSirvo(r.event_id) })
     escrever(projetoId, itens, res.itens, { ligar: { eventId: r.event_id }, ponteiros })
     lembrarMontado(r.event_id, projetoId)
     dispensados.delete(chaveDispensa(r.event_id, projetoId))
@@ -397,12 +400,15 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
  * `ativos`), ou com Aplicar (`forcar`). Nunca no meio de um arrasto.
  */
 function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
+    // F3: o que o operador tirou do projeto (aliancaSirvoDispensar.ts), conferido
+    // ANTES de ler a lista: a marca que voltou pode perder a marca aqui mesmo
+    const dispensadas = conferirDispensasSirvo(r.event_id, projetoId, r)
     const itens = get(projects)[projetoId]?.shows || []
     const aberto = get(activeProject) === projetoId
     const prot = protegido(projetoId)
     // daqui até o fim do `escrever` é tudo síncrono: lido, contado e escrito sem pausa
     const ponteiros = lerPonteiros(projetoId, itens)
-    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: inicioDoPlano(r), musicas: contextoMusicas() })
+    const res = reconciliar(itens, r.blocos, { ativos: ativosNo(projetoId), protegido: prot, forcar, comecaEm: inicioDoPlano(r), musicas: contextoMusicas(), dispensadas })
 
     let depois = res.itens
     let pendente = res.motivo
@@ -422,7 +428,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     // a conta já mexeu nos objetos (campos, lápide, duplicata): grava mesmo com a ordem pendente
     if ((res.mudouCampos || depois !== itens) && podeEscrever()) escrever(projetoId, itens, depois, { ponteiros })
 
-    const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos)) : ""
+    const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos, { dispensadas })) : ""
     return { pendente, resumo, sumiram: res.sumiram, protegido: prot }
 }
 
@@ -470,7 +476,7 @@ function passada(pedido: Pedido = {}): string | null {
             // a lista vem pronta da conta: o projeto nasce montado, numa escrita só
             const pasta = garantirPastas(decisao.pastas).id
             const id = uid()
-            const itens = reconciliar([], r.blocos, { forcar: true, comecaEm: inicioDoPlano(r), musicas: contextoMusicas() }).itens
+            const itens = reconciliar([], r.blocos, { forcar: true, comecaEm: inicioDoPlano(r), musicas: contextoMusicas(), dispensadas: marcasDispensadasSirvo(r.event_id) }).itens
             projects.update((a) => {
                 a[id] = { name: decisao.nome, parent: pasta, created: Date.now(), modified: Date.now(), shows: itens, sirvo: { eventId: r.event_id, montadoEm: Date.now() } }
                 return a
@@ -565,6 +571,8 @@ export function iniciarMontagemSirvo() {
     sirvoRoteiro.subscribe(seguro(0))
     projects.subscribe(seguro(1_000))
     activeProject.subscribe(seguro(1_000))
+    // F3: a carência da música tirada venceu, a fila andou, o operador respondeu: a passada confere
+    iniciarDispensasSirvo(seguro(0))
     // F3: a música apareceu (criada, importada, rascunho aprovado): o aviso vira ela
     shows.subscribe(seguro(1_000))
     // a tela limpou ou o culto encerrou: a ordem pendente pode entrar
