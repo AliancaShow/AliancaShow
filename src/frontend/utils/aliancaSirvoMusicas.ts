@@ -257,32 +257,50 @@ export function normalizarTitulo(t: string | null | undefined): string {
 // "Refrão:" só vira grupo com nome de grupo conhecido: "Senhor: tu és" é letra
 const GRUPO_COM_DOIS_PONTOS = /^((?:verso|refr[aã]o|coro|ponte|pr[eé][- ]?refr[aã]o|intro(?:du[cç][aã]o)?|final|tag|interl[uú]dio|chorus|verse|bridge|pre[- ]?chorus)(?:\s*\d+)?)\s*:\s*(.*)$/i
 
+const TAG_COLCHETE = /^\[([^\]]{1,30})\]\s*(.*)$/
+/** "[Refrão]" ou "Refrão:" (só com nome de grupo conhecido): [nome, resto da linha] */
+const tagDeGrupo = (linha: string) => TAG_COLCHETE.exec(linha) ?? GRUPO_COM_DOIS_PONTOS.exec(linha)
+
+export type SlideDaLetra = { grupo: string | null; linhas: string[] }
+/** `continua`: pedaço de uma estrofe partida pela quebra automática (no rascunho vira slide-filho) */
+export type SlideDaLetraComContinuacao = SlideDaLetra & { continua: boolean }
+
 /**
  * A letra colada no Sirvo em slides: linha em branco separa slides; `[Refrão]`
- * ou `Refrão:` no começo de um bloco dá o nome do grupo. A MESMA regra do Sirvo
- * (src/lib/musicas.ts, `slidesDaLetra`).
+ * ou `Refrão:` abre um slide com o nome do grupo — no começo do bloco ou no
+ * meio dele (a tag nunca é letra). A MESMA regra do Sirvo (src/lib/musicas.ts,
+ * `slidesDaLetra`). A forma de saída é espelhada no Sirvo: não muda.
  */
-export function slidesDaLetra(letra: string | null | undefined): { grupo: string | null; linhas: string[] }[] {
+export function slidesDaLetra(letra: string | null | undefined): SlideDaLetra[] {
+    return slidesDaLetraComContinuacao(letra).map(({ grupo, linhas }) => ({ grupo, linhas }))
+}
+
+/** o mesmo, dizendo qual slide é continuação da estrofe anterior (para o rascunho) */
+export function slidesDaLetraComContinuacao(letra: string | null | undefined): SlideDaLetraComContinuacao[] {
     if (!letra) return []
-    return String(letra)
+    const estrofes: SlideDaLetra[] = []
+    for (const bloco of String(letra)
         .replace(/\r\n?/g, "\n")
-        .split(/\n\s*\n/)
-        .map((bloco) => {
-            const linhas = bloco
-                .split("\n")
-                .map((l) => texto(l, 300).trim())
-                .filter(Boolean)
-            let grupo: string | null = null
-            if (linhas.length) {
-                const m = /^\[([^\]]{1,30})\]\s*(.*)$/.exec(linhas[0]) ?? GRUPO_COM_DOIS_PONTOS.exec(linhas[0])
-                if (m) {
-                    grupo = m[1].trim()
-                    if (m[2].trim()) linhas[0] = m[2].trim()
-                    else linhas.shift()
-                }
+        .split(/\n\s*\n/)) {
+        let atual: SlideDaLetra | null = null
+        for (const bruta of bloco.split("\n")) {
+            const linha = texto(bruta, 300).trim()
+            if (!linha) continue
+            const tag = tagDeGrupo(linha)
+            if (tag) {
+                atual = { grupo: tag[1].trim(), linhas: [] }
+                estrofes.push(atual)
+                if (tag[2].trim()) atual.linhas.push(tag[2].trim())
+                continue
             }
-            return { grupo, linhas }
-        })
+            if (!atual) {
+                atual = { grupo: null, linhas: [] }
+                estrofes.push(atual)
+            }
+            atual.linhas.push(linha)
+        }
+    }
+    return estrofes
         .filter((s) => s.linhas.length > 0)
         .flatMap(quebrarEstrofe)
         .slice(0, 100)
@@ -291,15 +309,16 @@ export function slidesDaLetra(letra: string | null | undefined): { grupo: string
 /**
  * Estrofe longa vira slides de LINHAS_POR_SLIDE linhas (o LED da Aliança cabe 2).
  * Estrofe curta (até MAX_LINHAS_ESTROFE) que quem colou separou com linha em
- * branco fica como está. O nome do grupo vai só no primeiro pedaço.
+ * branco fica como está. O nome do grupo vai só no primeiro pedaço; os outros
+ * são continuação.
  * A MESMA regra do Sirvo (src/lib/musicas.ts).
  */
 export const LINHAS_POR_SLIDE = 2
 export const MAX_LINHAS_ESTROFE = 4
-function quebrarEstrofe(s: { grupo: string | null; linhas: string[] }): { grupo: string | null; linhas: string[] }[] {
-    if (s.linhas.length <= MAX_LINHAS_ESTROFE) return [s]
-    const out: { grupo: string | null; linhas: string[] }[] = []
-    for (let i = 0; i < s.linhas.length; i += LINHAS_POR_SLIDE) out.push({ grupo: i === 0 ? s.grupo : null, linhas: s.linhas.slice(i, i + LINHAS_POR_SLIDE) })
+function quebrarEstrofe(s: SlideDaLetra): SlideDaLetraComContinuacao[] {
+    if (s.linhas.length <= MAX_LINHAS_ESTROFE) return [{ ...s, continua: false }]
+    const out: SlideDaLetraComContinuacao[] = []
+    for (let i = 0; i < s.linhas.length; i += LINHAS_POR_SLIDE) out.push({ grupo: i === 0 ? s.grupo : null, linhas: s.linhas.slice(i, i + LINHAS_POR_SLIDE), continua: i > 0 })
     return out
 }
 
@@ -321,22 +340,34 @@ export function grupoGlobal(grupo: string | null): string | undefined {
  * Categoria "Novas do Sirvo": enquanto estiver lá é rascunho, e no projeto
  * aparece só o aviso — nunca vai direto para a saída. O operador revisa e muda
  * a categoria; aí o aviso vira a música no mesmo lugar.
+ *
+ * Estrofe partida pela quebra automática vira UM grupo, como o FreeShow faz:
+ * o primeiro pedaço é o slide-pai (no layout) e os outros são filhos dele
+ * (`children`, grupo nulo, fora do layout).
  */
 export function rascunhoDaLetra(nome: string, letra: string | null | undefined, criado: number, estilo: string) {
-    const slidesDaMusica = slidesDaLetra(letra)
+    const slidesDaMusica = slidesDaLetraComContinuacao(letra)
     const slides: { [id: string]: any } = {}
     const ordem: { id: string }[] = []
+    let pai: string | null = null
     slidesDaMusica.forEach((s, i) => {
         const id = `s${i + 1}`
+        const items = [{ style: estilo, align: "", lines: s.linhas.map((l) => ({ align: "", text: [{ value: l, style: "" }] })) }]
+        if (s.continua && pai) {
+            slides[id] = { group: null, color: null, settings: {}, notes: "", items }
+            slides[pai].children = [...(slides[pai].children || []), id]
+            return
+        }
         slides[id] = {
             group: s.grupo || (i === 0 ? "Verso" : ""),
             color: null,
             globalGroup: grupoGlobal(s.grupo || (i === 0 ? "Verso" : null)),
             settings: {},
             notes: "",
-            items: [{ style: estilo, align: "", lines: s.linhas.map((l) => ({ align: "", text: [{ value: l, style: "" }] })) }]
+            items
         }
         ordem.push({ id })
+        pai = id
     })
     return {
         name: texto(nome) || "Música nova",

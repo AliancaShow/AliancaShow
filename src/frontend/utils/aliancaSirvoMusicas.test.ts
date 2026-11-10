@@ -274,13 +274,54 @@ describe("música nova: letra e rascunho", () => {
         ])
     })
 
+    it("tag no MEIO do bloco abre um slide novo, nunca vira letra", () => {
+        expect(slidesDaLetra("a\n[Refrão]\nb")).toEqual([
+            { grupo: null, linhas: ["a"] },
+            { grupo: "Refrão", linhas: ["b"] }
+        ])
+        expect(slidesDaLetra("a\nRefrão: b\nc\nPonte 2:\nd\nSenhor: tu és")).toEqual([
+            { grupo: null, linhas: ["a"] },
+            { grupo: "Refrão", linhas: ["b", "c"] },
+            { grupo: "Ponte 2", linhas: ["d", "Senhor: tu és"] }
+        ])
+        // a forma de saída é a espelhada no Sirvo: só grupo e linhas
+        expect(Object.keys(slidesDaLetra("a")[0])).toEqual(["grupo", "linhas"])
+    })
+
     it("o rascunho é um show na categoria Novas do Sirvo, um slide por bloco, com grupo global", () => {
         const show = rascunhoDaLetra("Canção Nova", "a\nb\n\n[Refrão]\nc", 1, "estilo")
         expect(show.category).toBe(CATEGORIA_NOVAS)
         expect(show.layouts.default.slides).toEqual([{ id: "s1" }, { id: "s2" }])
         expect(show.slides.s1).toMatchObject({ group: "Verso", globalGroup: "verse" })
+        expect(show.slides.s1.children).toBeUndefined()
         expect(show.slides.s2).toMatchObject({ group: "Refrão", globalGroup: "chorus" })
         expect(show.slides.s2.items[0].lines[0].text[0].value).toBe("c")
+    })
+
+    it("estrofe partida pela quebra automática vira um grupo: pai no layout, pedaços como filhos", () => {
+        const show = rascunhoDaLetra("Canção Nova", "[Refrão]\n1\n2\n3\n4\n5\n\nx", 1, "estilo")
+        expect(show.layouts.default.slides).toEqual([{ id: "s1" }, { id: "s4" }])
+        expect(show.slides.s1).toMatchObject({ group: "Refrão", globalGroup: "chorus", children: ["s2", "s3"] })
+        expect(show.slides.s2).toEqual({
+            group: null,
+            color: null,
+            settings: {},
+            notes: "",
+            items: [
+                {
+                    style: "estilo",
+                    align: "",
+                    lines: [
+                        { align: "", text: [{ value: "3", style: "" }] },
+                        { align: "", text: [{ value: "4", style: "" }] }
+                    ]
+                }
+            ]
+        })
+        expect(show.slides.s3.items[0].lines.map((l: any) => l.text[0].value)).toEqual(["5"])
+        expect(show.slides.s4.group).toBe("")
+        expect(show.slides.s4.children).toBeUndefined()
+        expect(show.slides.s4.items[0].lines[0].text[0].value).toBe("x")
     })
 
     it("'é esta?': mesmo nome normalizado, fora do rascunho, só para quem ainda não tem show", () => {
