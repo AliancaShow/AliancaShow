@@ -14,7 +14,7 @@ import { isMainWindow, newToast, wait, waitUntilValueIsDefined } from "../../uti
 import { audioExtensions, imageExtensions, mediaExtensions, presentationExtensions, videoExtensions } from "../../values/extensions"
 import type { API_media, API_slide_thumbnail } from "../actions/api"
 import { clone } from "./array"
-import { getFirstActiveOutput, getOutputResolution } from "./output"
+import { getFirstProgramOutput, getOutputResolution } from "./output"
 
 export function getExtension(path: string): string {
     if (typeof path !== "string") return ""
@@ -116,7 +116,7 @@ export async function getThumbnail(data: API_media) {
 }
 
 export async function getSlideThumbnail(data: API_slide_thumbnail, extraOutData: { backgroundImage?: string; overlays?: string[] } = {}, plainSlide = false) {
-    const currentOutput = getFirstActiveOutput()
+    const currentOutput = getFirstProgramOutput() // AliançaShow
     const outSlide = currentOutput?.out?.slide
     if (!currentOutput) return ""
 

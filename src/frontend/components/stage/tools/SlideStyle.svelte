@@ -27,7 +27,7 @@
         history({ id: "UPDATE", newData: { data: value, key: "password" }, oldData: { id: $activeStage.id }, location: { page: "stage", id: "stage" } })
     }
 
-    $: outputsList = sortByName(keysToID($outputs).filter((a) => !a.stageOutput)).map((a) => ({ value: a.id, label: a.name }))
+    $: outputsList = sortByName(keysToID($outputs).filter((a) => !a.stageOutput && !a.retornoFonte)).map((a) => ({ value: a.id, label: a.name })) // AliançaShow: a Fonte do Retorno é interna
 </script>
 
 <div class="tools">

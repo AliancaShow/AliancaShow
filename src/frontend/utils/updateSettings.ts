@@ -226,7 +226,7 @@ function convertTriggersToActions(data: any) {
 
 export function restartOutputs(specificId = "") {
     const allOutputs = keysToID(get(outputs))
-    const outputIds = specificId ? [specificId] : allOutputs.filter((a) => a.enabled).map(({ id }) => id)
+    const outputIds = specificId ? [specificId] : allOutputs.filter((a) => a.enabled && !a.retornoFonte).map(({ id }) => id) // AliançaShow: a Fonte do Retorno não tem janela
 
     outputIds.forEach((id: string) => {
         const output: Output = get(outputs)[id]

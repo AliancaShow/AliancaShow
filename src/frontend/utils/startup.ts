@@ -17,6 +17,7 @@ import { receiveOUTPUTasOUTPUT, remoteListen, setupMainReceivers } from "./recei
 import { destroy, receive, send } from "./request"
 import { save, unsavedUpdater } from "./save"
 import { entrarSalvo } from "./aliancaRemote"
+import { desfazerSoRetornoQueFicouLigado } from "./aliancaRetorno"
 import { iniciarSirvo } from "./aliancaSirvo"
 import { iniciarMontagemSirvo } from "./aliancaSirvoMontar"
 
@@ -84,6 +85,9 @@ async function startupMain() {
     iniciarSirvo()
     // e monta os blocos do roteiro no projeto do culto (F0b)
     iniciarMontagemSirvo()
+
+    // o app fechou com o modo Só no Retorno ligado: desfaz (saídas e palco voltam ao normal)
+    desfazerSoRetornoQueFicouLigado()
 
     // custom alert
     // if (Math.random() < 0.01) {

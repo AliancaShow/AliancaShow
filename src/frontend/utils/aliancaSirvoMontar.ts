@@ -29,6 +29,7 @@ import { OutputHelper } from "../components/helpers/OutputHelper"
 import { activeFocus, activeProject, activeRename, activeShow, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, selected, special, undoHistory } from "../stores"
 import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { garantirPastas } from "./aliancaPastas"
+import { saidasDePrograma } from "./aliancaRetornoLogica"
 import { registrarPendenciaSirvo, sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
 import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
@@ -87,9 +88,9 @@ function lembrarMontado(eventId: string, projetoId: string) {
 
 // ---------------------------------------------------------------- o que está no ar
 
-/** as saídas que mostram slide ou fundo (a de palco não conta) */
+/** as saídas que mostram slide ou fundo (a de palco e a Fonte do Retorno não contam) */
 function saidasComAlgo(): any[] {
-    return Object.values(get(outputs) || {}).filter((o: any) => o && o.enabled && !o.stageOutput && (o.out?.slide || o.out?.background))
+    return saidasDePrograma(get(outputs)).filter((o: any) => o.out?.slide || o.out?.background)
 }
 
 /**

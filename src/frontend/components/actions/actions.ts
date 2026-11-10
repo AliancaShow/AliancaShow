@@ -1,6 +1,7 @@
 import { get } from "svelte/store"
 import { uid } from "uid"
-import { actionHistory, actions, audioPlaylists, audioStreams, runningActions, shows, stageShows, styles } from "../../stores"
+import { actionHistory, actions, audioPlaylists, audioStreams, outputs, runningActions, shows, stageShows, styles } from "../../stores"
+import { ativacaoSilenciada } from "../../utils/aliancaRetornoLogica"
 import { newToast, wait } from "../../utils/common"
 import { getShowBPM } from "../drawer/audio/metronome"
 import { getDynamicValue } from "../edit/scripts/itemHelpers"
@@ -153,6 +154,7 @@ export function checkStartupActions() {
 }
 
 export function customActionActivation(id: string, specificActivation: any = null) {
+    if (ativacaoSilenciada(id, get(outputs))) return // AliançaShow: no Só no Retorno, o clique não dispara ações
     let actionTriggered = false
     Object.keys(get(actions)).forEach((actionId) => {
         const action = get(actions)[actionId]

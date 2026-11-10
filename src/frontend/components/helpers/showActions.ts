@@ -11,6 +11,7 @@ import { clearAudio } from "../../audio/audioFading"
 import { AudioMicrophone } from "../../audio/audioMicrophone"
 import { AudioPlayer } from "../../audio/audioPlayer"
 import { requestMain, sendMain } from "../../IPC/main"
+import { modoSoRetornoLigado, primeiraSaidaDePrograma } from "../../utils/aliancaRetornoLogica"
 import { isMainWindow, isOutputWindow } from "../../utils/common"
 import { send } from "../../utils/request"
 import { convertRSSToString, getRSS } from "../../utils/rss"
@@ -207,6 +208,7 @@ function shouldTriggerBefore(action: any) {
     return action?.triggers?.find((trigger) => triggerActionsBeforeOutput[trigger]?.(action.actionValues?.[trigger]))
 }
 export function checkActionTrigger(layoutData: SlideData, slideIndex = 0) {
+    if (modoSoRetornoLigado(get(outputs))) return // AliançaShow: no Só no Retorno, clique = Alt (nenhuma ação)
     if (Array.isArray(layoutData?.actions?.slideActions)) {
         layoutData.actions.slideActions.forEach((a) => {
             if (shouldTriggerBefore(a)) runAction(a, { slideIndex, source: "slide" })
@@ -285,6 +287,9 @@ export function updateOut(showId: string, index: number, layout: LayoutRef[], ex
     _show(showId).set({ key: "timestamps.used", value: new Date().getTime() })
     if (!layout) return
     const data = layout[index]?.data
+
+    // AliançaShow: no Só no Retorno, todo clique é um clique com Alt (sem som, ações, MIDI nem timers)
+    if (modoSoRetornoLigado(get(outputs))) extra = false
 
     // holding "alt" key will disable all extra features
     if (!extra || !data) return
@@ -915,7 +920,7 @@ export function replaceDynamicValues(text: string, { showId, layoutId, slideInde
         const stageLayoutId: string = isOutputWin ? Object.values(get(outputs))[0]?.stageOutput || id : id
         const sourceOutputId = get(stageShows)[stageLayoutId]?.settings?.output
         const outputStores = isOutputWin ? get(allOutputs) : get(outputs)
-        const outputId = sourceOutputId && outputStores[sourceOutputId] ? sourceOutputId : getActiveOutputs(outputStores, false, true, true)[0]
+        const outputId = sourceOutputId && outputStores[sourceOutputId] ? sourceOutputId : primeiraSaidaDePrograma(outputStores, { ignorarTrava: true })?.id || getActiveOutputs(outputStores, false, true, true)[0] // AliançaShow
         const outSlide = outputStores[outputId]?.out?.slide
         showId = outSlide?.id
         slideIndex = outSlide?.index ?? -1
@@ -1036,7 +1041,7 @@ export function replaceDynamicValues(text: string, { showId, layoutId, slideInde
         if (stageLayoutId) {
             const sourceOutputId = get(stageShows)[stageLayoutId]?.settings?.output
             const outputStores = isOutputWin ? get(allOutputs) : get(outputs)
-            outputId = sourceOutputId && outputStores[sourceOutputId] ? sourceOutputId : getActiveOutputs(outputStores, false, true, true)[0]
+            outputId = sourceOutputId && outputStores[sourceOutputId] ? sourceOutputId : primeiraSaidaDePrograma(outputStores, { ignorarTrava: true })?.id || getActiveOutputs(outputStores, false, true, true)[0] // AliançaShow
         }
 
         const outSlide: OutSlide | null = output?.out?.slide || null

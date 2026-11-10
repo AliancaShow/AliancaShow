@@ -38,7 +38,7 @@
     ///
 
     let outputsList: Output[] = []
-    $: outputsList = sortObject(sortByName(keysToID(currentOutputs)), "stageOutput")
+    $: outputsList = sortObject(sortByName(keysToID(currentOutputs).filter((a) => !a.retornoFonte)), "stageOutput") // AliançaShow: a Fonte do Retorno é interna
 
     $: if (outputsList.length && (!$currentOutputSettings || !currentOutputs[$currentOutputSettings])) currentOutputSettings.set(outputsList.find((a) => a.enabled)?.id || outputsList[0].id || "")
 

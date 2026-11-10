@@ -34,6 +34,16 @@ export interface Output {
     style?: string
     show?: any
     out?: OutData
+    // AliançaShow: modo "Só no Retorno" (utils/aliancaRetorno*.ts)
+    retornoFonte?: boolean
+    retornoModo?: RegistroSoRetorno
+}
+
+// AliançaShow: o que o modo "Só no Retorno" mudou, para desfazer ao desligar
+export interface RegistroSoRetorno {
+    travas: { [outputId: string]: boolean } // `active` de cada saída de público antes de ligar
+    fontes: { [stageLayoutId: string]: string | null } // `settings.output` de cada layout de palco antes de ligar (null = nenhuma)
+    desde: number
 }
 
 // RTMP

@@ -11,6 +11,7 @@
     import { getItemText } from "../edit/scripts/textStyle"
     import Icon from "../helpers/Icon.svelte"
     import { getActiveOutputs, getStageResolution, percentageStylePos } from "../helpers/output"
+    import { primeiraSaidaDePrograma } from "../../utils/aliancaRetornoLogica"
     import { createCSSVariables, replaceDynamicValues } from "../helpers/showActions"
     import { getStyles } from "../helpers/style"
     import Button from "../inputs/Button.svelte"
@@ -195,7 +196,7 @@
     // SLIDE
     $: sourceOutputId = currentShow?.settings?.output
     $: outputStores = $currentWindow === "output" ? $allOutputs : $outputs
-    $: stageOutputId = sourceOutputId && outputStores[sourceOutputId] ? sourceOutputId : getActiveOutputs(outputStores, false, true, true)[0]
+    $: stageOutputId = sourceOutputId && outputStores[sourceOutputId] ? sourceOutputId : primeiraSaidaDePrograma(outputStores, { ignorarTrava: true })?.id || getActiveOutputs(outputStores, false, true, true)[0] // AliançaShow
     $: currentOutput = outputStores[stageOutputId] || {}
     $: currentSlide = currentOutput.out?.slide || (slideOffset !== 0 ? $outputSlideCache[stageOutputId] || null : null)
 

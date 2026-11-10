@@ -23,6 +23,7 @@
     import Overlay from "../tools/Overlay.svelte"
     import Show from "../tools/Show.svelte"
     import TimerControls from "../tools/TimerControls.svelte"
+    import AliancaSoRetorno from "./AliancaSoRetorno.svelte"
     import ClearButtons from "./ClearButtons.svelte"
     import MultiOutputs from "./MultiOutputs.svelte"
     import PreviewOutputs from "./PreviewOutputs.svelte"
@@ -253,6 +254,7 @@
 <div id="previewArea" class="main">
     {#if enablePreview}
         <PreviewOutputs />
+        <AliancaSoRetorno />
 
         <div class="top">
             <MaterialButton class="hide" icon="hide" style="z-index: 2;" title="preview._hide_preview" on:click={() => (enablePreview = false)} />

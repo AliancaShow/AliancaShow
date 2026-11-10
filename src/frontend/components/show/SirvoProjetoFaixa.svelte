@@ -21,6 +21,7 @@
     import { pedirAoSirvo, sirvo, sirvoRoteiro } from "../../utils/aliancaSirvo"
     import { sugerirAvanco, type Sugestao } from "../../utils/aliancaSirvoSugestao"
     import { dicaSegura } from "../../utils/aliancaDica"
+    import { saidasDePrograma } from "../../utils/aliancaRetornoLogica"
     import { aplicarOrdemSirvo, desligarDoSirvo, dispensarFaixaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
     import SirvoConduzir, { marcarEncerrado } from "./SirvoConduzir.svelte"
 
@@ -69,9 +70,8 @@
     $: bruta = calcularSugestao(desteCulto && $sirvo.podeConduzir && !pendente && !confirmando, projeto?.shows || [], $outputs, rot)
     function calcularSugestao(pode: boolean, itens: any[], outs: any, r: typeof rot): Sugestao | null {
         if (!pode || !r) return null
-        const slides = Object.values(outs || {})
-            .filter((o: any) => o && o.enabled && !o.stageOutput)
-            .map((o: any) => o.out?.slide)
+        // só o que o público vê: a Fonte do Retorno não sugere avanço
+        const slides = saidasDePrograma(outs).map((o: any) => o.out?.slide)
         return sugerirAvanco(itens, slides, { noAr: !!r.iniciado_em && !r.encerrado_em, blocoNoAr: r.bloco_no_ar, ordem: r.blocos.map((b) => ({ id: b.id, feito: !!b.concluido_em })) })
     }
     let vista = { chave: "", desde: 0 }

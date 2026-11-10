@@ -1,5 +1,6 @@
 <script lang="ts">
     import { activePage, activeStyle, audioChannelsData, dictionary, outputs, rtmpStatus, selected, settingsTab, styles, templates, toggleOutputEnabled } from "../../../stores"
+    import { COR_SO_RETORNO, modoSoRetornoLigado } from "../../../utils/aliancaRetornoLogica"
     import { translateText } from "../../../utils/language"
     import AudioMeter from "../../drawer/audio/AudioMeter.svelte"
     import { openDrawer } from "../../edit/scripts/edit"
@@ -16,7 +17,10 @@
     export let disableTransitions = false
 
     // export let resolution: Resolution
-    $: outs = sortObject(sortByName(keysToID($outputs).filter((a) => a.enabled)), "stageOutput")
+    $: outs = sortObject(sortByName(keysToID($outputs).filter((a) => a.enabled && !a.retornoFonte)), "stageOutput") // AliançaShow: sem a Fonte do Retorno
+    // AliançaShow: com o Só no Retorno ligado, a miniatura do palco ganha contorno laranja
+    $: soRetorno = modoSoRetornoLigado($outputs)
+    const cor = (o, ligado) => (ligado && o.stageOutput ? COR_SO_RETORNO : o.color)
     // hide from preview if omre than one output is "enabled", and no non hidden output is "active"
     $: if (outs.length > 1 && !keysToID($outputs).filter((a) => outs.find(({ id }) => a.id === id) && !a.active && !a.hideFromPreview).length) outs = outs.filter((a) => !a.hideFromPreview)
 
@@ -157,7 +161,15 @@ aria-label={fullscreen ? "Exit fullscreen preview" : "Toggle fullscreen preview"
         {@const isMuted = $audioChannelsData[`channel_${output.id}`]?.isMuted}
         {@const isNetworkOutput = output.ndi || output.webrtc || output.rtmp}
 
-        <div id={output.id} class="outputPreview output_button context #output_preview" class:drop-target={!fullscreen && dragOverOutputId === output.id} on:dragover={(e) => handleDragOver(e, output.id)} on:dragleave={(e) => handleDragLeave(e, output.id)} on:drop={(e) => handleDrop(e, output.id)} style={fullscreen ? (fullscreenId === output.id ? "display: contents;" : "opacity: 0;position: absolute;") : outs.length > 1 ? `border: 2px solid ${output?.color};width: 50%;` : "display: contents;"}>
+        <div
+            id={output.id}
+            class="outputPreview output_button context #output_preview"
+            class:drop-target={!fullscreen && dragOverOutputId === output.id}
+            on:dragover={(e) => handleDragOver(e, output.id)}
+            on:dragleave={(e) => handleDragLeave(e, output.id)}
+            on:drop={(e) => handleDrop(e, output.id)}
+            style={fullscreen ? (fullscreenId === output.id ? "display: contents;" : "opacity: 0;position: absolute;") : outs.length > 1 ? `border: 2px solid ${cor(output, soRetorno)};width: 50%;` : "display: contents;"}
+        >
             <PreviewOutput outputId={output.id} {disableTransitions} disabled={outs.length > 1 && !fullscreen && !output?.active} {fullscreen} />
 
             <!-- LIVE -->

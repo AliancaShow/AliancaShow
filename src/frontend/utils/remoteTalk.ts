@@ -6,7 +6,7 @@ import { AudioPlayer } from "../audio/audioPlayer"
 import { loadJsonBible } from "../components/drawer/bible/scripture"
 import { clone, keysToID, removeDeleted } from "../components/helpers/array"
 import { getThumbnailPath, mediaSize } from "../components/helpers/media"
-import { getAllNormalOutputs, getFirstActiveOutput, setOutput } from "../components/helpers/output"
+import { getAllNormalOutputs, getFirstProgramOutput, setOutput } from "../components/helpers/output"
 import { loadShows } from "../components/helpers/setShow"
 import { getLayoutRef } from "../components/helpers/show"
 import { updateOut } from "../components/helpers/showActions"
@@ -81,7 +81,7 @@ export const receiveREMOTE: any = {
         const currentId = uid(5)
         currentOut = currentId
 
-        const currentOutput = getFirstActiveOutput()
+        const currentOutput = getFirstProgramOutput() // AliançaShow
         const out = currentOutput?.out?.slide || null
         let id = ""
 
@@ -131,7 +131,7 @@ export const receiveREMOTE: any = {
         return msg
     },
     OUT_DATA: (msg: any) => {
-        const currentOutput = getFirstActiveOutput()
+        const currentOutput = getFirstProgramOutput() // AliançaShow
         const out = clone(currentOutput?.out || {})
 
         // Include player video name for online media (YouTube, Vimeo, etc.)
@@ -322,7 +322,7 @@ export async function initializeRemote(id: string) {
     send(REMOTE, ["PROJECT"], get(activeProject))
 
     // Get current output state
-    const currentOutput = getFirstActiveOutput()
+    const currentOutput = getFirstProgramOutput() // AliançaShow
     const styleRes = currentOutput?.style ? get(styles)[currentOutput?.style]?.aspectRatio || get(styles)[currentOutput?.style]?.resolution : null
 
     const outSlide = currentOutput?.out?.slide

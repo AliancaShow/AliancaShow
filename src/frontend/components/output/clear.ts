@@ -8,6 +8,8 @@ import { startMetronome } from "../drawer/audio/metronome"
 import { clone } from "../helpers/array"
 import { clearOverlayTimer, getAllActiveOutputIds, getAllActiveOutputs, isOutCleared, setOutput } from "../helpers/output"
 import { _show } from "../helpers/shows"
+import { desligarModoSoRetorno } from "../../utils/aliancaRetorno"
+import { planoDoLimparTudo } from "../../utils/aliancaRetornoLogica"
 import { getActiveTimelinePlayback } from "../timeline/TimelinePlayback"
 
 export function clearAll(button = false) {
@@ -16,6 +18,17 @@ export function clearAll(button = false) {
 
     // reset slide cache on Escape
     outputSlideCache.set({})
+
+    // AliançaShow: modo Só no Retorno. O botão da barra limpa só o Retorno; o Esc (pânico)
+    // desliga o modo e limpa salão e Retorno.
+    const planoRetorno = planoDoLimparTudo(get(outputs), button)
+    if (planoRetorno === "so_retorno") {
+        clearBackground()
+        clearSlide(!get(focusMode))
+        clearOverlays()
+        return
+    }
+    if (planoRetorno === "desligar_e_limpar") desligarModoSoRetorno("Só no Retorno desligado: o Esc limpou o salão e o Retorno.")
 
     const audioCleared = !Object.keys(get(playingAudio)).length && !get(playingMetronome)
     const allCleared = isOutCleared(null) && audioCleared

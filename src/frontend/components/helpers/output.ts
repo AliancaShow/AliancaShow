@@ -9,6 +9,7 @@ import type { Item, Layout, LayoutRef, Media, OutSlide, Show, Slide, SlideData, 
 import { AudioAnalyser } from "../../audio/audioAnalyser"
 import { requestMain, sendMain } from "../../IPC/main"
 import { actions, activeFocus, activeProject, activeRename, activeShow, activeTimers, allOutputs, categories, connections, currentOutputSettings, customMessageCredits, disabledServers, effects, focusMode, lockedOverlays, media, outputDisplay, outputs, outputSlideCache, outputState, overlays, overlayTimers, projects, scriptures, scriptureSettings, serverData, showsCache, special, stageShows, styles, templates, theme, themes, transitionData, usageLog } from "../../stores"
+import { fundoComSom, idDaFonte, modoSoRetornoLigado, primeiraSaidaDePrograma } from "../../utils/aliancaRetornoLogica"
 import { isMainWindow, isOutputWindow, newToast } from "../../utils/common"
 import { translateText } from "../../utils/language"
 import { confirmCustom } from "../../utils/popup"
@@ -32,7 +33,8 @@ export function toggleOutputs(outputIds: string[] | null = null, options: { forc
     if (outputIds === null) outputIds = getActiveOutputs(get(outputs), false)
     // if (outputIds === null) outputIds = Object.keys(get(outputs))
 
-    const outputsList = outputIds.map((id) => ({ ...get(outputs)[id], id })).filter((a) => a.enabled)
+    // AliançaShow: a Fonte do Retorno não tem janela
+    const outputsList = outputIds.map((id) => ({ ...get(outputs)[id], id })).filter((a) => a.enabled && !a.retornoFonte)
     if (!outputsList.length) return
 
     // sort so display order can be changed! (needs app restart)
@@ -58,6 +60,15 @@ let resetActionTrigger = false
 export function setOutput(type: string, data: any, toggle = false, outputId = "", add = false) {
     const ref = data?.layout ? _show(data.id).layouts([data.layout]).ref()[0] || [] : []
 
+    // AliançaShow: modo Só no Retorno. O clique vai só para a Fonte do Retorno (até o slide com
+    // "Saída específica"), sem som, ações nem contagem de uso. Vídeo não vai: o som tocaria no salão.
+    const fonteRetorno = modoSoRetornoLigado(get(outputs)) ? idDaFonte(get(outputs)) : ""
+    const soNaFonte = !!fonteRetorno && (!outputId || outputId === fonteRetorno)
+    if (soNaFonte && type === "background" && data && (fundoComSom(data.type) || fundoComSom(getMediaType(getExtension(data.path || data.id || ""))))) {
+        newToast("Vídeo não vai só para o palco: o som tocaria no salão.")
+        return
+    }
+
     // stop any active break slide recording when the slide changes
     if (type === "slide") _stopBreakRecording()
 
@@ -65,7 +76,7 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
 
     const bindings = data?.bindings || (data?.layout ? ref[data.index]?.data?.bindings || [] : [])
     const allOutputIds = bindings.length ? bindings : getActiveOutputs(get(outputs), true, false, true)
-    const outs = outputId ? [outputId] : allOutputIds
+    const outs = outputId ? [outputId] : soNaFonte ? [fonteRetorno] : allOutputIds
 
     // track usage (& set attributionString)
     if (type === "slide" && data?.id) {
@@ -107,7 +118,7 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
 
     const inputData = clone(data)
 
-    checkAudio(type, data, allOutputIds, outs)
+    if (!soNaFonte) checkAudio(type, data, allOutputIds, outs)
 
     outputs.update((a) => {
         if (type === "slide" && data?.id) {
@@ -117,12 +128,12 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
             const currentOutSlideId = get(outputs)[outs?.[0]]?.out?.slide?.id || ""
 
             // log usage if show is not currently outputted
-            if (currentOutSlideId !== data?.id) appendShowUsage(data.id)
+            if (currentOutSlideId !== data?.id && !soNaFonte) appendShowUsage(data.id)
 
             const overrideCategoryAction = ref[data?.index]?.data?.actions?.slideActions?.find((action) => Object.values(action.customData || {}).find((a1) => Object.entries(a1).find(([key, value]) => key === "overrideCategoryAction" && value === true)))
 
             // run category action if show slide is not currently outputted, and it does not have a custom override action
-            if (currentOutSlideId !== data?.id || resetActionTrigger) {
+            if ((currentOutSlideId !== data?.id || resetActionTrigger) && !soNaFonte) {
                 const category = get(showsCache)[data.id]?.category || ""
                 const categoryActionId = get(categories)[category]?.action
                 if (!overrideCategoryAction && categoryActionId) runAction(get(actions)[categoryActionId], { source: "slide" }, true)
@@ -460,11 +471,13 @@ export function getAllActiveOutputs() {
     const outputsList = getAllNormalOutputs()
     const active = outputsList.filter((a) => a.active)
     if (!active.length && isMainWindow()) {
+        // AliançaShow: a primeira saída de programa (nunca a Fonte do Retorno nem uma de palco)
+        const primeira = primeiraSaidaDePrograma(get(outputs), { ignorarTrava: true })
         outputs.update((a) => {
-            a[Object.keys(a)[0]].active = true
+            a[primeira?.id || Object.keys(a)[0]].active = true
             return a
         })
-        return [outputsList[0]]
+        return [primeira ? outputsList.find((o) => o.id === primeira.id) || outputsList[0] : outputsList[0]]
     }
     return active
 }
@@ -480,6 +493,12 @@ export function getFirstActiveOutput(_updater: any = null) {
 
     // get first regardless of active state
     return keysToID(get(outputs)).find((a) => !a.stageOutput)
+}
+
+// AliançaShow: o que o público vê. Igual a getFirstActiveOutput, mas nunca a Fonte do
+// Retorno: com o modo Só no Retorno ligado, vale a trava de antes do modo.
+export function getFirstProgramOutput() {
+    return primeiraSaidaDePrograma(get(outputs)) || getFirstActiveOutput()
 }
 
 // DEPRECATED
@@ -604,7 +623,7 @@ export function outputSlideHasContent(output) {
 export function getResolution(initial: Resolution | undefined | null = null, _updater: any = null, _getSlideRes = false, outputId = "", styleIdOverride = ""): Resolution {
     if (initial?.width) return initial
 
-    if (!outputId) outputId = getFirstActiveOutput()?.id || ""
+    if (!outputId) outputId = primeiraSaidaDePrograma(get(outputs))?.id || getFirstActiveOutput()?.id || "" // AliançaShow: nunca a Fonte do Retorno
     const currentOutput = get(outputs)[outputId]
 
     if (currentOutput?.stageOutput) return currentOutput.bounds ?? DEFAULT_BOUNDS

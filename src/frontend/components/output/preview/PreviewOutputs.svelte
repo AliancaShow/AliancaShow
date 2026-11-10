@@ -2,6 +2,7 @@
     import type { ClickEvent } from "../../../../types/Main"
     import type { Output } from "../../../../types/Output"
     import { dictionary, ndiData, outputs, outputState } from "../../../stores"
+    import { modoSoRetornoLigado } from "../../../utils/aliancaRetornoLogica"
     import { newToast } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { keysToID, sortByName, sortObject } from "../../helpers/array"
@@ -12,10 +13,13 @@
     //     currentOutputId = getActiveOutputs({}, true, true)[0]
     // })
 
-    $: outs = sortObject(sortByName(keysToID($outputs).filter((a) => a.enabled)), "stageOutput")
+    // AliançaShow: a Fonte do Retorno não aparece; com o modo ligado, as travas ficam presas
+    $: outs = sortObject(sortByName(keysToID($outputs).filter((a) => a.enabled && !a.retornoFonte)), "stageOutput")
+    $: soRetorno = modoSoRetornoLigado($outputs)
 
     function toggleOutput(e: ClickEvent, id: string) {
         if (outs.length <= 1) return
+        if (soRetorno) return newToast("Com o Só no Retorno ligado, as saídas do público ficam travadas. Desligue o modo para mudar.")
 
         outputs.update((a) => {
             if (e.detail.ctrl) {

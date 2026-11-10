@@ -4,7 +4,7 @@ import { uid } from "uid"
 import { Main } from "../../types/IPC/Main"
 import type { Item } from "../../types/Show"
 import { loadJsonBible, getShortBibleName } from "../components/drawer/bible/scripture"
-import { getFirstActiveOutput } from "../components/helpers/output"
+import { getFirstProgramOutput } from "../components/helpers/output"
 import { OutputHelper } from "../components/helpers/OutputHelper"
 import { _show } from "../components/helpers/shows"
 import { clearAll } from "../components/output/clear"
@@ -199,7 +199,7 @@ function publicarEstado(forcar = false) {
 const NOMES_MES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
 
 function montarEstado() {
-    const out = get(outputs)[getFirstActiveOutput()?.id || ""]?.out || {}
+    const out = get(outputs)[getFirstProgramOutput()?.id || ""]?.out || {} // o que o público vê (nunca a Fonte do Retorno)
     const slide = out.slide
     const fundo = out.background
 

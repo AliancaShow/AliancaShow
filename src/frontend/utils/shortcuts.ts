@@ -16,6 +16,7 @@ import { getFirstActiveOutput, refreshOut, setOutput, startFolderTimer, toggleOu
 import { OutputHelper } from "../components/helpers/OutputHelper"
 import { VideoPlayer } from "../components/media/video/videoPlayer"
 import { clearAll, clearBackground, clearSlide } from "../components/output/clear"
+import { alternarModoSoRetorno } from "./aliancaRetorno"
 import { getRecentlyUsedProjects, openProject } from "../components/show/project"
 import { importFromClipboard } from "../converters/importHelpers"
 import { addSection } from "../converters/project"
@@ -367,6 +368,11 @@ export const previewShortcuts = {
     F5: () => {
         if (!presentationControllersKeysDisabled()) OutputHelper.advanceOutputs()
         else setOutput("transition", null)
+    },
+    // AliançaShow: liga/desliga o modo Só no Retorno
+    F6: () => {
+        alternarModoSoRetorno()
+        return true
     },
 
     " ": (e: KeyboardEvent) => {
