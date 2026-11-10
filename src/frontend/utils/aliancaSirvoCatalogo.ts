@@ -22,7 +22,9 @@ import { lerLigacoesSirvo } from "./aliancaSirvoMontar"
 const DEPOIS_DE_MUDAR_MS = 10_000
 const AO_CONECTAR_MS = 3_000
 const PING_MS = 6 * 60 * 60_000
-const NAO_PUBLICA_MS = 60 * 60_000
+// chave sem "publica as músicas": pergunta de novo em 5 min (só o hash, barato),
+// para o admin ligar e ver a lista chegar sem reiniciar o Show
+const NAO_PUBLICA_MS = 5 * 60_000
 const FALHOU_MS = 5 * 60_000
 
 let iniciado = false
