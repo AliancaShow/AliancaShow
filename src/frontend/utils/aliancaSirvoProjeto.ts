@@ -1,6 +1,6 @@
 import { uid } from "uid"
 import type { ProjectShowRef } from "../../types/Projects"
-import { musicasDiferem, musicasNaFamilia, tirarMarcasRepetidas, type ContextoMusicas, type MusicaDoSirvo } from "./aliancaSirvoMusicas"
+import { ajustarMarcado, desejadoDe, linhasDoRoteiro, marcaDe, musicasDiferem, musicasNaFamilia, tirarMarcasRepetidas, type ContextoMusicas, type MusicaDoSirvo } from "./aliancaSirvoMusicas"
 
 // ----- AliançaShow · o roteiro do Sirvo dentro do projeto do culto (F0b) -----
 //
@@ -276,10 +276,15 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
     const doRoteiro = new Map(roteiro.map((b) => [b.id, b]))
     const horas = horasPlanejadas(roteiro, opcoes.comecaEm)
     const ctxMusicas = opcoes.musicas
+    // F3: linha de música → bloco que a lista; e as linhas já satisfeitas por um
+    // item marcado fora da família do bloco (o operador levou: fica lá, não entra de novo)
+    const linhas = linhasDoRoteiro(roteiro)
+    const foraDaFamilia = new Set<string>()
+    const emUso = (item: ProjectShowRef) => ativos.has(itens.indexOf(item))
     /** a família de um bloco que ainda não está no projeto: o cabeçalho e as músicas dele */
     const familiaNova = (b: BlocoParaProjeto) => {
         const cab = novoCabecalho(b, horas.get(b.id) || "")
-        return ctxMusicas ? musicasNaFamilia([cab], b.musicas, ctxMusicas).itens : [cab]
+        return ctxMusicas ? musicasNaFamilia([cab], b.musicas, ctxMusicas, { foraDaFamilia }).itens : [cab]
     }
 
     // Duplicata de um id do Sirvo (copiar e colar): a primeira é a oficial; as
@@ -295,8 +300,6 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         tirarSirvoDoData(item)
         mudouCampos = true
     }
-    // o mesmo para a marca de música do Sirvo (C2)
-    if (ctxMusicas && tirarMarcasRepetidas(itens, novoId)) mudouCampos = true
 
     // O bloco da lápide voltou (a régia restaurou, Sirvo 0082, com o mesmo id):
     // a lápide revive no lugar, com o conteúdo embaixo dela. Sem isto, entraria
@@ -323,6 +326,19 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         else segmentos[segmentos.length - 1].itens.push(item)
     }
     const familias = segmentos.filter((s) => s.papel === "familia")
+
+    // 1b. marca de música repetida (copiar e colar, C2): a oficial é a que está
+    // na família do bloco que lista a linha; senão a primeira. As outras viram
+    // item do operador, onde estão, e nunca são apagadas.
+    if (ctxMusicas) {
+        const blocoDoItem = new Map<ProjectShowRef, string>()
+        for (const s of familias) for (const item of s.itens) blocoDoItem.set(item, s.blocoId!)
+        const oficialDe = (marca: string, repetidos: ProjectShowRef[]) => {
+            const blocoId = linhas.get(marca)?.blocoId
+            return blocoId ? repetidos.find((item) => blocoDoItem.get(item) === blocoId) : undefined
+        }
+        if (tirarMarcasRepetidas(itens, novoId, oficialDe)) mudouCampos = true
+    }
 
     // 2. campos (valem até com a ordem pendente: não movem nada)
     for (const f of familias) {
@@ -352,15 +368,47 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
         mudouCampos = true
     }
 
-    // 3b. as músicas de cada bloco, só nas famílias vivas (lápide, cabeça e
-    // cauda nunca são tocadas: B3). Item em uso (ponteiro) não sai nem troca.
+    // 3a. item marcado FORA da família do bloco que lista a linha dele (o
+    // operador levou para a cabeça, a cauda, outro bloco): fica onde está e
+    // satisfaz a linha, que não entra de novo na família. Só o objeto ajusta no
+    // lugar (aviso ↔ show, nome do aviso). Linha que saiu do Sirvo: o item sai
+    // de onde estiver, salvo em uso. Debaixo de uma lápide nada sai (B3: a
+    // lápide guarda o conteúdo do bloco e revive com ele). Item do operador
+    // nunca é tocado.
     if (ctxMusicas) {
-        const emUso = (item: ProjectShowRef) => ativos.has(itens.indexOf(item))
+        for (const s of segmentos) {
+            const blocoDaFamilia = s.papel === "familia" ? s.blocoId : null
+            let mudou = false
+            const novos = s.itens.map((item): ProjectShowRef | null => {
+                const marca = marcaDe(item)
+                if (!marca || papelDoItem(item)) return item
+                const linha = linhas.get(marca)
+                if (linha && linha.blocoId === blocoDaFamilia) return item // na família certa: 3b cuida
+                if (!linha) {
+                    if (s.papel === "lapide" || emUso(item)) return item
+                    mudou = true
+                    return null // saiu do Sirvo
+                }
+                foraDaFamilia.add(marca)
+                const r = ajustarMarcado(item, desejadoDe(linha.musica, ctxMusicas), emUso)
+                if (r.mudouCampos) mudouCampos = true
+                if (r.item !== item) mudou = true
+                return r.item
+            })
+            if (mudou) s.itens = novos.filter((item): item is ProjectShowRef => item !== null)
+        }
+    }
+
+    // 3b. as músicas de cada bloco, só nas famílias vivas (lápide, cabeça e
+    // cauda só perdem o item marcado cuja linha saiu, em 3a). Item em uso
+    // (ponteiro) não sai nem troca.
+    if (ctxMusicas) {
+        const linhaViva = (rmId: string) => linhas.has(rmId)
         for (const f of segmentos) {
             if (f.papel !== "familia") continue
             const bloco = doRoteiro.get(f.blocoId!)
             if (!bloco) continue
-            const r = musicasNaFamilia(f.itens, bloco.musicas, ctxMusicas, emUso)
+            const r = musicasNaFamilia(f.itens, bloco.musicas, ctxMusicas, { emUso, linhaViva, foraDaFamilia })
             f.itens = r.itens
             if (r.mudouCampos) mudouCampos = true
         }
@@ -447,24 +495,39 @@ export function resumirPendencia(itens: ProjectShowRef[], blocos: BlocoParaProje
     return musicas.length ? { ...r, musicas } : r
 }
 
-/** os blocos cuja lista de músicas no projeto não é a do Sirvo (só famílias vivas) */
+/**
+ * Os blocos cuja lista de músicas no projeto não é a do Sirvo (só famílias
+ * vivas). Item marcado que o operador levou para fora da família (ou trouxe de
+ * outro bloco) fica onde está e não conta como diferença.
+ */
 function blocosComMusicaMudada(itens: ProjectShowRef[], blocos: BlocoParaProjeto[]): string[] {
     const porId = new Map((blocos || []).filter((b) => b?.id).map((b) => [b.id, b]))
-    const nomes: string[] = []
-    let atual: BlocoParaProjeto | undefined
-    let familia: ProjectShowRef[] = []
-    const fechar = () => {
-        if (atual && Array.isArray(atual.musicas) && musicasDiferem(familia, atual.musicas)) nomes.push(texto(atual.titulo))
-    }
+    const linhas = linhasDoRoteiro([...porId.values()])
+    const familias: { bloco: BlocoParaProjeto; itens: ProjectShowRef[] }[] = []
+    let atual: { bloco: BlocoParaProjeto; itens: ProjectShowRef[] } | null = null
     for (const item of itens || []) {
         const papel = papelDoItem(item)
         if (papel) {
-            fechar()
-            atual = papel === "cabecalho" ? porId.get(item.id.slice(PREFIXO_SIRVO.length)) : undefined
-            familia = []
-        } else familia.push(item)
+            const bloco = papel === "cabecalho" ? porId.get(item.id.slice(PREFIXO_SIRVO.length)) : undefined
+            atual = bloco ? { bloco, itens: [] } : null
+            if (atual) familias.push(atual)
+        } else if (atual) atual.itens.push(item)
     }
-    fechar()
+    // onde está cada marca: na família do bloco que lista a linha, ou fora dela
+    const naFamiliaCerta = new Set<string>()
+    for (const f of familias)
+        for (const item of f.itens) {
+            const marca = marcaDe(item)
+            if (marca && linhas.get(marca)?.blocoId === f.bloco.id) naFamiliaCerta.add(marca)
+        }
+    const marcasNoProjeto = new Set((itens || []).map(marcaDe).filter((m): m is string => !!m))
+    const foraDaFamilia = new Set([...marcasNoProjeto].filter((m) => !naFamiliaCerta.has(m)))
+    const nomes: string[] = []
+    for (const f of familias) {
+        if (!Array.isArray(f.bloco.musicas)) continue
+        const deOutroBloco = (rmId: string) => linhas.get(rmId)?.blocoId !== f.bloco.id
+        if (musicasDiferem(f.itens, f.bloco.musicas, { foraDaFamilia, deOutroBloco })) nomes.push(texto(f.bloco.titulo))
+    }
     return nomes
 }
 

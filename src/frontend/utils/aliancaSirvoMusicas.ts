@@ -10,6 +10,12 @@ import type { ProjectShowRef } from "../../types/Projects"
 // o que o operador pôs (e o que veio do Remote, que entra sem marca em "Fora do
 // roteiro") nunca é tocado.
 //
+// Onde o operador põe um item marcado, ele FICA (decisão de 10/nov): um item
+// marcado em qualquer lugar do projeto satisfaz a linha dele no Sirvo, não
+// volta para a família e não ganha cópia. A ordem do Sirvo só vale entre as
+// marcadas que estão DENTRO da família do bloco. Se a linha sair do Sirvo, o
+// item marcado sai de onde estiver, se não estiver em uso. Nada fica trancado.
+//
 // Cada música vira:
 //   - o show, `{id: showId, type: "show", data: {sirvoMusica}}`, se ele existe
 //     neste computador e não é rascunho;
@@ -41,7 +47,8 @@ export type ContextoMusicas = {
 export const idDoRascunho = (rmId: string) => `${PREFIXO_RASCUNHO}${String(rmId).replace(/[^A-Za-z0-9]/g, "")}`.slice(0, 80)
 export const idDoAviso = (rmId: string) => `${PREFIXO_AVISO_MUSICA}${rmId}`
 
-const marcaDe = (item: ProjectShowRef | null | undefined): string | null => {
+/** a linha do Sirvo que o item representa (`data.sirvoMusica`); null para item do operador */
+export const marcaDe = (item: ProjectShowRef | null | undefined): string | null => {
     const m = item?.data?.sirvoMusica
     return typeof m === "string" && m ? m : null
 }
@@ -92,51 +99,95 @@ export function musicasDoBloco(musicas: MusicaDoSirvo[] | null | undefined): Mus
         .sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0))
 }
 
+/** a marca sai e o item vira do operador (o aviso ganha id de seção comum) */
+export function tirarMarca(item: ProjectShowRef, novoId: () => string) {
+    const { sirvoMusica: _m, sirvoFalta: _f, ...resto } = item.data
+    item.data = resto
+    if (item.type === "section" && item.id.startsWith(PREFIXO_AVISO_MUSICA)) item.id = novoId()
+}
+
 /**
- * Marca duplicada por copiar e colar (C2): a primeira é a oficial; nas outras a
- * marca sai e elas viram item do operador (o aviso ganha id de seção comum).
+ * Marca duplicada por copiar e colar (C2): uma só é a oficial; nas outras a
+ * marca sai e elas viram item do operador, onde estão. `oficialDe` escolhe a
+ * oficial entre as repetidas (a reconciliação prefere a que está na família do
+ * bloco que lista a linha); sem ele, ou sem resposta, a primeira da lista.
  * Devolve se mexeu em algum objeto.
  */
-export function tirarMarcasRepetidas(itens: ProjectShowRef[], novoId: () => string): boolean {
-    const vistas = new Set<string>()
-    let mudou = false
+export function tirarMarcasRepetidas(itens: ProjectShowRef[], novoId: () => string, oficialDe: (marca: string, repetidos: ProjectShowRef[]) => ProjectShowRef | undefined = () => undefined): boolean {
+    const porMarca = new Map<string, ProjectShowRef[]>()
     for (const item of itens) {
         const marca = marcaDe(item)
         if (!marca) continue
-        if (!vistas.has(marca)) {
-            vistas.add(marca)
-            continue
+        porMarca.set(marca, [...(porMarca.get(marca) || []), item])
+    }
+    let mudou = false
+    for (const [marca, repetidos] of porMarca) {
+        if (repetidos.length < 2) continue
+        const oficial = oficialDe(marca, repetidos) || repetidos[0]
+        for (const item of repetidos) {
+            if (item === oficial) continue
+            tirarMarca(item, novoId)
+            mudou = true
         }
-        const { sirvoMusica: _m, sirvoFalta: _f, ...resto } = item.data
-        item.data = resto
-        if (item.type === "section" && item.id.startsWith(PREFIXO_AVISO_MUSICA)) item.id = novoId()
-        mudou = true
     }
     return mudou
 }
 
+/**
+ * O item marcado vira o que a linha pede, NO LUGAR: o nome do aviso ajusta no
+ * próprio objeto; tipo mudado (aviso ↔ show) troca o objeto, salvo em uso
+ * (ponteiro), que espera. Devolve o objeto que fica na posição.
+ */
+export function ajustarMarcado(item: ProjectShowRef, d: Desejado, emUso: (item: ProjectShowRef) => boolean): { item: ProjectShowRef; mudouCampos: boolean } {
+    if (bate(item, d)) {
+        if (d.tipo === "aviso" && item.name !== d.nome) {
+            item.name = d.nome
+            return { item, mudouCampos: true }
+        }
+        return { item, mudouCampos: false }
+    }
+    if (emUso(item)) return { item, mudouCampos: false }
+    return { item: itemDe(d), mudouCampos: false }
+}
+
 export type ResultadoFamilia = { itens: ProjectShowRef[]; mudouCampos: boolean }
+
+export type OpcoesFamilia = {
+    /** o item está em uso (ponteiro): não sai nem troca */
+    emUso?: (item: ProjectShowRef) => boolean
+    /** a linha ainda existe em ALGUM bloco do roteiro (padrão: só as deste bloco) */
+    linhaViva?: (rmId: string) => boolean
+    /** linhas deste bloco já satisfeitas por um item marcado FORA desta família: não entram aqui */
+    foraDaFamilia?: Set<string>
+}
 
 /**
  * Põe as músicas do bloco na família (cabeçalho + o que vem embaixo):
- * - Saiu: sai só item COM a marca; se estiver em uso (ponteiro), fica.
+ * - Saiu do Sirvo: sai só item COM a marca; se estiver em uso (ponteiro), fica.
+ *   Marcada de OUTRO bloco (o operador trouxe para cá) fica, como item dele.
  * - Tipo mudou (aviso ↔ show): troca o objeto no mesmo lugar (em uso, espera).
- * - Ordem: as marcadas trocam entre si nas posições que já ocupam.
+ * - Ordem: as marcadas deste bloco trocam entre si nas posições que já ocupam.
  * - Entrou: depois da última marcada; sem nenhuma, logo depois do cabeçalho.
+ *   Linha já satisfeita por um item marcado fora da família não entra.
  * - Item do operador nunca se move.
  * Devolve a MESMA lista quando nada muda de lugar.
  */
-export function musicasNaFamilia(itens: ProjectShowRef[], musicas: MusicaDoSirvo[] | null | undefined, ctx: ContextoMusicas, emUso: (item: ProjectShowRef) => boolean = () => false): ResultadoFamilia {
-    const desejados = musicasDoBloco(musicas).map((m) => desejadoDe(m, ctx))
+export function musicasNaFamilia(itens: ProjectShowRef[], musicas: MusicaDoSirvo[] | null | undefined, ctx: ContextoMusicas, opcoes: OpcoesFamilia = {}): ResultadoFamilia {
+    const emUso = opcoes.emUso || (() => false)
+    const fora = opcoes.foraDaFamilia || new Set<string>()
+    const desejados = musicasDoBloco(musicas)
+        .map((m) => desejadoDe(m, ctx))
+        .filter((d) => !fora.has(d.rmId))
     const querido = new Map(desejados.map((d) => [d.rmId, d]))
+    const linhaViva = opcoes.linhaViva || ((rmId: string) => querido.has(rmId))
     let mudouCampos = false
 
-    // o que fica: marcadas que o Sirvo ainda quer (ou em uso)
+    // o que fica: marcadas que o Sirvo ainda quer em algum bloco (ou em uso)
     const lista: ProjectShowRef[] = []
     const fica = new Set<ProjectShowRef>()
     for (const item of itens) {
         const marca = marcaDe(item)
-        if (marca && !querido.has(marca) && !emUso(item)) continue // saiu
+        if (marca && !linhaViva(marca) && !emUso(item)) continue // saiu do Sirvo
         lista.push(item)
         if (marca && querido.has(marca)) fica.add(item)
     }
@@ -149,15 +200,10 @@ export function musicasNaFamilia(itens: ProjectShowRef[], musicas: MusicaDoSirvo
     // o objeto certo para cada música (reaproveita o que bate; troca o que mudou de tipo)
     const objetos = desejados.map((d) => {
         const atual = porMarca.get(d.rmId)
-        if (atual && bate(atual, d)) {
-            if (d.tipo === "aviso" && atual.name !== d.nome) {
-                atual.name = d.nome
-                mudouCampos = true
-            }
-            return atual
-        }
-        if (atual && emUso(atual)) return atual // em uso: troca depois
-        return itemDe(d)
+        if (!atual) return itemDe(d)
+        const r = ajustarMarcado(atual, d, emUso)
+        if (r.mudouCampos) mudouCampos = true
+        return r.item
     })
 
     // ordem: os primeiros ocupam as posições que já eram de música; o resto entra depois da última
@@ -173,11 +219,27 @@ export function musicasNaFamilia(itens: ProjectShowRef[], musicas: MusicaDoSirvo
     return { itens: mesma ? itens : nova, mudouCampos }
 }
 
-/** a sequência de marcas da família difere da lista do Sirvo? (para a faixa dizer "músicas do X mudaram") */
-export function musicasDiferem(itens: ProjectShowRef[], musicas: MusicaDoSirvo[] | null | undefined): boolean {
-    const atuais = itens.map(marcaDe).filter((m): m is string => !!m)
-    const querem = musicasDoBloco(musicas).map((m) => m.id)
+/**
+ * A sequência de marcas da família difere da lista do Sirvo? (para a faixa
+ * dizer "músicas do X mudaram"). O que o operador levou para fora da família
+ * (`foraDaFamilia`) e o que ele trouxe de outro bloco (`deOutroBloco`) não
+ * contam: ficam onde estão.
+ */
+export function musicasDiferem(itens: ProjectShowRef[], musicas: MusicaDoSirvo[] | null | undefined, opcoes: { foraDaFamilia?: Set<string>; deOutroBloco?: (rmId: string) => boolean } = {}): boolean {
+    const fora = opcoes.foraDaFamilia || new Set<string>()
+    const deOutro = opcoes.deOutroBloco || (() => false)
+    const atuais = itens.map(marcaDe).filter((m): m is string => !!m && !deOutro(m))
+    const querem = musicasDoBloco(musicas)
+        .map((m) => m.id)
+        .filter((id) => !fora.has(id))
     return atuais.join("\n") !== querem.join("\n")
+}
+
+/** linha do Sirvo → bloco que a lista (e a própria linha), para a conta do projeto */
+export function linhasDoRoteiro(blocos: { id: string; musicas?: MusicaDoSirvo[] | null }[]): Map<string, { blocoId: string; musica: MusicaDoSirvo }> {
+    const linhas = new Map<string, { blocoId: string; musica: MusicaDoSirvo }>()
+    for (const b of blocos) for (const m of musicasDoBloco(b.musicas)) if (!linhas.has(m.id)) linhas.set(m.id, { blocoId: b.id, musica: m })
+    return linhas
 }
 
 // ---------------------------------------------------------------- música nova: o rascunho

@@ -120,6 +120,93 @@ describe("músicas do Sirvo no projeto", () => {
         expect(r.mudouCampos).toBe(true)
     })
 
+    describe("onde o operador põe um item marcado, ele fica", () => {
+        const umaMusica = [bloco("louvor", [mus("r1", "oceanos", 0)]), bloco("palavra")]
+        const clonar = (item: ProjectShowRef): ProjectShowRef => JSON.parse(JSON.stringify(item))
+
+        it("arrastou para fora da família (sem ponteiro): fica lá, sem cópia; a segunda passada não muda nada", () => {
+            const base = passar([], umaMusica).itens
+            base.push(base.splice(1, 1)[0]) // para a cauda
+            expect(desenho(base)).toEqual(["[louvor]", "[palavra]", "[fim]", "♪oceanos"])
+            const r = passar(base, umaMusica)
+            expect(r.itens).toBe(base)
+            expect(r.mudouEstrutura).toBe(false)
+            expect(r.mudouCampos).toBe(false)
+            expect(passar(r.itens, umaMusica).itens).toBe(base)
+        })
+
+        it("arrastou para outro bloco: fica lá, como item do operador, sem cópia", () => {
+            const base = passar([], umaMusica).itens
+            base.splice(2, 0, base.splice(1, 1)[0]) // debaixo de [palavra]
+            expect(desenho(base)).toEqual(["[louvor]", "[palavra]", "♪oceanos", "[fim]"])
+            const r = passar(base, umaMusica)
+            expect(r.itens).toBe(base)
+            // a ordem do Louvor não se intromete: o item não volta nem com mais músicas no bloco
+            const mais = [bloco("louvor", [mus("r2", "terra", 0), mus("r1", "oceanos", 1)]), bloco("palavra")]
+            expect(desenho(passar(base, mais).itens)).toEqual(["[louvor]", "♪terra", "[palavra]", "♪oceanos", "[fim]"])
+        })
+
+        it("arrastou para fora com a música no ar: fica lá, sem cópia", () => {
+            const base = passar([], umaMusica).itens
+            base.push(base.splice(1, 1)[0])
+            const r = passar(base, umaMusica, { ativos: [3], protegido: true })
+            expect(r.itens).toBe(base)
+            expect(r.pendente).toBe(false)
+            expect(passar(r.itens, umaMusica, { ativos: [3], protegido: true }).itens).toBe(base)
+        })
+
+        it("colou uma cópia ANTES da original: a original (na família) continua oficial, a cópia vira do operador, sem terceiro item", () => {
+            const base = passar([], umaMusica).itens
+            const original = base[1]
+            base.unshift(clonar(original))
+            let n = 0
+            const r = reconciliar(base, umaMusica, { musicas: ctx(), novoId: () => `novo${++n}` })
+            expect(desenho(r.itens)).toEqual(["oceanos", "[louvor]", "♪oceanos", "[palavra]", "[fim]"])
+            expect(r.itens[2]).toBe(original)
+            expect(r.itens[0].data?.sirvoMusica).toBeUndefined()
+            expect(r.mudouCampos).toBe(true)
+            // a segunda passada não muda nada
+            const deNovo = reconciliar(r.itens, umaMusica, { musicas: ctx(), novoId: () => `novo${++n}` })
+            expect(deNovo.itens).toBe(r.itens)
+            expect(deNovo.mudouCampos).toBe(false)
+            // o aviso colado ganha id de seção comum, onde está
+            const comAviso = [bloco("louvor", [mus("r2", null, 0, "Nova")])]
+            const b = passar([], comAviso).itens
+            b.unshift(clonar(b[1]))
+            const ra = reconciliar(b, comAviso, { musicas: ctx(), novoId: () => `novo${++n}` })
+            expect(desenho(ra.itens)).toEqual(["novo1", "[louvor]", "!r2", "[fim]"])
+        })
+
+        it("a linha saiu do Sirvo: o item marcado sai de onde estiver, salvo em uso", () => {
+            const base = passar([], umaMusica).itens
+            base.push(base.splice(1, 1)[0])
+            const semMusica = [bloco("louvor"), bloco("palavra")]
+            expect(desenho(passar(base, semMusica).itens)).toEqual(["[louvor]", "[palavra]", "[fim]"])
+            expect(desenho(passar(base, semMusica, { ativos: [3] }).itens)).toEqual(["[louvor]", "[palavra]", "[fim]", "♪oceanos"])
+        })
+
+        it("fora da família o objeto ainda ajusta no lugar: o aviso vira a música quando ela aparece", () => {
+            const blocos = [bloco("louvor", [mus("r2", null, 0, "Sangue")])]
+            const base = passar([], blocos).itens
+            base.push(base.splice(1, 1)[0])
+            expect(desenho(base)).toEqual(["[louvor]", "[fim]", "!r2"])
+            const r = reconciliar(base, blocos, { musicas: ctx({ r2: "sangue" }) })
+            expect(desenho(r.itens)).toEqual(["[louvor]", "[fim]", "♪sangue"])
+        })
+
+        it("a ordem do Sirvo só vale entre as marcadas que estão dentro da família", () => {
+            const blocos = [bloco("louvor", [mus("r1", "oceanos", 0), mus("r2", "terra", 1), mus("r3", "sangue", 2)])]
+            const base = passar([], blocos).itens
+            base.push(base.splice(1, 1)[0]) // oceanos para a cauda
+            expect(desenho(base)).toEqual(["[louvor]", "♪terra", "♪sangue", "[fim]", "♪oceanos"])
+            const invertido = [bloco("louvor", [mus("r3", "sangue", 0), mus("r2", "terra", 1), mus("r1", "oceanos", 2)])]
+            expect(desenho(passar(base, invertido).itens)).toEqual(["[louvor]", "♪sangue", "♪terra", "[fim]", "♪oceanos"])
+            // e a faixa não acusa o que o operador levou para fora
+            expect(resumirPendencia(base, blocos).musicas).toBeUndefined()
+            expect(resumirPendencia(base, invertido).musicas).toEqual(["LOUVOR"])
+        })
+    })
+
     it("lápide com músicas sobrevive (nada sai) e revive com elas quando o bloco volta", () => {
         const blocos = [bloco("louvor", [mus("r1", "oceanos", 0), mus("r2", "terra", 1)]), bloco("palavra"), bloco("avisos")]
         const a = passar([], blocos)
