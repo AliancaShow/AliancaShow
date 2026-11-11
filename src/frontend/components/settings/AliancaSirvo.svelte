@@ -3,6 +3,8 @@
     import { Main } from "../../../types/IPC/Main"
     import { requestMain } from "../../IPC/main"
     import { desconectarSirvo, escolherCultoSirvo, salvarChaveSirvo, sirvo } from "../../utils/aliancaSirvo"
+    import { sirvoChatOperador } from "../../utils/aliancaSirvoChat"
+    import { LIMITE_OPERADOR } from "../../utils/aliancaSirvoChatSaida"
     import Icon from "../helpers/Icon.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import MaterialTextInput from "../inputs/MaterialTextInput.svelte"
@@ -15,6 +17,9 @@
     let ambiente: "producao" | "staging" = "producao"
     onMount(async () => (ambiente = (await requestMain(Main.SIRVO_AMBIENTE)) || "producao"))
     let salvando = false
+    // "quem opera hoje" (opcional): aparece como "Sala de vídeo · <nome>" nas respostas do chat.
+    // Valor inicial lido uma vez: o campo não é reescrito pelo store enquanto se digita.
+    let operador = $sirvoChatOperador
     let erro = ""
 
     async function conectar() {
@@ -41,15 +46,17 @@
     <div class="topo">
         <span class="ponto" class:ligado={$sirvo.status === "conectado"} class:caido={$sirvo.status === "caido"}></span>
         <div class="texto">
-            <span class="titulo">Sirvo · roteiro do culto{#if ambiente === "staging"} <span class="staging">STAGING</span>{/if}</span>
+            <span class="titulo"
+                >Sirvo · roteiro do culto{#if ambiente === "staging"}
+                    <span class="staging">STAGING</span>{/if}</span
+            >
             <span class="detalhe">{rotuloStatus}</span>
         </div>
     </div>
 
     {#if ligado}
         <p class="explicacao">
-            O timer <b>sirvo_live</b> e as variáveis <b>sirvo_bloco</b>, <b>sirvo_proximo</b>, <b>sirvo_mensagem</b> e <b>sirvo_fim</b> seguem o roteiro do culto
-            no Sirvo. Coloque no layout de palco os que quiser.
+            O timer <b>sirvo_live</b> e as variáveis <b>sirvo_bloco</b>, <b>sirvo_proximo</b>, <b>sirvo_mensagem</b> e <b>sirvo_fim</b> seguem o roteiro do culto no Sirvo. Coloque no layout de palco os que quiser.
         </p>
 
         {#if $sirvo.cultos.length}
@@ -63,6 +70,18 @@
                 {/each}
             </div>
         {/if}
+
+        <!-- on:input: salva a cada letra; o limite é 40 letras -->
+        <MaterialTextInput
+            label="Quem opera hoje (opcional)"
+            value={operador}
+            placeholder="Nome que aparece nas respostas do chat"
+            on:input={(e) => {
+                operador = String(e.detail || "").slice(0, LIMITE_OPERADOR)
+                sirvoChatOperador.set(operador)
+            }}
+        />
+        <p class="explicacao">As respostas do chat saem como <b>Sala de vídeo · {operador.trim() || "…"}</b>. Só para as pessoas saberem com quem falam; não dá permissão nenhuma.</p>
 
         <MaterialButton variant="outlined" icon="logout" on:click={desconectarSirvo} white>Desconectar</MaterialButton>
     {:else}

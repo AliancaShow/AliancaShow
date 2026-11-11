@@ -32,13 +32,20 @@ const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar"
 // no renderer (aliancaSirvoChat.ts). Fora da trava de escrita: ler o chat
 // nunca pode atrasar "avançar bloco".
 const CHAT = ["show_chat"]
-const FUNCOES = new Set([...LEITURA, ...ESCRITA, ...CHAT])
+// Responder no chat (F4 v1.1, migration 0089 do Sirvo): escrita com trava PRÓPRIA
+// de 1 s. A trava de 500 ms do roteiro não é tocada: mandar "ok" e logo em
+// seguida tocar "Encerrar bloco" faz os dois funcionarem.
+const CHAT_ESCRITA = ["show_chat_enviar"]
+const FUNCOES = new Set([...LEITURA, ...ESCRITA, ...CHAT, ...CHAT_ESCRITA])
 const DE_ESCRITA = new Set(ESCRITA)
 const DO_CHAT = new Set(CHAT)
+const DE_CHAT_ESCRITA = new Set(CHAT_ESCRITA)
 // No máximo uma escrita a cada 500 ms, venha de onde vier no renderer: protege
 // contra duplo clique e contra um renderer que enlouqueça (o Sirvo também limita).
 const ESCRITA_MIN_MS = 500
 let ultimaEscrita = 0
+const CHAT_ESCRITA_MIN_MS = 1_000
+let ultimaEscritaChat = 0
 const TEMPO_LIMITE_MS = 8_000
 // cofre separado por ambiente: a chave do staging nunca é usada contra a produção
 const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "sirvo")
@@ -94,6 +101,13 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         ultimaEscrita = agora
     }
 
+    const escritaChat = DE_CHAT_ESCRITA.has(funcao)
+    if (escritaChat) {
+        const agora = Date.now()
+        if (agora - ultimaEscritaChat < CHAT_ESCRITA_MIN_MS) return { ok: false, codigo: "erro", mensagem: "Calma: um pedido de cada vez." }
+        ultimaEscritaChat = agora
+    }
+
     const controle = new AbortController()
     const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE_MS)
     try {
@@ -115,11 +129,11 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         if (codigo === "P0002") return { ok: false, codigo: "culto_inexistente", mensagem: "Culto não encontrado no Sirvo." }
         // Numa escrita (e no chat), a recusa do Sirvo é a frase que o operador
         // precisa ler ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
-        if ((escrita || DO_CHAT.has(funcao)) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200) }
+        if ((escrita || escritaChat || DO_CHAT.has(funcao)) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200) }
         return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.` }
     } catch {
         // Escrita que estourou o tempo pode ter chegado: quem diz é o próximo rev.
-        if (escrita) return { ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" }
+        if (escrita || escritaChat) return { ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" }
         return { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
     } finally {
         clearTimeout(limite)

@@ -15,7 +15,8 @@
 import { get, writable } from "svelte/store"
 import { Main } from "../../types/IPC/Main"
 import { requestMain } from "../IPC/main"
-import { aoErro, aoRetrato, aoRev, estadoInicial, marcarLidas, type EstadoChat } from "./aliancaSirvoChatLogica"
+import { aoErro, aoRetrato, aoRev, estadoInicial, marcarLidas, type EstadoChat, type MensagemChat } from "./aliancaSirvoChatLogica"
+import { adicionar, aoResposta, aoRetratoSaida, aoTempo, citacaoDe, descartar, ESPACO_ENVIOS_MS, normalizarOperador, novoItem, precisaDeRelogio, proximoParaEnviar, tentarDeNovo, validarEnvio, type CaixaDeSaida, type Citacao, type RespostaEnvio } from "./aliancaSirvoChatSaida"
 
 type Resposta = { ok: true; dados: any; codigo?: undefined; mensagem?: undefined } | { ok: false; codigo: string; mensagem: string; dados?: undefined }
 
@@ -39,6 +40,27 @@ export const sirvoChatSom = writable(lerSom())
 sirvoChatSom.subscribe((on) => {
     try {
         localStorage.setItem(CHAVE_SOM, on ? "1" : "0")
+    } catch {
+        // sem armazenamento: vale só nesta sessão
+    }
+})
+
+// ---------------------------------------------------------------- operador (v1.1, D2)
+// "Quem opera hoje": opcional, só exibição ("Sala de vídeo · Pedro"), guardado
+// neste computador. Vai como p_operador; o Sirvo limita a 40 letras.
+
+const CHAVE_OPERADOR = "aliancashow:sirvo-chat-operador"
+function lerOperador(): string {
+    try {
+        return (localStorage.getItem(CHAVE_OPERADOR) || "").slice(0, 80)
+    } catch {
+        return ""
+    }
+}
+export const sirvoChatOperador = writable(lerOperador())
+sirvoChatOperador.subscribe((nome) => {
+    try {
+        localStorage.setItem(CHAVE_OPERADOR, nome)
     } catch {
         // sem armazenamento: vale só nesta sessão
     }
@@ -102,6 +124,8 @@ async function buscarRetrato() {
         const r = ((await requestMain(Main.SIRVO_CHAMAR, { funcao: "show_chat", args: { p_event: cultoId } })) as Resposta | undefined) || { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
         if (g !== geracao) return
         if (r.ok) {
+            // as respostas que o retrato já trouxe deixam de ser bolha otimista
+            if (get(sirvoChatSaida).length) saidaSet(aoRetratoSaida(get(sirvoChatSaida), Array.isArray(r.dados?.mensagens) ? (r.dados.mensagens as MensagemChat[]) : []))
             let novas = 0
             atualizar((e) => {
                 const x = aoRetrato(e, cultoId, r.dados)
@@ -131,6 +155,98 @@ export function marcarChatLido() {
 /** Desconectou, chave recusada: o chat sai junto com o resto do Sirvo. */
 export function zerarChat() {
     geracao++
+    saidaSet([])
     assinaturaDoRev = null
     sirvoChat.set(estadoInicial())
+}
+
+// ---------------------------------------------------------------- responder (F4 v1.1)
+// A caixa de saída vive aqui (lógica pura em aliancaSirvoChatSaida.ts). Um
+// envio por vez, espaçados (o main limita a um por segundo); o cliente_id nasce
+// UMA vez por resposta e é reusado em toda nova tentativa — o Sirvo reconhece
+// e não duplica. Sem internet nada fica escondido numa fila: a bolha mostra o
+// estado e o operador decide "tentar de novo".
+
+export const sirvoChatSaida = writable<CaixaDeSaida>([])
+function saidaSet(c: CaixaDeSaida) {
+    if (c !== get(sirvoChatSaida)) sirvoChatSaida.set(c)
+    ajustarRelogio()
+}
+
+let relogio: ReturnType<typeof setInterval> | null = null
+function ajustarRelogio() {
+    const precisa = precisaDeRelogio(get(sirvoChatSaida))
+    if (precisa && !relogio) relogio = setInterval(() => saidaSet(aoTempo(get(sirvoChatSaida), Date.now())), 2_000)
+    else if (!precisa && relogio) {
+        clearInterval(relogio)
+        relogio = null
+    }
+}
+
+function novoClienteId(): string {
+    try {
+        return crypto.randomUUID()
+    } catch {
+        // contexto sem crypto.randomUUID: v4 simples (o Sirvo só exige um uuid)
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0
+            return (c === "x" ? r : (r & 3) | 8).toString(16)
+        })
+    }
+}
+
+let enviandoAgora: string | null = null
+let ultimoEnvio = 0
+let agendado: ReturnType<typeof setTimeout> | null = null
+
+function andarFila() {
+    if (agendado) return
+    const prox = proximoParaEnviar(get(sirvoChatSaida), enviandoAgora)
+    if (!prox) return
+    const espera = Math.max(0, ultimoEnvio + ESPACO_ENVIOS_MS - Date.now())
+    agendado = setTimeout(() => {
+        agendado = null
+        void enviarUm()
+    }, espera)
+}
+
+async function enviarUm() {
+    const item = proximoParaEnviar(get(sirvoChatSaida), enviandoAgora)
+    if (!item) return
+    enviandoAgora = item.clienteId
+    ultimoEnvio = Date.now()
+    let r: RespostaEnvio
+    try {
+        const args = { p_event: item.cultoId, p_texto: item.texto, p_cliente_id: item.clienteId, p_reply_to: item.citacao?.id || null, p_operador: item.operador }
+        r = ((await requestMain(Main.SIRVO_CHAMAR, { funcao: "show_chat_enviar", args })) as Resposta | undefined) || { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
+    } catch (erro) {
+        console.error("Sirvo: falha ao enviar no chat", erro)
+        r = { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
+    }
+    enviandoAgora = null
+    saidaSet(aoResposta(get(sirvoChatSaida), item.clienteId, r, Date.now()))
+    // o retrato novo costuma chegar no próximo show_rev (até 2 s); a fila segue
+    andarFila()
+}
+
+/** O operador mandou a resposta. Devolve false (e não faz nada) se o texto não vale ou o chat não responde. */
+export function enviarChat(texto: string, citada: MensagemChat | null): boolean {
+    const e = get(sirvoChat)
+    if (!e.cultoId || !e.ligado || e.congelado || e.motivo || !e.responde) return false
+    const v = validarEnvio(texto)
+    if (!v.ok) return false
+    const cit: Citacao | null = citada ? citacaoDe(citada) : null
+    saidaSet(adicionar(get(sirvoChatSaida), novoItem({ clienteId: novoClienteId(), cultoId: e.cultoId, texto: v.texto, citacao: cit, operador: normalizarOperador(get(sirvoChatOperador)), agora: Date.now() })))
+    andarFila()
+    return true
+}
+
+/** "Tentar de novo": o MESMO cliente_id. */
+export function tentarChatDeNovo(clienteId: string) {
+    saidaSet(tentarDeNovo(get(sirvoChatSaida), clienteId, Date.now()))
+    andarFila()
+}
+
+export function descartarChat(clienteId: string) {
+    saidaSet(descartar(get(sirvoChatSaida), clienteId))
 }
