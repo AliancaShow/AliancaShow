@@ -92,7 +92,9 @@ export function hashDoCatalogo(itens: MusicaParaSirvo[]): string {
     h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
     h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
     const n = 4294967296 * (2097151 & h2) + (h1 >>> 0)
-    return `c53_${itens.length}_${n.toString(16)}`
+    // o prefixo é a VERSÃO DO FORMATO: mudou o que vai em cada item (c54 = com a letra),
+    // a assinatura muda e a próxima conversa manda a lista inteira de novo
+    return `c54_${itens.length}_${n.toString(16)}`
 }
 
 /**
