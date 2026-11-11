@@ -180,6 +180,13 @@ export function limparPeloRoteiro(lista: Dispensa[], eventId: string, linhasViva
             nova.push(d)
             continue
         }
+        // na fila e a linha já saiu: o pedido chegou (a resposta ainda vem) ou outro tirou —
+        // de todo jeito conta como enviada, para o Ctrl+Z tardio ainda achar o registro
+        if (d.envio === "fila") {
+            nova.push({ ...d, envio: "enviada", falhou: false, sumiuEm: agora })
+            mudou = true
+            continue
+        }
         if (NAO_ENVIADA.has(d.envio)) {
             mudou = true
             continue

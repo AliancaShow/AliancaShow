@@ -132,8 +132,15 @@ describe("o roteiro novo chegou", () => {
     })
 
     it("a linha saiu do Sirvo: o que não foi enviado cai (nada a mandar)", () => {
-        const lista = [disp("x1", "aguardando"), disp("x2", "confirmar"), disp("x3", "fila"), disp("x4", "local"), disp("r1", "local")]
+        const lista = [disp("x1", "aguardando"), disp("x2", "confirmar"), disp("x4", "local"), disp("r1", "local")]
         expect(envios(limparPeloRoteiro(lista, EV, vivas, T0))).toEqual({ r1: "local" })
+    })
+
+    it("na fila e a linha saiu (o roteiro novo chegou antes da resposta): vira enviada, com o relógio do Ctrl+Z tardio", () => {
+        const r = limparPeloRoteiro([disp("x3", "fila", { falhou: true })], EV, vivas, T0)
+        expect(r).toEqual([disp("x3", "enviada", { falhou: false, sumiuEm: T0 })])
+        // a resposta que chega depois não mexe mais
+        expect(aplicarRespostaTirar(r, ["x3"], { tiradas: ["x3"] })).toBe(r)
     })
 
     it("enviada: ganha o relógio quando a linha some, e só cai depois da guarda (o Ctrl+Z tardio)", () => {
