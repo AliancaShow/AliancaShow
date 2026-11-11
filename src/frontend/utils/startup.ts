@@ -18,6 +18,7 @@ import { destroy, receive, send } from "./request"
 import { save, unsavedUpdater } from "./save"
 import { entrarSalvo } from "./aliancaRemote"
 import { iniciarSirvo } from "./aliancaSirvo"
+import { iniciarCatalogoSirvo } from "./aliancaSirvoCatalogo"
 import { iniciarMontagemSirvo } from "./aliancaSirvoMontar"
 
 let initialized = false
@@ -82,6 +83,8 @@ async function startupMain() {
 
     // liga a ponte com o Sirvo (roteiro do culto), se já houver chave guardada
     iniciarSirvo()
+    // e manda a biblioteca de músicas, se a chave for a que publica (F3)
+    iniciarCatalogoSirvo()
     // e monta os blocos do roteiro no projeto do culto (F0b)
     iniciarMontagemSirvo()
 

@@ -111,6 +111,7 @@ import {
 } from "../stores"
 import type { SaveActions, SaveData, SaveList, SaveListSettings, SaveListSyncedSettings } from "./../../types/Save"
 import { audioStreams, companion } from "./../stores"
+import { rastreioDeSalvos } from "./aliancaShowsSalvos"
 import { socketDisconnect, syncWithCloud } from "./cloudSync"
 import { newToast, setStatus, startAutosave } from "./common"
 import { syncDrive } from "./drive"
@@ -235,6 +236,9 @@ export function save(closeWhenFinished = false, customTriggers: SaveActions = {}
         customTriggers
     }
 
+    // catálogo do Sirvo: guarda o que está indo para o disco (vira "salvo" quando o main confirmar)
+    if (!customTriggers.backup) rastreioDeSalvos.salvando(get(showsCache))
+
     const saveData = clone(allSavedData)
 
     deletedShows.set([])
@@ -284,6 +288,7 @@ export function getSyncedSettings(): { [key in SaveListSyncedSettings]: any } {
 
 export async function saveComplete({ closeWhenFinished, customTriggers }: { closeWhenFinished: boolean; customTriggers?: SaveActions }) {
     const alreadySaved = get(saved)
+    if (!customTriggers?.backup) rastreioDeSalvos.salvo()
     if (!closeWhenFinished) {
         if ((!customTriggers?.autosave || !alreadySaved) && !customTriggers?.backup) setStatus("saved", 1)
 

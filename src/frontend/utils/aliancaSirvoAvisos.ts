@@ -17,7 +17,8 @@ export type BlocoParaAviso = { id: string; titulo: string; concluido_em: string 
 export type LinhaDeAviso = { chave: string; texto: string }
 
 const DO_CULTO = new Set(["encerrar", "reabrir", "reiniciar"])
-const DO_BLOCO = new Set(["duracao", "mover", "criar", "apagar"])
+// "musica_tirada" (F3): um Show tirou do projeto uma música que o Sirvo pôs — vale como mudança das músicas do bloco
+const DO_BLOCO = new Set(["duracao", "mover", "criar", "apagar", "musicas", "musica_tirada"])
 
 /**
  * Encerrar/reabrir/reiniciar avisam sempre (já derrubaram culto, 09/ago).
@@ -60,6 +61,10 @@ function textoDe(m: Mudanca, antes: unknown, depois: unknown): string {
             return `${quem} pôs ${aspas(m.bloco_titulo)} no roteiro`
         case "apagar":
             return `${quem} tirou ${aspas(m.bloco_titulo)} do roteiro`
+        case "musicas":
+            return textoMusicas(quem, m.bloco_titulo || "um bloco", antes, depois)
+        case "musica_tirada":
+            return `${quem} tirou ${aspas(nomeDaMusica(antes, depois))} de ${aspas(m.bloco_titulo)}`
         case "encerrar":
             return `${quem} encerrou o culto`
         case "reabrir":
@@ -69,6 +74,34 @@ function textoDe(m: Mudanca, antes: unknown, depois: unknown): string {
         default:
             return `${quem} mudou o roteiro`
     }
+}
+
+/** F3 (migration 0086): `antes`/`depois` são as listas de nomes. Mesmo texto de servir: src/lib/musicas.ts. */
+function textoMusicas(quem: string, bloco: string, antes: unknown, depois: unknown): string {
+    const a = Array.isArray(antes) ? antes.filter((x): x is string => typeof x === "string") : []
+    const d = Array.isArray(depois) ? depois.filter((x): x is string => typeof x === "string") : []
+    const entrou = d.filter((x) => !a.includes(x))
+    const saiu = a.filter((x) => !d.includes(x))
+    const partes: string[] = []
+    if (entrou.length) partes.push(`entrou ${entrou.join(", ")}`)
+    if (saiu.length) partes.push(`saiu ${saiu.join(", ")}`)
+    if (!partes.length) partes.push(a.join() === d.join() ? "letra mudou" : "a ordem mudou")
+    return `${quem} mudou as músicas de “${bloco}”: ${partes.join(" · ")}`
+}
+
+/**
+ * F3 ("musica_tirada"): o nome da música, onde o Sirvo o puser — texto, ou
+ * objeto com `nome`, em `depois` ou em `antes`. Tolerante: a forma é do Sirvo.
+ */
+function nomeDaMusica(antes: unknown, depois: unknown): string | null {
+    for (const x of [depois, antes]) {
+        if (typeof x === "string" && x.trim()) return x.trim()
+        if (x && typeof x === "object") {
+            const nome = (x as { nome?: unknown; name?: unknown }).nome ?? (x as { name?: unknown }).name
+            if (typeof nome === "string" && nome.trim()) return nome.trim()
+        }
+    }
+    return null
 }
 
 /** Quantos blocos a linha "mudou a ordem" lista antes de cortar com "…". */
@@ -84,7 +117,8 @@ const ORDEM_MAX = 8
 export function juntarAvisos(ms: Mudanca[], blocos: BlocoParaAviso[] = []): LinhaDeAviso[] {
     const grupos = new Map<string, { m: Mudanca; antes: unknown; depois: unknown }>()
     for (const m of ms) {
-        const chave = `${m.autor || ""}|${m.tipo}|${m.bloco_id ?? m.rev}`
+        // duas músicas tiradas do mesmo bloco são duas notícias, não uma "antes → depois"
+        const chave = `${m.autor || ""}|${m.tipo}|${m.tipo === "musica_tirada" ? m.rev : (m.bloco_id ?? m.rev)}`
         const g = grupos.get(chave)
         if (g) {
             g.m = m

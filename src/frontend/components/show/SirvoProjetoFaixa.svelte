@@ -13,6 +13,13 @@
     // - Projeto não ligado: "Montar os blocos aqui?", "Montar de novo?", "ligado
     //   a outro culto" ou "mais de um culto neste dia".
     // - Desligar pede confirmação na própria linha.
+    // - F3 "é esta?": música nova do Sirvo com o mesmo nome de uma da
+    //   biblioteca. Uma linha a mais, só fora do momento protegido (a lista não
+    //   desce no meio do culto).
+    // - F3 "você tirou": o operador apagou uma música que o Sirvo pôs. Uma
+    //   linha a mais, sempre (é resposta ao gesto dele, e o Desfazer precisa
+    //   estar à mão): "Desfazer" na carência; a pergunta do lote; "ainda não
+    //   avisei" / "o Sirvo ainda lista". Some sozinha quando confirmado.
     // - Não pega foco: o operador passa slide pelo teclado.
     // Texto do Sirvo só por interpolação {…}, nunca {@html}.
     import { onDestroy } from "svelte"
@@ -21,7 +28,9 @@
     import { pedirAoSirvo, sirvo, sirvoRoteiro } from "../../utils/aliancaSirvo"
     import { sugerirAvanco, type Sugestao } from "../../utils/aliancaSirvoSugestao"
     import { dicaSegura } from "../../utils/aliancaDica"
-    import { aplicarOrdemSirvo, desligarDoSirvo, dispensarFaixaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
+    import { aplicarOrdemSirvo, desligarDoSirvo, dispensarEEstaSirvo, dispensarFaixaSirvo, ligarMusicaSirvo, montarSirvoAqui, sirvoMontagem } from "../../utils/aliancaSirvoMontar"
+    import { desfazerDispensasSirvo, responderLoteSirvo, sirvoDispensas } from "../../utils/aliancaSirvoDispensar"
+    import { textoDispensas, type ResumoDispensas } from "../../utils/aliancaSirvoDispensas"
     import SirvoConduzir, { marcarEncerrado } from "./SirvoConduzir.svelte"
 
     $: projetoId = $activeProject
@@ -54,7 +63,34 @@
         return { titulo: `O Sirvo tirou ${plural(e.sumiram, "bloco", "blocos")} de uma vez`, detalhe: e.resumo || "Os que têm conteúdo ficam no lugar.", aplicar: true, dicaAplicar: dicaNoAr }
     }
     $: aplicarBloqueado = !estado || !estado.pendente
+    // F3: "é esta?" só fora do momento protegido
+    $: eEsta = desteCulto && !confirmando && estado?.eEsta && !estado.protegido ? estado.eEsta : null
     $: pendente = !!(desteCulto && estado?.pendente)
+
+    // F3: "você tirou" — a música que o Sirvo pôs e o operador apagou (aliancaSirvoDispensar.ts)
+    $: tirada = desteCulto && !confirmando && estado && $sirvoDispensas.eventId === estado.eventId && $sirvoDispensas.resumo.tipo !== "nada" ? $sirvoDispensas.resumo : null
+    function dicaTirada(t: ResumoDispensas, conduz: boolean): string {
+        switch (t.tipo) {
+            case "aguardando":
+                return conduz ? "Não volta sozinha. Daqui a alguns segundos o Sirvo tira do roteiro também. Desfazer põe de volta." : "Não volta sozinha. Esta chave não conduz: no Sirvo ela continua. Desfazer põe de volta."
+            case "confirmar":
+                return "Tirar do Sirvo também: saem do roteiro no Sirvo. Manter só aqui: continuam no Sirvo, e não voltam a este projeto."
+            case "fila":
+                return "Sem Sirvo agora: aviso assim que a conexão voltar. Desfazer põe de volta."
+            case "local":
+                return "Fica fora só neste projeto; no Sirvo ela continua. Desfazer põe de volta."
+            case "devolver":
+                return "Você pôs de volta uma música que já tinha saído do Sirvo. Peço a linha de volta assim que a conexão voltar."
+            default:
+                return ""
+        }
+    }
+    function responderTirada(resposta: "tirar" | "manter") {
+        if (tirada?.tipo === "confirmar") responderLoteSirvo(tirada.lote, resposta)
+    }
+    function desfazerTirada() {
+        if (tirada) desfazerDispensasSirvo(tirada.rmIds)
+    }
 
     // F2: avanço sugerido (SHOW-DESIGN.md §13.4). Atalho, não caminho principal:
     // só aparece com o MESMO bloco na saída por 5 s, e o botão nasce inerte 3 s.
@@ -179,6 +215,29 @@
                     <SirvoConduzir />
                 {/if}
             {/if}
+        {/if}
+
+        {#if eEsta}
+            <div class="linha aviso">
+                <span class="ponto" />
+                <span class="texto" data-title={dicaSegura(`O Sirvo pediu a música nova "${eEsta.nome}". "${eEsta.showNome}" da biblioteca é esta? Se for, ela entra no lugar do aviso, e o Sirvo passa a usá-la.`)}>Música nova do Sirvo: é “{eEsta.showNome}”?</span>
+                <button tabindex="-1" on:click={() => eEsta && ligarMusicaSirvo(eEsta.rmId, eEsta.showId)}>É esta</button>
+                <button class="fraco" tabindex="-1" on:click={() => eEsta && dispensarEEstaSirvo(eEsta.rmId)}>Não é</button>
+            </div>
+        {/if}
+
+        {#if tirada}
+            <!-- F3: o operador tirou uma música que o Sirvo pôs; o Show respeita e avisa o Sirvo -->
+            <div class="linha aviso">
+                <span class="ponto" />
+                <span class="texto" data-title={dicaSegura(dicaTirada(tirada, $sirvo.podeConduzir))}>{textoDispensas(tirada)}</span>
+                {#if tirada.tipo === "confirmar"}
+                    <button tabindex="-1" on:click={() => responderTirada("tirar")}>Tirar do Sirvo também</button>
+                    <button class="fraco" tabindex="-1" on:click={() => responderTirada("manter")}>Manter só aqui</button>
+                {:else if tirada.tipo !== "devolver"}
+                    <button class="fraco" tabindex="-1" on:click={desfazerTirada}>Desfazer</button>
+                {/if}
+            </div>
         {/if}
 
         {#if erro}
