@@ -1,6 +1,6 @@
 {
     "name": "aliancashow",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "private": true,
     "main": "build/electron/index.js",
     "description": "Software de envio de vídeos e imagens para projetores e painéis de LED.",
