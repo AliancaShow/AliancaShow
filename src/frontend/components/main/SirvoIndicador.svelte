@@ -15,6 +15,7 @@
     import { activePage, settingsTab } from "../../stores"
     import { dicaSegura } from "../../utils/aliancaDica"
     import { intervaloRev, sirvo } from "../../utils/aliancaSirvo"
+    import { sirvoMaterialEstado } from "../../utils/aliancaSirvoMaterial"
 
     let agoraMs = Date.now()
     const relogio = setInterval(() => (agoraMs = Date.now()), 2_000)
@@ -45,9 +46,20 @@
     type Visual = { tom: "verde" | "cinza" | "laranja" | "vermelho"; texto: string; dica: string; clicavel: boolean }
 
     $: culto = $sirvo.cultos.find((c) => c.event_id === $sirvo.cultoId) || null
-    $: visual = calcular($sirvo, culto, agoraMs)
+    $: visual = calcular($sirvo, culto, agoraMs, $sirvoMaterialEstado)
 
-    function calcular(e: typeof $sirvo, c: typeof culto, t: number): Visual | null {
+    // F5: o material da semana que o Show baixa do Sirvo ("baixando 2 de 5", "1 falhou")
+    function materialTexto(m: typeof $sirvoMaterialEstado): { texto: string; dica: string; falhou: boolean } {
+        if (m.falhas.length) {
+            const n = m.falhas.length
+            const nomes = m.falhas.map((f) => f.nome).join(", ")
+            return { texto: ` · ${n} ${n === 1 ? "arquivo falhou" : "arquivos falharam"}`, dica: ` Material do Sirvo que não baixou (o Show tenta de novo em 10 min): ${nomes}.`, falhou: true }
+        }
+        if (m.baixando || m.naFila) return { texto: ` · baixando ${m.lote.feitos} de ${m.lote.total}`, dica: " Baixando o material da semana enviado pelo Sirvo.", falhou: false }
+        return { texto: "", dica: "", falhou: false }
+    }
+
+    function calcular(e: typeof $sirvo, c: typeof culto, t: number, m: typeof $sirvoMaterialEstado): Visual | null {
         if (e.status === "sem_chave") return null
         if (e.status === "chave_invalida") return { tom: "vermelho", texto: "Chave do Sirvo recusada", dica: "A chave guardada não vale mais. Clique para abrir Conexão.", clicavel: true }
         if (e.status === "conectando") return { tom: "cinza", texto: "Sirvo · conectando…", dica: "", clicavel: false }
@@ -71,7 +83,8 @@
         const papel = e.podeConduzir ? " · conduz" : " · só lê"
         const dicaPapel = e.podeConduzir ? " Esta chave conduz: o Show pode encerrar blocos e mexer no roteiro." : " Esta chave só lê o roteiro."
         const dica = `Seguindo ${c.titulo} · ${quando(c.comeca_em)}${estado}${e.escolhaManual ? " · escolhido à mão" : " · escolhido automaticamente"}.${dicaPapel}`
-        return { tom: "verde", texto: `${quando(c.comeca_em)}${estado}${papel}`, dica, clicavel: false }
+        const mat = materialTexto(m)
+        return { tom: mat.falhou ? "laranja" : "verde", texto: `${quando(c.comeca_em)}${estado}${papel}${mat.texto}`, dica: dica + mat.dica, clicavel: false }
     }
 
     function abrirConexao() {

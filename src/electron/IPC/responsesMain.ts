@@ -36,6 +36,7 @@ import { closeMidiInPorts, getMidiInputs, getMidiOutputs, receiveMidi, sendMidi 
 import { deleteShows, deleteShowsNotIndexed, getAllShows, getEmptyShows, refreshAllShows } from "../utils/shows"
 import { correctSpelling } from "../utils/spellcheck"
 import { executeSpotifyCommand, getSpotifyState } from "../utils/spotify"
+import { materialEstado, materialParar, materialSincronizar } from "../sirvo/material"
 import { sirvoAmbiente, sirvoApagarChave, sirvoChamar, sirvoSalvarChave, sirvoTemChave } from "../sirvo/sirvo"
 import { sendToMain } from "./main"
 
@@ -199,9 +200,18 @@ export const mainResponses: MainResponses = {
     // Sirvo (AliançaShow): a chave nunca volta para o renderer
     [Main.SIRVO_TEM_CHAVE]: () => sirvoTemChave(),
     [Main.SIRVO_AMBIENTE]: () => sirvoAmbiente(),
-    [Main.SIRVO_SALVAR_CHAVE]: (data) => sirvoSalvarChave(data.chave),
-    [Main.SIRVO_APAGAR_CHAVE]: () => sirvoApagarChave(),
+    [Main.SIRVO_SALVAR_CHAVE]: (data) => {
+        materialParar() // chave nova pode ser de outra igreja: a fila da antiga não vale
+        return sirvoSalvarChave(data.chave)
+    },
+    [Main.SIRVO_APAGAR_CHAVE]: () => {
+        materialParar()
+        return sirvoApagarChave()
+    },
     [Main.SIRVO_CHAMAR]: (data) => sirvoChamar(data.funcao, data.args || {}),
+    // F5: o material do culto. A URL do arquivo nunca atravessa: o estado devolvido não tem URL
+    [Main.SIRVO_MATERIAL_SINCRONIZAR]: () => materialSincronizar(),
+    [Main.SIRVO_MATERIAL_ESTADO]: () => materialEstado(),
     [Main.PCO_LIVE_GET]: (data) => ContentProviderRegistry.getPcoLiveData(data.serviceTypeId, data.planId).catch(() => null),
     [Main.PCO_PUSHER_AUTH]: (data) => ContentProviderRegistry.getPcoPusherAuth(data.socketId, data.channelName, data.serviceTypeId),
     // Content Library

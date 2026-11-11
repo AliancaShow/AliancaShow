@@ -259,7 +259,7 @@ export function criarPastasOnline(pastas: string[]) {
  * inclusive na pasta de inicializacao do Windows. Por isso todo destino passa
  * por aqui antes de tocar o disco, venha de onde vier.
  */
-function dentroDaPastaOnline(alvo: string) {
+export function dentroDaPastaOnline(alvo: string) {
     const raiz = path.resolve(getDataFolderPath("onlineMedia"))
     const resolvido = path.resolve(alvo)
     return resolvido === raiz || resolvido.startsWith(raiz + path.sep)

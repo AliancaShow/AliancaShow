@@ -340,7 +340,8 @@ function tirarDoProjeto(chave: string, sumiram: string[]) {
 
     const fora = new Set(sumiram)
     // o item que o Sirvo pos debaixo do Louvor (F3, marca `sirvoMusica`) e do Sirvo: o Remote nunca o tira
-    const restantes = (projeto.shows || []).filter((s: any) => !fora.has(s.id) || s.data?.sirvoMusica)
+    // o mesmo vale para o material de arquivo do Sirvo (F5, marca `sirvoMaterial`)
+    const restantes = (projeto.shows || []).filter((s: any) => !fora.has(s.id) || s.data?.sirvoMusica || s.data?.sirvoMaterial)
     if (restantes.length === (projeto.shows || []).length) return false
 
     projects.update((a) => {
@@ -513,7 +514,7 @@ function adicionarAoProjeto(projetoId: string, ref: any, chave: string) {
     const projeto: any = get(projects)[projetoId]
     if (!projeto) return false
     // a mesma musica posta pelo Sirvo (F3) nao conta: a do Remote entra solta, em "Fora do roteiro"
-    if ((projeto.shows || []).some((s: any) => s.id === chave && !s.data?.sirvoMusica)) return false
+    if ((projeto.shows || []).some((s: any) => s.id === chave && !s.data?.sirvoMusica && !s.data?.sirvoMaterial)) return false
     if (ref.type === "show" && !get(shows)[ref.id]) return false // musica que nao existe neste computador
 
     projects.update((a) => {
