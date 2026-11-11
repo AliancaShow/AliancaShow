@@ -8,6 +8,7 @@
 import { safeStorage } from "electron"
 import { isProd } from ".."
 import { _store } from "../data/store"
+import { enriquecerCatalogo } from "./catalogo"
 
 // Endereço e chave PÚBLICA de cada projeto (as mesmas que vão no app web do
 // Sirvo). Quem dá acesso é a chave do dispositivo, não esta.
@@ -27,7 +28,8 @@ export function sirvoAmbiente(): keyof typeof AMBIENTES {
 // Leitura (F0a) e escrita (F2, migration 0081 do Sirvo). Qualquer outro nome é
 // recusado aqui mesmo.
 const LEITURA = ["show_cultos", "show_rev", "show_roteiro"]
-const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco"]
+// show_tirar_musicas / show_devolver_musica (F3): o operador tirou do projeto uma música que o Sirvo pôs
+const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco", "show_tirar_musicas", "show_devolver_musica"]
 // O chat do culto (F4 v1, migration 0084 do Sirvo): só leitura, caminho próprio
 // no renderer (aliancaSirvoChat.ts). Fora da trava de escrita: ler o chat
 // nunca pode atrasar "avançar bloco".
@@ -36,7 +38,12 @@ const CHAT = ["show_chat"]
 // de 1 s. A trava de 500 ms do roteiro não é tocada: mandar "ok" e logo em
 // seguida tocar "Encerrar bloco" faz os dois funcionarem.
 const CHAT_ESCRITA = ["show_chat_enviar"]
-const FUNCOES = new Set([...LEITURA, ...ESCRITA, ...CHAT, ...CHAT_ESCRITA])
+// F3 (migration 0085 do Sirvo): o catálogo de músicas. Fica FORA das escritas
+// de propósito: não disputa o intervalo de 500 ms com o operador (uma
+// publicação em segundo plano não pode fazer o "avançar" responder "Calma"), e
+// a recusa dele nunca é lida como chave recusada (não derruba a ponte).
+const CATALOGO = "show_publicar_catalogo"
+const FUNCOES = new Set([...LEITURA, ...ESCRITA, ...CHAT, ...CHAT_ESCRITA, CATALOGO])
 const DE_ESCRITA = new Set(ESCRITA)
 const DO_CHAT = new Set(CHAT)
 const DE_CHAT_ESCRITA = new Set(CHAT_ESCRITA)
@@ -47,11 +54,16 @@ let ultimaEscrita = 0
 const CHAT_ESCRITA_MIN_MS = 1_000
 let ultimaEscritaChat = 0
 const TEMPO_LIMITE_MS = 8_000
+// teto do corpo do catálogo com as letras (acima disso, vai sem elas)
+const CORPO_MAX_BYTES = 7_500_000
+// o catálogo vai com a biblioteca inteira (centenas de músicas, enriquecidas dos arquivos): mais folga
+const TEMPO_LIMITE_CATALOGO_MS = 30_000
 // cofre separado por ambiente: a chave do staging nunca é usada contra a produção
 const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "sirvo")
 const FORMATO_DA_CHAVE = /^sirvo_show_[A-Za-z0-9_-]{20,100}$/
 
-export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "rede" | "erro"; mensagem: string }
+// "ocupado": outra escrita saiu há menos de 500 ms — tente daqui a pouco (não é recusa do Sirvo)
+export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "nao_publica" | "rede" | "ocupado" | "erro"; mensagem: string; /** código do Postgres (ou "413") quando o Sirvo recusou o catálogo */ pg?: string }
 
 let chaveEmMemoria: string | null = null
 
@@ -97,7 +109,7 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
     const escrita = DE_ESCRITA.has(funcao)
     if (escrita) {
         const agora = Date.now()
-        if (agora - ultimaEscrita < ESCRITA_MIN_MS) return { ok: false, codigo: "erro", mensagem: "Calma: um pedido de cada vez." }
+        if (agora - ultimaEscrita < ESCRITA_MIN_MS) return { ok: false, codigo: "ocupado", mensagem: "Calma: um pedido de cada vez." }
         ultimaEscrita = agora
     }
 
@@ -108,14 +120,25 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         ultimaEscritaChat = agora
     }
 
+    // o catálogo leva o que só o arquivo tem (primeira linha, artista, tom…)
+    if (funcao === CATALOGO && Array.isArray(args.p_musicas)) args = { ...args, p_musicas: await enriquecerCatalogo(args.p_musicas) }
+
+    let corpoTexto = JSON.stringify({ ...args, p_chave: chave })
+    // depois de enriquecer, o corpo pode passar do teto: o catálogo básico nunca depende da letra
+    if (funcao === CATALOGO && Array.isArray(args.p_musicas) && Buffer.byteLength(corpoTexto) > CORPO_MAX_BYTES) {
+        console.warn("Sirvo: catálogo grande demais com as letras; mandando sem elas.")
+        args = { ...args, p_musicas: args.p_musicas.map(({ letra: _letra, ...resto }: any) => resto) }
+        corpoTexto = JSON.stringify({ ...args, p_chave: chave })
+    }
+
     const controle = new AbortController()
-    const limite = setTimeout(() => controle.abort(), TEMPO_LIMITE_MS)
+    const limite = setTimeout(() => controle.abort(), funcao === CATALOGO ? TEMPO_LIMITE_CATALOGO_MS : TEMPO_LIMITE_MS)
     try {
         const ambiente = AMBIENTES[sirvoAmbiente()]
         const resposta = await fetch(ambiente.url + funcao, {
             method: "POST",
             headers: { apikey: ambiente.apikey, "Content-Type": "application/json" },
-            body: JSON.stringify({ ...args, p_chave: chave }),
+            body: corpoTexto,
             signal: controle.signal
         })
         const corpo: any = await resposta.json().catch(() => null)
@@ -126,11 +149,14 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         // migration). Só é chave recusada com a mensagem do próprio Sirvo; o
         // resto vira erro comum: o Show segue tentando em vez de se desligar.
         if (codigo === "42501" && String(corpo?.message || "").startsWith("Chave do Sirvo")) return { ok: false, codigo: "chave_invalida", mensagem: "Chave do Sirvo inválida ou revogada." }
+        if (funcao === CATALOGO && codigo === "42501" && String(corpo?.message || "").startsWith("Esta chave não publica")) return { ok: false, codigo: "nao_publica", mensagem: "Esta chave não publica as músicas." }
         if (codigo === "P0002") return { ok: false, codigo: "culto_inexistente", mensagem: "Culto não encontrado no Sirvo." }
         // Numa escrita (e no chat), a recusa do Sirvo é a frase que o operador
         // precisa ler ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
-        if ((escrita || escritaChat || DO_CHAT.has(funcao)) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200) }
-        return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.` }
+        // o catálogo também devolve o código: 54000 / 413 (corpo grande demais) faz o Show tentar sem a letra
+        const pg = funcao === CATALOGO ? (resposta.status === 413 ? "413" : typeof codigo === "string" ? codigo : undefined) : undefined
+        if ((escrita || escritaChat || DO_CHAT.has(funcao) || funcao === CATALOGO) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200), pg }
+        return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.`, pg }
     } catch {
         // Escrita que estourou o tempo pode ter chegado: quem diz é o próximo rev.
         if (escrita || escritaChat) return { ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" }

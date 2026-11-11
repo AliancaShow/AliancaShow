@@ -20,6 +20,7 @@ import { createThumbnail, doesMediaExist, filePathHashCode } from "../data/thumb
 import { sendMain, sendToMain } from "../IPC/main"
 import { mainWindow, setAutoProfile } from "./../index"
 import { getAllShows, trimShow } from "./shows"
+import { jaResolvidoPeloArquivo, planejarEmbutidos, type EmbutidosResolvidos } from "./bundledShowsPlano"
 
 function actionComplete(err: Error | null, actionFailedMessage: string) {
     if (err) console.error(actionFailedMessage + ":", err)
@@ -362,30 +363,66 @@ export function getDataFolderRoot() {
 // a NVI nas configuracoes padrao mas nao encontraria o arquivo, e o app marcaria
 // a traducao como "nao encontrada".
 // AliancaShow: mesma ideia das Biblias embutidas, para os shows. Sao copiados
-// para a pasta do usuario na primeira execucao, de modo que um .exe levado para
-// outro computador ja chegue com a biblioteca de musicas pronta.
+// para a pasta do usuario de modo que um .exe levado para outro computador ja
+// chegue com a biblioteca de musicas pronta.
+// Cada embutido entra UMA vez por pasta de shows (ver bundledShowsPlano.ts):
+// apagar uma musica embutida de proposito nao a traz de volta na proxima
+// abertura, e renomear nao cria uma gemea com o mesmo id.
+const EMBUTIDOS_CONFIG = "bundledShowsResolvidos"
 export function installBundledShows() {
     try {
         const origem = app.isPackaged ? path.join(process.resourcesPath, "shows") : path.join(__dirname, "..", "..", "..", "bundled-shows")
         if (!doesPathExist(origem)) return
 
         const destino = getDataFolderPath("shows")
-        let copiados = 0
+        const todos = (config.get(EMBUTIDOS_CONFIG as any) || {}) as { [pasta: string]: EmbutidosResolvidos }
+        const resolvidos: EmbutidosResolvidos = todos[destino] || {}
 
-        for (const nome of fs.readdirSync(origem)) {
+        // o caminho comum (tudo ja resolvido) nao le nenhum arquivo
+        const pendentes = fs.readdirSync(origem).filter((nome) => nome.toLowerCase().endsWith(".show") && !jaResolvidoPeloArquivo(nome, resolvidos))
+        if (!pendentes.length) return
+
+        const embutidos = pendentes.map((arquivo) => ({ arquivo, id: idDoShow(path.join(origem, arquivo)) }))
+
+        // o que ja esta na biblioteca, por id e por nome de arquivo
+        const idsNaBiblioteca = new Set<string>()
+        const arquivosNaBiblioteca = new Set<string>()
+        for (const nome of readFolder(destino)) {
             if (!nome.toLowerCase().endsWith(".show")) continue
+            arquivosNaBiblioteca.add(nome.toLowerCase())
+            const id = idDoShow(path.join(destino, nome))
+            if (id) idsNaBiblioteca.add(id)
+        }
 
-            const alvo = path.join(destino, nome)
+        const plano = planejarEmbutidos(embutidos, { resolvidos, idsNaBiblioteca, arquivosNaBiblioteca })
+
+        let copiados = 0
+        for (const arquivo of plano.copiar) {
+            const alvo = path.join(destino, arquivo)
             // nunca sobrescreve: a copia do usuario pode ter sido editada
             if (doesPathExist(alvo)) continue
-
-            fs.copyFileSync(path.join(origem, nome), alvo)
+            fs.copyFileSync(path.join(origem, arquivo), alvo)
             copiados++
         }
 
+        if (plano.mudou) config.set(EMBUTIDOS_CONFIG as any, { ...todos, [destino]: plano.resolvidos })
         if (copiados) console.info(`Shows embutidos instalados: ${copiados}`)
     } catch (err) {
         console.error("Could not install bundled shows:", err)
+    }
+}
+
+// O id fica no comeco do arquivo: ["<id>", {...}]. Le so o comeco; se o
+// formato for outro, cai no JSON inteiro.
+function idDoShow(caminho: string): string | null {
+    try {
+        const conteudo = readFile(caminho)
+        const rapido = /^\s*\[\s*"([^"\\]{1,200})"/.exec(conteudo)
+        if (rapido) return rapido[1]
+        const show = parseShow(conteudo)
+        return typeof show?.[0] === "string" ? show[0] : null
+    } catch {
+        return null
     }
 }
 

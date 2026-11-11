@@ -28,6 +28,7 @@ import { requestMain } from "../IPC/main"
 import { activeTimers, timers, variables } from "../stores"
 import { send } from "./request"
 import { newToast } from "./common"
+import type { MusicaDoSirvo } from "./aliancaSirvoMusicas"
 import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./aliancaSirvoAvisos"
 import { chatAoRev, zerarChat } from "./aliancaSirvoChat"
 
@@ -51,6 +52,8 @@ export type Bloco = {
     responsavel: string | null
     nota: string | null
     link: string | null
+    /** as músicas que o Sirvo escolheu para o bloco (F3, migration 0086; ausente antes dela) */
+    musicas?: MusicaDoSirvo[]
 }
 export type Roteiro = {
     event_id: string
@@ -555,8 +558,10 @@ export function escolherCultoSirvo(eventId: string | null) {
 // a montagem aplica o próprio pedido até o rev que o Sirvo devolveu mesmo com
 // o culto no ar (`sirvoForcarAte`): a pendência existe para a mudança ALHEIA.
 
-export type FuncaoDeEscrita = "show_iniciar" | "show_encerrar" | "show_reabrir" | "show_avancar" | "show_desfazer_bloco" | "show_ajustar_duracao" | "show_mover_bloco" | "show_criar_bloco" | "show_apagar_bloco" | "show_editar_bloco"
-export type RespostaPedido = { ok: true; dados: any } | { ok: false; mensagem: string }
+// show_tirar_musicas / show_devolver_musica (F3): o operador tirou do projeto uma música que o Sirvo pôs (aliancaSirvoDispensar.ts)
+export type FuncaoDeEscrita = "show_iniciar" | "show_encerrar" | "show_reabrir" | "show_avancar" | "show_desfazer_bloco" | "show_ajustar_duracao" | "show_mover_bloco" | "show_criar_bloco" | "show_apagar_bloco" | "show_editar_bloco" | "show_tirar_musicas" | "show_devolver_musica"
+/** `codigo` (só na recusa que veio do main): "rede" = não chegou; "ocupado" = tente daqui a pouco; sem código = o Show não pôde pedir agora (porQueNaoConduz) */
+export type RespostaPedido = { ok: true; dados: any } | { ok: false; mensagem: string; codigo?: string }
 
 const forcarAte = new Map<string, number>()
 // A montagem diz se há uma ordem ALHEIA esperando "Aplicar" (registrada por
@@ -603,8 +608,8 @@ export async function pedirAoSirvo(funcao: FuncaoDeEscrita, args: { [key: string
             if (pendiaAntes && MUDA_ORDEM.has(funcao)) newToast("Feito no Sirvo. A ordem nova entra no projeto quando você aplicar.")
             return { ok: true, dados: r.dados }
         }
-        if (r.codigo === "chave_invalida") return { ok: false, mensagem: "A chave do Sirvo foi recusada." }
-        return { ok: false, mensagem: r.mensagem || "O Sirvo não aceitou." }
+        if (r.codigo === "chave_invalida") return { ok: false, mensagem: "A chave do Sirvo foi recusada.", codigo: r.codigo }
+        return { ok: false, mensagem: r.mensagem || "O Sirvo não aceitou.", codigo: r.codigo }
     } finally {
         // sempre: se a conexão foi refeita no meio, ninguém mais zeraria e os
         // botões ficariam presos em "Esperando o Sirvo responder…"

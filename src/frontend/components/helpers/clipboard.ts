@@ -76,6 +76,7 @@ import { loadShows } from "./setShow"
 import { checkName, getLayoutRef, removeTemplatesFromShow } from "./show"
 import { _show } from "./shows"
 import { removeOutputAudioChannel } from "../../audio/routing/audioRoutingInit"
+import { registrarRemocaoDeMusicasSirvo } from "../../utils/aliancaSirvoDispensar"
 import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
 import { naoSaiDoProjeto } from "../../utils/aliancaSirvoProjeto"
 
@@ -941,8 +942,16 @@ const deleteActions = {
             indexes.push(index)
         })
 
-        if (trancados) newToast("Os cabeçalhos do Sirvo e o \"Fora do roteiro\" ficam no projeto. Mude o roteiro no Sirvo.")
+        if (trancados) newToast('Os cabeçalhos do Sirvo e o "Fora do roteiro" ficam no projeto. Mude o roteiro no Sirvo.')
         if (!indexes.length) return
+
+        // AliançaShow (F3): música que o Sirvo pôs e o OPERADOR tirou (Delete, Ctrl+X, Remover):
+        // o Show respeita (não repõe) e avisa o Sirvo. Só aqui conta como "o operador tirou".
+        if (!isTemplate && currentProject.sirvo?.eventId)
+            registrarRemocaoDeMusicasSirvo(
+                currentProject.sirvo.eventId,
+                indexes.map((i) => projectItems[i])
+            )
 
         if (get(activeShow)?.index !== undefined && indexes.includes(get(activeShow)!.index!)) {
             activeShow.update((a) => {

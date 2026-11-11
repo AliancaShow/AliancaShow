@@ -11,6 +11,7 @@ import { clearAll } from "../components/output/clear"
 import { requestMain } from "../IPC/main"
 import { activeProject, activeShow, categories, folders, outputs, projects, scriptures, shows, showsCache } from "../stores"
 import { AGENDAS, cultoDoProjeto, type Agenda } from "./agendas"
+import { musicasDaBiblioteca } from "./aliancaCatalogo"
 
 /**
  * O lado do computador na aba Remote do celular, no catalogo de louvores e no
@@ -302,13 +303,11 @@ function agendarCatalogo() {
 function publicarCatalogo() {
     if (!db || !souDono) return
 
-    const cats = get(categories)
+    // a mesma lista que vai para o Sirvo (aliancaCatalogo.ts)
     const lista: { [id: string]: { nome: string } } = {}
-    for (const [id, show] of Object.entries(get(shows))) {
-        if (!show?.name || show.private) continue
-        if (cats[show.category || ""]?.icon !== "song") continue
-        if (/[.#$/[\]]/.test(id)) continue // chave invalida no Firebase
-        lista[id] = { nome: String(show.name).slice(0, 120) }
+    for (const m of musicasDaBiblioteca(get(shows), get(categories))) {
+        if (/[.#$/[\]]/.test(m.id)) continue // chave invalida no Firebase
+        lista[m.id] = { nome: m.nome }
     }
 
     const json = JSON.stringify(lista)
