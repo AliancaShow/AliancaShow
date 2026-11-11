@@ -136,7 +136,7 @@ export type MaterialPreparado = ResultadoMaterial & {
  * estado de agora, conta e devolve. Quem chama escreve a lista e então chama
  * `commit()`. `null` = não há o que fazer (sem material no Show, sem roteiro).
  */
-export function prepararMaterial(projetoId: string, roteiro: { event_id: string; material?: MaterialDoRoteiro[] | null }, itens: ProjectShowRef[], contexto: { ativos: number[]; protegido: boolean; congelarRemocao: boolean }): MaterialPreparado | null {
+export function prepararMaterial(projetoId: string, roteiro: { event_id: string; material?: MaterialDoRoteiro[] | null }, itens: ProjectShowRef[], contexto: { ativos: number[]; protegido: boolean; congelarRemocao: boolean; forcar: boolean }): MaterialPreparado | null {
     const e = get(sirvoMaterialEstado)
     const baixados = new Map<string, Baixado>()
     for (const b of e.baixados) if (b.event_id === roteiro.event_id) baixados.set(b.id, b)
@@ -147,7 +147,7 @@ export function prepararMaterial(projetoId: string, roteiro: { event_id: string;
 
     const memoria = lerMemoria()
     const jaPostos = new Set(Object.keys(memoria).filter((id) => memoria[id].projeto === projetoId))
-    const res = conciliarMaterial(itens, { baixados, noRoteiro, eventoId: roteiro.event_id, jaPostos, ativos: contexto.ativos, protegido: contexto.protegido, congelarRemocao: contexto.congelarRemocao, agora: Date.now() })
+    const res = conciliarMaterial(itens, { baixados, noRoteiro, eventoId: roteiro.event_id, jaPostos, ativos: contexto.ativos, protegido: contexto.protegido, congelarRemocao: contexto.congelarRemocao, forcar: contexto.forcar, agora: Date.now() })
 
     return {
         ...res,

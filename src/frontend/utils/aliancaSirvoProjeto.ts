@@ -83,6 +83,19 @@ export function horasPlanejadas(blocos: BlocoParaProjeto[], comecaEm: string | n
     return horas
 }
 
+/**
+ * A trava do momento protegido, compartilhada com o material (aliancaSirvoMaterialConta.ts):
+ * a ordem nova mexe numa posição que vem ANTES de algum ponteiro vivo, ou NELE?
+ * (a primeira posição que muda é a de um ponteiro, ou fica antes de um). Só mudança
+ * depois de todo ponteiro passa sozinha; a outra espera o "Aplicar".
+ */
+export function ordemMudaAteOPonteiro(antes: ProjectShowRef[], depois: ProjectShowRef[], ativos: number[]): boolean {
+    let primeira = 0
+    while (primeira < depois.length && depois[primeira] === antes[primeira]) primeira++
+    if (primeira >= depois.length && depois.length === antes.length) return false
+    return primeira <= Math.max(-1, ...ativos)
+}
+
 export type MotivoPendente = "roteiro_vazio" | "muitos_sumiram" | "no_ar"
 
 export type ResultadoReconciliar = {
@@ -475,10 +488,7 @@ export function reconciliar(itens: ProjectShowRef[], blocos: BlocoParaProjeto[],
 
     // momento protegido: só se a primeira posição que muda vem depois de todo ponteiro vivo
     if (opcoes.protegido && !opcoes.forcar) {
-        let primeira = 0
-        while (primeira < novos.length && novos[primeira] === itens[primeira]) primeira++
-        const ultimoAtivo = Math.max(-1, ...ativos)
-        if (primeira <= ultimoAtivo) return semMudanca("no_ar", sumidas.length)
+        if (ordemMudaAteOPonteiro(itens, novos, [...ativos])) return semMudanca("no_ar", sumidas.length)
     }
 
     return { itens: novos, mudouCampos, mudouEstrutura: true, pendente: false, motivo: null, sumiram: sumidas.length }

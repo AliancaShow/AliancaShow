@@ -431,13 +431,19 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     // o material entra no FIM e sai só sem ponteiro vivo depois dele, mas as posições que a
     // conta de cima usou são as do projeto de antes. Nunca no meio de um arrasto.
     let material: ReturnType<typeof prepararMaterial> = null
+    let materialPendente = false
     if (depois === itens && !pendente && !(aberto && arrastando)) {
         try {
-            material = prepararMaterial(projetoId, r, itens, { ativos: ativosNo(projetoId), protegido: prot, congelarRemocao: !aberto && prot && saidaComPosicao() })
+            material = prepararMaterial(projetoId, r, itens, { ativos: ativosNo(projetoId), protegido: prot, congelarRemocao: !aberto && prot && saidaComPosicao(), forcar })
         } catch (erro) {
             console.error("Sirvo: falha ao conciliar o material", erro)
         }
         if (material) depois = material.itens
+        // o material que entraria (ou mudaria de bloco) alcança um ponteiro vivo: espera o "Aplicar", como a ordem das músicas
+        if (material?.pendente) {
+            pendente = "no_ar"
+            materialPendente = true
+        }
     }
 
     // a conta já mexeu nos objetos (campos, lápide, duplicata): grava mesmo com a ordem pendente
@@ -450,7 +456,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     // o fim dos 30 s do item apagado no Sirvo: passa de novo quando vencer
     if (material?.reavaliarEm) agendar(material.reavaliarEm + 100)
 
-    const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos, { dispensadas })) : ""
+    const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos, { dispensadas })) || (materialPendente ? "material novo ou em outro bloco" : "") : ""
     return { pendente, resumo, sumiram: res.sumiram, protegido: prot }
 }
 

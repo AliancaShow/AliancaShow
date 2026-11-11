@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { APAGANDO_EM, conciliarMaterial, GRACA_APAGAR_MS, itemDoMaterial, mapaDoRoteiro, MARCA, marcaDoMaterial, PREFIXO_APAGADO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
-import { ID_RODAPE, NOME_RODAPE } from "./aliancaSirvoProjeto"
+import { APAGANDO_EM, BLOCO, conciliarMaterial, GRACA_APAGAR_MS, itemDoMaterial, mapaDoRoteiro, MARCA, marcaDoMaterial, PREFIXO_APAGADO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
+import { ID_RODAPE, NOME_RODAPE, ordemMudaAteOPonteiro } from "./aliancaSirvoProjeto"
 
 const cab = (id: string): ProjectShowRef => ({ id: `sirvo_${id}`, type: "section", name: id })
 const rodape = (): ProjectShowRef => ({ id: ID_RODAPE, type: "section", name: NOME_RODAPE })
@@ -180,5 +180,89 @@ describe("projeto religado a outro culto", () => {
         expect(r.itens).toBe(itens)
         expect(velho.name).toBe("Video m1")
         expect(velho.data[APAGANDO_EM]).toBeUndefined()
+    })
+})
+
+describe("material dentro do bloco escolhido no Sirvo (S5)", () => {
+    const musica = (id: string): ProjectShowRef => ({ id, type: "show", data: { sirvoMusica: id } })
+    // b1: cabeçalho, 2 músicas, 1 item do operador; b2: cabeçalho; rodapé
+    const montado = () => [cab("b1"), musica("s1"), musica("s2"), doOperador("dele"), cab("b2"), rodape()]
+    const ids = (itens: ProjectShowRef[]) => itens.map((i) => i.data?.[MARCA] ?? i.id)
+    const mat = (id: string, bloco: string | null, extra: Partial<MaterialDoRoteiro> = {}): MaterialDoRoteiro => ({ id, bloco_id: bloco, status: "pronto", ...extra })
+
+    it("entra logo depois das músicas do bloco (antes do item do operador), e os seguintes depois dele, na ordem do Sirvo", () => {
+        const r = conciliarMaterial(montado(), opcoes([baixado("m1"), baixado("m2")], [mat("m1", "b1"), mat("m2", "b1")]))
+        expect(ids(r.itens)).toEqual(["sirvo_b1", "s1", "s2", "m1", "m2", "dele", "sirvo_b2", ID_RODAPE])
+        expect(r.itens[3].data[BLOCO]).toBe("b1")
+        expect(r.postos).toEqual(["m1", "m2"])
+        expect(r.pendente).toBe(false)
+    })
+    it("bloco sem música: logo depois do cabeçalho; um novo entra depois do material que já está lá", () => {
+        const itens = montado()
+        const r1 = conciliarMaterial(itens, opcoes([baixado("m1")], [mat("m1", "b2")]))
+        expect(ids(r1.itens)).toEqual(["sirvo_b1", "s1", "s2", "dele", "sirvo_b2", "m1", ID_RODAPE])
+        const r2 = conciliarMaterial(r1.itens, opcoes([baixado("m1"), baixado("m2")], [mat("m1", "b2"), mat("m2", "b2")]))
+        expect(ids(r2.itens)).toEqual(["sirvo_b1", "s1", "s2", "dele", "sirvo_b2", "m1", "m2", ID_RODAPE])
+    })
+    it("sem bloco ou bloco que não está no projeto: Fora do roteiro (fim)", () => {
+        const r = conciliarMaterial(montado(), opcoes([baixado("m1"), baixado("m2")], [mat("m1", null), mat("m2", "b9")]))
+        expect(ids(r.itens).slice(-3)).toEqual([ID_RODAPE, "m1", "m2"])
+        expect(r.itens.at(-1)?.data[BLOCO]).toBe("")
+    })
+    it("idempotente com o item dentro do bloco", () => {
+        const o = opcoes([baixado("m1")], [mat("m1", "b1")])
+        const r1 = conciliarMaterial(montado(), o)
+        const r2 = conciliarMaterial(r1.itens, o)
+        expect(r2.itens).toBe(r1.itens)
+        expect(r2.mudouCampos).toBe(false)
+    })
+    it("religou a outro bloco no Sirvo: o item se mexe (e o BLOCO acompanha); o que o operador arrastou, sem mudança no Sirvo, fica onde ele pôs", () => {
+        const r1 = conciliarMaterial(montado(), opcoes([baixado("m1")], [mat("m1", "b1")]))
+        const r2 = conciliarMaterial(r1.itens, opcoes([baixado("m1")], [mat("m1", "b2")]))
+        expect(ids(r2.itens)).toEqual(["sirvo_b1", "s1", "s2", "dele", "sirvo_b2", "m1", ID_RODAPE])
+        expect(r2.itens[5].data[BLOCO]).toBe("b2")
+        expect(r2.itens[5]).toBe(r1.itens[3]) // o MESMO objeto (os ponteiros acompanham)
+        // o operador leva para o fim; o Sirvo continua dizendo b2: não briga
+        const arrastado = [...r2.itens.filter((i) => i.data?.[MARCA] !== "m1"), r2.itens[5]]
+        expect(conciliarMaterial(arrastado, opcoes([baixado("m1")], [mat("m1", "b2")])).itens).toBe(arrastado)
+    })
+    it("momento protegido: o que alcança um ponteiro vivo fica PENDENTE; o 'Aplicar' (forcar) passa; depois do ponteiro entra sozinho", () => {
+        const itens = montado()
+        const o = opcoes([baixado("m1")], [mat("m1", "b1")])
+        // ponteiro vivo no item do operador (posição 3), depois do ponto de entrada (3): a posição 3 muda
+        const preso = conciliarMaterial(itens, { ...o, protegido: true, ativos: [3] })
+        expect(preso.pendente).toBe(true)
+        expect(preso.itens).toBe(itens)
+        expect(preso.postos).toEqual([])
+        const aplicado = conciliarMaterial(itens, { ...o, protegido: true, ativos: [3], forcar: true })
+        expect(aplicado.pendente).toBe(false)
+        expect(ids(aplicado.itens)[3]).toBe("m1")
+        // ponteiro no cabeçalho (0): a primeira posição que muda é a 3, depois dele
+        const livre = conciliarMaterial(itens, { ...o, protegido: true, ativos: [0] })
+        expect(livre.pendente).toBe(false)
+        expect(ids(livre.itens)[3]).toBe("m1")
+        // Fora do roteiro (fim) nunca alcança ponteiro
+        const fim = conciliarMaterial(itens, { ...opcoes([baixado("m1")], [mat("m1", null)]), protegido: true, ativos: [3] })
+        expect(fim.pendente).toBe(false)
+    })
+    it("religação no momento protegido também espera; fora dele (sem ponteiro) acontece na hora", () => {
+        const r1 = conciliarMaterial(montado(), opcoes([baixado("m1")], [mat("m1", "b1")]))
+        const o = opcoes([baixado("m1")], [mat("m1", "b2")])
+        const preso = conciliarMaterial(r1.itens, { ...o, protegido: true, ativos: [4] })
+        expect(preso.pendente).toBe(true)
+        expect(preso.itens).toBe(r1.itens)
+        expect(preso.itens[3].data[BLOCO]).toBe("b1")
+    })
+    it("item em uso não é levado a outro bloco", () => {
+        const r1 = conciliarMaterial(montado(), opcoes([baixado("m1")], [mat("m1", "b1")]))
+        const r2 = conciliarMaterial(r1.itens, { ...opcoes([baixado("m1")], [mat("m1", "b2")]), ativos: [3] })
+        expect(r2.itens).toBe(r1.itens)
+    })
+    it("a trava compartilhada: ordemMudaAteOPonteiro", () => {
+        const a = montado()
+        const b = [...a.slice(0, 3), doOperador("x"), ...a.slice(3)]
+        expect(ordemMudaAteOPonteiro(a, b, [2])).toBe(false)
+        expect(ordemMudaAteOPonteiro(a, b, [3])).toBe(true)
+        expect(ordemMudaAteOPonteiro(a, b, [])).toBe(false)
     })
 })

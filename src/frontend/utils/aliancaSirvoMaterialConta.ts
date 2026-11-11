@@ -1,5 +1,6 @@
 import type { ProjectShowRef } from "../../types/Projects"
-import { ID_RODAPE } from "./aliancaSirvoProjeto"
+import { marcaDe as marcaDeMusica } from "./aliancaSirvoMusicas"
+import { ID_RODAPE, ordemMudaAteOPonteiro, papelDoItem, PREFIXO_SIRVO } from "./aliancaSirvoProjeto"
 
 // ----- AliançaShow · o material do Sirvo dentro do projeto do culto (F5, S3) -----
 //
@@ -10,8 +11,14 @@ import { ID_RODAPE } from "./aliancaSirvoProjeto"
 //
 // Marca: todo item que o Sirvo pôs leva `data.sirvoMaterial = <id do material>`.
 //   - o item é `{id: <caminho no disco>, type: "video"|"image"|"audio", name, data}`;
-//   - entra no FIM do projeto, depois do rodapé "Fora do roteiro": nunca mexe
-//     na posição de nada que já existe (ponteiros e telão ficam onde estão);
+//   - entra DENTRO do bloco que o Sirvo escolheu (`show_roteiro.material[].bloco_id`): na
+//     família do cabeçalho, logo depois da última música/material do bloco. Sem bloco, ou
+//     bloco que não está no projeto: no FIM, depois do rodapé "Fora do roteiro".
+//     `data.sirvoBloco` guarda para onde o Show o levou: só se o Sirvo MUDAR de ideia
+//     (religou a outro bloco) o item se mexe; o que o operador arrastou fica onde ele pôs;
+//   - o que muda de posição obedece à trava do momento protegido da reconciliação das
+//     músicas (`ordemMudaAteOPonteiro`): mudança que alcança um ponteiro vivo fica
+//     PENDENTE até o "Aplicar" (`pendente: true`);
 //   - o que não tem a marca nunca é tocado (nem tirado, nem renomeado);
 //   - o ARQUIVO nunca é apagado: o item some do projeto, o disco fica.
 // Apagou no Sirvo: o item fica cinza por 30 s ("apagado no Sirvo") e então sai —
@@ -25,6 +32,8 @@ export const GRACA_APAGAR_MS = 30_000
 export const PREFIXO_APAGADO = "(apagado no Sirvo) "
 /** de qual culto o item veio (para não confundir material de outro culto com apagado) */
 export const EVENTO = "sirvoMaterialEvento"
+/** o bloco para onde o Show levou o item ("" = Fora do roteiro) */
+export const BLOCO = "sirvoBloco"
 
 export type TipoDoProjeto = "video" | "image" | "audio"
 const TIPO_DO_PROJETO: { [tipo: string]: TipoDoProjeto } = { video: "video", imagem: "image", audio: "audio" }
@@ -51,8 +60,8 @@ const limpo = (t: unknown, max = 100) =>
 /** o rótulo do item: nome + aviso de HEVC */
 export const rotuloDoItem = (nome: unknown, codec?: unknown) => limpo(nome) + (ehHevc(codec) ? " (HEVC — pode não tocar)" : "")
 
-export function itemDoMaterial(b: Baixado): ProjectShowRef {
-    return { id: b.caminho, type: TIPO_DO_PROJETO[b.tipo] || "video", name: rotuloDoItem(b.nome, b.codec), data: { [MARCA]: b.id, ...(b.event_id ? { [EVENTO]: b.event_id } : {}) } }
+export function itemDoMaterial(b: Baixado, bloco = ""): ProjectShowRef {
+    return { id: b.caminho, type: TIPO_DO_PROJETO[b.tipo] || "video", name: rotuloDoItem(b.nome, b.codec), data: { [MARCA]: b.id, [BLOCO]: bloco, ...(b.event_id ? { [EVENTO]: b.event_id } : {}) } }
 }
 
 export type OpcoesMaterial = {
@@ -68,6 +77,8 @@ export type OpcoesMaterial = {
     protegido?: boolean
     /** o culto do roteiro que o Show segue: item de OUTRO culto (projeto religado) não é tocado nem tirado */
     eventoId?: string | null
+    /** "Aplicar": passa por cima do momento protegido */
+    forcar?: boolean
     /** nada sai do projeto agora (ex.: projeto fechado com slide na tela que guardou uma posição): só entra */
     congelarRemocao?: boolean
     agora: number
@@ -82,6 +93,8 @@ export type ResultadoMaterial = {
     postos: string[]
     /** ids que saíram agora do projeto */
     tirados: string[]
+    /** havia posição a mudar (entrada ou religação de bloco) e o momento protegido segurou: espera o "Aplicar" */
+    pendente: boolean
     /** daqui a quantos ms há outra coisa a fazer (o fim dos 30 s de cinza); null = nada */
     reavaliarEm: number | null
 }
@@ -169,21 +182,88 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
         }
     })
 
-    // 3. o que chegou do disco e ainda não está: entra no fim, depois do rodapé
-    const novos: ProjectShowRef[] = []
+    // a lista depois das saídas (nenhum ponteiro vivo fica depois de quem saiu: as posições dos ativos não mudam)
+    const base = sai.size ? itens.filter((i) => !sai.has(i)) : itens
+
+    // 3. onde cada material deve estar: dentro do bloco do Sirvo (se o bloco está no projeto), senão no fim
     const temRodape = itens.some((i) => i?.type === "section" && i.id === ID_RODAPE)
+    const vivos = blocosVivos(base)
+    const caminhos = new Set(base.map((i) => i?.id))
+    const doMarcado = new Map<string, ProjectShowRef>()
+    for (const item of base) {
+        const m = marcaDoMaterial(item)
+        if (m && !doMarcado.has(m)) doMarcado.set(m, item)
+    }
+    type Mover = { id: string; item: ProjectShowRef; existente: boolean; alvo: string }
+    const mover: Mover[] = []
     if (o.noRoteiro && temRodape) {
-        const caminhos = new Set(itens.map((i) => i?.id))
-        for (const [id, b] of o.baixados) {
-            const r = o.noRoteiro.get(id)
-            if (!r || apagado(r) || vistas.has(id) || o.jaPostos.has(id)) continue
+        // na ordem do Sirvo (material[]): a ordem entre os que chegam juntos é estável
+        for (const [id, r] of o.noRoteiro) {
+            const b = o.baixados.get(id)
+            if (apagado(r) || !b) continue
+            const alvo = r.bloco_id && vivos.has(r.bloco_id) ? r.bloco_id : ""
+            const atual = doMarcado.get(id)
+            if (atual) {
+                if (typeof atual.data?.[EVENTO] === "string" && o.eventoId && atual.data[EVENTO] !== o.eventoId) continue
+                const onde = typeof atual.data?.[BLOCO] === "string" ? atual.data[BLOCO] : ""
+                if (onde === alvo || typeof atual.data?.[APAGANDO_EM] === "number") continue
+                // em uso (aberto, foco, saída) não é levado a outro lugar
+                if (ativos.has(itens.indexOf(atual))) continue
+                mover.push({ id, item: atual, existente: true, alvo })
+                continue
+            }
+            if (vistas.has(id) || o.jaPostos.has(id)) continue
             // o operador já tem esse mesmo arquivo no projeto (arrastou da Mídia): não duplica nem toma conta dele
             if (caminhos.has(b.caminho)) continue
-            novos.push(itemDoMaterial({ ...b, nome: r.nome ?? b.nome }))
-            postos.push(id)
+            mover.push({ id, item: itemDoMaterial({ ...b, nome: r.nome ?? b.nome }, alvo), existente: false, alvo })
         }
     }
 
-    if (!sai.size && !novos.length) return { itens, mudouCampos, postos: [], tirados: [], reavaliarEm }
-    return { itens: [...itens.filter((i) => !sai.has(i)), ...novos], mudouCampos, postos, tirados, reavaliarEm }
+    let depois = base
+    let pendente = false
+    if (mover.length) {
+        const sobra = base.filter((i) => !mover.some((m) => m.existente && m.item === i))
+        const novaLista = [...sobra]
+        for (const m of mover) {
+            if (!m.alvo) {
+                novaLista.push(m.item)
+                continue
+            }
+            novaLista.splice(depoisDoUltimoDoBloco(novaLista, m.alvo), 0, m.item)
+        }
+        // a mesma trava das músicas: mudança que alcança um ponteiro vivo espera o "Aplicar"
+        const trava = !o.forcar && (o.protegido || o.congelarRemocao)
+        const bloqueada = trava && (o.congelarRemocao ? novaLista.slice(0, base.length).some((x, i) => x !== base[i]) : ordemMudaAteOPonteiro(base, novaLista, [...ativos]))
+        if (bloqueada) {
+            pendente = true
+        } else {
+            depois = novaLista
+            for (const m of mover) {
+                if (m.existente) {
+                    m.item.data = { ...m.item.data, [BLOCO]: m.alvo }
+                    mudouCampos = true
+                } else postos.push(m.id)
+            }
+        }
+    }
+
+    if (depois === itens) return { itens, mudouCampos, postos: [], tirados: [], pendente, reavaliarEm }
+    return { itens: depois, mudouCampos, postos, tirados, pendente, reavaliarEm }
+}
+
+/** blocos cujo cabeçalho está no projeto (família viva) */
+function blocosVivos(itens: ProjectShowRef[]): Set<string> {
+    return new Set(itens.filter((i) => papelDoItem(i) === "cabecalho").map((i) => i.id.slice(PREFIXO_SIRVO.length)))
+}
+
+/**
+ * Onde entra o próximo material do bloco: logo depois da última música ou material dele
+ * (a família é o cabeçalho e o que vem embaixo, até o próximo item do Sirvo); sem nenhum,
+ * logo depois do cabeçalho. Item do operador nunca é tocado.
+ */
+function depoisDoUltimoDoBloco(itens: ProjectShowRef[], blocoId: string): number {
+    const cab = itens.findIndex((i) => i.id === PREFIXO_SIRVO + blocoId && papelDoItem(i) === "cabecalho")
+    let ultimo = cab
+    for (let j = cab + 1; j < itens.length && !papelDoItem(itens[j]); j++) if (marcaDeMusica(itens[j]) || marcaDoMaterial(itens[j])) ultimo = j
+    return ultimo + 1
 }
