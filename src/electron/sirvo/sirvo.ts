@@ -30,17 +30,29 @@ export function sirvoAmbiente(): keyof typeof AMBIENTES {
 const LEITURA = ["show_cultos", "show_rev", "show_roteiro"]
 // show_tirar_musicas / show_devolver_musica (F3): o operador tirou do projeto uma música que o Sirvo pôs
 const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco", "show_tirar_musicas", "show_devolver_musica"]
+// O chat do culto (F4 v1, migration 0084 do Sirvo): só leitura, caminho próprio
+// no renderer (aliancaSirvoChat.ts). Fora da trava de escrita: ler o chat
+// nunca pode atrasar "avançar bloco".
+const CHAT = ["show_chat"]
+// Responder no chat (F4 v1.1, migration 0089 do Sirvo): escrita com trava PRÓPRIA
+// de 1 s. A trava de 500 ms do roteiro não é tocada: mandar "ok" e logo em
+// seguida tocar "Encerrar bloco" faz os dois funcionarem.
+const CHAT_ESCRITA = ["show_chat_enviar"]
 // F3 (migration 0085 do Sirvo): o catálogo de músicas. Fica FORA das escritas
 // de propósito: não disputa o intervalo de 500 ms com o operador (uma
 // publicação em segundo plano não pode fazer o "avançar" responder "Calma"), e
 // a recusa dele nunca é lida como chave recusada (não derruba a ponte).
 const CATALOGO = "show_publicar_catalogo"
-const FUNCOES = new Set([...LEITURA, ...ESCRITA, CATALOGO])
+const FUNCOES = new Set([...LEITURA, ...ESCRITA, ...CHAT, ...CHAT_ESCRITA, CATALOGO])
 const DE_ESCRITA = new Set(ESCRITA)
+const DO_CHAT = new Set(CHAT)
+const DE_CHAT_ESCRITA = new Set(CHAT_ESCRITA)
 // No máximo uma escrita a cada 500 ms, venha de onde vier no renderer: protege
 // contra duplo clique e contra um renderer que enlouqueça (o Sirvo também limita).
 const ESCRITA_MIN_MS = 500
 let ultimaEscrita = 0
+const CHAT_ESCRITA_MIN_MS = 1_000
+let ultimaEscritaChat = 0
 const TEMPO_LIMITE_MS = 8_000
 // teto do corpo do catálogo com as letras (acima disso, vai sem elas)
 const CORPO_MAX_BYTES = 7_500_000
@@ -101,6 +113,13 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         ultimaEscrita = agora
     }
 
+    const escritaChat = DE_CHAT_ESCRITA.has(funcao)
+    if (escritaChat) {
+        const agora = Date.now()
+        if (agora - ultimaEscritaChat < CHAT_ESCRITA_MIN_MS) return { ok: false, codigo: "erro", mensagem: "Calma: um pedido de cada vez." }
+        ultimaEscritaChat = agora
+    }
+
     // o catálogo leva o que só o arquivo tem (primeira linha, artista, tom…)
     if (funcao === CATALOGO && Array.isArray(args.p_musicas)) args = { ...args, p_musicas: await enriquecerCatalogo(args.p_musicas) }
 
@@ -132,15 +151,15 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         if (codigo === "42501" && String(corpo?.message || "").startsWith("Chave do Sirvo")) return { ok: false, codigo: "chave_invalida", mensagem: "Chave do Sirvo inválida ou revogada." }
         if (funcao === CATALOGO && codigo === "42501" && String(corpo?.message || "").startsWith("Esta chave não publica")) return { ok: false, codigo: "nao_publica", mensagem: "Esta chave não publica as músicas." }
         if (codigo === "P0002") return { ok: false, codigo: "culto_inexistente", mensagem: "Culto não encontrado no Sirvo." }
-        // Numa escrita, a recusa do Sirvo é a frase que o operador precisa ler
-        // ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
+        // Numa escrita (e no chat), a recusa do Sirvo é a frase que o operador
+        // precisa ler ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
         // o catálogo também devolve o código: 54000 / 413 (corpo grande demais) faz o Show tentar sem a letra
         const pg = funcao === CATALOGO ? (resposta.status === 413 ? "413" : typeof codigo === "string" ? codigo : undefined) : undefined
-        if ((escrita || funcao === CATALOGO) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200), pg }
+        if ((escrita || escritaChat || DO_CHAT.has(funcao) || funcao === CATALOGO) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200), pg }
         return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.`, pg }
     } catch {
         // Escrita que estourou o tempo pode ter chegado: quem diz é o próximo rev.
-        if (escrita) return { ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" }
+        if (escrita || escritaChat) return { ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" }
         return { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
     } finally {
         clearTimeout(limite)

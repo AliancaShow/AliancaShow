@@ -279,7 +279,7 @@ export interface MainSendPayloads {
     [Main.PCO_FETCH_SERVICE_TREE]: undefined
     [Main.PCO_LOAD_PLAN]: { serviceTypeId: string; planId: string }
     [Main.SIRVO_SALVAR_CHAVE]: { chave: string }
-    [Main.SIRVO_CHAMAR]: { funcao: "show_cultos" | "show_rev" | "show_roteiro" | "show_publicar_catalogo"; args?: { [key: string]: any } }
+    [Main.SIRVO_CHAMAR]: { funcao: "show_cultos" | "show_rev" | "show_roteiro" | "show_chat" | "show_chat_enviar" | "show_publicar_catalogo"; args?: { [key: string]: any } }
     // Content Library
     [Main.GET_CONTENT_LIBRARY]: { providerId: ContentProviderId }
     [Main.GET_PROVIDER_CONTENT]: { providerId: ContentProviderId; key: string }
