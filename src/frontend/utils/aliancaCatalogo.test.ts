@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { hashDoCatalogo, itensParaSirvo, lerRespostaDoCatalogo, musicasDaBiblioteca } from "./aliancaCatalogo"
+import { comDetalhesDosNaoSalvos, CORPO_MAX_BYTES, deveTirarALetra, hashDoCatalogo, itensParaSirvo, lerRespostaDoCatalogo, musicasDaBiblioteca, semLetra, tamanhoDoCorpo } from "./aliancaCatalogo"
 
 const categorias = { musicas: { name: "Músicas", icon: "song" }, impulso: { name: "Impulso", icon: "song" }, avisos: { name: "Avisos", icon: "info" } }
 const shows = {
@@ -64,5 +64,42 @@ describe("catálogo de músicas", () => {
         // chave recusada não derruba nada aqui: só tenta mais tarde (quem cuida da chave é a ponte)
         expect(lerRespostaDoCatalogo({ ok: false, codigo: "chave_invalida", mensagem: "x" }).acao).toBe("falhou")
         expect(lerRespostaDoCatalogo(null).acao).toBe("falhou")
+    })
+})
+
+describe("catálogo · detalhes do que não foi salvo e letra", () => {
+    const item = { show_id: "a", nome: "A", categoria: "M", modificado_em: 1 }
+    const showEmMemoria = { slides: { s: { items: [{ lines: [{ text: [{ value: "linha nova" }] }] }] } }, layouts: { L: { slides: [{ id: "s" }] } } }
+
+    it("só o show não salvo ganha detalhes do cache; o hash não muda", () => {
+        const itens = [item, { ...item, show_id: "b" }]
+        const r = comDetalhesDosNaoSalvos(itens, (id) => id === "a", { a: showEmMemoria, b: showEmMemoria })
+        expect(r[0].primeira_linha).toBe("linha nova")
+        expect(r[0].letra).toBe("linha nova")
+        expect("primeira_linha" in r[1]).toBe(false)
+        expect(hashDoCatalogo(r)).toBe(hashDoCatalogo(itens))
+    })
+
+    it("não salvo mas fora do cache segue sem detalhes (o main lê o arquivo)", () => {
+        expect(comDetalhesDosNaoSalvos([item], () => true, {})).toEqual([item])
+    })
+
+    it("decide tirar a letra: 54000, 413 ou corpo grande; outros erros não", () => {
+        expect(deveTirarALetra({ ok: false, pg: "54000" }, 1000)).toBe(true)
+        expect(deveTirarALetra({ ok: false, pg: "413" }, 1000)).toBe(true)
+        expect(deveTirarALetra(null, CORPO_MAX_BYTES + 1)).toBe(true)
+        expect(deveTirarALetra({ ok: false, pg: "42501" }, 1000)).toBe(false)
+        expect(deveTirarALetra({ ok: false }, 1000)).toBe(false)
+        expect(deveTirarALetra({ ok: true }, 1000)).toBe(false)
+    })
+
+    it("semLetra tira a letra de todos e mantém o resto", () => {
+        const r = semLetra([{ ...item, letra: "x", trecho: null }, item])
+        expect(r[0]).toEqual({ ...item, trecho: null })
+        expect("letra" in r[0]).toBe(false)
+    })
+
+    it("tamanho do corpo conta UTF-8", () => {
+        expect(tamanhoDoCorpo("á")).toBe(4) // "á" com as aspas do JSON: 1+2+1
     })
 })

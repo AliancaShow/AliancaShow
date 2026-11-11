@@ -15,10 +15,11 @@
 import { get } from "svelte/store"
 import { Main } from "../../types/IPC/Main"
 import { requestMain } from "../IPC/main"
-import { categories, loaded, shows, special } from "../stores"
-import { hashDoCatalogo, itensParaSirvo, lerRespostaDoCatalogo, musicasDaBiblioteca } from "./aliancaCatalogo"
+import { categories, loaded, shows, showsCache, special } from "../stores"
+import { comDetalhesDosNaoSalvos, deveTirarALetra, hashDoCatalogo, itensParaSirvo, lerRespostaDoCatalogo, musicasDaBiblioteca, semLetra, tamanhoDoCorpo } from "./aliancaCatalogo"
 import { sirvo } from "./aliancaSirvo"
 import { lerLigacoesSirvo } from "./aliancaSirvoMontar"
+import { rastreioDeSalvos } from "./aliancaShowsSalvos"
 
 const DEPOIS_DE_MUDAR_MS = 10_000
 const AO_CONECTAR_MS = 3_000
@@ -39,9 +40,18 @@ let naoPublicaAte = 0
 /** o último hash que o Sirvo confirmou (publicado ou "igual") nesta sessão */
 let hashConfirmado = ""
 
+/** ids que já estavam no disco quando a biblioteca terminou de carregar */
+let idsDoDisco: Set<string> | null = null
+
 export function iniciarCatalogoSirvo() {
     if (iniciado) return
     iniciado = true
+
+    // quais shows foram editados e ainda não gravados (o arquivo estaria velho para o trecho/letra)
+    loaded.subscribe((l) => {
+        if (l && !idsDoDisco) idsDoDisco = new Set(Object.keys(get(shows) || {}))
+    })
+    showsCache.subscribe((cache) => rastreioDeSalvos.observar(cache as any, (id) => !idsDoDisco || idsDoDisco.has(id)))
 
     sirvo.subscribe((e) => {
         const conectado = e.status === "conectado"
@@ -79,6 +89,12 @@ async function chamar(args: { [key: string]: any }) {
     return (await requestMain(Main.SIRVO_CHAMAR, { funcao: "show_publicar_catalogo", args })) as any
 }
 
+/** Manda os detalhes do que está só em memória; o main preenche o resto do disco. */
+function itensComDetalhes(itens: ReturnType<typeof itensParaSirvo>) {
+    const cache = get(showsCache) as any
+    return comDetalhesDosNaoSalvos(itens, (id) => rastreioDeSalvos.naoSalvo(id, cache), cache)
+}
+
 async function publicar() {
     if (emVoo) {
         deNovo = true
@@ -103,7 +119,19 @@ async function publicar() {
     emVoo = true
     try {
         let acao = lerRespostaDoCatalogo(await chamar({ p_hash: hash }))
-        if (acao.acao === "mandar_lista") acao = lerRespostaDoCatalogo(await chamar({ p_hash: hash, p_musicas: itens }))
+        if (acao.acao === "mandar_lista") {
+            const completos = itensComDetalhes(itens)
+            let corpo = completos
+            let resposta: any = null
+            // corpo já grande demais: nem tenta com letra
+            if (!deveTirarALetra(null, tamanhoDoCorpo(completos))) resposta = await chamar({ p_hash: hash, p_musicas: completos })
+            if (!resposta || deveTirarALetra(resposta, 0)) {
+                console.warn("Sirvo: catálogo grande demais com as letras; publicando sem elas.")
+                corpo = semLetra(completos)
+                resposta = await chamar({ p_hash: hash, p_musicas: corpo })
+            }
+            acao = lerRespostaDoCatalogo(resposta)
+        }
 
         switch (acao.acao) {
             case "em_dia":

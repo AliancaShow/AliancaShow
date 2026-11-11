@@ -8,6 +8,7 @@
 // Música = show de categoria com ícone `song` (Músicas, Impulso,
 // ProPresenter), que não seja privado nem rascunho ("Novas do Sirvo", F3).
 
+import { detalhesDoShow, type DetalhesDaMusica } from "../../electron/sirvo/catalogoDetalhes"
 import { CATEGORIA_NOVAS, PREFIXO_RASCUNHO } from "./aliancaSirvoMusicas"
 
 export type MusicaDaBiblioteca = { id: string; nome: string; categoria: string; modificado: number | null }
@@ -39,7 +40,7 @@ export function musicasDaBiblioteca(shows: ShowsLike, categorias: CategoriasLike
  * as linhas de "música nova" do Sirvo que ESTA música é — o Sirvo troca a nova
  * pelo show_id real.
  */
-export type MusicaParaSirvo = { show_id: string; nome: string; categoria: string; modificado_em: number | null; sirvo_musicas?: string[] }
+export type MusicaParaSirvo = { show_id: string; nome: string; categoria: string; modificado_em: number | null; sirvo_musicas?: string[] } & Partial<DetalhesDaMusica>
 
 const UUID_SEM_HIFEN = /^[0-9a-f]{32}$/i
 
@@ -92,6 +93,50 @@ export function hashDoCatalogo(itens: MusicaParaSirvo[]): string {
     h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
     const n = 4294967296 * (2097151 & h2) + (h1 >>> 0)
     return `c53_${itens.length}_${n.toString(16)}`
+}
+
+/**
+ * Show editado e ainda não gravado: o arquivo no disco está velho, então o
+ * main não pode ler o conteúdo dele. O renderer calcula os detalhes (trecho,
+ * primeira linha, letra…) do show em memória, com a MESMA função pura do main.
+ * O hash não muda: ele só olha id/nome/categoria/modificado/ligações.
+ */
+export function comDetalhesDosNaoSalvos(itens: MusicaParaSirvo[], naoSalvo: (id: string) => boolean, cache: { [id: string]: any }): MusicaParaSirvo[] {
+    return itens.map((item) => (naoSalvo(item.show_id) && cache?.[item.show_id] ? { ...item, ...detalhesDoShow(cache[item.show_id]) } : item))
+}
+
+/** Teto do corpo da publicação (o limite do Sirvo/PostgREST é maior; aqui sobra folga). */
+export const CORPO_MAX_BYTES = 7_500_000
+
+export function tamanhoDoCorpo(itens: unknown): number {
+    const texto = JSON.stringify(itens)
+    // UTF-8 sem depender de TextEncoder/Buffer (renderer e testes)
+    let bytes = 0
+    for (let i = 0; i < texto.length; i++) {
+        const c = texto.charCodeAt(i)
+        bytes += c < 0x80 ? 1 : c < 0x800 ? 2 : c >= 0xd800 && c <= 0xdbff ? (i++, 4) : 3
+    }
+    return bytes
+}
+
+export function semLetra(itens: MusicaParaSirvo[]): MusicaParaSirvo[] {
+    return itens.map((item) => {
+        if (!("letra" in item)) return item
+        const copia = { ...item }
+        delete copia.letra
+        return copia
+    })
+}
+
+/**
+ * Mandar de novo SEM `letra`? Sim quando o Sirvo recusou por tamanho
+ * (Postgres 54000 "program_limit_exceeded", ou HTTP 413) ou quando o corpo
+ * já estimado passa do teto. O catálogo básico nunca depende da letra.
+ * @param tamanho bytes do corpo com as letras (os itens que vão ao Sirvo)
+ */
+export function deveTirarALetra(r: { ok: boolean; pg?: string } | null | undefined, tamanho: number): boolean {
+    if (tamanho > CORPO_MAX_BYTES) return true
+    return !!r && !r.ok && (r.pg === "54000" || r.pg === "413")
 }
 
 export type AcaoDoCatalogo =

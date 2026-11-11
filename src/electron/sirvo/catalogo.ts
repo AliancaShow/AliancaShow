@@ -56,7 +56,9 @@ async function lerDetalhesDaPasta(): Promise<Map<string, DetalhesDaMusica>> {
     return porId
 }
 
-/** Acrescenta os detalhes do arquivo a cada item `{show_id, …}`. Falhou a leitura: manda sem. */
+/** Acrescenta os detalhes do arquivo a cada item `{show_id, …}`. Falhou a leitura: manda sem.
+ *  Item que já veio COM detalhes (o renderer os calculou do show em memória, editado e ainda
+ *  não gravado — o arquivo estaria velho) não é tocado. */
 export async function enriquecerCatalogo(itens: any[]): Promise<any[]> {
     let porId: Map<string, DetalhesDaMusica>
     try {
@@ -65,6 +67,7 @@ export async function enriquecerCatalogo(itens: any[]): Promise<any[]> {
         return itens
     }
     return itens.map((item) => {
+        if (item && "primeira_linha" in item) return item
         const d = porId.get(item?.show_id)
         return d ? { ...item, ...d } : item
     })

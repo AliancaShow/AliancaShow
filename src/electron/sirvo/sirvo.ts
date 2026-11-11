@@ -42,6 +42,8 @@ const DE_ESCRITA = new Set(ESCRITA)
 const ESCRITA_MIN_MS = 500
 let ultimaEscrita = 0
 const TEMPO_LIMITE_MS = 8_000
+// teto do corpo do catálogo com as letras (acima disso, vai sem elas)
+const CORPO_MAX_BYTES = 7_500_000
 // o catálogo vai com a biblioteca inteira (centenas de músicas, enriquecidas dos arquivos): mais folga
 const TEMPO_LIMITE_CATALOGO_MS = 30_000
 // cofre separado por ambiente: a chave do staging nunca é usada contra a produção
@@ -49,7 +51,7 @@ const chaveNoCofre = () => (sirvoAmbiente() === "staging" ? "sirvo_staging" : "s
 const FORMATO_DA_CHAVE = /^sirvo_show_[A-Za-z0-9_-]{20,100}$/
 
 // "ocupado": outra escrita saiu há menos de 500 ms — tente daqui a pouco (não é recusa do Sirvo)
-export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "nao_publica" | "rede" | "ocupado" | "erro"; mensagem: string }
+export type RespostaSirvo = { ok: true; dados: any } | { ok: false; codigo: "sem_chave" | "chave_invalida" | "culto_inexistente" | "nao_publica" | "rede" | "ocupado" | "erro"; mensagem: string; /** código do Postgres (ou "413") quando o Sirvo recusou o catálogo */ pg?: string }
 
 let chaveEmMemoria: string | null = null
 
@@ -102,6 +104,14 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
     // o catálogo leva o que só o arquivo tem (primeira linha, artista, tom…)
     if (funcao === CATALOGO && Array.isArray(args.p_musicas)) args = { ...args, p_musicas: await enriquecerCatalogo(args.p_musicas) }
 
+    let corpoTexto = JSON.stringify({ ...args, p_chave: chave })
+    // depois de enriquecer, o corpo pode passar do teto: o catálogo básico nunca depende da letra
+    if (funcao === CATALOGO && Array.isArray(args.p_musicas) && Buffer.byteLength(corpoTexto) > CORPO_MAX_BYTES) {
+        console.warn("Sirvo: catálogo grande demais com as letras; mandando sem elas.")
+        args = { ...args, p_musicas: args.p_musicas.map(({ letra: _letra, ...resto }: any) => resto) }
+        corpoTexto = JSON.stringify({ ...args, p_chave: chave })
+    }
+
     const controle = new AbortController()
     const limite = setTimeout(() => controle.abort(), funcao === CATALOGO ? TEMPO_LIMITE_CATALOGO_MS : TEMPO_LIMITE_MS)
     try {
@@ -109,7 +119,7 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         const resposta = await fetch(ambiente.url + funcao, {
             method: "POST",
             headers: { apikey: ambiente.apikey, "Content-Type": "application/json" },
-            body: JSON.stringify({ ...args, p_chave: chave }),
+            body: corpoTexto,
             signal: controle.signal
         })
         const corpo: any = await resposta.json().catch(() => null)
@@ -124,8 +134,10 @@ export async function sirvoChamar(funcao: string, args: { [key: string]: any } =
         if (codigo === "P0002") return { ok: false, codigo: "culto_inexistente", mensagem: "Culto não encontrado no Sirvo." }
         // Numa escrita, a recusa do Sirvo é a frase que o operador precisa ler
         // ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
-        if ((escrita || funcao === CATALOGO) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200) }
-        return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.` }
+        // o catálogo também devolve o código: 54000 / 413 (corpo grande demais) faz o Show tentar sem a letra
+        const pg = funcao === CATALOGO ? (resposta.status === 413 ? "413" : typeof codigo === "string" ? codigo : undefined) : undefined
+        if ((escrita || funcao === CATALOGO) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200), pg }
+        return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.`, pg }
     } catch {
         // Escrita que estourou o tempo pode ter chegado: quem diz é o próximo rev.
         if (escrita) return { ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" }
