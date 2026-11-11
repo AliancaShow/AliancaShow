@@ -1,6 +1,6 @@
 import type { ProjectShowRef } from "../../types/Projects"
 import { marcaDe as marcaDeMusica } from "./aliancaSirvoMusicas"
-import { ID_RODAPE, ordemMudaAteOPonteiro, papelDoItem, PREFIXO_SIRVO } from "./aliancaSirvoProjeto"
+import { ID_RODAPE, ordemMudaAteOPonteiro, papelDoItem, PREFIXO_LAPIDE, PREFIXO_SIRVO } from "./aliancaSirvoProjeto"
 
 // ----- AliançaShow · o material do Sirvo dentro do projeto do culto (F5, S3) -----
 //
@@ -188,6 +188,8 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
     // 3. onde cada material deve estar: dentro do bloco do Sirvo (se o bloco está no projeto), senão no fim
     const temRodape = itens.some((i) => i?.type === "section" && i.id === ID_RODAPE)
     const vivos = blocosVivos(base)
+    // bloco que saiu do Sirvo e virou lápide: o material que já estava nele fica lá, como as músicas
+    const lapides = new Set(base.filter((i) => papelDoItem(i) === "lapide").map((i) => i.id.slice(PREFIXO_LAPIDE.length)))
     const caminhos = new Set(base.map((i) => i?.id))
     const doMarcado = new Map<string, ProjectShowRef>()
     for (const item of base) {
@@ -207,7 +209,9 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
                 if (typeof atual.data?.[EVENTO] === "string" && o.eventoId && atual.data[EVENTO] !== o.eventoId) continue
                 const onde = typeof atual.data?.[BLOCO] === "string" ? atual.data[BLOCO] : ""
                 if (onde === alvo || typeof atual.data?.[APAGANDO_EM] === "number") continue
-                // em uso (aberto, foco, saída) não é levado a outro lugar
+                if (lapides.has(onde)) continue
+                // em uso (aberto, foco, saída) não é levado a outro lugar. `ativos` e `itens.indexOf` são posições da lista
+                // RECEBIDA; quem sai (`sai`) nunca está antes de um ponteiro, então as posições dos ativos valem também em `base`
                 if (ativos.has(itens.indexOf(atual))) continue
                 mover.push({ id, item: atual, existente: true, alvo })
                 continue
@@ -222,23 +226,33 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
     let depois = base
     let pendente = false
     if (mover.length) {
-        const sobra = base.filter((i) => !mover.some((m) => m.existente && m.item === i))
-        const novaLista = [...sobra]
-        for (const m of mover) {
-            if (!m.alvo) {
-                novaLista.push(m.item)
-                continue
+        // a lista que sai de uma escolha de movimentos (os existentes saem de onde estão e entram no alvo)
+        const montar = (escolhidos: Mover[]) => {
+            const saem = new Set(escolhidos.filter((m) => m.existente).map((m) => m.item))
+            const lista = saem.size ? base.filter((i) => !saem.has(i)) : [...base]
+            for (const m of escolhidos) {
+                if (!m.alvo) lista.push(m.item)
+                else lista.splice(depoisDoUltimoDoBloco(lista, m.alvo), 0, m.item)
             }
-            novaLista.splice(depoisDoUltimoDoBloco(novaLista, m.alvo), 0, m.item)
+            return lista
         }
-        // a mesma trava das músicas: mudança que alcança um ponteiro vivo espera o "Aplicar"
+        // a mesma trava das músicas, mas item a item: o que entra no fim ("Fora do roteiro") passa primeiro, e o que
+        // alcança um ponteiro vivo fica pendente SOZINHO (não segura os outros)
         const trava = !o.forcar && (o.protegido || o.congelarRemocao)
-        const bloqueada = trava && (o.congelarRemocao ? novaLista.slice(0, base.length).some((x, i) => x !== base[i]) : ordemMudaAteOPonteiro(base, novaLista, [...ativos]))
-        if (bloqueada) {
-            pendente = true
-        } else {
-            depois = novaLista
-            for (const m of mover) {
+        const alcancaPonteiro = (lista: ProjectShowRef[]) => (o.congelarRemocao ? lista.slice(0, base.length).some((x, i) => x !== base[i]) : ordemMudaAteOPonteiro(base, lista, [...ativos]))
+        const ordenados = [...mover.filter((m) => !m.alvo), ...mover.filter((m) => m.alvo)]
+        const aceitos: Mover[] = []
+        for (const m of ordenados) {
+            if (trava && alcancaPonteiro(montar([...aceitos, m]))) pendente = true
+            else aceitos.push(m)
+        }
+        if (aceitos.length) {
+            const novaLista = montar(aceitos)
+            // a mesma sequência de objetos (o item já estava no lugar): só a marca muda, sem escrita estrutural
+            // (não mexe no Ctrl+Z, na seleção nem no "abrir por posição" do celular)
+            const mesma = novaLista.length === base.length && novaLista.every((x, i) => x === base[i])
+            if (!mesma) depois = novaLista
+            for (const m of aceitos) {
                 if (m.existente) {
                     m.item.data = { ...m.item.data, [BLOCO]: m.alvo }
                     mudouCampos = true

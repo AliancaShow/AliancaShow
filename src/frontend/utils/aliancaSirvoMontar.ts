@@ -54,6 +54,8 @@ export type EstadoMontagem = {
     outroCulto: string
     /** a ordem nova não foi aplicada (só com situacao "ligado") */
     pendente: MotivoPendente | null
+    /** o `pendente` é só do material de arquivo (entrada ou troca de bloco): não bloqueia os pedidos do operador (F2) */
+    materialPendente: boolean
     /** o que está pendente, em texto curto ("Louvor mudou de lugar · bloco novo: Avisos") */
     resumo: string
     sumiram: number
@@ -63,12 +65,13 @@ export type EstadoMontagem = {
     eEsta: PerguntaEEsta | null
 }
 
-const VAZIO: EstadoMontagem = { projetoId: null, situacao: "nenhuma", motivo: null, eventId: null, titulo: "", blocos: 0, quantosNoDia: 0, outroCulto: "", pendente: null, resumo: "", sumiram: 0, protegido: false, eEsta: null }
+const VAZIO: EstadoMontagem = { projetoId: null, situacao: "nenhuma", motivo: null, eventId: null, titulo: "", blocos: 0, quantosNoDia: 0, outroCulto: "", pendente: null, materialPendente: false, resumo: "", sumiram: 0, protegido: false, eEsta: null }
 export const sirvoMontagem = writable<EstadoMontagem>(VAZIO)
 // F2: o pedido do operador não força o rev se já havia ordem alheia pendente
 registrarPendenciaSirvo((eventId) => {
     const m = get(sirvoMontagem)
-    return m.eventId === eventId && !!m.pendente
+    // pendência SÓ do material não conta: forçar o rev do pedido não aplica o material (ele só entra no "Aplicar")
+    return m.eventId === eventId && !!m.pendente && !m.materialPendente
 })
 
 const CHAVE_MEMORIA = "aliancaSirvoMontados"
@@ -400,7 +403,7 @@ function ligarEMontar(projetoId: string, r: Roteiro): string | null {
  * sempre; nele, sozinha só depois de todo ponteiro vivo (a conta decide pelos
  * `ativos`), ou com Aplicar (`forcar`). Nunca no meio de um arrasto.
  */
-function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
+function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean, forcarMaterial = false) {
     // F3: o que o operador tirou do projeto (aliancaSirvoDispensar.ts), conferido
     // ANTES de ler a lista: a marca que voltou pode perder a marca aqui mesmo
     const dispensadas = conferirDispensasSirvo(r.event_id, projetoId, r)
@@ -426,15 +429,17 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
         }
     }
 
-    // F5: o material de arquivo do Sirvo ("Fora do roteiro", marca `sirvoMaterial`). Só quando
-    // nada mais mexe na lista nesta passada (a ordem dos blocos não mudou e nada está pendente):
-    // o material entra no FIM e sai só sem ponteiro vivo depois dele, mas as posições que a
-    // conta de cima usou são as do projeto de antes. Nunca no meio de um arrasto.
+    // F5: o material de arquivo do Sirvo (marca `sirvoMaterial`), DENTRO do bloco escolhido no Sirvo
+    // ou em "Fora do roteiro". Só quando nada mais mexe na lista nesta passada (a ordem dos blocos
+    // não mudou e nada está pendente): as posições dos ponteiros (`ativosNo`) são as do projeto de
+    // agora. Sai só sem ponteiro vivo depois dele; entra/troca de bloco sob a trava do momento
+    // protegido (a das músicas) e, se alcança um ponteiro vivo, fica pendente até o "Aplicar" desta
+    // faixa (`forcarMaterial`: só esse botão libera, nunca um pedido do operador). Nunca no meio de um arrasto.
     let material: ReturnType<typeof prepararMaterial> = null
     let materialPendente = false
     if (depois === itens && !pendente && !(aberto && arrastando)) {
         try {
-            material = prepararMaterial(projetoId, r, itens, { ativos: ativosNo(projetoId), protegido: prot, congelarRemocao: !aberto && prot && saidaComPosicao(), forcar })
+            material = prepararMaterial(projetoId, r, itens, { ativos: ativosNo(projetoId), protegido: prot, congelarRemocao: !aberto && prot && saidaComPosicao(), forcar: forcarMaterial })
         } catch (erro) {
             console.error("Sirvo: falha ao conciliar o material", erro)
         }
@@ -457,7 +462,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean) {
     if (material?.reavaliarEm) agendar(material.reavaliarEm + 100)
 
     const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos, { dispensadas })) || (materialPendente ? "material novo ou em outro bloco" : "") : ""
-    return { pendente, resumo, sumiram: res.sumiram, protegido: prot }
+    return { pendente, resumo, sumiram: res.sumiram, protegido: prot, materialPendente }
 }
 
 function passada(pedido: Pedido = {}): string | null {
@@ -538,9 +543,9 @@ function passada(pedido: Pedido = {}): string | null {
         case "reconciliar": {
             const id = decisao.projetoId
             // o próprio pedido do operador (F2) entra mesmo no momento protegido
-            const res = atualizarLigado(id, r, pedido.forcar === id || Number(r.rev) <= sirvoForcarAte(r.event_id))
+            const res = atualizarLigado(id, r, pedido.forcar === id || Number(r.rev) <= sirvoForcarAte(r.event_id), pedido.forcar === id)
             lembrarMontado(r.event_id, id)
-            publicar({ ...base, projetoId: id, situacao: "ligado", pendente: res.pendente, resumo: res.resumo, sumiram: res.sumiram, protegido: res.protegido })
+            publicar({ ...base, projetoId: id, situacao: "ligado", pendente: res.pendente, materialPendente: res.materialPendente, resumo: res.resumo, sumiram: res.sumiram, protegido: res.protegido })
             return null
         }
     }

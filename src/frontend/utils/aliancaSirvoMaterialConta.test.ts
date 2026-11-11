@@ -265,4 +265,45 @@ describe("material dentro do bloco escolhido no Sirvo (S5)", () => {
         expect(ordemMudaAteOPonteiro(a, b, [3])).toBe(true)
         expect(ordemMudaAteOPonteiro(a, b, [])).toBe(false)
     })
+
+    it("a: o item já está na posição certa (só a marca muda): a lista é a MESMA, sem escrita estrutural", () => {
+        const itens = montado()
+        const item = itemDoMaterial(baixado("m1"), "") // veio do S3 sem bloco, mas já está no lugar do bloco b1
+        itens.splice(3, 0, item)
+        const r = conciliarMaterial(itens, opcoes([baixado("m1")], [mat("m1", "b1")]))
+        expect(r.itens).toBe(itens)
+        expect(r.mudouCampos).toBe(true)
+        expect(item.data[BLOCO]).toBe("b1")
+    })
+    it("b: bloco removido no Sirvo (lápide): o material que estava nele fica; o novo vai para o fim", () => {
+        const lapide: ProjectShowRef = { id: "sirvo_x_b1", type: "section", name: "(removido no Sirvo) b1" }
+        const velho = itemDoMaterial(baixado("m1"), "b1")
+        const itens = [lapide, velho, cab("b2"), rodape()]
+        const r = conciliarMaterial(itens, opcoes([baixado("m1"), baixado("m2")], [mat("m1", null), mat("m2", "b1")]))
+        expect(r.itens[1]).toBe(velho)
+        expect(velho.data[BLOCO]).toBe("b1")
+        expect(ids(r.itens)).toEqual(["sirvo_x_b1", "m1", "sirvo_b2", ID_RODAPE, "m2"])
+    })
+    it("c: o que vai para o fim passa na frente; o que alcança o ponteiro fica pendente sozinho", () => {
+        const itens = montado()
+        const r = conciliarMaterial(itens, { ...opcoes([baixado("m1"), baixado("m2")], [mat("m1", "b1"), mat("m2", null)]), protegido: true, ativos: [3] })
+        expect(r.pendente).toBe(true)
+        expect(r.postos).toEqual(["m2"])
+        expect(ids(r.itens)).toEqual(["sirvo_b1", "s1", "s2", "dele", "sirvo_b2", ID_RODAPE, "m2"])
+    })
+    it("item legado do S3 (sem sirvoBloco, no fim) migra para o bloco", () => {
+        const legado: ProjectShowRef = { id: baixado("m1").caminho, type: "video", name: "Video m1", data: { [MARCA]: "m1" } }
+        const r = conciliarMaterial([...montado(), legado], opcoes([baixado("m1")], [mat("m1", "b1")]))
+        expect(ids(r.itens)).toEqual(["sirvo_b1", "s1", "s2", "m1", "dele", "sirvo_b2", ID_RODAPE])
+        expect(legado.data[BLOCO]).toBe("b1")
+    })
+    it("projeto fechado com slide de posição desconhecida (congelarRemocao): religar espera; só entrar no fim passa", () => {
+        const r1 = conciliarMaterial(montado(), opcoes([baixado("m1")], [mat("m1", "b1")]))
+        const preso = conciliarMaterial(r1.itens, { ...opcoes([baixado("m1")], [mat("m1", "b2")]), protegido: true, congelarRemocao: true })
+        expect(preso.pendente).toBe(true)
+        expect(preso.itens).toBe(r1.itens)
+        const fim = conciliarMaterial(r1.itens, { ...opcoes([baixado("m1"), baixado("m2")], [mat("m1", "b1"), mat("m2", null)]), protegido: true, congelarRemocao: true })
+        expect(fim.pendente).toBe(false)
+        expect(ids(fim.itens).at(-1)).toBe("m2")
+    })
 })
