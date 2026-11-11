@@ -17,7 +17,7 @@ import type { ProjectShowRef } from "../../types/Projects"
 import { Main } from "../../types/IPC/Main"
 import { requestMain } from "../IPC/main"
 import { outputs, special } from "../stores"
-import { conciliarMaterial, marcaDoMaterial, type Baixado, type MaterialDoRoteiro, type ResultadoMaterial } from "./aliancaSirvoMaterialConta"
+import { conciliarMaterial, mapaDoRoteiro, marcaDoMaterial, type Baixado, type MaterialDoRoteiro, type ResultadoMaterial } from "./aliancaSirvoMaterialConta"
 
 const VAZIO: EstadoMaterial = { habilitado: null, baixando: 0, naFila: 0, lote: { total: 0, feitos: 0 }, falhas: [], baixados: [] }
 export const sirvoMaterialEstado = writable<EstadoMaterial>(VAZIO)
@@ -102,16 +102,18 @@ function mudarMemoria(fn: (m: { [id: string]: Memoria }) => void) {
 // ---------------------------------------------------------------- avisar o Sirvo
 
 const emRelato = new Set<string>()
+let relatarApos = 0 // recuo: rede, interruptor desligado ou limite de 60/min
 
 /** `no_projeto` / `usado`: uma vez por item; se não chegou, a próxima passada tenta de novo */
 async function relatar(id: string, status: "no_projeto" | "usado", codec: string | null | undefined) {
     const chave = `${id}|${status}`
-    if (emRelato.has(chave)) return
+    if (emRelato.has(chave) || Date.now() < relatarApos) return
     emRelato.add(chave)
     try {
         const r: any = await requestMain(Main.SIRVO_CHAMAR, { funcao: "show_material_status", args: { p_id: id, p_status: status, p_detalhe: null, p_codec: codec ?? null } })
         // o Sirvo recusar ("erro") não melhora tentando de novo; rede e chave desligada, sim
         // 54000 (mais de 60/min) e 55000 (ainda não pronto) ficam para a próxima passada
+        if (!r?.ok && (r?.codigo === "rede" || r?.codigo === "nao_baixa" || r?.pg === "54000")) relatarApos = Date.now() + (r?.codigo === "nao_baixa" ? 300_000 : 60_000)
         if (r?.ok || ((r?.codigo === "erro" || r?.codigo === "culto_inexistente") && r?.pg !== "54000" && r?.pg !== "55000")) mudarMemoria((m) => m[id] && (m[id][status === "usado" ? "us" : "np"] = 1))
     } catch (erro) {
         console.error("Sirvo: falha ao avisar o material", erro)
@@ -138,13 +140,14 @@ export function prepararMaterial(projetoId: string, roteiro: { event_id: string;
     const e = get(sirvoMaterialEstado)
     const baixados = new Map<string, Baixado>()
     for (const b of e.baixados) if (b.event_id === roteiro.event_id) baixados.set(b.id, b)
-    const noRoteiro = Array.isArray(roteiro.material) ? new Map(roteiro.material.filter((m) => m && typeof m.id === "string").map((m) => [m.id, m])) : null
+    // sem o interruptor "baixa material" (ou sem a lista) a conta não faz nada: material [] não é "apagou tudo"
+    const noRoteiro = mapaDoRoteiro(roteiro.material, e.habilitado)
     // sem material no disco nem no projeto, não há nada a fazer (a conta nem corre)
     if (!baixados.size && !itens.some((i) => marcaDoMaterial(i))) return null
 
     const memoria = lerMemoria()
     const jaPostos = new Set(Object.keys(memoria).filter((id) => memoria[id].projeto === projetoId))
-    const res = conciliarMaterial(itens, { baixados, noRoteiro, jaPostos, ativos: contexto.ativos, protegido: contexto.protegido, congelarRemocao: contexto.congelarRemocao, agora: Date.now() })
+    const res = conciliarMaterial(itens, { baixados, noRoteiro, eventoId: roteiro.event_id, jaPostos, ativos: contexto.ativos, protegido: contexto.protegido, congelarRemocao: contexto.congelarRemocao, agora: Date.now() })
 
     return {
         ...res,
@@ -190,7 +193,29 @@ function emSaida(): Set<string> {
     return caminhos
 }
 
+let ultimaConferencia = 0
+let conferenciaMarcada: ReturnType<typeof setTimeout> | null = null
+const CONFERIR_USADO_MIN_MS = 5_000
+
+/** no máximo uma conferência a cada 5 s (as saídas mudam toda hora); a última chamada nunca se perde */
+function conferirUsadoComFreio() {
+    const espera = ultimaConferencia + CONFERIR_USADO_MIN_MS - Date.now()
+    if (espera > 0) {
+        if (!conferenciaMarcada) {
+            conferenciaMarcada = setTimeout(() => {
+                conferenciaMarcada = null
+                conferirUsadoComFreio()
+            }, espera)
+        }
+        return
+    }
+    ultimaConferencia = Date.now()
+    conferirUsado()
+}
+
 function conferirUsado() {
+    // sem o interruptor ligado não há material para acompanhar
+    if (get(sirvoMaterialEstado).habilitado !== true) return
     const naSaida = emSaida()
     if (!naSaida.size) return
     const memoria = lerMemoria()
@@ -210,7 +235,7 @@ export function iniciarMaterialSirvo() {
     // quem assina não pode lançar erro: o `set` do Svelte roda os assinantes na hora
     outputs.subscribe(() => {
         try {
-            conferirUsado()
+            conferirUsadoComFreio()
         } catch (erro) {
             console.error("Sirvo: falha ao conferir o uso do material", erro)
         }

@@ -13,19 +13,21 @@
 //   - grava em `.part`, confere tamanho (e o MD5, quando o ETag é MD5) e só
 //     então renomeia: arquivo pela metade nunca tem o nome final;
 //   - o Show NUNCA apaga arquivo do disco por causa do Sirvo;
-//   - 3 tentativas (5 s, 30 s, 120 s); depois reporta `falhou` e só tenta de
-//     novo 10 min depois.
+//   - 3 tentativas (5 s, 30 s, 120 s), cada uma com o PRÓPRIO AbortController;
+//     depois reporta `falhou` e recua por id (1, 5, 15, 60 min).
 // A conversa com o projeto (pôr o item em "Fora do roteiro") é do renderer
 // (aliancaSirvoMaterial.ts), que só recebe o estado sem URL.
 
-import { once } from "events"
 import { createHash } from "crypto"
+import { once } from "events"
 import fs from "fs"
+import path from "path"
 import { Readable } from "stream"
-import { _store } from "../data/store"
+import { pipeline } from "stream/promises"
 import { dentroDaPastaOnline } from "../data/downloadMedia"
+import { _store } from "../data/store"
 import { getDataFolderPath, getMediaCodec, makeDir } from "../utils/files"
-import { cabeNoDisco, ESTADO_VAZIO, estadoParaRenderer, etagEhMd5, etagsIguais, nomeDoArquivo, pastaDoMaterial, resolverDestino, urlDoMaterialValida, validarPendente, type EstadoMaterial, type MaterialNoDisco, type MaterialPendente } from "./materialLogica"
+import { cabeNoDisco, comTentativas, decidirRelato, ehUuid, ESTADO_VAZIO, estadoParaRenderer, etagEhMd5, etagsIguais, limparEtag, nomeDoArquivo, PASTA_DO_SIRVO, pastaDoMaterial, resolverDestino, tipoDaExtensao, urlDoMaterialValida, validarPendente, type EstadoMaterial, type MaterialNoDisco, type MaterialPendente } from "./materialLogica"
 import { sirvoChamarDoMain, sirvoR2, sirvoSufixoDoAmbiente } from "./sirvo"
 
 const EM_PARALELO = 2
@@ -37,8 +39,16 @@ const DEPOIS_DE_FALHAR_MS = [60_000, 5 * 60_000, 15 * 60_000, 60 * 60_000]
 const LIMITE_POR_HORA_MS = 10 * 60_000
 const SEM_PERMISSAO_MS = 5 * 60_000
 const CODEC_MAX_MS = 20_000
+const PRAZO_REGISTRO_MS = 90 * 86_400_000
+const PARCIAL_VELHO_MS = 86_400_000
+const CACHE_DISCO_MS = 30_000
 
-type Registro = MaterialNoDisco & { etag: string; tamanho: number }
+type Registro = MaterialNoDisco & {
+    etag: string
+    tamanho: number
+    /** quando entrou no mapa (para podar) */
+    em?: number
+}
 type ARelatar = { status: "baixado" | "falhou"; detalhe: string | null; codec: string | null }
 
 /** erro com um código curto e SEM texto de rede: é o que vira `detalhe` */
@@ -54,23 +64,45 @@ let registros: Map<string, Registro> | null = null
 const fila: MaterialPendente[] = []
 const emCurso = new Map<string, AbortController>()
 const falhos = new Map<string, { nome: string; detalhe: string; tentarApos: number; vezes: number }>()
-const esperaPorId = new Map<string, number>() // id → só volta a tentar depois disto (url_indisponivel, 55000, 54000)
+const esperaPorId = new Map<string, number>() // id → só volta a tentar depois disto (url_indisponivel, 54000, descartado)
 let urlsLiberadasApos = 0
 const aRelatar = new Map<string, ARelatar>()
+const etagRelatado = new Set<string>()
 let habilitado: boolean | null = null
 let perguntarApos = 0
+let relatarApos = 0 // recuo dos relatos de status (rede, interruptor desligado, 54000)
 let lote = { total: 0, feitos: 0 }
 let sincronizando = false
+let limpouParciais = false
 let geracao = 0 // sobe em materialParar: o que estava em voo se descarta
 
 const chaveDoStore = () => "sirvo_material" + sirvoSufixoDoAmbiente()
+
+function tamanhoNoDisco(caminho: string): number {
+    try {
+        return fs.statSync(caminho).size
+    } catch {
+        return -1
+    }
+}
 
 function carregar(): Map<string, Registro> {
     if (registros) return registros
     registros = new Map()
     try {
         const salvo = _store.ACCESS?.get(chaveDoStore()) as { [id: string]: Registro } | undefined
-        for (const [id, r] of Object.entries(salvo || {})) if (r && typeof r.caminho === "string" && typeof r.etag === "string") registros.set(id, r)
+        const corte = Date.now() - PRAZO_REGISTRO_MS
+        let podou = false
+        for (const [id, r] of Object.entries(salvo || {})) {
+            if (!r || typeof r.caminho !== "string" || typeof r.etag !== "string") continue
+            // poda: registro velho demais, ou cujo arquivo não existe mais
+            if ((r.em && r.em < corte) || tamanhoNoDisco(r.caminho) < 0) {
+                podou = true
+                continue
+            }
+            registros.set(id, r)
+        }
+        if (podou) guardar()
     } catch (erro) {
         console.error("Sirvo: não consegui ler o mapa do material", erro)
     }
@@ -85,12 +117,15 @@ function guardar() {
     }
 }
 
-const tamanhoNoDisco = (caminho: string): number => {
-    try {
-        return fs.statSync(caminho).size
-    } catch {
-        return -1
-    }
+// o renderer pede o estado a cada 3 s: não confere o disco de tudo a cada vez
+const cacheDisco = new Map<string, { ok: boolean; em: number }>()
+function aindaNoDisco(r: Registro): boolean {
+    const agora = Date.now()
+    const c = cacheDisco.get(r.id)
+    if (c && agora - c.em < CACHE_DISCO_MS) return c.ok
+    const ok = tamanhoNoDisco(r.caminho) === r.tamanho
+    cacheDisco.set(r.id, { ok, em: agora })
+    return ok
 }
 
 /** o estado que o renderer enxerga (sem URL, ver estadoParaRenderer) */
@@ -98,7 +133,7 @@ export function materialEstado(): EstadoMaterial {
     const baixados: MaterialNoDisco[] = []
     for (const r of carregar().values()) {
         // arquivo que sumiu do disco não é oferecido ao projeto
-        if (tamanhoNoDisco(r.caminho) !== r.tamanho) continue
+        if (!aindaNoDisco(r)) continue
         baixados.push({ id: r.id, caminho: r.caminho, nome: r.nome, tipo: r.tipo, codec: r.codec, event_id: r.event_id })
     }
     return estadoParaRenderer({
@@ -120,6 +155,8 @@ export function materialParar() {
     fila.length = 0
     falhos.clear()
     aRelatar.clear()
+    cacheDisco.clear()
+    relatarApos = 0
     habilitado = null
     perguntarApos = 0
     lote = { total: 0, feitos: 0 }
@@ -133,6 +170,10 @@ export async function materialSincronizar(): Promise<EstadoMaterial> {
     sincronizando = true
     const g = geracao
     try {
+        if (!limpouParciais) {
+            limpouParciais = true
+            void limparParciais()
+        }
         // os relatos pendentes seguem em segundo plano: o IPC não espera N chamadas ao Sirvo
         void relatarPendentes(g)
         if (g === geracao && Date.now() >= perguntarApos) {
@@ -166,7 +207,14 @@ function enfileirar(lista: any[]) {
     const agora = Date.now()
     for (const bruto of lista) {
         const m = validarPendente(bruto)
-        if (!m) continue
+        if (!m) {
+            // ETag ausente: não há o que conferir, então nunca baixa; diz ao Sirvo uma vez (o resto do lixo é só ignorado)
+            if (ehUuid(bruto?.id) && tipoDaExtensao(bruto?.ext) && !limparEtag(bruto?.etag) && !etagRelatado.has(bruto.id)) {
+                etagRelatado.add(bruto.id)
+                aRelatar.set(bruto.id, { status: "falhou", detalhe: "etag", codec: null })
+            }
+            continue
+        }
         if (emCurso.has(m.id) || fila.some((x) => x.id === m.id)) continue
         const falho = falhos.get(m.id)
         if (falho && agora < falho.tentarApos) continue
@@ -186,48 +234,43 @@ function enfileirar(lista: any[]) {
 function bombear() {
     while (emCurso.size < EM_PARALELO && fila.length) {
         const m = fila.shift()!
-        const ctl = new AbortController()
-        emCurso.set(m.id, ctl)
-        void processar(m, ctl, geracao)
+        emCurso.set(m.id, new AbortController()) // ocupa a vaga; cada tentativa troca por um controle novo
+        void processar(m, geracao)
     }
 }
 
-async function processar(m: MaterialPendente, ctl: AbortController, g: number) {
-    let falha = ""
-    for (let tentativa = 0; tentativa < ESPERAS_MS.length + 1; tentativa++) {
-        try {
-            const r = await baixar(m, ctl)
-            if (g !== geracao) return
-            carregar().set(m.id, { id: m.id, caminho: r.caminho, nome: m.nome, tipo: m.tipo, codec: r.codec, event_id: m.event_id, etag: m.etag, tamanho: m.tamanho })
-            guardar()
-            falhos.delete(m.id)
-            aRelatar.set(m.id, { status: "baixado", detalhe: null, codec: r.codec })
-            falha = ""
-            break
-        } catch (erro) {
-            if (g !== geracao) return
-            falha = erro instanceof ErroDeMaterial ? erro.codigo : ctl.signal.aborted ? "tempo" : "rede"
-            // não é falha do arquivo: o Sirvo mandou esperar (ou descartar); nada é relatado
-            if (falha === "espera" || falha === "descartar") {
-                if (falha === "descartar") esperaPorId.set(m.id, Date.now() + 60 * 60_000)
-                emCurso.delete(m.id)
-                lote.total = Math.max(0, lote.total - 1)
-                bombear()
-                return
-            }
-            // sem permissão ou disco cheio não melhoram em segundos: não insiste
-            if (falha === "nao_baixa" || falha === "disco_cheio" || falha === "destino" || falha === "url_invalida") break
-            if (tentativa < ESPERAS_MS.length) await dormir(ESPERAS_MS[tentativa])
-            if (g !== geracao) return
-        }
-    }
+async function processar(m: MaterialPendente, g: number) {
+    const r = await comTentativas((ctl) => baixar(m, ctl), {
+        esperas: ESPERAS_MS,
+        dormir,
+        vivo: () => g === geracao,
+        // um controle NOVO por tentativa: o que estourou o tempo na anterior não aborta a seguinte
+        aoNovoControle: (ctl) => emCurso.set(m.id, ctl),
+        codigoDe: (erro, ctl) => (erro instanceof ErroDeMaterial ? erro.codigo : ctl.signal.aborted ? "tempo" : "rede"),
+        // sem permissão, disco cheio, destino ou URL torta não melhoram em segundos; "espera"/"descartar" nem são falha
+        fatal: (c) => ["nao_baixa", "disco_cheio", "destino", "url_invalida", "espera", "descartar"].includes(c)
+    })
+    if ("abandonado" in r) return
 
-    if (g !== geracao) return
-    if (falha) {
-        console.warn(`Sirvo: material ${m.id.slice(0, 8)} falhou (${falha})`)
+    if (r.ok) {
+        const v = r.valor
+        carregar().set(m.id, { id: m.id, caminho: v.caminho, nome: m.nome, tipo: m.tipo, codec: v.codec, event_id: m.event_id, etag: m.etag, tamanho: m.tamanho, em: Date.now() })
+        cacheDisco.delete(m.id)
+        guardar()
+        falhos.delete(m.id)
+        aRelatar.set(m.id, { status: "baixado", detalhe: null, codec: v.codec })
+    } else if (r.falha === "espera" || r.falha === "descartar") {
+        // não é falha do arquivo: o Sirvo mandou esperar (ou descartar); nada é relatado e o lote não conta
+        if (r.falha === "descartar") esperaPorId.set(m.id, Date.now() + 60 * 60_000)
+        emCurso.delete(m.id)
+        lote.total = Math.max(0, lote.total - 1)
+        bombear()
+        return
+    } else {
+        console.warn(`Sirvo: material ${m.id.slice(0, 8)} falhou (${r.falha})`)
         const vezes = (falhos.get(m.id)?.vezes || 0) + 1
-        falhos.set(m.id, { nome: m.nome, detalhe: falha, tentarApos: Date.now() + DEPOIS_DE_FALHAR_MS[Math.min(vezes, DEPOIS_DE_FALHAR_MS.length) - 1], vezes })
-        aRelatar.set(m.id, { status: "falhou", detalhe: falha, codec: null })
+        falhos.set(m.id, { nome: m.nome, detalhe: r.falha, tentarApos: Date.now() + DEPOIS_DE_FALHAR_MS[Math.min(vezes, DEPOIS_DE_FALHAR_MS.length) - 1], vezes })
+        aRelatar.set(m.id, { status: "falhou", detalhe: r.falha, codec: null })
     }
     lote.feitos++
     emCurso.delete(m.id)
@@ -244,20 +287,44 @@ const dormir = (ms: number) =>
 /** diz ao Sirvo o que aconteceu (baixado / falhou); o que não chegar fica para o próximo ciclo */
 let relatando = false
 async function relatarPendentes(g: number) {
-    if (relatando) return
+    if (relatando || Date.now() < relatarApos) return
     relatando = true
     try {
         for (const [id, a] of [...aRelatar]) {
             if (g !== geracao) return
             const r = await sirvoChamarDoMain("show_material_status", { p_id: id, p_status: a.status, p_detalhe: a.detalhe, p_codec: a.codec })
             if (g !== geracao) return
-            if (r.ok) aRelatar.delete(id)
-            else if (r.codigo === "chave_invalida" || r.codigo === "sem_chave" || r.codigo === "nao_baixa" || r.codigo === "rede" || r.pg === "54000" || r.pg === "55000")
-                return // 54000: passou de 60/min, fica na fila
-            else aRelatar.delete(id) // o Sirvo recusou este id (apagado, status inválido): repetir não muda nada
+            const decisao = decidirRelato(r as any)
+            if (decisao === "feito" || decisao === "pular") {
+                // "pular": o Sirvo recusou ESTE id (55000, P0002, 22023): repetir não muda nada, e o resto da fila segue
+                aRelatar.delete(id)
+                continue
+            }
+            // problema geral: recua (interruptor desligado 5 min; rede e 54000 1 min) e deixa na fila
+            relatarApos = Date.now() + (!r.ok && r.codigo === "nao_baixa" ? SEM_PERMISSAO_MS : 60_000)
+            return
         }
     } finally {
         relatando = false
+    }
+}
+
+/** .part de uma queda no meio do download, com mais de 1 dia: sai (só dentro de Online/Sirvo) */
+async function limparParciais() {
+    try {
+        const raiz = path.join(getDataFolderPath("onlineMedia"), PASTA_DO_SIRVO)
+        const agora = Date.now()
+        for (const dia of await fs.promises.readdir(raiz, { withFileTypes: true })) {
+            if (!dia.isDirectory()) continue
+            for (const f of await fs.promises.readdir(path.join(raiz, dia.name))) {
+                if (!f.endsWith(".part")) continue
+                const alvo = path.join(raiz, dia.name, f)
+                const st = await fs.promises.stat(alvo).catch(() => null)
+                if (st && agora - st.mtimeMs > PARCIAL_VELHO_MS) await fs.promises.unlink(alvo).catch(() => {})
+            }
+        }
+    } catch {
+        // a pasta ainda não existe: nada a limpar
     }
 }
 
@@ -308,6 +375,7 @@ async function baixar(m: MaterialPendente, ctl: AbortController): Promise<{ cami
     const parcial = alvo.destino + ".part"
     const limite = setTimeout(() => ctl.abort(), TEMPO_MAX_MS)
     let parada: ReturnType<typeof setTimeout> | null = null
+    let saida: fs.WriteStream | null = null
     const armar = () => {
         if (parada) clearTimeout(parada)
         parada = setTimeout(() => ctl.abort(), PARADA_MS)
@@ -321,30 +389,33 @@ async function baixar(m: MaterialPendente, ctl: AbortController): Promise<{ cami
         if (etagDoServidor && !etagsIguais(etagDoServidor, m.etag)) throw new ErroDeMaterial("etag")
 
         const md5 = etagEhMd5(m.etag) ? createHash("md5") : null
-        const saida = fs.createWriteStream(parcial)
+        saida = fs.createWriteStream(parcial)
         let bytes = 0
-        try {
-            for await (const pedaco of Readable.fromWeb(resposta.body as any)) {
-                bytes += (pedaco as Buffer).length
-                if (bytes > m.tamanho) throw new ErroDeMaterial("tamanho")
-                md5?.update(pedaco as Buffer)
-                armar()
-                if (!saida.write(pedaco)) await once(saida, "drain")
-            }
-            await new Promise<void>((resolve, reject) => {
-                saida.once("error", reject)
-                saida.end(resolve)
-            })
-        } catch (erro) {
-            saida.destroy()
-            throw erro
-        }
+        // o pipeline liga o 'error' dos dois lados (inclusive o do arquivo, que antes ficava sem ouvinte) e destrói tudo se algo falhar
+        await pipeline(
+            Readable.fromWeb(resposta.body as any),
+            async function* (origem: AsyncIterable<Buffer>) {
+                for await (const pedaco of origem) {
+                    bytes += pedaco.length
+                    if (bytes > m.tamanho) throw new ErroDeMaterial("tamanho")
+                    md5?.update(pedaco)
+                    armar()
+                    yield pedaco
+                }
+            },
+            saida
+        )
 
         if (bytes !== m.tamanho || tamanhoNoDisco(parcial) !== m.tamanho) throw new ErroDeMaterial("tamanho")
         if (md5 && !etagsIguais(md5.digest("hex"), m.etag)) throw new ErroDeMaterial("etag")
         await fs.promises.rename(parcial, alvo.destino)
     } catch (erro) {
+        // no Windows o arquivo aberto não se apaga (EBUSY): espera o stream fechar de verdade
         try {
+            if (saida && !saida.closed) {
+                saida.destroy()
+                await Promise.race([once(saida, "close"), new Promise((resolve) => setTimeout(resolve, 3_000))])
+            }
             if (fs.existsSync(parcial)) fs.unlinkSync(parcial)
         } catch {}
         throw erro

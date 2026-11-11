@@ -53,7 +53,7 @@
         if (m.falhas.length) {
             const n = m.falhas.length
             const nomes = m.falhas.map((f) => f.nome).join(", ")
-            return { texto: ` · ${n} ${n === 1 ? "arquivo falhou" : "arquivos falharam"}`, dica: ` Material do Sirvo que não baixou (o Show tenta de novo em 10 min): ${nomes}.`, falhou: true }
+            return { texto: ` · ${n} ${n === 1 ? "arquivo falhou" : "arquivos falharam"}`, dica: ` Material do Sirvo que não baixou (o Show tenta de novo sozinho, aos poucos: 1, 5, 15 e 60 min): ${nomes}.`, falhou: true }
         }
         if (m.baixando || m.naFila) return { texto: ` · baixando ${m.lote.feitos} de ${m.lote.total}`, dica: " Baixando o material da semana enviado pelo Sirvo.", falhou: false }
         return { texto: "", dica: "", falhou: false }

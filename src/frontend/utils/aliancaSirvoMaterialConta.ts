@@ -23,12 +23,14 @@ export const MARCA = "sirvoMaterial"
 export const APAGANDO_EM = "sirvoApagandoEm"
 export const GRACA_APAGAR_MS = 30_000
 export const PREFIXO_APAGADO = "(apagado no Sirvo) "
+/** de qual culto o item veio (para não confundir material de outro culto com apagado) */
+export const EVENTO = "sirvoMaterialEvento"
 
 export type TipoDoProjeto = "video" | "image" | "audio"
 const TIPO_DO_PROJETO: { [tipo: string]: TipoDoProjeto } = { video: "video", imagem: "image", audio: "audio" }
 
 /** um arquivo que o main já baixou (o caminho local; nunca URL) */
-export type Baixado = { id: string; caminho: string; nome: string; tipo: string; codec?: string | null }
+export type Baixado = { id: string; caminho: string; nome: string; tipo: string; codec?: string | null; event_id?: string }
 /** um material do roteiro do Sirvo (`show_roteiro.material[]`): sem URL */
 export type MaterialDoRoteiro = { id: string; nome?: string; status?: string; bloco_id?: string | null }
 
@@ -50,7 +52,7 @@ const limpo = (t: unknown, max = 100) =>
 export const rotuloDoItem = (nome: unknown, codec?: unknown) => limpo(nome) + (ehHevc(codec) ? " (HEVC — pode não tocar)" : "")
 
 export function itemDoMaterial(b: Baixado): ProjectShowRef {
-    return { id: b.caminho, type: TIPO_DO_PROJETO[b.tipo] || "video", name: rotuloDoItem(b.nome, b.codec), data: { [MARCA]: b.id } }
+    return { id: b.caminho, type: TIPO_DO_PROJETO[b.tipo] || "video", name: rotuloDoItem(b.nome, b.codec), data: { [MARCA]: b.id, ...(b.event_id ? { [EVENTO]: b.event_id } : {}) } }
 }
 
 export type OpcoesMaterial = {
@@ -64,6 +66,8 @@ export type OpcoesMaterial = {
     ativos?: number[]
     /** momento protegido (culto no ar ou algo na tela) */
     protegido?: boolean
+    /** o culto do roteiro que o Show segue: item de OUTRO culto (projeto religado) não é tocado nem tirado */
+    eventoId?: string | null
     /** nada sai do projeto agora (ex.: projeto fechado com slide na tela que guardou uma posição): só entra */
     congelarRemocao?: boolean
     agora: number
@@ -80,6 +84,16 @@ export type ResultadoMaterial = {
     tirados: string[]
     /** daqui a quantos ms há outra coisa a fazer (o fim dos 30 s de cinza); null = nada */
     reavaliarEm: number | null
+}
+
+/**
+ * `show_roteiro.material[]` como mapa. NULL (a conta não faz nada) quando o Sirvo não mandou a
+ * lista OU quando a chave não baixa material: sem o interruptor o Sirvo manda `[]`, e uma lista
+ * vazia leria como "tudo foi apagado" e tiraria do projeto, em 30 s, o que já estava lá.
+ */
+export function mapaDoRoteiro(material: unknown, habilitado: boolean | null): Map<string, MaterialDoRoteiro> | null {
+    if (habilitado !== true || !Array.isArray(material)) return null
+    return new Map((material as MaterialDoRoteiro[]).filter((m) => m && typeof m.id === "string").map((m) => [m.id, m]))
 }
 
 const apagado = (r: MaterialDoRoteiro | undefined) => !r || r.status === "apagando" || r.status === "apagado"
@@ -114,6 +128,8 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
     itens.forEach((item, i) => {
         const m = marcaDoMaterial(item)
         if (!m || o.noRoteiro === null) return
+        const deOutroCulto = o.eventoId && typeof item.data?.[EVENTO] === "string" && item.data[EVENTO] !== o.eventoId
+        if (deOutroCulto) return
         const r = o.noRoteiro.get(m)
         const b = o.baixados.get(m)
         const emCinza = typeof item.data?.[APAGANDO_EM] === "number"

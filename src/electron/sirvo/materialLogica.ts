@@ -238,3 +238,55 @@ export function estadoParaRenderer(e: EstadoMaterial): EstadoMaterial {
         baixados: e.baixados.map((b) => ({ id: b.id, caminho: b.caminho, nome: textoSeguro(b.nome), tipo: b.tipo, codec: b.codec, event_id: b.event_id }))
     }
 }
+
+// ---------------------------------------------------------------- a fila (sem rede, para poder ser testada)
+
+/**
+ * O que fazer com a resposta do Sirvo a um relato de status:
+ *   - "feito": entregue, sai da fila;
+ *   - "pular": o Sirvo recusou ESTE id (55000 não está pronto, P0002 não existe, 22023 inválido…):
+ *     sai da fila e o relato SEGUE com o próximo id (não pode travar a fila inteira);
+ *   - "parar": problema geral (chave, rede, interruptor desligado, 54000 mais de 60/min): para e tenta no próximo ciclo.
+ */
+export function decidirRelato(r: { ok: boolean; codigo?: string; pg?: string }): "feito" | "pular" | "parar" {
+    if (r.ok) return "feito"
+    if (r.codigo === "chave_invalida" || r.codigo === "sem_chave" || r.codigo === "nao_baixa" || r.codigo === "rede" || r.codigo === "ocupado" || r.pg === "54000") return "parar"
+    return "pular"
+}
+
+export type OpcoesTentativas = {
+    /** esperas entre as tentativas (n esperas = n + 1 tentativas) */
+    esperas: number[]
+    dormir: (ms: number) => Promise<void>
+    /** a fila ainda é desta geração? (materialParar muda) */
+    vivo: () => boolean
+    /** cada tentativa nasce com o PRÓPRIO AbortController: o abortado por tempo não envenena a seguinte */
+    aoNovoControle: (ctl: AbortController) => void
+    /** o código curto da falha */
+    codigoDe: (erro: unknown, ctl: AbortController) => string
+    /** esses códigos não melhoram em segundos: não insiste */
+    fatal: (codigo: string) => boolean
+}
+
+export type ResultadoTentativas<T> = { ok: true; valor: T } | { ok: false; falha: string } | { abandonado: true }
+
+export async function comTentativas<T>(fazer: (ctl: AbortController) => Promise<T>, o: OpcoesTentativas): Promise<ResultadoTentativas<T>> {
+    let falha = ""
+    for (let tentativa = 0; tentativa <= o.esperas.length; tentativa++) {
+        const ctl = new AbortController()
+        o.aoNovoControle(ctl)
+        try {
+            const valor = await fazer(ctl)
+            return o.vivo() ? { ok: true, valor } : { abandonado: true }
+        } catch (erro) {
+            if (!o.vivo()) return { abandonado: true }
+            falha = o.codigoDe(erro, ctl)
+            if (o.fatal(falha)) break
+            if (tentativa < o.esperas.length) {
+                await o.dormir(o.esperas[tentativa])
+                if (!o.vivo()) return { abandonado: true }
+            }
+        }
+    }
+    return { ok: false, falha }
+}

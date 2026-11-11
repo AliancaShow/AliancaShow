@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { APAGANDO_EM, conciliarMaterial, GRACA_APAGAR_MS, itemDoMaterial, MARCA, marcaDoMaterial, PREFIXO_APAGADO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
+import { APAGANDO_EM, conciliarMaterial, GRACA_APAGAR_MS, itemDoMaterial, mapaDoRoteiro, MARCA, marcaDoMaterial, PREFIXO_APAGADO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
 import { ID_RODAPE, NOME_RODAPE } from "./aliancaSirvoProjeto"
 
 const cab = (id: string): ProjectShowRef => ({ id: `sirvo_${id}`, type: "section", name: id })
@@ -153,5 +153,32 @@ describe("apagado no Sirvo", () => {
         const r = conciliarMaterial(itens, opcoes([], [], { agora: T0 + 10 * GRACA_APAGAR_MS }))
         expect(r.itens).toBe(itens)
         expect(dele.name).toBe("meu vídeo")
+    })
+})
+
+describe("chave sem o interruptor 'baixa material'", () => {
+    it("material [] com o interruptor desligado ou desconhecido NÃO é 'apagou tudo': mapa nulo, nada é tocado", () => {
+        expect(mapaDoRoteiro([], false)).toBeNull()
+        expect(mapaDoRoteiro([], null)).toBeNull()
+        expect(mapaDoRoteiro(undefined, true)).toBeNull()
+        expect(mapaDoRoteiro([], true)?.size).toBe(0)
+        const item = itemDoMaterial(baixado("m1"))
+        const itens = [...projeto(), item]
+        const longe = 1_000_000 + 10 * GRACA_APAGAR_MS
+        const r = conciliarMaterial(itens, { ...opcoes([baixado("m1")], null), noRoteiro: mapaDoRoteiro([], false), agora: longe })
+        expect(r.itens).toBe(itens)
+        expect(r.mudouCampos).toBe(false)
+        expect(item.name).toBe("Video m1")
+    })
+})
+
+describe("projeto religado a outro culto", () => {
+    it("item de outro culto não vira '(apagado no Sirvo)' nem sai", () => {
+        const velho = itemDoMaterial({ ...baixado("m1"), event_id: "culto-antigo" })
+        const itens = [...projeto(), velho]
+        const r = conciliarMaterial(itens, opcoes([], [], { eventoId: "culto-novo", agora: 1_000_000 + 10 * GRACA_APAGAR_MS }))
+        expect(r.itens).toBe(itens)
+        expect(velho.name).toBe("Video m1")
+        expect(velho.data[APAGANDO_EM]).toBeUndefined()
     })
 })

@@ -1,6 +1,6 @@
 import path from "path"
 import { describe, expect, it } from "vitest"
-import { cabeNoDisco, ehHevc, estadoParaRenderer, etagEhMd5, etagsIguais, limparEtag, limparNome, nomeDoArquivo, pastaDoMaterial, resolverDestino, rotuloDoMaterial, tipoDaExtensao, urlDoMaterialValida, validarPendente, type EstadoMaterial } from "./materialLogica"
+import { cabeNoDisco, comTentativas, decidirRelato, ehHevc, estadoParaRenderer, etagEhMd5, etagsIguais, limparEtag, limparNome, nomeDoArquivo, pastaDoMaterial, resolverDestino, rotuloDoMaterial, tipoDaExtensao, urlDoMaterialValida, validarPendente, type EstadoMaterial } from "./materialLogica"
 
 const ID = "0f8a1c2e-1111-4222-8333-444455556666"
 const EV = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
@@ -139,5 +139,49 @@ describe("a URL nunca vai para o renderer", () => {
         expect(Object.keys(fora.baixados[0]).sort()).toEqual(["caminho", "codec", "event_id", "id", "nome", "tipo"])
         expect(Object.keys(fora.falhas[0]).sort()).toEqual(["detalhe", "id", "nome"])
         expect(Object.keys(fora.lote).sort()).toEqual(["feitos", "total"])
+    })
+})
+
+describe("fila de relatos de status", () => {
+    it("recusa de UM id (55000, P0002, 22023) pula e a fila segue; problema geral para", () => {
+        expect(decidirRelato({ ok: true })).toBe("feito")
+        expect(decidirRelato({ ok: false, codigo: "erro", pg: "55000" })).toBe("pular")
+        expect(decidirRelato({ ok: false, codigo: "culto_inexistente", pg: "P0002" })).toBe("pular")
+        expect(decidirRelato({ ok: false, codigo: "erro", pg: "22023" })).toBe("pular")
+        expect(decidirRelato({ ok: false, codigo: "erro", pg: "54000" })).toBe("parar")
+        for (const codigo of ["rede", "nao_baixa", "chave_invalida", "sem_chave", "ocupado"]) expect(decidirRelato({ ok: false, codigo })).toBe("parar")
+    })
+})
+
+describe("tentativas do download", () => {
+    const base = { esperas: [1, 1], dormir: async () => {}, vivo: () => true, codigoDe: (e: unknown) => String(e), fatal: (c: string) => c === "fatal" }
+    it("cada tentativa nasce com um AbortController NOVO (o que estourou o tempo não envenena a seguinte)", async () => {
+        const vistos: AbortController[] = []
+        const r = await comTentativas(
+            async (ctl) => {
+                vistos.push(ctl)
+                if (vistos.length < 3) {
+                    ctl.abort()
+                    throw "tempo"
+                }
+                expect(ctl.signal.aborted).toBe(false)
+                return "ok"
+            },
+            { ...base, aoNovoControle: () => {} }
+        )
+        expect(r).toEqual({ ok: true, valor: "ok" })
+        expect(new Set(vistos).size).toBe(3)
+    })
+    it("avisa quem guarda o controle a cada tentativa", async () => {
+        const guardados: AbortController[] = []
+        await comTentativas(async () => Promise.reject("x"), { ...base, aoNovoControle: (c) => guardados.push(c) })
+        expect(guardados).toHaveLength(3)
+    })
+    it("falha fatal não insiste; esgotadas as tentativas devolve o código; geração velha abandona", async () => {
+        let n = 0
+        expect(await comTentativas(async () => (n++, Promise.reject("fatal")), { ...base, aoNovoControle: () => {} })).toEqual({ ok: false, falha: "fatal" })
+        expect(n).toBe(1)
+        expect(await comTentativas(async () => Promise.reject("rede"), { ...base, aoNovoControle: () => {} })).toEqual({ ok: false, falha: "rede" })
+        expect(await comTentativas(async () => "x", { ...base, vivo: () => false, aoNovoControle: () => {} })).toEqual({ abandonado: true })
     })
 })
