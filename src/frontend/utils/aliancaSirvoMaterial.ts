@@ -163,7 +163,7 @@ async function relatar(chaveMemoria: string, versaoId: string, usoId: string, st
         // o Sirvo recusar ("erro") não melhora tentando de novo; rede e chave desligada, sim
         // 54000 (mais de 60/min) e 55000 (ainda não pronto) ficam para a próxima passada
         if (!r?.ok && (r?.codigo === "rede" || r?.codigo === "nao_baixa" || r?.pg === "54000")) relatarApos = Date.now() + (r?.codigo === "nao_baixa" ? 300_000 : 60_000)
-        if (r?.ok || ((r?.codigo === "erro" || r?.codigo === "culto_inexistente") && r?.pg !== "54000" && r?.pg !== "55000")) mudarMemoria((m) => m[chaveMemoria] && { const mm = m[chaveMemoria]; if (mm) { if (status === "usado") { mm.us = versaoId; mm.usUso = usoId } else { mm.np = versaoId; mm.npUso = usoId } } })
+        if (r?.ok || ((r?.codigo === "erro" || r?.codigo === "culto_inexistente") && r?.pg !== "54000" && r?.pg !== "55000")) mudarMemoria((m) => { const mm = m[chaveMemoria]; if (mm) { if (status === "usado") { mm.us = versaoId; mm.usUso = usoId } else { mm.np = versaoId; mm.npUso = usoId } } })
     } catch (erro) {
         console.error("Sirvo: falha ao avisar o material", erro)
     } finally {
