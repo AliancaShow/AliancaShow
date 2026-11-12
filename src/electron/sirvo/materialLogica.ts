@@ -26,19 +26,22 @@ export const FOLGA_DE_DISCO = 500 * 1024 * 1024 // livre = tamanho + 500 MB
 /** pasta dentro de Online/ onde cai o material do Sirvo */
 export const PASTA_DO_SIRVO = "Sirvo"
 
-/** o que o Sirvo devolve em show_material_pendente (os campos que importam) */
+/**
+ * O que o Sirvo devolve em show_material_pendente (v5, migration 0092): UMA linha por VERSÃO atual
+ * de arquivo da igreja com uso na janela. `id` é o id da VERSÃO (um objeto no R2); `arquivo_id` é o
+ * arquivo da biblioteca. Sem culto nem bloco: quem diz isso é show_roteiro.material[].
+ */
 export type MaterialPendente = {
     id: string
+    arquivo_id: string
     nome: string
     ext: string
     tipo: TipoDeMaterial
     tamanho: number
     etag: string
     codec: string | null
-    event_id: string
-    bloco_id: string | null
-    /** "AAAA-MM-DD" do culto, se o Sirvo mandar; senão a pasta usa o event_id */
-    dia: string | null
+    /** o que o Sirvo já sabe desta versão: "baixado" não precisa ser relatado de novo */
+    baixa_status: "baixado" | "falhou" | null
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -64,7 +67,7 @@ export function textoSeguro(t: unknown, max = 120): string {
 
 /**
  * Valida uma linha de show_material_pendente. null = a linha é lixo e é
- * ignorada (nunca baixada): id e evento são UUID, a extensão está na lista
+ * ignorada (nunca baixada): id (da versão) e arquivo_id são UUID, a extensão está na lista
  * fechada e combina com o tipo, o tamanho é inteiro dentro do teto.
  */
 export function validarPendente(x: any): MaterialPendente | null {
@@ -72,7 +75,7 @@ export function validarPendente(x: any): MaterialPendente | null {
     const ext = String(x.ext || "").toLowerCase()
     const tipo = tipoDaExtensao(ext)
     const tamanho = Number(x.tamanho)
-    if (!ehUuid(x.id) || !ehUuid(x.event_id) || !tipo) return null
+    if (!ehUuid(x.id) || !ehUuid(x.arquivo_id) || !tipo) return null
     if (x.tipo !== undefined && x.tipo !== null && x.tipo !== tipo) return null
     if (!Number.isInteger(tamanho) || tamanho < 1 || tamanho > TAMANHO_MAX) return null
     const etag = limparEtag(x.etag)
@@ -85,9 +88,8 @@ export function validarPendente(x: any): MaterialPendente | null {
         tamanho,
         etag,
         codec: typeof x.codec === "string" && x.codec ? textoSeguro(x.codec, 40) : null,
-        event_id: x.event_id.toLowerCase(),
-        bloco_id: ehUuid(x.bloco_id) ? x.bloco_id : null,
-        dia: typeof x.dia === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.dia) ? x.dia : null
+        arquivo_id: x.arquivo_id.toLowerCase(),
+        baixa_status: x.baixa_status === "baixado" || x.baixa_status === "falhou" ? x.baixa_status : null
     }
 }
 
@@ -115,16 +117,28 @@ export function limparNome(nome: unknown): string {
     return base
 }
 
-/** `<nome-limpo>__<id8>.<ext>`: o id8 dá unicidade e a extensão vem da lista fechada */
-export function nomeDoArquivo(nome: unknown, id: string, ext: string): string | null {
+/** `<nome-limpo>__<versao8>.<ext>`: o id8 da VERSÃO dá unicidade e a extensão vem da lista fechada */
+export function nomeDoArquivo(nome: unknown, versaoId: string, ext: string): string | null {
     const e = String(ext || "").toLowerCase()
-    if (!tipoDaExtensao(e) || !ehUuid(id)) return null
-    return `${limparNome(nome)}__${id.slice(0, 8).toLowerCase()}.${e}`
+    if (!tipoDaExtensao(e) || !ehUuid(versaoId)) return null
+    return `${limparNome(nome)}__${versaoId.slice(0, 8).toLowerCase()}.${e}`
 }
 
-/** a pasta dentro de Online/: Sirvo/<dia> (ou Sirvo/<event_id>) */
-export function pastaDoMaterial(m: Pick<MaterialPendente, "event_id" | "dia">): string[] {
-    return [PASTA_DO_SIRVO, m.dia || m.event_id]
+/** `<nome-limpo>__<arquivo8>`: a pasta de UM arquivo da biblioteca (todas as versões dele ficam aqui) */
+export function nomeDaPasta(nome: unknown, arquivoId: string): string | null {
+    if (!ehUuid(arquivoId)) return null
+    return `${limparNome(nome)}__${arquivoId.slice(0, 8).toLowerCase()}`
+}
+
+/**
+ * A pasta de um arquivo é A QUE EXISTE NO DISCO com o sufixo `__<arquivo8>` (sobrevive a reinstalar, e
+ * uma v2 com outro nome não abre pasta nova). Só sem nenhuma, cria com o nome da pendente. Com mais de
+ * uma, a primeira em ordem alfabética (determinístico).
+ */
+export function pastaDoMaterial(m: Pick<MaterialPendente, "arquivo_id" | "nome">, existentes: string[] = []): string[] {
+    const sufixo = `__${String(m.arquivo_id).slice(0, 8).toLowerCase()}`
+    const achada = [...existentes].filter((n) => n.toLowerCase().endsWith(sufixo)).sort()[0]
+    return [PASTA_DO_SIRVO, achada || nomeDaPasta(m.nome, m.arquivo_id) || String(m.arquivo_id)]
 }
 
 /**
@@ -150,10 +164,10 @@ const HOST_R2 = /^[0-9a-f]{32}\.r2\.cloudflarestorage\.com$/
  * A URL que o Sirvo devolveu serve para ESTE arquivo? Host exato do R2 (o da
  * conta: `hostExato`, quando conhecido; senão 32 hex + o domínio), https sem
  * login nem porta, sem query além da assinatura, e o caminho
- * `/<balde>/igrejas/<uuid>/eventos/<event_id>/<id>.<ext>` com `event_id`, `id` e
+ * `/<balde>/igrejas/<uuid>/arquivos/<arquivo_id>/<versao>.<ext>` com `arquivo_id`, versão e
  * `ext` IGUAIS aos que o Show pediu: uma URL boa de outro arquivo não passa.
  */
-export function urlDoMaterialValida(url: unknown, m: Pick<MaterialPendente, "id" | "ext" | "event_id">, opcoes: { hostExato?: string; baldes?: string[] } = {}): boolean {
+export function urlDoMaterialValida(url: unknown, m: Pick<MaterialPendente, "id" | "ext" | "arquivo_id">, opcoes: { hostExato?: string; baldes?: string[] } = {}): boolean {
     if (typeof url !== "string" || url.length > 4000) return false
     let u: URL
     try {
@@ -167,13 +181,13 @@ export function urlDoMaterialValida(url: unknown, m: Pick<MaterialPendente, "id"
     // sem codificação no caminho: "%2e%2e" ou "%2f" não entram
     if (/%/.test(u.pathname)) return false
     const partes = u.pathname.split("/")
-    // ["", balde, "igrejas", igreja, "eventos", evento, "<id>.<ext>"]
+    // ["", balde, "igrejas", igreja, "arquivos", arquivo_id, "<versao>.<ext>"]
     if (partes.length !== 7 || partes[0] !== "") return false
-    const [, balde, igrejas, igreja, eventos, evento, arquivo] = partes
+    const [, balde, igrejas, igreja, arquivos, arquivoId, objeto] = partes
     if (!(opcoes.baldes || BALDES).includes(balde)) return false
-    if (igrejas !== "igrejas" || eventos !== "eventos") return false
-    if (!ehUuid(igreja) || !ehUuid(evento) || evento.toLowerCase() !== m.event_id.toLowerCase()) return false
-    return arquivo === `${m.id}.${m.ext}`
+    if (igrejas !== "igrejas" || arquivos !== "arquivos") return false
+    if (!ehUuid(igreja) || !ehUuid(arquivoId) || arquivoId.toLowerCase() !== m.arquivo_id.toLowerCase()) return false
+    return objeto === `${m.id}.${m.ext}`
 }
 
 // ---------------------------------------------------------------- conferências do arquivo
@@ -207,7 +221,7 @@ export function rotuloDoMaterial(nome: unknown, codec?: unknown): string {
 // ---------------------------------------------------------------- o que o renderer enxerga
 
 /** um arquivo que já está no disco (o caminho local é do PC, não é segredo) */
-export type MaterialNoDisco = { id: string; caminho: string; nome: string; tipo: TipoDeMaterial; codec: string | null; event_id: string }
+export type MaterialNoDisco = { id: string; arquivo_id: string; caminho: string; nome: string; tipo: TipoDeMaterial; codec: string | null }
 
 /**
  * O estado da fila que atravessa para o renderer. NUNCA tem URL (nem a assinada,
@@ -223,9 +237,21 @@ export type EstadoMaterial = {
     lote: { total: number; feitos: number }
     falhas: { id: string; nome: string; detalhe: string }[]
     baixados: MaterialNoDisco[]
+    /** o disco do material do Sirvo e a limpeza (F5 do Show) */
+    disco: EstadoDisco
 }
 
-export const ESTADO_VAZIO: EstadoMaterial = { habilitado: null, baixando: 0, naFila: 0, lote: { total: 0, feitos: 0 }, falhas: [], baixados: [] }
+export type EstadoDisco = {
+    /** bytes em Online/Sirvo; -1 = ainda não medido */
+    usado: number
+    /** bytes livres no volume; -1 = não sei */
+    livre: number
+    limpeza: { em: number; arquivos: number; bytes: number; /** por que a última limpeza não rodou (texto curto), ou null */ adiada: string | null }
+}
+
+export const DISCO_VAZIO: EstadoDisco = { usado: -1, livre: -1, limpeza: { em: 0, arquivos: 0, bytes: 0, adiada: null } }
+
+export const ESTADO_VAZIO: EstadoMaterial = { habilitado: null, baixando: 0, naFila: 0, lote: { total: 0, feitos: 0 }, falhas: [], baixados: [], disco: DISCO_VAZIO }
 
 /** só chaves conhecidas, só texto curto: o que sai para o renderer passa por aqui */
 export function estadoParaRenderer(e: EstadoMaterial): EstadoMaterial {
@@ -235,7 +261,12 @@ export function estadoParaRenderer(e: EstadoMaterial): EstadoMaterial {
         naFila: e.naFila,
         lote: { total: e.lote.total, feitos: e.lote.feitos },
         falhas: e.falhas.map((f) => ({ id: f.id, nome: textoSeguro(f.nome), detalhe: textoSeguro(f.detalhe, 40) })),
-        baixados: e.baixados.map((b) => ({ id: b.id, caminho: b.caminho, nome: textoSeguro(b.nome), tipo: b.tipo, codec: b.codec, event_id: b.event_id }))
+        baixados: e.baixados.map((b) => ({ id: b.id, arquivo_id: b.arquivo_id, caminho: b.caminho, nome: textoSeguro(b.nome), tipo: b.tipo, codec: b.codec })),
+        disco: {
+            usado: Number.isFinite(e.disco?.usado) ? e.disco.usado : -1,
+            livre: Number.isFinite(e.disco?.livre) ? e.disco.livre : -1,
+            limpeza: { em: Number(e.disco?.limpeza?.em) || 0, arquivos: Number(e.disco?.limpeza?.arquivos) || 0, bytes: Number(e.disco?.limpeza?.bytes) || 0, adiada: e.disco?.limpeza?.adiada ? textoSeguro(e.disco.limpeza.adiada, 80) : null }
+        }
     }
 }
 
@@ -289,4 +320,118 @@ export async function comTentativas<T>(fazer: (ctl: AbortController) => Promise<
         }
     }
     return { ok: false, falha }
+}
+
+// ---------------------------------------------------------------- o mapa de registros e a pendente (v5)
+
+/**
+ * O mapa guardado no store: SEM poda por idade (v5: o guardado que volta a ser usado depois de meses
+ * não pode sumir do mapa). Só sai o que não está mais no disco com o tamanho certo.
+ * `tamanhoNoDisco` devolve -1 quando o arquivo não existe.
+ */
+export function filtrarRegistros<R extends { caminho: string; etag: string; tamanho?: number }>(salvo: unknown, tamanhoNoDisco: (caminho: string) => number): { mantidos: Map<string, R>; podou: boolean } {
+    const mantidos = new Map<string, R>()
+    let podou = false
+    for (const [id, r] of Object.entries((salvo && typeof salvo === "object" ? salvo : {}) as { [id: string]: R })) {
+        if (!r || typeof r.caminho !== "string" || typeof r.etag !== "string") continue
+        if (tamanhoNoDisco(r.caminho) < 0) {
+            podou = true
+            continue
+        }
+        mantidos.set(id, r)
+    }
+    return { mantidos, podou }
+}
+
+/**
+ * O que fazer com UMA linha de show_material_pendente (já validada). A pendente traz tudo (toda
+ * versão atual com uso na janela), então:
+ *   - no disco, certa: relata `baixado` SÓ se o Sirvo ainda não sabe (`baixa_status !== "baixado"`); senão nada;
+ *   - fora do disco: fila (baixar() reaproveita um arquivo já no destino, depois de conferir).
+ */
+export function decidirLinha(m: Pick<MaterialPendente, "etag" | "tamanho" | "baixa_status">, feito: { etag: string; caminho: string } | undefined, tamanhoNoDisco: (caminho: string) => number): "nada" | "relatar_baixado" | "baixar" {
+    if (feito && etagsIguais(feito.etag, m.etag) && tamanhoNoDisco(feito.caminho) === m.tamanho) return m.baixa_status === "baixado" ? "nada" : "relatar_baixado"
+    return "baixar"
+}
+
+// ---------------------------------------------------------------- limpeza do disco (F5 do Show)
+
+/** o prazo no PC: o servidor declara o arquivo/versão morto; o Show só manda para a Lixeira depois de 30 dias (decisão do André, 11/nov; o desenho dizia 90) */
+export const PRAZO_LIXEIRA_MS = 30 * 86_400_000
+export const PARCIAL_VELHO_MS = 86_400_000
+
+/** uma subpasta de Online/Sirvo e os arquivos DIRETOS nela (a árvore que o main lê do disco) */
+export type PastaDoSirvo = { pasta: string; arquivos: { nome: string; caminho: string; mtimeMs: number }[] }[]
+export type Mortos = { arquivos: { id: string; morto_em: string }[]; versoes: { id: string; morto_em: string }[] }
+
+/** caminho normalizado para comparar: barras para frente, minúsculas */
+export const normCaminho = (p: string) =>
+    String(p || "")
+        .replace(/\\/g, "/")
+        .toLowerCase()
+
+/** `<x>__<arquivo8>` → arquivo8 (8 hex), ou null */
+const sufixoDaPasta = (n: string) => /__([0-9a-f]{8})$/i.exec(n)?.[1].toLowerCase() || null
+/** `<y>__<versao8>.<ext>[.part]` → versao8, ou null */
+const sufixoDoArquivo = (n: string) => /__([0-9a-f]{8})\.[a-z0-9]{2,5}(?:\.part)?$/i.exec(n)?.[1].toLowerCase() || null
+
+/**
+ * O que pode ir para a Lixeira. Candidato = arquivo em `<x>__<arquivo8>/<y>__<versao8>.<ext>` em que
+ * o `arquivo8` casa com EXATAMENTE um arquivo morto, ou o `versao8` com EXATAMENTE uma versão morta,
+ * com `morto_em + 30 d < agora`, que não é `.part` de menos de 1 dia e não está referenciado.
+ * Prefixo ambíguo (casa com 2+ mortos), pasta sem sufixo, id desconhecido: DEIXA.
+ * `referenciados` já vem normalizado (normCaminho). Pura: sem disco.
+ */
+export function candidatosALimpar(arvore: PastaDoSirvo, mortos: Mortos, referenciados: Set<string>, agora: number): string[] {
+    const porPrefixo = (lista: { id: string; morto_em: string }[]) => {
+        const m = new Map<string, number[]>()
+        for (const x of lista) {
+            if (!ehUuid(x?.id)) continue
+            const t = Date.parse(x.morto_em)
+            if (!Number.isFinite(t)) continue
+            const k = x.id.slice(0, 8).toLowerCase()
+            m.set(k, [...(m.get(k) || []), t])
+        }
+        return m
+    }
+    const arquivosMortos = porPrefixo(mortos?.arquivos || [])
+    const versoesMortas = porPrefixo(mortos?.versoes || [])
+    const velho = (t: number) => t + PRAZO_LIXEIRA_MS < agora
+    const saida: string[] = []
+    for (const p of arvore) {
+        const a8 = sufixoDaPasta(p.pasta)
+        for (const f of p.arquivos) {
+            if (f.nome.endsWith(".part") && agora - f.mtimeMs < PARCIAL_VELHO_MS) continue
+            if (referenciados.has(normCaminho(f.caminho))) continue
+            const v8 = sufixoDoArquivo(f.nome)
+            const doArquivo = a8 ? arquivosMortos.get(a8) : undefined
+            const daVersao = v8 ? versoesMortas.get(v8) : undefined
+            // ambíguo em qualquer das duas pontas: deixa
+            if ((doArquivo && doArquivo.length > 1) || (daVersao && daVersao.length > 1)) continue
+            const vale = (doArquivo?.length === 1 && velho(doArquivo[0])) || (daVersao?.length === 1 && velho(daVersao[0]))
+            if (vale) saida.push(f.caminho)
+        }
+    }
+    return saida
+}
+
+/**
+ * Quais dos `candidatos` aparecem nos textos dos stores salvos (SYNCED_SETTINGS, THEMES, STAGE,
+ * OVERLAYS, TEMPLATES e cada `.show`), em JSON ou texto cru (barras e caixa normalizadas; `\` do
+ * JSON vira `/`), e nos itens de PROJETO. No projeto o item MARCADO (`data.sirvoMaterial`) NÃO protege:
+ * foi o Sirvo que o pôs e o Sirvo já desistiu dele há 30 dias. O item do operador (sem marca) protege.
+ */
+export function caminhosReferenciados(textos: string[], projetos: { [id: string]: { shows?: { id?: string; data?: any }[] } } | undefined, candidatos: string[]): Set<string> {
+    const achados = new Set<string>()
+    const pendentes = candidatos.map((c) => ({ c, n: normCaminho(c) }))
+    const normTexto = (t: string) => t.replace(/\\\\/g, "/").replace(/\\/g, "/").toLowerCase()
+    for (const bruto of textos) {
+        if (typeof bruto !== "string" || !bruto) continue
+        const t = normTexto(bruto)
+        for (const { c, n } of pendentes) if (!achados.has(c) && t.includes(n)) achados.add(c)
+    }
+    const doOperador: string[] = []
+    for (const proj of Object.values(projetos || {})) for (const s of proj?.shows || []) if (typeof s?.id === "string" && !s?.data?.sirvoMaterial) doOperador.push(normCaminho(s.id))
+    for (const { c, n } of pendentes) if (doOperador.includes(n)) achados.add(c)
+    return achados
 }

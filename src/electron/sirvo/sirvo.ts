@@ -51,7 +51,8 @@ const CATALOGO = "show_publicar_catalogo"
 // retorno de status (baixado / no_projeto / usado / falhou). Nenhuma das duas
 // carrega URL, então o renderer pode chamar. Ficam FORA da trava de escrita:
 // têm limite próprio no Sirvo e nunca disputam o "avançar" (500 ms).
-const MATERIAL = ["show_material_pendente", "show_material_status"]
+// show_material_retencao (v5): ids de arquivos/versões MORTOS no servidor, sem URL (limpeza.ts)
+const MATERIAL = ["show_material_pendente", "show_material_status", "show_material_retencao"]
 // A URL assinada de UM arquivo: só o processo principal pede (material.ts) e ela
 // nunca volta para o renderer (Sentry, devtools, console). Por isso NÃO está em FUNCOES.
 const MATERIAL_SO_MAIN = ["show_material_url"]

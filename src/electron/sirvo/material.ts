@@ -27,7 +27,8 @@ import { pipeline } from "stream/promises"
 import { dentroDaPastaOnline } from "../data/downloadMedia"
 import { _store } from "../data/store"
 import { getDataFolderPath, getMediaCodec, makeDir } from "../utils/files"
-import { cabeNoDisco, comTentativas, decidirRelato, ehUuid, ESTADO_VAZIO, estadoParaRenderer, etagEhMd5, etagsIguais, limparEtag, nomeDoArquivo, PASTA_DO_SIRVO, pastaDoMaterial, resolverDestino, tipoDaExtensao, urlDoMaterialValida, validarPendente, type EstadoMaterial, type MaterialNoDisco, type MaterialPendente } from "./materialLogica"
+import { limparMaterial, bytesDaArvore, lerArvore } from "./limpeza"
+import { cabeNoDisco, comTentativas, decidirLinha, decidirRelato, DISCO_VAZIO, ehUuid, ESTADO_VAZIO, estadoParaRenderer, etagEhMd5, etagsIguais, filtrarRegistros, limparEtag, nomeDoArquivo, PASTA_DO_SIRVO, pastaDoMaterial, resolverDestino, tipoDaExtensao, urlDoMaterialValida, validarPendente, type EstadoDisco, type EstadoMaterial, type MaterialNoDisco, type MaterialPendente } from "./materialLogica"
 import { sirvoChamarDoMain, sirvoR2, sirvoSufixoDoAmbiente } from "./sirvo"
 
 const EM_PARALELO = 2
@@ -39,14 +40,13 @@ const DEPOIS_DE_FALHAR_MS = [60_000, 5 * 60_000, 15 * 60_000, 60 * 60_000]
 const LIMITE_POR_HORA_MS = 10 * 60_000
 const SEM_PERMISSAO_MS = 5 * 60_000
 const CODEC_MAX_MS = 20_000
-const PRAZO_REGISTRO_MS = 90 * 86_400_000
 const PARCIAL_VELHO_MS = 86_400_000
 const CACHE_DISCO_MS = 30_000
 
 type Registro = MaterialNoDisco & {
     etag: string
     tamanho: number
-    /** quando entrou no mapa (para podar) */
+    /** quando entrou no mapa (informativo: o mapa NÃO é mais podado por idade, v5) */
     em?: number
 }
 type ARelatar = { status: "baixado" | "falhou"; detalhe: string | null; codec: string | null }
@@ -75,8 +75,11 @@ let lote = { total: 0, feitos: 0 }
 let sincronizando = false
 let limpouParciais = false
 let geracao = 0 // sobe em materialParar: o que estava em voo se descarta
+let disco: EstadoDisco = DISCO_VAZIO
+let limpando = false
 
-const chaveDoStore = () => "sirvo_material" + sirvoSufixoDoAmbiente()
+// v2: o registro é por VERSÃO e leva arquivo_id; os registros do modelo antigo ficam ignorados
+const chaveDoStore = () => "sirvo_material_v2" + sirvoSufixoDoAmbiente()
 
 function tamanhoNoDisco(caminho: string): number {
     try {
@@ -90,18 +93,9 @@ function carregar(): Map<string, Registro> {
     if (registros) return registros
     registros = new Map()
     try {
-        const salvo = _store.ACCESS?.get(chaveDoStore()) as { [id: string]: Registro } | undefined
-        const corte = Date.now() - PRAZO_REGISTRO_MS
-        let podou = false
-        for (const [id, r] of Object.entries(salvo || {})) {
-            if (!r || typeof r.caminho !== "string" || typeof r.etag !== "string") continue
-            // poda: registro velho demais, ou cujo arquivo não existe mais
-            if ((r.em && r.em < corte) || tamanhoNoDisco(r.caminho) < 0) {
-                podou = true
-                continue
-            }
-            registros.set(id, r)
-        }
+        // sem poda por idade: só sai o que não está mais no disco
+        const { mantidos, podou } = filtrarRegistros<Registro>(_store.ACCESS?.get(chaveDoStore()), tamanhoNoDisco)
+        registros = mantidos
         if (podou) guardar()
     } catch (erro) {
         console.error("Sirvo: não consegui ler o mapa do material", erro)
@@ -134,7 +128,7 @@ export function materialEstado(): EstadoMaterial {
     for (const r of carregar().values()) {
         // arquivo que sumiu do disco não é oferecido ao projeto
         if (!aindaNoDisco(r)) continue
-        baixados.push({ id: r.id, caminho: r.caminho, nome: r.nome, tipo: r.tipo, codec: r.codec, event_id: r.event_id })
+        baixados.push({ id: r.id, arquivo_id: r.arquivo_id, caminho: r.caminho, nome: r.nome, tipo: r.tipo, codec: r.codec })
     }
     return estadoParaRenderer({
         ...ESTADO_VAZIO,
@@ -143,8 +137,35 @@ export function materialEstado(): EstadoMaterial {
         naFila: fila.length,
         lote: { total: lote.total, feitos: Math.min(lote.total, lote.feitos + emCurso.size) },
         falhas: [...falhos].map(([id, f]) => ({ id, nome: f.nome, detalhe: f.detalhe })),
-        baixados
+        baixados,
+        disco
     })
+}
+
+/** mede Online/Sirvo e o volume (a cada sincronização, 60 s; nunca no poll de 3 s) */
+async function medirDisco() {
+    try {
+        const arvore = lerArvore()
+        const s = await fs.promises.statfs(getDataFolderPath("onlineMedia")).catch(() => null)
+        disco = { ...disco, usado: bytesDaArvore(arvore), livre: s ? Number(s.bavail) * Number(s.bsize) : -1 }
+    } catch {}
+}
+
+/** o renderer pediu a limpeza (tela e áudio livres, fora do roteiroNoAr) — ver aliancaSirvoMaterial.ts */
+export async function materialLimpar(vivos: string[]): Promise<EstadoMaterial> {
+    if (limpando) return materialEstado()
+    limpando = true
+    try {
+        const r = await limparMaterial(vivos, habilitado)
+        disco = { ...disco, limpeza: { em: Date.now(), arquivos: r.arquivos, bytes: r.bytes, adiada: r.adiada } }
+        await medirDisco()
+    } catch (erro) {
+        console.error("Sirvo: falha na limpeza do material", erro)
+        disco = { ...disco, limpeza: { ...disco.limpeza, em: Date.now(), adiada: "erro na limpeza" } }
+    } finally {
+        limpando = false
+    }
+    return materialEstado()
 }
 
 /** desconectou do Sirvo (ou trocou a chave): cancela tudo; o que já está no disco continua lá */
@@ -176,6 +197,7 @@ export async function materialSincronizar(): Promise<EstadoMaterial> {
         }
         // os relatos pendentes seguem em segundo plano: o IPC não espera N chamadas ao Sirvo
         void relatarPendentes(g)
+        void medirDisco()
         if (g === geracao && Date.now() >= perguntarApos) {
             const r = await sirvoChamarDoMain("show_material_pendente", {})
             if (g !== geracao) return materialEstado()
@@ -219,13 +241,15 @@ function enfileirar(lista: any[]) {
         const falho = falhos.get(m.id)
         if (falho && agora < falho.tentarApos) continue
         if (agora < (esperaPorId.get(m.id) || 0)) continue
-        // mesmo id + mesmo ETag e o arquivo está lá com o tamanho certo: não baixa de novo,
-        // só diz ao Sirvo que está no PC (o relato anterior pode ter se perdido)
+        // a pendente traz TODA versão atual com uso na janela: no disco e certa não baixa de novo, e só
+        // relata `baixado` se o Sirvo ainda não sabe (baixa_status !== "baixado")
         const feito = carregar().get(m.id)
-        if (feito && etagsIguais(feito.etag, m.etag) && tamanhoNoDisco(feito.caminho) === m.tamanho) {
-            if (!aRelatar.has(m.id)) aRelatar.set(m.id, { status: "baixado", detalhe: null, codec: feito.codec })
+        const acao = decidirLinha(m, feito, tamanhoNoDisco)
+        if (acao === "relatar_baixado") {
+            if (!aRelatar.has(m.id)) aRelatar.set(m.id, { status: "baixado", detalhe: null, codec: feito!.codec })
             continue
         }
+        if (acao === "nada") continue
         fila.push(m)
         lote.total++
     }
@@ -254,7 +278,7 @@ async function processar(m: MaterialPendente, g: number) {
 
     if (r.ok) {
         const v = r.valor
-        carregar().set(m.id, { id: m.id, caminho: v.caminho, nome: m.nome, tipo: m.tipo, codec: v.codec, event_id: m.event_id, etag: m.etag, tamanho: m.tamanho, em: Date.now() })
+        carregar().set(m.id, { id: m.id, arquivo_id: m.arquivo_id, caminho: v.caminho, nome: m.nome, tipo: m.tipo, codec: v.codec, etag: m.etag, tamanho: m.tamanho, em: Date.now() })
         cacheDisco.delete(m.id)
         guardar()
         falhos.delete(m.id)
@@ -355,7 +379,12 @@ async function baixar(m: MaterialPendente, ctl: AbortController): Promise<{ cami
 
     // 2. o destino, dentro de Online/Sirvo
     const arquivo = nomeDoArquivo(m.nome, m.id, m.ext)
-    const alvo = arquivo && resolverDestino(getDataFolderPath("onlineMedia"), pastaDoMaterial(m), arquivo)
+    // a pasta do arquivo é a que já existe no disco com o sufixo __<arquivo8>
+    let existentes: string[] = []
+    try {
+        existentes = fs.readdirSync(path.join(getDataFolderPath("onlineMedia"), PASTA_DO_SIRVO), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
+    } catch {}
+    const alvo = arquivo && resolverDestino(getDataFolderPath("onlineMedia"), pastaDoMaterial(m, existentes), arquivo)
     if (!alvo || !dentroDaPastaOnline(alvo.pasta)) throw new ErroDeMaterial("destino")
     makeDir(alvo.pasta)
 
