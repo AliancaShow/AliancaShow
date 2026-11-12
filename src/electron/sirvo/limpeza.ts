@@ -11,9 +11,10 @@ import path from "path"
 import { _store } from "../data/store"
 import { getDataFolderPath } from "../utils/files"
 import { candidatosALimpar, caminhosReferenciados, normCaminho, PASTA_DO_SIRVO, type Mortos, type PastaDoSirvo } from "./materialLogica"
+import { getMainWindow } from ".."
 import { sirvoChamarDoMain, sirvoSufixoDoAmbiente } from "./sirvo"
 
-export type ResultadoLimpeza = { adiada: string | null; arquivos: number; bytes: number }
+export type ResultadoLimpeza = { adiada: string | null; arquivos: number; bytes: number; /** false = nem chegou a tentar (chave desligada, Lixeira sem teste): não conta como rodada e não inicia a espera de 24 h */ rodou?: boolean }
 
 const raizDoSirvo = () => path.join(getDataFolderPath("onlineMedia"), PASTA_DO_SIRVO)
 const chaveLixeira = () => "sirvo_lixeira" + sirvoSufixoDoAmbiente()
@@ -58,7 +59,10 @@ export async function testarLixeira(): Promise<{ ok: boolean; mensagem: string }
         const sonda = path.join(raiz, SONDA)
         fs.writeFileSync(sonda, "teste da Lixeira do AliançaShow")
         await shell.trashItem(sonda)
-        const r = await dialog.showMessageBox({ type: "question", buttons: ["Sim, está na Lixeira", "Não está"], defaultId: 0, cancelId: 1, title: "Testar a Lixeira", message: "Mandei o arquivo .sonda-lixeira.txt para a Lixeira. Ele está lá?" })
+        // com a janela principal como dona, a pergunta fica por cima do app em tela cheia (e não atrás dele)
+        const opcoes: Electron.MessageBoxOptions = { type: "question", buttons: ["Sim, está na Lixeira", "Não está"], defaultId: 0, cancelId: 1, title: "Testar a Lixeira", message: "Mandei o arquivo .sonda-lixeira.txt para a Lixeira. Ele está lá?" }
+        const janela = getMainWindow()
+        const r = janela ? await dialog.showMessageBox(janela, opcoes) : await dialog.showMessageBox(opcoes)
         if (r.response !== 0) return { ok: false, mensagem: "Lixeira não confirmada: a limpeza do material continua desligada." }
         _store.ACCESS?.set(chaveLixeira(), { lixeiraConferidaEm: Date.now(), caminho: normCaminho(raiz) })
         return { ok: true, mensagem: "Lixeira conferida." }
@@ -94,12 +98,13 @@ async function textosParaVarrer(): Promise<string[]> {
 }
 
 export async function limparMaterial(vivos: string[], habilitado: boolean | null): Promise<ResultadoLimpeza> {
-    const adia = (motivo: string): ResultadoLimpeza => ({ adiada: motivo, arquivos: 0, bytes: 0 })
+    // `rodou` false: adiada antes de tentar nada, então não gasta as 24 h (quem corrige o motivo não espera um dia)
+    const adia = (motivo: string, rodou = false): ResultadoLimpeza => ({ adiada: motivo, arquivos: 0, bytes: 0, rodou })
     if (habilitado !== true) return adia("a chave não baixa material")
     if (!lixeiraConferida()) return adia("Lixeira não testada")
     const r = await sirvoChamarDoMain("show_material_retencao", {})
     const d: any = r.ok ? r.dados : null
-    if (!r.ok || !d || !Array.isArray(d.arquivos) || !Array.isArray(d.versoes)) return adia("sem resposta do Sirvo")
+    if (!r.ok || !d || !Array.isArray(d.arquivos) || !Array.isArray(d.versoes)) return adia("sem resposta do Sirvo", true)
     const mortos: Mortos = { arquivos: d.arquivos, versoes: d.versoes }
 
     const raiz = raizDoSirvo()

@@ -244,6 +244,13 @@ function ativosNo(projetoId: string): number[] {
     return posicoes.filter((i): i is number => typeof i === "number" && i >= 0)
 }
 
+/** posições que as SAÍDAS apontam neste projeto (no ar de verdade; aberto no centro ou foco não contam) */
+function noArNo(projetoId: string): number[] {
+    if (get(activeProject) !== projetoId) return []
+    const posicoes: unknown[] = Object.values(get(outputs) || {}).map((o: any) => o?.out?.slide?.projectIndex)
+    return posicoes.filter((i): i is number => typeof i === "number" && i >= 0)
+}
+
 /**
  * Os ponteiros por posição do projeto aberto, lidos ANTES da conta (que muda o
  * id de lápide e duplicata no próprio objeto). Só os coerentes: um ponteiro
@@ -443,7 +450,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean, forcarM
     let materialPendente = false
     if (depois === itens && !pendente && !(aberto && arrastando) && podeEscreverAgora()) {
         try {
-            material = prepararMaterial(projetoId, r, itens, { ativos: ativosNo(projetoId), protegido: prot, congelarRemocao: !aberto && prot && saidaComPosicao(), forcar: forcarMaterial })
+            material = prepararMaterial(projetoId, r, itens, { ativos: ativosNo(projetoId), ativosNoAr: noArNo(projetoId), protegido: prot, congelarRemocao: !aberto && prot && saidaComPosicao(), forcar: forcarMaterial })
         } catch (erro) {
             console.error("Sirvo: falha ao conciliar o material", erro)
         }

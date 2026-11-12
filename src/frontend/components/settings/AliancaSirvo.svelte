@@ -21,7 +21,9 @@
     async function testarLixeira() {
         testandoLixeira = true
         try {
-            lixeiraMsg = ((await requestMain(Main.SIRVO_LIXEIRA_TESTAR)) as { mensagem?: string } | undefined)?.mensagem || ""
+            // o operador leva o tempo dele para olhar a Lixeira: 10 min de espera, não os 15 s do padrão
+            const r = (await requestMain(Main.SIRVO_LIXEIRA_TESTAR, undefined, undefined, 600000)) as { mensagem?: string } | undefined
+            lixeiraMsg = r?.mensagem || "Sem resposta do teste da Lixeira. Tente de novo."
         } finally {
             testandoLixeira = false
         }

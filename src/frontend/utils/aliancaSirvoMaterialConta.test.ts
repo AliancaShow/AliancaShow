@@ -363,10 +363,26 @@ describe("v5: versão nova do mesmo arquivo troca NO LUGAR", () => {
         expect(aplicado.pendente).toBe(false)
         expect(itens[2].data[VERSAO]).toBe("m1.v2")
     })
-    it("EM USO nunca troca, nem com Aplicar: ponteiro vivo, saída com o caminho ou áudio tocando (caminho em emUso)", () => {
+    it("só ABERTO no centro / em foco (ativos, fora do ar): troca na hora, mesmo índice", () => {
+        const itens = comV1()
+        const item = itens[2]
+        const r = conciliarMaterial(itens, pronto2({ ativos: [2] }))
+        expect(r.trocas).toHaveLength(1)
+        expect(r.trocaEmUso).toEqual([])
+        expect(r.itens[2]).toBe(item)
+        expect(item.data[VERSAO]).toBe("m1.v2")
+    })
+    it("aberto no centro MAS protegido (culto no ar): continua pendência com Aplicar, como antes", () => {
+        const itens = comV1()
+        const r = conciliarMaterial(itens, pronto2({ ativos: [2], protegido: true }))
+        expect(r.pendente).toBe(true)
+        expect(r.trocaPendente).toEqual(["Video m1 v2"])
+        expect(itens[2].data[VERSAO]).toBe("m1.v1")
+    })
+    it("EM USO nunca troca, nem com Aplicar: ponteiro de saída, saída com o caminho ou áudio tocando (caminho em emUso)", () => {
         const base = comV1()
         const idx = 2
-        const casos: Partial<OpcoesMaterial>[] = [{ ativos: [idx] }, { emUso: new Set([normCam("C:\\Online\\Sirvo\\m1.mp4")]) }, { ativos: [idx], protegido: true, forcar: true }, { emUso: new Set([normCam("c:/online/sirvo/M1.mp4")]), forcar: true }]
+        const casos: Partial<OpcoesMaterial>[] = [{ ativosNoAr: [idx] }, { emUso: new Set([normCam("C:\\Online\\Sirvo\\m1.mp4")]) }, { ativos: [idx], ativosNoAr: [idx], protegido: true, forcar: true }, { emUso: new Set([normCam("c:/online/sirvo/M1.mp4")]), forcar: true }]
         for (const extra of casos) {
             const r = conciliarMaterial(base, pronto2(extra))
             expect(r.trocas).toEqual([])
@@ -388,7 +404,13 @@ describe("v5: versão nova do mesmo arquivo troca NO LUGAR", () => {
     it("um uso novo (id novo) para o MESMO arquivo deixa o item intacto; v1 -> v3 direto", () => {
         const itens = comV1()
         const item = itens[2]
-        const r = conciliarMaterial(itens, opcoes([baixado("m1")], [{ id: "m1", bloco_id: "b1", status: "pronto" }].map((l) => ({ ...l }))), )
+        const r = conciliarMaterial(
+            itens,
+            opcoes(
+                [baixado("m1")],
+                [{ id: "m1", bloco_id: "b1", status: "pronto" }].map((l) => ({ ...l }))
+            )
+        )
         expect(r.itens).toBe(itens)
         expect(itens[2]).toBe(item)
         const v3 = v2("m1", { id: "m1.v3", caminho: "C:\\Online\\Sirvo\\m1-v3.mp4" })
@@ -467,7 +489,7 @@ describe("v5 revisão: correções", () => {
         const item = itens.find((i) => i.data?.[MARCA] === "m1")!
         conciliarMaterial(itens, o)
         expect(item.name).toBe("Video m1")
-        conciliarMaterial(itens, { ...o, protegido: false, ativos: [itens.indexOf(item)] })
+        conciliarMaterial(itens, { ...o, protegido: false, ativosNoAr: [itens.indexOf(item)] })
         expect(item.name).toBe("Video m1")
     })
     it("show_roteiro sem a chave material, null ou não-array: desconhecido, nada muda (só array é autoridade)", () => {

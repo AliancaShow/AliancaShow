@@ -101,6 +101,8 @@ export type OpcoesMaterial = {
     jaPostos: Set<string>
     /** posições (na lista recebida) com ponteiro vivo: item aberto, foco, saídas */
     ativos?: number[]
+    /** posições (na lista recebida) que estão NO AR de verdade: só as que as saídas apontam. Aberto no centro ou em foco NÃO segura a troca de versão */
+    ativosNoAr?: number[]
     /** momento protegido (culto no ar ou algo na tela) */
     protegido?: boolean
     /** o culto do roteiro que o Show segue: item de OUTRO culto (projeto religado) não é tocado nem tirado */
@@ -153,6 +155,7 @@ const apagado = (r: MaterialDoRoteiro | undefined) => !r || r.status === "apagan
  */
 export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): ResultadoMaterial {
     const ativos = new Set(o.ativos || [])
+    const noAr = new Set(o.ativosNoAr || [])
     let mudouCampos = false
     const postos: string[] = []
     const tirados: string[] = []
@@ -164,6 +167,8 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
     const emUsoCam = o.emUso || new Set<string>()
     // em uso = ponteiro vivo na lista (aberto/foco/saída com posição) OU o caminho está numa saída / tocando
     const emUsoItem = (item: ProjectShowRef, i: number) => ativos.has(i) || emUsoCam.has(normCam(item.id))
+    // a troca de versão só espera o que está no ar (saída ou áudio): item só aberto/em foco troca na hora e o centro acompanha
+    const noArItem = (item: ProjectShowRef, i: number) => noAr.has(i) || emUsoCam.has(normCam(item.id))
 
     // 1. marca duplicada (copiar e colar): a primeira é a oficial; as outras viram item do operador
     const vistas = new Set<string>()
@@ -214,7 +219,7 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
         const nova = r?.versao_id ? o.baixados.get(r.versao_id) : undefined
         const versaoDoItem = typeof item.data?.[VERSAO] === "string" ? item.data[VERSAO] : null
         if (!emCinza && r?.versao_id && nova && versaoDoItem && versaoDoItem !== r.versao_id) {
-            if (emUsoItem(item, i)) {
+            if (noArItem(item, i)) {
                 trocaEmUso.push(nova.nome)
             } else if (itens.some((x) => x !== item && x?.id === nova.caminho)) {
                 trocaJaNoProjeto.push(nova.nome)

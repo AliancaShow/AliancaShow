@@ -163,7 +163,19 @@ async function relatar(chaveMemoria: string, versaoId: string, usoId: string, st
         // o Sirvo recusar ("erro") não melhora tentando de novo; rede e chave desligada, sim
         // 54000 (mais de 60/min) e 55000 (ainda não pronto) ficam para a próxima passada
         if (!r?.ok && (r?.codigo === "rede" || r?.codigo === "nao_baixa" || r?.pg === "54000")) relatarApos = Date.now() + (r?.codigo === "nao_baixa" ? 300_000 : 60_000)
-        if (r?.ok || ((r?.codigo === "erro" || r?.codigo === "culto_inexistente") && r?.pg !== "54000" && r?.pg !== "55000")) mudarMemoria((m) => { const mm = m[chaveMemoria]; if (mm) { if (status === "usado") { mm.us = versaoId; mm.usUso = usoId } else { mm.np = versaoId; mm.npUso = usoId } } })
+        if (r?.ok || ((r?.codigo === "erro" || r?.codigo === "culto_inexistente") && r?.pg !== "54000" && r?.pg !== "55000"))
+            mudarMemoria((m) => {
+                const mm = m[chaveMemoria]
+                if (mm) {
+                    if (status === "usado") {
+                        mm.us = versaoId
+                        mm.usUso = usoId
+                    } else {
+                        mm.np = versaoId
+                        mm.npUso = usoId
+                    }
+                }
+            })
     } catch (erro) {
         console.error("Sirvo: falha ao avisar o material", erro)
     } finally {
@@ -204,7 +216,7 @@ export function caminhosEmUso(): Set<string> {
  * estado de agora, conta e devolve. Quem chama escreve a lista e então chama
  * `commit()`. `null` = não há o que fazer (sem material no Show, sem roteiro).
  */
-export function prepararMaterial(projetoId: string, roteiro: { event_id: string; material?: MaterialDoRoteiro[] | null }, itens: ProjectShowRef[], contexto: { ativos: number[]; protegido: boolean; congelarRemocao: boolean; forcar: boolean }): MaterialPreparado | null {
+export function prepararMaterial(projetoId: string, roteiro: { event_id: string; material?: MaterialDoRoteiro[] | null }, itens: ProjectShowRef[], contexto: { ativos: number[]; ativosNoAr: number[]; protegido: boolean; congelarRemocao: boolean; forcar: boolean }): MaterialPreparado | null {
     const e = get(sirvoMaterialEstado)
     // sem o interruptor "baixa material" (ou sem a lista) a conta não faz nada: material [] não é "apagou tudo"
     const noRoteiro = mapaDoRoteiro(roteiro.material, e.habilitado)
@@ -221,9 +233,13 @@ export function prepararMaterial(projetoId: string, roteiro: { event_id: string;
     eventoSeguido = roteiro.event_id
     const memoria = lerMemoria()
     const prefixo = `${roteiro.event_id}:`
-    const jaPostos = new Set(Object.keys(memoria).filter((k) => k.startsWith(prefixo) && memoria[k].projeto === projetoId).map((k) => k.slice(prefixo.length)))
+    const jaPostos = new Set(
+        Object.keys(memoria)
+            .filter((k) => k.startsWith(prefixo) && memoria[k].projeto === projetoId)
+            .map((k) => k.slice(prefixo.length))
+    )
     const emUso = caminhosEmUso()
-    const res = conciliarMaterial(itens, { baixados, noRoteiro, eventoId: roteiro.event_id, jaPostos, emUso, ativos: contexto.ativos, protegido: contexto.protegido, congelarRemocao: contexto.congelarRemocao, forcar: contexto.forcar, agora: Date.now() })
+    const res = conciliarMaterial(itens, { baixados, noRoteiro, eventoId: roteiro.event_id, jaPostos, emUso, ativos: contexto.ativos, ativosNoAr: contexto.ativosNoAr, protegido: contexto.protegido, congelarRemocao: contexto.congelarRemocao, forcar: contexto.forcar, agora: Date.now() })
     trocaEsperandoUso = res.trocaEmUso.length > 0
 
     return {

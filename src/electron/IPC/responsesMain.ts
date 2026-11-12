@@ -37,7 +37,7 @@ import { deleteShows, deleteShowsNotIndexed, getAllShows, getEmptyShows, refresh
 import { correctSpelling } from "../utils/spellcheck"
 import { executeSpotifyCommand, getSpotifyState } from "../utils/spotify"
 import { testarLixeira } from "../sirvo/limpeza"
-import { materialEstado, materialLimpar, materialParar, materialSincronizar } from "../sirvo/material"
+import { materialEstado, materialLiberarLimpeza, materialLimpar, materialParar, materialSincronizar } from "../sirvo/material"
 import { sirvoAmbiente, sirvoApagarChave, sirvoChamar, sirvoSalvarChave, sirvoTemChave } from "../sirvo/sirvo"
 import { sendToMain } from "./main"
 
@@ -214,7 +214,11 @@ export const mainResponses: MainResponses = {
     [Main.SIRVO_MATERIAL_SINCRONIZAR]: () => materialSincronizar(),
     [Main.SIRVO_MATERIAL_ESTADO]: () => materialEstado(),
     [Main.SIRVO_MATERIAL_LIMPAR]: (data) => materialLimpar(Array.isArray(data?.vivos) ? data.vivos.filter((v: unknown) => typeof v === "string").slice(0, 5000) : []),
-    [Main.SIRVO_LIXEIRA_TESTAR]: () => testarLixeira(),
+    [Main.SIRVO_LIXEIRA_TESTAR]: async () => {
+        const r = await testarLixeira()
+        if (r.ok) materialLiberarLimpeza()
+        return r
+    },
     [Main.PCO_LIVE_GET]: (data) => ContentProviderRegistry.getPcoLiveData(data.serviceTypeId, data.planId).catch(() => null),
     [Main.PCO_PUSHER_AUTH]: (data) => ContentProviderRegistry.getPcoPusherAuth(data.socketId, data.channelName, data.serviceTypeId),
     // Content Library

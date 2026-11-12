@@ -157,7 +157,8 @@ export async function materialLimpar(vivos: string[]): Promise<EstadoMaterial> {
     limpando = true
     try {
         const r = await limparMaterial(vivos, habilitado)
-        disco = { ...disco, limpeza: { em: Date.now(), arquivos: r.arquivos, bytes: r.bytes, adiada: r.adiada } }
+        // adiada antes de tentar (r.rodou === false) não inicia a espera de 24 h
+        disco = { ...disco, limpeza: { em: r.rodou === false ? disco.limpeza.em : Date.now(), arquivos: r.arquivos, bytes: r.bytes, adiada: r.adiada } }
         await medirDisco()
     } catch (erro) {
         console.error("Sirvo: falha na limpeza do material", erro)
@@ -166,6 +167,11 @@ export async function materialLimpar(vivos: string[]): Promise<EstadoMaterial> {
         limpando = false
     }
     return materialEstado()
+}
+
+/** a Lixeira acabou de ser conferida: o "adiada" velho some e a próxima passada de 60 s já pode limpar */
+export function materialLiberarLimpeza() {
+    disco = { ...disco, limpeza: { ...disco.limpeza, em: 0, adiada: null } }
 }
 
 /** desconectou do Sirvo (ou trocou a chave): cancela tudo; o que já está no disco continua lá */
@@ -382,7 +388,10 @@ async function baixar(m: MaterialPendente, ctl: AbortController): Promise<{ cami
     // a pasta do arquivo é a que já existe no disco com o sufixo __<arquivo8>
     let existentes: string[] = []
     try {
-        existentes = fs.readdirSync(path.join(getDataFolderPath("onlineMedia"), PASTA_DO_SIRVO), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
+        existentes = fs
+            .readdirSync(path.join(getDataFolderPath("onlineMedia"), PASTA_DO_SIRVO), { withFileTypes: true })
+            .filter((d) => d.isDirectory())
+            .map((d) => d.name)
     } catch {}
     const alvo = arquivo && resolverDestino(getDataFolderPath("onlineMedia"), pastaDoMaterial(m, existentes), arquivo)
     if (!alvo || !dentroDaPastaOnline(alvo.pasta)) throw new ErroDeMaterial("destino")
