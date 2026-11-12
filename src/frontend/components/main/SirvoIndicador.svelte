@@ -59,6 +59,39 @@
         return { texto: "", dica: "", falhou: false }
     }
 
+    // F5 (v5): o disco do material do Sirvo na dica; laranja com < 10 GB livres ou limpeza adiada há mais de 7 dias
+    const GB = 1024 ** 3
+    const SETE_DIAS = 7 * 86_400_000
+    let adiadaDesde = 0
+    $: {
+        const a = $sirvoMaterialEstado.disco?.limpeza?.adiada
+        if (!a) adiadaDesde = 0
+        else if (!adiadaDesde) adiadaDesde = lerAdiadaDesde()
+    }
+    function lerAdiadaDesde(): number {
+        try {
+            const salvo = Number(localStorage.getItem("sirvoLimpezaAdiadaDesde"))
+            if (salvo) return salvo
+            localStorage.setItem("sirvoLimpezaAdiadaDesde", String(Date.now()))
+        } catch {}
+        return Date.now()
+    }
+    $: if (!$sirvoMaterialEstado.disco?.limpeza?.adiada) {
+        try {
+            localStorage.removeItem("sirvoLimpezaAdiadaDesde")
+        } catch {}
+    }
+    function discoTexto(m: typeof $sirvoMaterialEstado, t: number): { dica: string; aviso: boolean } {
+        const d = m.disco
+        if (!d || d.usado < 0) return { dica: "", aviso: false }
+        const gb = (n: number) => (n / GB).toFixed(1).replace(".", ",")
+        const pouco = d.livre >= 0 && d.livre < 10 * GB
+        const adiada = !!d.limpeza.adiada && adiadaDesde > 0 && t - adiadaDesde > SETE_DIAS
+        const livre = d.livre >= 0 ? ` · ${gb(d.livre)} GB livres` : ""
+        const limpeza = d.limpeza.adiada ? ` · limpeza adiada (${d.limpeza.adiada})` : ""
+        return { dica: ` Material do Sirvo no disco: ${gb(d.usado)} GB${livre}${limpeza}.`, aviso: pouco || adiada }
+    }
+
     function calcular(e: typeof $sirvo, c: typeof culto, t: number, m: typeof $sirvoMaterialEstado): Visual | null {
         if (e.status === "sem_chave") return null
         if (e.status === "chave_invalida") return { tom: "vermelho", texto: "Chave do Sirvo recusada", dica: "A chave guardada não vale mais. Clique para abrir Conexão.", clicavel: true }
@@ -84,7 +117,8 @@
         const dicaPapel = e.podeConduzir ? " Esta chave conduz: o Show pode encerrar blocos e mexer no roteiro." : " Esta chave só lê o roteiro."
         const dica = `Seguindo ${c.titulo} · ${quando(c.comeca_em)}${estado}${e.escolhaManual ? " · escolhido à mão" : " · escolhido automaticamente"}.${dicaPapel}`
         const mat = materialTexto(m)
-        return { tom: mat.falhou ? "laranja" : "verde", texto: `${quando(c.comeca_em)}${estado}${papel}${mat.texto}`, dica: dica + mat.dica, clicavel: false }
+        const dsc = discoTexto(m, t)
+        return { tom: mat.falhou || dsc.aviso ? "laranja" : "verde", texto: `${quando(c.comeca_em)}${estado}${papel}${mat.texto}`, dica: dica + mat.dica + dsc.dica, clicavel: false }
     }
 
     function abrirConexao() {

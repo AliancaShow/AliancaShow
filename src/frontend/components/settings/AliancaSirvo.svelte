@@ -15,6 +15,18 @@
 
     let chave = ""
     let ambiente: "producao" | "staging" = "producao"
+    // F5: a limpeza do material só roda depois que o operador confirma que a Lixeira recebe o arquivo de teste
+    let testandoLixeira = false
+    let lixeiraMsg = ""
+    async function testarLixeira() {
+        testandoLixeira = true
+        try {
+            lixeiraMsg = ((await requestMain(Main.SIRVO_LIXEIRA_TESTAR)) as { mensagem?: string } | undefined)?.mensagem || ""
+        } finally {
+            testandoLixeira = false
+        }
+    }
+
     onMount(async () => (ambiente = (await requestMain(Main.SIRVO_AMBIENTE)) || "producao"))
     let salvando = false
     // "quem opera hoje" (opcional): aparece como "Sala de vídeo · <nome>" nas respostas do chat.
@@ -84,6 +96,8 @@
         <p class="explicacao">As respostas do chat saem como <b>Sala de vídeo · {operador.trim() || "…"}</b>. Só para as pessoas saberem com quem falam; não dá permissão nenhuma.</p>
 
         <MaterialButton variant="outlined" icon="logout" on:click={desconectarSirvo} white>Desconectar</MaterialButton>
+        <MaterialButton variant="outlined" icon="delete" on:click={testarLixeira} disabled={testandoLixeira} white>Testar a Lixeira</MaterialButton>
+        {#if lixeiraMsg}<p class="lixeira">{lixeiraMsg}</p>{/if}
     {:else}
         <p class="explicacao">
             {#if $sirvo.status === "chave_invalida"}
@@ -110,6 +124,10 @@
 </div>
 
 <style>
+    .lixeira {
+        opacity: 0.7;
+        font-size: 0.9em;
+    }
     .painel {
         display: flex;
         flex-direction: column;
