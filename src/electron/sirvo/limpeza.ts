@@ -72,8 +72,8 @@ const lixeiraConferida = () => {
     return !!c?.lixeiraConferidaEm && c.caminho === normCaminho(raizDoSirvo())
 }
 
-/** os textos dos stores salvos que podem apontar para um arquivo (STAGE, THEMES, SYNCED_SETTINGS, OVERLAYS, TEMPLATES) e cada .show */
-function textosParaVarrer(): string[] {
+/** os textos dos stores salvos que podem apontar para um arquivo (STAGE, THEMES, SYNCED_SETTINGS, OVERLAYS, TEMPLATES) e cada .show (assíncrono, cedendo entre arquivos: o main atende o ao vivo) */
+async function textosParaVarrer(): Promise<string[]> {
     const textos: string[] = []
     for (const k of ["SYNCED_SETTINGS", "THEMES", "STAGE", "OVERLAYS", "TEMPLATES"] as const) {
         try {
@@ -82,7 +82,13 @@ function textosParaVarrer(): string[] {
     }
     try {
         const pasta = getDataFolderPath("shows")
-        for (const f of fs.readdirSync(pasta)) if (f.toLowerCase().endsWith(".show")) textos.push(fs.readFileSync(path.join(pasta, f), "utf8"))
+        for (const f of await fs.promises.readdir(pasta)) {
+            if (!f.toLowerCase().endsWith(".show")) continue
+            try {
+                textos.push(await fs.promises.readFile(path.join(pasta, f), "utf8"))
+            } catch {}
+            await new Promise<void>((resolve) => setImmediate(resolve))
+        }
     } catch {}
     return textos
 }
@@ -104,7 +110,7 @@ export async function limparMaterial(vivos: string[], habilitado: boolean | null
     if (!candidatos.length) return { adiada: null, arquivos: 0, bytes: 0 }
 
     const projetos = (_store.PROJECTS?.store as any)?.projects
-    const referenciados = caminhosReferenciados(textosParaVarrer(), projetos, candidatos)
+    const referenciados = caminhosReferenciados(await textosParaVarrer(), projetos, candidatos)
     candidatos = candidatos.filter((c) => !referenciados.has(c))
 
     let arquivos = 0

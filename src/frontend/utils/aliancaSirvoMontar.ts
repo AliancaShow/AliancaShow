@@ -360,6 +360,10 @@ function esquecerDesfazerDaLista(projetoId: string) {
 // trava contra laço: se a conta deixar de ser idempotente, o Show não reescreve o projeto a cada segundo
 let escritasSeguidas = 0
 let ultimaEscrita = 0
+/** olha SEM contar: a próxima escrita seria aceita? (a conta do material muda objetos no lugar; sem poder escrever, nem começa) */
+function podeEscreverAgora() {
+    return Date.now() - ultimaEscrita >= 3_000 || escritasSeguidas < 5
+}
 function podeEscrever() {
     const agora = Date.now()
     escritasSeguidas = agora - ultimaEscrita < 3_000 ? escritasSeguidas + 1 : 1
@@ -437,7 +441,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean, forcarM
     // faixa (`forcarMaterial`: só esse botão libera, nunca um pedido do operador). Nunca no meio de um arrasto.
     let material: ReturnType<typeof prepararMaterial> = null
     let materialPendente = false
-    if (depois === itens && !pendente && !(aberto && arrastando)) {
+    if (depois === itens && !pendente && !(aberto && arrastando) && podeEscreverAgora()) {
         try {
             material = prepararMaterial(projetoId, r, itens, { ativos: ativosNo(projetoId), protegido: prot, congelarRemocao: !aberto && prot && saidaComPosicao(), forcar: forcarMaterial })
         } catch (erro) {

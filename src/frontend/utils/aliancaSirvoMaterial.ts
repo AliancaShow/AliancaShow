@@ -18,7 +18,7 @@ import { Main } from "../../types/IPC/Main"
 import { requestMain } from "../IPC/main"
 import { media, outputs, overlays, playingAudio, projects, shows, special, stageShows, styles, templates, themes } from "../stores"
 import { sirvo } from "./aliancaSirvo"
-import { conciliarMaterial, copiarMidiaDaTroca, mapaDoRoteiro, marcaDoMaterial, normCam, podeLimparAgora, VERSAO, type Baixado, type MaterialDoRoteiro, type ResultadoMaterial } from "./aliancaSirvoMaterialConta"
+import { conciliarMaterial, copiarMidiaDaTroca, extrairCaminhosSirvo, mapaDoRoteiro, marcaDoMaterial, normCam, podeLimparAgora, VERSAO, type Baixado, type MaterialDoRoteiro, type ResultadoMaterial } from "./aliancaSirvoMaterialConta"
 
 const VAZIO: EstadoMaterial = { habilitado: null, baixando: 0, naFila: 0, lote: { total: 0, feitos: 0 }, falhas: [], baixados: [], disco: { usado: -1, livre: -1, limpeza: { em: 0, arquivos: 0, bytes: 0, adiada: null } } }
 export const sirvoMaterialEstado = writable<EstadoMaterial>(VAZIO)
@@ -94,7 +94,7 @@ function caminhosVivos(): string[] {
     for (const proj of Object.values(get(projects) || {}) as any[]) seguro((proj?.shows || []).filter((i: any) => !marcaDoMaterial(i)).map((i: any) => i?.id))
     for (const st of [shows, overlays, templates, stageShows, themes, styles]) seguro(get(st as any))
     const achados = new Set<string>()
-    for (const t of textos) for (const m of t.matchAll(/[A-Za-z]:[\\/][^"]*?[\\/]Online[\\/]Sirvo[\\/][^"]+/g)) achados.add(m[0].replace(/\\\\/g, "\\"))
+    for (const t of textos) for (const c of extrairCaminhosSirvo(t)) achados.add(c)
     return [...achados]
 }
 
@@ -125,7 +125,7 @@ async function talvezLimpar(g: number) {
 // a VERSÃO de que já avisou o Sirvo (`np` = no_projeto, `us` = usado). Versão nova = relata de novo.
 const CHAVE_MEMORIA = "aliancaSirvoMaterial"
 const PRAZO_MEMORIA_MS = 90 * 86_400_000
-type Memoria = { projeto: string; em: number; np?: string; us?: string }
+type Memoria = { projeto: string; em: number; np?: string; npUso?: string; us?: string; usUso?: string }
 
 export const chaveDaMemoria = (eventId: string, arquivoId: string) => `${eventId}:${arquivoId}`
 
@@ -163,7 +163,7 @@ async function relatar(chaveMemoria: string, versaoId: string, usoId: string, st
         // o Sirvo recusar ("erro") não melhora tentando de novo; rede e chave desligada, sim
         // 54000 (mais de 60/min) e 55000 (ainda não pronto) ficam para a próxima passada
         if (!r?.ok && (r?.codigo === "rede" || r?.codigo === "nao_baixa" || r?.pg === "54000")) relatarApos = Date.now() + (r?.codigo === "nao_baixa" ? 300_000 : 60_000)
-        if (r?.ok || ((r?.codigo === "erro" || r?.codigo === "culto_inexistente") && r?.pg !== "54000" && r?.pg !== "55000")) mudarMemoria((m) => m[chaveMemoria] && (m[chaveMemoria][status === "usado" ? "us" : "np"] = versaoId))
+        if (r?.ok || ((r?.codigo === "erro" || r?.codigo === "culto_inexistente") && r?.pg !== "54000" && r?.pg !== "55000")) mudarMemoria((m) => m[chaveMemoria] && { const mm = m[chaveMemoria]; if (mm) { if (status === "usado") { mm.us = versaoId; mm.usUso = usoId } else { mm.np = versaoId; mm.npUso = usoId } } })
     } catch (erro) {
         console.error("Sirvo: falha ao avisar o material", erro)
     } finally {
@@ -251,7 +251,7 @@ export function prepararMaterial(projetoId: string, roteiro: { event_id: string;
                 const arq = marcaDoMaterial(item)
                 const versao = item.data?.[VERSAO]
                 const r = arq ? noRoteiro?.get(arq) : undefined
-                if (!arq || typeof versao !== "string" || !r || r.status === "apagando" || lida[chaveDe(arq)]?.np === versao || !baixados.has(versao)) continue
+                if (!arq || typeof versao !== "string" || !r || r.status === "apagando" || (lida[chaveDe(arq)]?.np === versao && lida[chaveDe(arq)]?.npUso === r.id) || !baixados.has(versao)) continue
                 void relatar(chaveDe(arq), versao, r.id, "no_projeto", baixados.get(versao)?.codec)
             }
         }
@@ -309,7 +309,7 @@ function conferirUsado() {
         if (!linha || !eventoSeguido) continue
         const chave = chaveDaMemoria(eventoSeguido, b.arquivo_id)
         // só conta o que o Show pôs (ou o operador pôs a mão no mesmo arquivo): precisa estar na memória; pula se `us` já é esta versão
-        if (!memoria[chave] || memoria[chave].us === b.id) continue
+        if (!memoria[chave] || (memoria[chave].us === b.id && memoria[chave].usUso === linha.id)) continue
         void relatar(chave, b.id, linha.id, "usado", b.codec)
     }
 }

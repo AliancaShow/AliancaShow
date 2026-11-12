@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { APAGANDO_EM, BLOCO, CAMPOS_DE_MIDIA_QUE_ATRAVESSAM, conciliarMaterial, copiarMidiaDaTroca, GRACA_APAGAR_MS, itemDoMaterial, mapaDoRoteiro, MARCA, marcaDoMaterial, normCam, podeLimparAgora, PREFIXO_APAGADO, VERSAO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
+import { APAGANDO_EM, BLOCO, CAMPOS_DE_MIDIA_QUE_ATRAVESSAM, conciliarMaterial, copiarMidiaDaTroca, extrairCaminhosSirvo, GRACA_APAGAR_MS, itemDoMaterial, mapaDoRoteiro, MARCA, marcaDoMaterial, normCam, podeLimparAgora, PREFIXO_APAGADO, VERSAO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
 import { ID_RODAPE, NOME_RODAPE, ordemMudaAteOPonteiro } from "./aliancaSirvoProjeto"
 
 const cab = (id: string): ProjectShowRef => ({ id: `sirvo_${id}`, type: "section", name: id })
@@ -447,5 +447,37 @@ describe("v5: o gatilho da limpeza", () => {
         expect(podeLimparAgora({ ...ok, saidasComAlgo: 1 })).toBe(false)
         expect(podeLimparAgora({ ...ok, tocando: 1 })).toBe(false)
         expect(podeLimparAgora({ ...ok, ultimaEm: ok.agora - 3_600_000 })).toBe(false)
+    })
+})
+
+describe("v5 revisão: correções", () => {
+    it("extrairCaminhosSirvo acha o caminho de um JSON.stringify real do Windows (barras dobradas)", () => {
+        const caminho = "C:\\Users\\igreja\\Documents\\AliancaShow\\Online\\Sirvo\\Vinheta__aaaaaaaa\\Vinheta__11111111.mp4"
+        const json = JSON.stringify({ tema: { fundo: caminho } })
+        expect(json).toContain("\\\\Online\\\\Sirvo")
+        expect(extrairCaminhosSirvo(json)).toEqual([caminho])
+        expect(extrairCaminhosSirvo(JSON.stringify({ a: "D:/x/Online/Sirvo/p/q.mp4" }))).toEqual(["D:/x/Online/Sirvo/p/q.mp4"])
+        expect(extrairCaminhosSirvo(JSON.stringify({ a: "C:\\fora\\video.mp4" }))).toEqual([])
+    })
+    it("troca segurada (protegido ou em uso) NÃO renomeia o item para o nome da versão nova", () => {
+        const musica: ProjectShowRef = { id: "s1", type: "show", data: { sirvoMusica: "s1" } }
+        const itens = conciliarMaterial([cab("b1"), musica, rodape()], opcoes([baixado("m1")], [mat("m1", "b1")])).itens
+        const nova = baixado("m1", { id: "m1.v2", caminho: "C:\\Online\\Sirvo\\m1-v2.mp4", nome: "Nome novo" })
+        const o = opcoes([baixado("m1"), nova], [mat("m1", "b1", { versao_id: "m1.v2", nome: "Nome novo" })], { protegido: true })
+        const item = itens.find((i) => i.data?.[MARCA] === "m1")!
+        conciliarMaterial(itens, o)
+        expect(item.name).toBe("Video m1")
+        conciliarMaterial(itens, { ...o, protegido: false, ativos: [itens.indexOf(item)] })
+        expect(item.name).toBe("Video m1")
+    })
+    it("show_roteiro sem a chave material, null ou não-array: desconhecido, nada muda (só array é autoridade)", () => {
+        expect(mapaDoRoteiro(undefined, true)).toBeNull()
+        expect(mapaDoRoteiro(null, true)).toBeNull()
+        expect(mapaDoRoteiro({}, true)).toBeNull()
+        const item = itemDoMaterial(baixado("m1"))
+        const itens = [...projeto(), item]
+        const r = conciliarMaterial(itens, { ...opcoes([baixado("m1")], null), noRoteiro: mapaDoRoteiro(null, true), agora: 1_000_000 + 10 * GRACA_APAGAR_MS })
+        expect(r.itens).toBe(itens)
+        expect(item.data[APAGANDO_EM]).toBeUndefined()
     })
 })

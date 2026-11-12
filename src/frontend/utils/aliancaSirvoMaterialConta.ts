@@ -234,11 +234,13 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
         if (emCinza) {
             const { [APAGANDO_EM]: _cinza, ...resto } = item.data
             item.data = resto
-            item.name = rotuloDoItem(r?.nome ?? b?.nome ?? item.name, b?.codec)
+            // troca segurada (em uso / protegido): o nome continua o da versão que o item toca
+            item.name = rotuloDoItem(versaoDoItem === r?.versao_id ? (r?.nome ?? b?.nome ?? item.name) : (b?.nome ?? item.name), b?.codec)
             mudouCampos = true
         } else {
             const nome = rotuloDoItem(r?.nome ?? b?.nome ?? item.name, b?.codec)
-            if (item.name !== nome && b) {
+            // com a troca segurada (versão do item ≠ do uso) NÃO renomeia para a versão nova
+            if (item.name !== nome && b && versaoDoItem === r?.versao_id) {
                 item.name = nome
                 mudouCampos = true
             }
@@ -351,4 +353,14 @@ function depoisDoUltimoDoBloco(itens: ProjectShowRef[], blocoId: string): number
 /** a limpeza só roda com tela e áudio livres (a trava do ao vivo, do lado do renderer; pura para ser testada) */
 export function podeLimparAgora(c: { roteiroNoAr: boolean; saidasComAlgo: number; tocando: number; ultimaEm: number; agora: number }): boolean {
     return !c.roteiroNoAr && c.saidasComAlgo === 0 && c.tocando === 0 && c.agora - c.ultimaEm >= 24 * 3_600_000
+}
+
+/**
+ * Caminhos sob Online/Sirvo num texto (JSON.stringify de um store). No Windows o JSON DOBRA as barras
+ * (`C:\Online\Sirvo\…`), então os separadores aceitam 1 ou mais barras; o resultado volta a ter uma só.
+ */
+export function extrairCaminhosSirvo(texto: string): string[] {
+    const saida: string[] = []
+    for (const m of String(texto || "").matchAll(/[A-Za-z]:[\\/]+[^"]*?[\\/]+Online[\\/]+Sirvo[\\/]+[^"]+/g)) saida.push(m[0].replace(/\\\\+/g, "\\"))
+    return saida
 }
