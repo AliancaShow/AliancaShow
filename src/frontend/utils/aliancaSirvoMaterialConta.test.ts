@@ -1,17 +1,20 @@
 import { describe, expect, it } from "vitest"
 import type { ProjectShowRef } from "../../types/Projects"
-import { APAGANDO_EM, BLOCO, conciliarMaterial, GRACA_APAGAR_MS, itemDoMaterial, mapaDoRoteiro, MARCA, marcaDoMaterial, PREFIXO_APAGADO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
+import { APAGANDO_EM, BLOCO, CAMPOS_DE_MIDIA_QUE_ATRAVESSAM, conciliarMaterial, copiarMidiaDaTroca, GRACA_APAGAR_MS, itemDoMaterial, mapaDoRoteiro, MARCA, marcaDoMaterial, normCam, podeLimparAgora, PREFIXO_APAGADO, VERSAO, type Baixado, type MaterialDoRoteiro, type OpcoesMaterial } from "./aliancaSirvoMaterialConta"
 import { ID_RODAPE, NOME_RODAPE, ordemMudaAteOPonteiro } from "./aliancaSirvoProjeto"
 
 const cab = (id: string): ProjectShowRef => ({ id: `sirvo_${id}`, type: "section", name: id })
 const rodape = (): ProjectShowRef => ({ id: ID_RODAPE, type: "section", name: NOME_RODAPE })
 const doOperador = (id: string): ProjectShowRef => ({ id, type: "show" })
-const baixado = (id: string, extra: Partial<Baixado> = {}): Baixado => ({ id, caminho: `C:\\Online\\Sirvo\\${id}.mp4`, nome: `Video ${id}`, tipo: "video", codec: null, ...extra })
+// `id` do teste = o ARQUIVO; a versão é `<id>.v1` (ou a que o teste disser)
+const baixado = (id: string, extra: Partial<Baixado> = {}): Baixado => ({ id: `${id}.v1`, arquivo_id: id, caminho: `C:\\Online\\Sirvo\\${id}.mp4`, nome: `Video ${id}`, tipo: "video", codec: null, ...extra })
+type Linha = { id: string } & Partial<Omit<MaterialDoRoteiro, "id">>
+const linhaDe = (r: Linha): MaterialDoRoteiro => ({ ...r, id: `uso-${r.id}`, arquivo_id: r.id, versao_id: r.versao_id ?? `${r.id}.v1` })
 const projeto = () => [cab("b1"), doOperador("musica"), rodape()]
 
-const opcoes = (baixados: Baixado[], roteiro: MaterialDoRoteiro[] | null, extra: Partial<OpcoesMaterial> = {}): OpcoesMaterial => ({
+const opcoes = (baixados: Baixado[], roteiro: Linha[] | null, extra: Partial<OpcoesMaterial> = {}): OpcoesMaterial => ({
     baixados: new Map(baixados.map((b) => [b.id, b])),
-    noRoteiro: roteiro && new Map(roteiro.map((r) => [r.id, r])),
+    noRoteiro: roteiro && new Map(roteiro.map((r) => [r.id, linhaDe(r)])),
     jaPostos: new Set(),
     agora: 1_000_000,
     ...extra
@@ -174,7 +177,7 @@ describe("chave sem o interruptor 'baixa material'", () => {
 
 describe("projeto religado a outro culto", () => {
     it("item de outro culto não vira '(apagado no Sirvo)' nem sai", () => {
-        const velho = itemDoMaterial({ ...baixado("m1"), event_id: "culto-antigo" })
+        const velho = itemDoMaterial(baixado("m1"), "", "culto-antigo")
         const itens = [...projeto(), velho]
         const r = conciliarMaterial(itens, opcoes([], [], { eventoId: "culto-novo", agora: 1_000_000 + 10 * GRACA_APAGAR_MS }))
         expect(r.itens).toBe(itens)
@@ -188,7 +191,7 @@ describe("material dentro do bloco escolhido no Sirvo (S5)", () => {
     // b1: cabeçalho, 2 músicas, 1 item do operador; b2: cabeçalho; rodapé
     const montado = () => [cab("b1"), musica("s1"), musica("s2"), doOperador("dele"), cab("b2"), rodape()]
     const ids = (itens: ProjectShowRef[]) => itens.map((i) => i.data?.[MARCA] ?? i.id)
-    const mat = (id: string, bloco: string | null, extra: Partial<MaterialDoRoteiro> = {}): MaterialDoRoteiro => ({ id, bloco_id: bloco, status: "pronto", ...extra })
+    const mat = (id: string, bloco: string | null, extra: Partial<MaterialDoRoteiro> = {}): Linha => ({ id, bloco_id: bloco, status: "pronto", ...extra })
 
     it("entra logo depois das músicas do bloco (antes do item do operador), e os seguintes depois dele, na ordem do Sirvo", () => {
         const r = conciliarMaterial(montado(), opcoes([baixado("m1"), baixado("m2")], [mat("m1", "b1"), mat("m2", "b1")]))
@@ -305,5 +308,144 @@ describe("material dentro do bloco escolhido no Sirvo (S5)", () => {
         const fim = conciliarMaterial(r1.itens, { ...opcoes([baixado("m1"), baixado("m2")], [mat("m1", "b1"), mat("m2", null)]), protegido: true, congelarRemocao: true })
         expect(fim.pendente).toBe(false)
         expect(ids(fim.itens).at(-1)).toBe("m2")
+    })
+})
+
+const mat = (id: string, bloco: string | null, extra: Partial<MaterialDoRoteiro> = {}): Linha => ({ id, bloco_id: bloco, status: "pronto", ...extra })
+
+describe("v5: versão nova do mesmo arquivo troca NO LUGAR", () => {
+    const musica = (id: string): ProjectShowRef => ({ id, type: "show", data: { sirvoMusica: id } })
+    const montado = () => [cab("b1"), musica("s1"), doOperador("dele"), cab("b2"), rodape()]
+    const v2 = (id: string, extra: Partial<Baixado> = {}) => baixado(id, { id: `${id}.v2`, caminho: `C:\\Online\\Sirvo\\${id}-v2.mp4`, nome: `Video ${id} v2`, ...extra })
+    // o projeto com m1 em v1 dentro do bloco b1
+    const comV1 = () => conciliarMaterial(montado(), opcoes([baixado("m1")], [mat("m1", "b1")])).itens
+    const pronto2 = (extra: Partial<OpcoesMaterial> = {}) => opcoes([baixado("m1"), v2("m1")], [mat("m1", "b1", { versao_id: "m1.v2" })], extra)
+
+    it("livre e fora do momento protegido: mesmo índice, MESMA lista; id, versão e nome acompanham", () => {
+        const itens = comV1()
+        const item = itens[2]
+        const r = conciliarMaterial(itens, pronto2())
+        expect(r.itens).toBe(itens)
+        expect(r.itens[2]).toBe(item)
+        expect(item.id).toBe("C:\\Online\\Sirvo\\m1-v2.mp4")
+        expect(item.data[VERSAO]).toBe("m1.v2")
+        expect(item.data[MARCA]).toBe("m1")
+        expect(item.name).toBe("Video m1 v2")
+        expect(r.mudouCampos).toBe(true)
+        expect(r.trocas).toEqual([{ arquivo: "m1", de: "C:\\Online\\Sirvo\\m1.mp4", para: "C:\\Online\\Sirvo\\m1-v2.mp4" }])
+        expect(r.pendente).toBe(false)
+        // idempotente
+        const r2 = conciliarMaterial(itens, pronto2())
+        expect(r2.trocas).toEqual([])
+        expect(r2.mudouCampos).toBe(false)
+    })
+    it("a v2 ainda não está no disco: nada muda", () => {
+        const itens = comV1()
+        const r = conciliarMaterial(itens, opcoes([baixado("m1")], [mat("m1", "b1", { versao_id: "m1.v2" })]))
+        expect(r.trocas).toEqual([])
+        expect(itens[2].data[VERSAO]).toBe("m1.v1")
+    })
+    it("PROTEGIDO: a troca vira pendência (Aplicar), nada muda na lista nem no item; com 'forcar' troca", () => {
+        const itens = comV1()
+        const id0 = itens[2].id
+        const preso = conciliarMaterial(itens, pronto2({ protegido: true, ativos: [0] }))
+        expect(preso.pendente).toBe(true)
+        expect(preso.trocaPendente).toEqual(["Video m1 v2"])
+        expect(preso.trocas).toEqual([])
+        expect(preso.itens).toBe(itens)
+        expect(itens[2].id).toBe(id0)
+        expect(itens[2].data[VERSAO]).toBe("m1.v1")
+        // sem nenhum ponteiro vivo também espera: a regra é o momento, não a posição
+        expect(conciliarMaterial(itens, pronto2({ protegido: true, ativos: [] })).pendente).toBe(true)
+        // projeto fechado com slide de posição desconhecida
+        expect(conciliarMaterial(itens, pronto2({ congelarRemocao: true })).pendente).toBe(true)
+        const aplicado = conciliarMaterial(itens, pronto2({ protegido: true, ativos: [0], forcar: true }))
+        expect(aplicado.pendente).toBe(false)
+        expect(itens[2].data[VERSAO]).toBe("m1.v2")
+    })
+    it("EM USO nunca troca, nem com Aplicar: ponteiro vivo, saída com o caminho ou áudio tocando (caminho em emUso)", () => {
+        const base = comV1()
+        const idx = 2
+        const casos: Partial<OpcoesMaterial>[] = [{ ativos: [idx] }, { emUso: new Set([normCam("C:\\Online\\Sirvo\\m1.mp4")]) }, { ativos: [idx], protegido: true, forcar: true }, { emUso: new Set([normCam("c:/online/sirvo/M1.mp4")]), forcar: true }]
+        for (const extra of casos) {
+            const r = conciliarMaterial(base, pronto2(extra))
+            expect(r.trocas).toEqual([])
+            expect(r.trocaEmUso).toEqual(["Video m1 v2"])
+            expect(base[idx].data[VERSAO]).toBe("m1.v1")
+            expect(r.pendente).toBe(false)
+        }
+        // soltou: troca
+        expect(conciliarMaterial(base, pronto2()).trocas).toHaveLength(1)
+    })
+    it("a v2 já está no projeto (item do operador no mesmo caminho): não troca, e avisa", () => {
+        const dele: ProjectShowRef = { id: v2("m1").caminho, type: "video" }
+        const itens = [...comV1(), dele]
+        const r = conciliarMaterial(itens, pronto2())
+        expect(r.trocas).toEqual([])
+        expect(r.trocaJaNoProjeto).toEqual(["Video m1 v2"])
+        expect(itens[2].data[VERSAO]).toBe("m1.v1")
+    })
+    it("um uso novo (id novo) para o MESMO arquivo deixa o item intacto; v1 -> v3 direto", () => {
+        const itens = comV1()
+        const item = itens[2]
+        const r = conciliarMaterial(itens, opcoes([baixado("m1")], [{ id: "m1", bloco_id: "b1", status: "pronto" }].map((l) => ({ ...l }))), )
+        expect(r.itens).toBe(itens)
+        expect(itens[2]).toBe(item)
+        const v3 = v2("m1", { id: "m1.v3", caminho: "C:\\Online\\Sirvo\\m1-v3.mp4" })
+        const r3 = conciliarMaterial(itens, opcoes([baixado("m1"), v3], [mat("m1", "b1", { versao_id: "m1.v3" })]))
+        expect(r3.trocas[0].para).toBe("C:\\Online\\Sirvo\\m1-v3.mp4")
+        expect(itens[2].data[VERSAO]).toBe("m1.v3")
+    })
+    it("tirar + usar de novo no culto: o mesmo item (por arquivo) volta do cinza, sem sair do lugar", () => {
+        const itens = comV1()
+        const item = itens[2]
+        conciliarMaterial(itens, opcoes([baixado("m1")], [], { agora: 1_000_000 }))
+        expect(item.name?.startsWith(PREFIXO_APAGADO)).toBe(true)
+        const r = conciliarMaterial(itens, opcoes([baixado("m1")], [{ id: "m1", bloco_id: "b1", status: "pronto" }], { agora: 1_010_000 }))
+        expect(r.itens).toBe(itens)
+        expect(itens[2]).toBe(item)
+        expect(item.data[APAGANDO_EM]).toBeUndefined()
+    })
+    it("item apagado e em uso por ÁUDIO (emUso) não sai", () => {
+        const itens = comV1()
+        const T0 = 1_000_000
+        conciliarMaterial(itens, opcoes([baixado("m1")], [], { agora: T0 }))
+        const r = conciliarMaterial(itens, opcoes([baixado("m1")], [], { agora: T0 + 5 * GRACA_APAGAR_MS, emUso: new Set([normCam(itens[2].id)]) }))
+        expect(r.tirados).toEqual([])
+    })
+    it("itemDoMaterial leva arquivo, versão e culto", () => {
+        const it = itemDoMaterial(baixado("m1"), "b1", "ev")
+        expect(it.data).toMatchObject({ [MARCA]: "m1", [VERSAO]: "m1.v1", [BLOCO]: "b1", sirvoMaterialEvento: "ev" })
+    })
+})
+
+describe("v5: a mídia do operador atravessa a troca só pela lista branca", () => {
+    it("copia fit/volume/loop… e NUNCA fromTime/toTime/info/tracks/cropping", () => {
+        const media = { A: { fit: "cover", fitOptions: { x: 1 }, volume: 0.5, loop: true, videoType: "background", audioType: "music", speed: "2", filter: "blur", flipped: true, flippedY: false, fromTime: 5, toTime: 9, info: { codec: "x" }, creationTime: 1, tracks: [1], cropping: { top: 1 }, favourite: true } }
+        const r = copiarMidiaDaTroca(media as any, "A", "B")
+        expect(Object.keys(r.B).sort()).toEqual([...CAMPOS_DE_MIDIA_QUE_ATRAVESSAM].sort())
+        expect(r.B.fromTime).toBeUndefined()
+        expect(r.B.toTime).toBeUndefined()
+        expect(r.B.info).toBeUndefined()
+        expect(r.B.tracks).toBeUndefined()
+        expect(r.B.cropping).toBeUndefined()
+        expect(r.A).toBe(media.A)
+    })
+    it("se media[novo] já existe não sobrescreve; sem media[antigo] nada a fazer", () => {
+        const media = { A: { fit: "cover" }, B: { fit: "contain", fromTime: 3 } }
+        expect(copiarMidiaDaTroca(media as any, "A", "B")).toBe(media)
+        expect(copiarMidiaDaTroca(media as any, "Z", "C")).toBe(media)
+        expect(copiarMidiaDaTroca({ A: { info: 1 } } as any, "A", "B")).toEqual({ A: { info: 1 } })
+    })
+})
+
+describe("v5: o gatilho da limpeza", () => {
+    const ok = { roteiroNoAr: false, saidasComAlgo: 0, tocando: 0, ultimaEm: 0, agora: 100 * 3_600_000 }
+    it("só com saída vazia, nada tocando (pausado conta), fora do roteiroNoAr e 24 h depois da última", () => {
+        expect(podeLimparAgora(ok)).toBe(true)
+        expect(podeLimparAgora({ ...ok, roteiroNoAr: true })).toBe(false)
+        expect(podeLimparAgora({ ...ok, saidasComAlgo: 1 })).toBe(false)
+        expect(podeLimparAgora({ ...ok, tocando: 1 })).toBe(false)
+        expect(podeLimparAgora({ ...ok, ultimaEm: ok.agora - 3_600_000 })).toBe(false)
     })
 })

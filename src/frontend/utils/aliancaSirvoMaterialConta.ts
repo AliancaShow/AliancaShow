@@ -9,7 +9,11 @@ import { ID_RODAPE, ordemMudaAteOPonteiro, papelDoItem, PREFIXO_LAPIDE, PREFIXO_
 // lista certa. Quem chama (aliancaSirvoMaterial.ts) lê os stores, chama e
 // escreve na mesma passada.
 //
-// Marca: todo item que o Sirvo pôs leva `data.sirvoMaterial = <id do material>`.
+// v5 (biblioteca da igreja): o item é chaveado por ARQUIVO. Marca: `data.sirvoMaterial = <arquivo_id>`;
+// `data.sirvoVersao = <versao_id>` é a versão que o item toca. Versão nova de um arquivo que já está no
+// projeto TROCA NO LUGAR (mesmo índice, mesma lista) — nunca em uso (item aberto/foco, saída, áudio
+// tocando) e, no momento protegido, só pelo "Aplicar" (pendente).
+// Marca: todo item que o Sirvo pôs leva `data.sirvoMaterial = <arquivo_id>`.
 //   - o item é `{id: <caminho no disco>, type: "video"|"image"|"audio", name, data}`;
 //   - entra DENTRO do bloco que o Sirvo escolheu (`show_roteiro.material[].bloco_id`): na
 //     família do cabeçalho, logo depois da última música/material do bloco. Sem bloco, ou
@@ -34,14 +38,22 @@ export const PREFIXO_APAGADO = "(apagado no Sirvo) "
 export const EVENTO = "sirvoMaterialEvento"
 /** o bloco para onde o Show levou o item ("" = Fora do roteiro) */
 export const BLOCO = "sirvoBloco"
+/** a versão (id da versão no Sirvo) que o item toca */
+export const VERSAO = "sirvoVersao"
+
+/** caminho normalizado para comparar (barras e caixa) */
+export const normCam = (p: unknown) =>
+    String(p ?? "")
+        .replace(/\\/g, "/")
+        .toLowerCase()
 
 export type TipoDoProjeto = "video" | "image" | "audio"
 const TIPO_DO_PROJETO: { [tipo: string]: TipoDoProjeto } = { video: "video", imagem: "image", audio: "audio" }
 
-/** um arquivo que o main já baixou (o caminho local; nunca URL) */
-export type Baixado = { id: string; caminho: string; nome: string; tipo: string; codec?: string | null; event_id?: string }
-/** um material do roteiro do Sirvo (`show_roteiro.material[]`): sem URL */
-export type MaterialDoRoteiro = { id: string; nome?: string; status?: string; bloco_id?: string | null }
+/** uma VERSÃO que o main já baixou (o caminho local; nunca URL). `id` = id da versão */
+export type Baixado = { id: string; arquivo_id: string; caminho: string; nome: string; tipo: string; codec?: string | null }
+/** um uso do roteiro do Sirvo (`show_roteiro.material[]`): `id` = id do uso, `versao_id` = a versão a tocar; sem URL */
+export type MaterialDoRoteiro = { id: string; arquivo_id: string; versao_id?: string; nome?: string; status?: string; bloco_id?: string | null }
 
 /** a marca do item (id do material no Sirvo); null para item do operador */
 export const marcaDoMaterial = (item: ProjectShowRef | null | undefined): string | null => {
@@ -60,14 +72,30 @@ const limpo = (t: unknown, max = 100) =>
 /** o rótulo do item: nome + aviso de HEVC */
 export const rotuloDoItem = (nome: unknown, codec?: unknown) => limpo(nome) + (ehHevc(codec) ? " (HEVC — pode não tocar)" : "")
 
-export function itemDoMaterial(b: Baixado, bloco = ""): ProjectShowRef {
-    return { id: b.caminho, type: TIPO_DO_PROJETO[b.tipo] || "video", name: rotuloDoItem(b.nome, b.codec), data: { [MARCA]: b.id, [BLOCO]: bloco, ...(b.event_id ? { [EVENTO]: b.event_id } : {}) } }
+export function itemDoMaterial(b: Baixado, bloco = "", evento?: string | null): ProjectShowRef {
+    return { id: b.caminho, type: TIPO_DO_PROJETO[b.tipo] || "video", name: rotuloDoItem(b.nome, b.codec), data: { [MARCA]: b.arquivo_id, [VERSAO]: b.id, [BLOCO]: bloco, ...(evento ? { [EVENTO]: evento } : {}) } }
+}
+
+/**
+ * A troca de versão leva só o AJUSTE do operador (lista branca). `fromTime`/`toTime`, `info`, `creationTime`,
+ * `tracks`, `cropping` etc. são DO ARQUIVO e nunca atravessam. Só copia se `media[novo]` ainda não existe;
+ * devolve o mapa (o mesmo, se nada a fazer).
+ */
+export const CAMPOS_DE_MIDIA_QUE_ATRAVESSAM = ["fit", "fitOptions", "volume", "loop", "videoType", "audioType", "speed", "filter", "flipped", "flippedY"] as const
+export function copiarMidiaDaTroca<M extends { [caminho: string]: any }>(media: M, de: string, para: string): M {
+    if (!media || de === para || media[para] || !media[de]) return media
+    const copia: { [k: string]: any } = {}
+    for (const k of CAMPOS_DE_MIDIA_QUE_ATRAVESSAM) if (media[de][k] !== undefined) copia[k] = media[de][k]
+    if (!Object.keys(copia).length) return media
+    return { ...media, [para]: copia }
 }
 
 export type OpcoesMaterial = {
-    /** o que está no disco, por id do material */
+    /** o que está no disco, por id da VERSÃO */
     baixados: Map<string, Baixado>
-    /** `show_roteiro.material[]` por id; null = o Sirvo não mandou a lista (versão antiga): nada é tirado nem posto */
+    /** caminhos (normalizados com normCam) em uso FORA da lista: nas saídas e nas chaves de `playingAudio` (pausado conta) */
+    emUso?: Set<string>
+    /** `show_roteiro.material[]` por ARQUIVO (arquivo_id); null = o Sirvo não mandou a lista (versão antiga): nada é tirado nem posto */
     noRoteiro: Map<string, MaterialDoRoteiro> | null
     /** ids que o Show já pôs NESTE projeto: se não estão mais nele, o operador tirou, e não voltam */
     jaPostos: Set<string>
@@ -95,6 +123,14 @@ export type ResultadoMaterial = {
     tirados: string[]
     /** havia posição a mudar (entrada ou religação de bloco) e o momento protegido segurou: espera o "Aplicar" */
     pendente: boolean
+    /** trocas de versão feitas agora, no lugar: a mídia do operador (fit, volume…) é copiada de `de` para `para` */
+    trocas: { arquivo: string; de: string; para: string }[]
+    /** nomes: versão nova que NÃO pôde trocar porque o item está em uso (reavalia quando o uso baixar) */
+    trocaEmUso: string[]
+    /** nomes: versão nova que o momento protegido segurou; o "Aplicar" troca */
+    trocaPendente: string[]
+    /** nomes: a versão nova já está no projeto como item do operador; não trocou */
+    trocaJaNoProjeto: string[]
     /** daqui a quantos ms há outra coisa a fazer (o fim dos 30 s de cinza); null = nada */
     reavaliarEm: number | null
 }
@@ -106,7 +142,7 @@ export type ResultadoMaterial = {
  */
 export function mapaDoRoteiro(material: unknown, habilitado: boolean | null): Map<string, MaterialDoRoteiro> | null {
     if (habilitado !== true || !Array.isArray(material)) return null
-    return new Map((material as MaterialDoRoteiro[]).filter((m) => m && typeof m.id === "string").map((m) => [m.id, m]))
+    return new Map((material as MaterialDoRoteiro[]).filter((m) => m && typeof m.arquivo_id === "string").map((m) => [m.arquivo_id, m]))
 }
 
 const apagado = (r: MaterialDoRoteiro | undefined) => !r || r.status === "apagando" || r.status === "apagado"
@@ -120,7 +156,14 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
     let mudouCampos = false
     const postos: string[] = []
     const tirados: string[] = []
+    const trocas: { arquivo: string; de: string; para: string }[] = []
+    const trocaEmUso: string[] = []
+    const trocaPendente: string[] = []
+    const trocaJaNoProjeto: string[] = []
     let reavaliarEm: number | null = null
+    const emUsoCam = o.emUso || new Set<string>()
+    // em uso = ponteiro vivo na lista (aberto/foco/saída com posição) OU o caminho está numa saída / tocando
+    const emUsoItem = (item: ProjectShowRef, i: number) => ativos.has(i) || emUsoCam.has(normCam(item.id))
 
     // 1. marca duplicada (copiar e colar): a primeira é a oficial; as outras viram item do operador
     const vistas = new Set<string>()
@@ -144,7 +187,7 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
         const deOutroCulto = o.eventoId && typeof item.data?.[EVENTO] === "string" && item.data[EVENTO] !== o.eventoId
         if (deOutroCulto) return
         const r = o.noRoteiro.get(m)
-        const b = o.baixados.get(m)
+        const b = o.baixados.get(String(item.data?.[VERSAO] ?? "")) ?? (r?.versao_id ? o.baixados.get(r.versao_id) : undefined)
         const emCinza = typeof item.data?.[APAGANDO_EM] === "number"
 
         if (apagado(r)) {
@@ -160,11 +203,31 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
                 return
             }
             // venceu: em uso nunca sai; no momento protegido, só se ninguém vivo está depois dele
-            if (o.congelarRemocao || ativos.has(i)) return
+            if (o.congelarRemocao || emUsoItem(item, i)) return
             if (o.protegido && [...ativos].some((a) => a > i)) return
             sai.add(item)
             tirados.push(m)
             return
+        }
+
+        // versão nova do mesmo arquivo: troca no lugar (mesmo índice, mesma lista) quando livre
+        const nova = r?.versao_id ? o.baixados.get(r.versao_id) : undefined
+        const versaoDoItem = typeof item.data?.[VERSAO] === "string" ? item.data[VERSAO] : null
+        if (!emCinza && r?.versao_id && nova && versaoDoItem && versaoDoItem !== r.versao_id) {
+            if (emUsoItem(item, i)) {
+                trocaEmUso.push(nova.nome)
+            } else if (itens.some((x) => x !== item && x?.id === nova.caminho)) {
+                trocaJaNoProjeto.push(nova.nome)
+            } else if (!o.forcar && (o.protegido || o.congelarRemocao)) {
+                trocaPendente.push(nova.nome)
+            } else {
+                trocas.push({ arquivo: m, de: item.id, para: nova.caminho })
+                item.id = nova.caminho
+                item.name = rotuloDoItem(r.nome ?? nova.nome, nova.codec)
+                item.data = { ...item.data, [VERSAO]: r.versao_id }
+                mudouCampos = true
+                return
+            }
         }
 
         // voltou (o Sirvo desfez o apagar): sai do cinza e volta ao rótulo certo
@@ -201,7 +264,7 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
     if (o.noRoteiro && temRodape) {
         // na ordem do Sirvo (material[]): a ordem entre os que chegam juntos é estável
         for (const [id, r] of o.noRoteiro) {
-            const b = o.baixados.get(id)
+            const b = r.versao_id ? o.baixados.get(r.versao_id) : undefined
             if (apagado(r) || !b) continue
             const alvo = r.bloco_id && vivos.has(r.bloco_id) ? r.bloco_id : ""
             const atual = doMarcado.get(id)
@@ -212,14 +275,14 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
                 if (lapides.has(onde)) continue
                 // em uso (aberto, foco, saída) não é levado a outro lugar. `ativos` e `itens.indexOf` são posições da lista
                 // RECEBIDA; quem sai (`sai`) nunca está antes de um ponteiro, então as posições dos ativos valem também em `base`
-                if (ativos.has(itens.indexOf(atual))) continue
+                if (emUsoItem(atual, itens.indexOf(atual))) continue
                 mover.push({ id, item: atual, existente: true, alvo })
                 continue
             }
             if (vistas.has(id) || o.jaPostos.has(id)) continue
             // o operador já tem esse mesmo arquivo no projeto (arrastou da Mídia): não duplica nem toma conta dele
             if (caminhos.has(b.caminho)) continue
-            mover.push({ id, item: itemDoMaterial({ ...b, nome: r.nome ?? b.nome }, alvo), existente: false, alvo })
+            mover.push({ id, item: itemDoMaterial({ ...b, nome: r.nome ?? b.nome }, alvo, o.eventoId), existente: false, alvo })
         }
     }
 
@@ -261,8 +324,11 @@ export function conciliarMaterial(itens: ProjectShowRef[], o: OpcoesMaterial): R
         }
     }
 
-    if (depois === itens) return { itens, mudouCampos, postos: [], tirados: [], pendente, reavaliarEm }
-    return { itens: depois, mudouCampos, postos, tirados, pendente, reavaliarEm }
+    // a troca presa pelo momento protegido também espera o "Aplicar"
+    if (trocaPendente.length) pendente = true
+    const extra = { trocas, trocaEmUso, trocaPendente, trocaJaNoProjeto }
+    if (depois === itens) return { itens, mudouCampos, postos: [], tirados: [], pendente, reavaliarEm, ...extra }
+    return { itens: depois, mudouCampos, postos, tirados, pendente, reavaliarEm, ...extra }
 }
 
 /** blocos cujo cabeçalho está no projeto (família viva) */
@@ -280,4 +346,9 @@ function depoisDoUltimoDoBloco(itens: ProjectShowRef[], blocoId: string): number
     let ultimo = cab
     for (let j = cab + 1; j < itens.length && !papelDoItem(itens[j]); j++) if (marcaDeMusica(itens[j]) || marcaDoMaterial(itens[j])) ultimo = j
     return ultimo + 1
+}
+
+/** a limpeza só roda com tela e áudio livres (a trava do ao vivo, do lado do renderer; pura para ser testada) */
+export function podeLimparAgora(c: { roteiroNoAr: boolean; saidasComAlgo: number; tocando: number; ultimaEm: number; agora: number }): boolean {
+    return !c.roteiroNoAr && c.saidasComAlgo === 0 && c.tocando === 0 && c.agora - c.ultimaEm >= 24 * 3_600_000
 }

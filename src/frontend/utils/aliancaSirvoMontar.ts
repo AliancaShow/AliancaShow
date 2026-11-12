@@ -37,7 +37,7 @@ import { conferirDispensasSirvo, iniciarDispensasSirvo, marcasDispensadasSirvo }
 import { decidirProjeto, soltarDoSirvo, type MotivoPergunta } from "./aliancaSirvoMontagem"
 import { desfazListaDoProjeto, remapearPonteiros, type PonteirosDoProjeto } from "./aliancaSirvoPonteiros"
 import { CATEGORIA_NOVAS, NOME_CATEGORIA_NOVAS, acaoDoRascunho, hashDaLetra, idDoRascunho, ligacoesVivas, perguntasEEsta, rascunhoDaLetra, type ContextoMusicas, type MusicaDoSirvo, type PerguntaEEsta } from "./aliancaSirvoMusicas"
-import { iniciarMaterialSirvo, prepararMaterial, sirvoMaterialEstado } from "./aliancaSirvoMaterial"
+import { aoSoltarUso, iniciarMaterialSirvo, prepararMaterial, sirvoMaterialEstado } from "./aliancaSirvoMaterial"
 import { papelDoItem, reconciliar, resumirPendencia, textoDaPendencia, type MotivoPendente } from "./aliancaSirvoProjeto"
 import { getAccess } from "./profile"
 
@@ -461,7 +461,7 @@ function atualizarLigado(projetoId: string, r: Roteiro, forcar: boolean, forcarM
     // o fim dos 30 s do item apagado no Sirvo: passa de novo quando vencer
     if (material?.reavaliarEm) agendar(material.reavaliarEm + 100)
 
-    const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos, { dispensadas })) || (materialPendente ? "material novo ou em outro bloco" : "") : ""
+    const resumo = pendente ? textoDaPendencia(resumirPendencia(depois, r.blocos, { dispensadas })) || (materialPendente ? material?.textoTrocaPendente || "material novo ou em outro bloco" : "") : ""
     return { pendente, resumo, sumiram: res.sumiram, protegido: prot, materialPendente }
 }
 
@@ -609,6 +609,8 @@ export function iniciarMontagemSirvo() {
     // F5: chegou arquivo do Sirvo, ou a fila andou: a passada confere o que entra e o que sai
     sirvoMaterialEstado.subscribe(seguro(0))
     iniciarMaterialSirvo()
+    // troca de versão esperando o item em uso: quando o uso baixa, uma passada
+    aoSoltarUso(() => agendar(500))
     // F3: a música apareceu (criada, importada, rascunho aprovado): o aviso vira ela
     shows.subscribe(seguro(1_000))
     // a tela limpou ou o culto encerrou: a ordem pendente pode entrar
