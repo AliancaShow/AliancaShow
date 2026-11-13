@@ -77,6 +77,8 @@ export async function sincronizarLocais(porAgenda: { [agenda: string]: { [culto:
         const locais: { [k: string]: ProjectShowRef } = {}
         for (const item of get(projects)[projetoId]?.shows || []) {
             if (item.type === "section" || doCelular.has(item.id) || item.id.startsWith("remote_")) continue
+            // o que o Sirvo pôs (material de arquivo, músicas) tem caminho do disco deste PC: não vai para o Firebase do Remote
+            if (item.data?.sirvoMaterial || item.data?.sirvoMusica) continue
             locais[chaveDoItem(item.id)] = item
         }
 

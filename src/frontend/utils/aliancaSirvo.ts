@@ -31,6 +31,8 @@ import { newToast } from "./common"
 import type { MusicaDoSirvo } from "./aliancaSirvoMusicas"
 import { juntarAvisos, mereceAviso, type LinhaDeAviso, type Mudanca } from "./aliancaSirvoAvisos"
 import { chatAoRev, zerarChat } from "./aliancaSirvoChat"
+import { sincronizarMaterial, zerarMaterial } from "./aliancaSirvoMaterial"
+import type { MaterialDoRoteiro } from "./aliancaSirvoMaterialConta"
 
 // ---------------------------------------------------------------- tipos
 
@@ -72,6 +74,8 @@ export type Roteiro = {
     mudancas?: Mudanca[]
     /** a chave deste Show pode conduzir (F2, migration 0081 do Sirvo) */
     pode_conduzir?: boolean
+    /** o material do culto (F5, migration 0090 do Sirvo; ausente antes dela): id, nome e status, sem URL */
+    material?: MaterialDoRoteiro[]
 }
 // os dois lados declaram todos os campos: o tsconfig do Show não é strict e não estreita a união por `ok`
 type Resposta = { ok: true; dados: any; codigo?: undefined } | { ok: false; codigo: string; mensagem: string; dados?: undefined }
@@ -216,6 +220,8 @@ async function buscarCultos() {
     const alvo = escolherCulto(cultos, get(sirvo).escolhaManual)
     const novoId = alvo?.event_id || null
     atualizar({ cultos, cultoId: novoId, cultoTitulo: alvo?.titulo || "" })
+    // F5: o material pendente (o main pergunta ao Sirvo e baixa); a cada 60 s, junto da lista de cultos
+    void sincronizarMaterial()
     if (novoId !== (roteiro?.event_id || null)) {
         roteiro = null
         revVisto = -1
@@ -407,6 +413,7 @@ function zerar() {
     atualizar({ roteiroNoAr: false, roteiroEncerrado: false })
     anunciar()
     zerarChat()
+    zerarMaterial()
 }
 
 // ---------------------------------------------------------------- aviso "o roteiro mudou"

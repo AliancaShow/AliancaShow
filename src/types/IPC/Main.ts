@@ -1,3 +1,4 @@
+import type { EstadoMaterial } from "../../electron/sirvo/materialLogica"
 import type { RespostaSirvo } from "../../electron/sirvo/sirvo"
 import type { Display } from "electron"
 import type { EncoderDetection } from "../../electron/streaming/encoderDetection"
@@ -168,6 +169,10 @@ export enum Main {
     SIRVO_SALVAR_CHAVE = "SIRVO_SALVAR_CHAVE",
     SIRVO_APAGAR_CHAVE = "SIRVO_APAGAR_CHAVE",
     SIRVO_CHAMAR = "SIRVO_CHAMAR",
+    SIRVO_MATERIAL_SINCRONIZAR = "SIRVO_MATERIAL_SINCRONIZAR",
+    SIRVO_MATERIAL_ESTADO = "SIRVO_MATERIAL_ESTADO",
+    SIRVO_MATERIAL_LIMPAR = "SIRVO_MATERIAL_LIMPAR",
+    SIRVO_LIXEIRA_TESTAR = "SIRVO_LIXEIRA_TESTAR",
     // Content Library
     GET_CONTENT_PROVIDERS = "GET_CONTENT_PROVIDERS",
     GET_CONTENT_LIBRARY = "GET_CONTENT_LIBRARY",
@@ -279,7 +284,8 @@ export interface MainSendPayloads {
     [Main.PCO_FETCH_SERVICE_TREE]: undefined
     [Main.PCO_LOAD_PLAN]: { serviceTypeId: string; planId: string }
     [Main.SIRVO_SALVAR_CHAVE]: { chave: string }
-    [Main.SIRVO_CHAMAR]: { funcao: "show_cultos" | "show_rev" | "show_roteiro" | "show_chat" | "show_chat_enviar" | "show_publicar_catalogo"; args?: { [key: string]: any } }
+    [Main.SIRVO_CHAMAR]: { funcao: "show_cultos" | "show_rev" | "show_roteiro" | "show_chat" | "show_chat_enviar" | "show_publicar_catalogo" | "show_material_pendente" | "show_material_status"; args?: { [key: string]: any } }
+    [Main.SIRVO_MATERIAL_LIMPAR]: { vivos: string[] }
     // Content Library
     [Main.GET_CONTENT_LIBRARY]: { providerId: ContentProviderId }
     [Main.GET_PROVIDER_CONTENT]: { providerId: ContentProviderId; key: string }
@@ -388,6 +394,10 @@ export interface MainReturnPayloads {
     [Main.SIRVO_APAGAR_CHAVE]: { ok: true }
     [Main.SIRVO_SALVAR_CHAVE]: { ok: boolean; erro?: string }
     [Main.SIRVO_CHAMAR]: Promise<RespostaSirvo>
+    [Main.SIRVO_MATERIAL_SINCRONIZAR]: Promise<EstadoMaterial>
+    [Main.SIRVO_MATERIAL_ESTADO]: EstadoMaterial
+    [Main.SIRVO_MATERIAL_LIMPAR]: Promise<EstadoMaterial>
+    [Main.SIRVO_LIXEIRA_TESTAR]: Promise<{ ok: boolean; mensagem: string }>
     // Content Library
     [Main.GET_CONTENT_PROVIDERS]: { providerId: ContentProviderId; displayName: string; hasContentLibrary: boolean }[]
     [Main.GET_CONTENT_LIBRARY]: Promise<ContentLibraryCategory[]>
