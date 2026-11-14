@@ -67,6 +67,7 @@ import { getSetChars } from "./randomValue"
 import { loadShows } from "./setShow"
 import { getCustomMetadata, getGroupName, getLayoutRef } from "./show"
 import { _show } from "./shows"
+import { marcarConferidoSeFicar } from "../../utils/aliancaConferir"
 import { addZero, getMonthName, getWeekday, joinTime, joinTimeBig, secondsToTime } from "./time"
 import { stopTimers } from "./timerTick"
 
@@ -96,6 +97,8 @@ export function checkInput(e: any) {
 
     const selectItem: "next" | "previous" = e.key === "ArrowDown" ? "next" : "previous"
     selectProjectShow(selectItem)
+    // AliançaShow (Preparar F3): ↑/↓ só conta como "conferido" se o item ficar aberto um instante (aqui, nunca no Remote/API)
+    if (!get(focusMode)) marcarConferidoSeFicar(() => get(activeShow)?.index)
 }
 
 export function selectProjectShow(select: number | "next" | "previous") {

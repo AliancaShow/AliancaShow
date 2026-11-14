@@ -2,10 +2,13 @@
     import { getDocument, GlobalWorkerOptions } from "pdfjs-dist"
     import type { ClickEvent } from "../../../types/Main"
     import { AudioPlayer } from "../../audio/audioPlayer"
-    import { activeEdit, activeFocus, activePage, activeProject, activeShow, categories, editingProjectTemplate, effects, focusMode, globalTags, media, notFound, outLocked, outputs, overlayCategories, overlays, playerVideos, playingAudio, projects, projectTemplates, refreshEditSlide, shows, showsCache, special, styles, textCache } from "../../stores"
+    import { activeEdit, activeFocus, activePage, activeProject, activeShow, categories, editingProjectTemplate, effects, focusMode, modoAlianca, globalTags, media, notFound, outLocked, outputs, overlayCategories, overlays, playerVideos, playingAudio, projects, projectTemplates, refreshEditSlide, shows, showsCache, special, styles, textCache } from "../../stores"
+    import { itemPrecisaConferir, marcarConferidoPorIndice } from "../../utils/aliancaConferir"
+    import { sirvoRoteiro } from "../../utils/aliancaSirvo"
     import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
     import { customIconsColors } from "../../values/customIcons"
+    import { deleteAction } from "../helpers/clipboard"
     import { history, historyAwait } from "../helpers/history"
     import Icon from "../helpers/Icon.svelte"
     import { encodeFilePath, getExtension, getFileName, getMedia, getMediaLayerType, getMediaStyle, getMediaType, getVideoDuration, mediaSize, removeExtension } from "../helpers/media"
@@ -26,6 +29,8 @@
     export let index: null | number = null
     export let isFirst: boolean = false
     export let isProject: boolean = false
+    // AliançaShow (Preparar F3): o projeto aceita tirar item daqui (não é template nem somente leitura)
+    export let podeTirar: boolean = false
     $: type = show.type || "show"
     $: name = type === "show" ? $shows[show.id]?.name : type === "overlay" ? $overlays[show.id]?.name : type === "effect" ? $effects[show.id]?.name : type === "player" ? ($playerVideos[id] || show.data?.id ? $playerVideos[id]?.name || show.data?.name || show.data?.id : setNotFound(id)) : show.name
     // export let page: "side" | "drawer" = "drawer"
@@ -96,10 +101,21 @@
     $: selectedItem = $focusMode ? $activeFocus : $activeShow
     $: isActive = index !== null ? selectedItem?.index === index : selectedItem?.id === id
 
+    // AliançaShow (Preparar F3): selo "conferir" (música que o Sirvo pôs e ninguém abriu) e o × de tirar (só no Preparar)
+    $: projetoDoSirvo = isProject && !$editingProjectTemplate && $activeProject ? $projects[$activeProject]?.sirvo : null
+    $: conferir = !!projetoDoSirvo?.eventId && itemPrecisaConferir(show, projetoDoSirvo.eventId, $sirvoRoteiro, $special.aliancaConferidos)
+    $: mostrarTirar = isProject && podeTirar && index !== null && $modoAlianca === "preparar" && type !== "show_placeholder" && !($shows[show.id]?.private && type === "show")
+    function tirarDaLista() {
+        if (index === null) return
+        deleteAction({ id: "show", data: [{ index }] })
+    }
+
     // WIP partly duplicate of openShow() in show.ts
     let editActive = false
     function click(e: ClickEvent) {
         const { ctrl, shift, target } = e.detail
+        // AliançaShow (Preparar F3): abrir o item é conferir (antes do "já está ativo": reabrir o mesmo também vale)
+        if (isProject && index !== null && !ctrl && !shift && !target.closest("input")) marcarConferidoPorIndice(index)
         if (editActive || ctrl || shift || isActive || target.closest("input")) return
 
         // set active show
@@ -302,6 +318,7 @@
                 {#if isProject}
                     <!-- AliancaShow: selo "no ar" (Culto e Preparar) -->
                     {#if activeOutput !== null}<span class="noArSelo">no ar</span>{/if}
+                    {#if conferir}<span class="conferirSelo" data-title="Música nova do Sirvo: abra pra conferir a letra">conferir</span>{/if}
                     {#if show.layoutInfo?.name}
                         <span class="layout" style="opacity: 0.6;font-style: italic;font-size: 0.9em;">{show.layoutInfo.name}</span>
                     {/if}
@@ -353,6 +370,11 @@
         {/if}
     </MaterialButton>
 
+    {#if mostrarTirar}
+        <!-- AliançaShow (Preparar F3): irmão do botão (botão dentro de botão não vale); passa pela mesma porta do Delete -->
+        <button class="tirarItem" tabindex="-1" title="Tirar do culto (dá pra desfazer)" aria-label="Tirar do culto" on:mousedown|stopPropagation on:dblclick|stopPropagation on:click|stopPropagation={tirarDaLista}>×</button>
+    {/if}
+
     {#if match !== null}
         <span class="match-indicator" data-title="{match}%">
             <span class="match-fill" style={searchStyle}></span>
@@ -373,7 +395,45 @@
         color: #fff;
         background: rgb(242 26 39 / 0.85);
     }
+    .conferirSelo {
+        flex: none;
+        margin-inline-start: 6px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #1c1400;
+        background: #e0a030;
+    }
+    .main button.tirarItem {
+        position: absolute;
+        inset-inline-end: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border-radius: 50%;
+        border: none;
+        background: rgb(0 0 0 / 0.45);
+        color: var(--text);
+        font-size: 15px;
+        line-height: 1;
+        cursor: pointer;
+        opacity: 0;
+    }
+    .main:hover button.tirarItem,
+    .main button.tirarItem:focus-visible {
+        opacity: 0.85;
+    }
+    .main button.tirarItem:hover {
+        opacity: 1;
+        background: rgb(242 26 39 / 0.85);
+    }
     .main {
+        position: relative;
         width: 100%;
 
         display: flex;

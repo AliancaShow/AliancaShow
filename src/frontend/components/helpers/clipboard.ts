@@ -79,6 +79,7 @@ import { removeOutputAudioChannel } from "../../audio/routing/audioRoutingInit"
 import { registrarRemocaoDeMusicasSirvo } from "../../utils/aliancaSirvoDispensar"
 import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
 import { naoSaiDoProjeto } from "../../utils/aliancaSirvoProjeto"
+import { moverPonteirosAoTirar, registrarTirados } from "../../utils/aliancaTirados"
 
 export function copy(clip: Clipboard | null = null, getData = true, shouldDuplicate = false) {
     let copyData: Clipboard | null = clip
@@ -952,6 +953,13 @@ const deleteActions = {
                 currentProject.sirvo.eventId,
                 indexes.map((i) => projectItems[i])
             )
+
+        // AliançaShow (Preparar F3): o item que sai fica riscado na lista ("tirado") com Desfazer; e o que está no ar
+        // aponta por POSIÇÃO, então desce junto com a lista. O rastro mora só na memória da janela, nunca em `projects`.
+        if (!isTemplate) {
+            registrarTirados(projectId || "", projectItems, indexes)
+            if (projectId === get(activeProject)) moverPonteirosAoTirar(projectId || "", indexes)
+        }
 
         if (get(activeShow)?.index !== undefined && indexes.includes(get(activeShow)!.index!)) {
             activeShow.update((a) => {
