@@ -21,7 +21,7 @@ import { importFromClipboard } from "../converters/importHelpers"
 import { addSection } from "../converters/project"
 import { requestMain, sendMain } from "../IPC/main"
 import { changeSlidesView } from "../show/slides"
-import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, drawer, editMode, focusedArea, focusMode, guideActive, media, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
+import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, drawer, editMode, focusedArea, focusMode, guideActive, media, modoAlianca, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
 import { audioExtensions, imageExtensions, videoExtensions } from "../values/extensions"
 import { drawerTabs } from "../values/tabs"
 import { activeShow } from "./../stores"
@@ -117,10 +117,18 @@ const keys = {
         if (popupId && disablePopupClose.includes(popupId)) return
         if (popupId === "alert" && get(alertMessage) === "actions.closing") return
 
+        // AliancaShow (Preparar): Esc fecha/volta e nunca limpa o telao. Decide AGORA (o Editbox limpa os itens num timeout)
+        const voltarDaGaveta = !popupId && !get(selected).id && get(drawer).height > 40
+        const voltarDoEditor = !popupId && !get(selected).id && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
+
         // give time so output don't clear also
         setTimeout(() => {
             if (popupId) activePopup.set(null)
             else if (get(selected).id) selected.set({ id: null, data: [] })
+            else if (get(modoAlianca) === "preparar") {
+                if (voltarDaGaveta) drawer.set({ height: 40, stored: get(drawer).height })
+                else if (voltarDoEditor) activePage.set("show")
+            }
         }, 20)
     },
     Enter: () => {

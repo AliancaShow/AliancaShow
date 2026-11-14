@@ -28,7 +28,9 @@ function teclaMexeriaNaSaida(e: { key: string; ctrlKey?: boolean; metaKey?: bool
     const key = e.key || ""
     if (e.ctrlKey || e.metaKey) return ["r", "l", "m", "o"].includes(key.toLowerCase())
     if (e.altKey) return false
-    if (/^F[1-5]$/.test(key) || key === "Escape" || key === ".") return algoNoAr()
+    // Esc tem funcao propria no Preparar (fecha/volta): bloqueado no Preview, mas sem aviso
+    if (key === "Escape") return false
+    if (/^F[1-5]$/.test(key) || key === ".") return algoNoAr()
     if (ehCampoDeTexto(e.target)) return false
     if ([" ", "PageUp", "PageDown", "Home", "End"].includes(key)) return true
     if (key === "ArrowRight" || key === "ArrowLeft") return !(get(activeEdit)?.items?.length || get(activeStage)?.items?.length)
