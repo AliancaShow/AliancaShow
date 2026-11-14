@@ -330,6 +330,15 @@ describe("música nova: letra e rascunho", () => {
         expect(perguntasEEsta(musicas, shows, new Set(["musicas"]), {})).toEqual([{ rmId: "r1", nome: "nada além do SANGUE!", showId: "a1", showNome: "Nada Além do Sangue" }])
         expect(perguntasEEsta(musicas, shows, new Set(["musicas"]), { r1: "a1" })).toEqual([])
     })
+
+    it("'é esta?' (F4): com dois shows do mesmo nome, o que tem letra ganha do 'sem letra'", () => {
+        const shows = { vazio: { name: "Oceanos", category: "musicas" }, cheio: { name: "oceanos", category: "musicas" } }
+        const musicas = [mus("r1", null, 0, "Oceanos")]
+        const semLetra = (id: string) => id === "vazio"
+        expect(perguntasEEsta(musicas, shows, new Set(["musicas"]), {}, new Set(), semLetra)[0].showId).toBe("cheio")
+        // sem o critério, vale o primeiro (como antes)
+        expect(perguntasEEsta(musicas, shows, new Set(["musicas"]), {})[0].showId).toBe("vazio")
+    })
 })
 
 describe("o rascunho não ressuscita", () => {

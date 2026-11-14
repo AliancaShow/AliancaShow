@@ -3,6 +3,7 @@
     import { ShowObj } from "../../../../classes/Show"
     import { convertText, getQuickExample, trimNameFromString } from "../../../../converters/txt"
     import { activePopup, activeProject, activeShow, categories, drawerTabsData, formatNewShow, quickTextCache, shows, special, splitLines } from "../../../../stores"
+    import { chaveDeMusica } from "../../../../utils/aliancaLista"
     import { newToast } from "../../../../utils/common"
     import { translateText } from "../../../../utils/language"
     import { customIconsColors } from "../../../../values/customIcons"
@@ -89,6 +90,11 @@
     })
 
     let selectedOption = ""
+    function jaExisteComONome(nome: string): boolean {
+        const chave = chaveDeMusica(nome)
+        return !!chave && Object.values($shows).some((a) => !!a?.name && chaveDeMusica(a.name) === chave)
+    }
+
     function selectOption(id: string) {
         if (id === "empty") {
             // values.text = ""
@@ -99,7 +105,8 @@
 
             // look for existing shows with the same title
             if (values.name) {
-                const exists = Object.values($shows).find((a) => a?.name?.toLowerCase() === values.name.toLowerCase())
+                // AliançaShow (F4): o nome compara sem acento, caixa, pontuação e sufixo de versão ("(Ao Vivo)")
+                const exists = jaExisteComONome(values.name)
                 if (exists) newToast("create_show.exists")
             }
         }
@@ -143,6 +150,9 @@
         // let metaData: string = ""
         // if (sections[1] && sections[0]?.split("\n").length < 3) metaData = sections.splice(0, 1)[0]
         let category = selectedCategory?.id?.length ? selectedCategory.id : null
+
+        // AliançaShow (F4): repete a checagem de música duplicada ao criar (só aviso: o fluxo do FreeShow não muda)
+        if (values.name && jaExisteComONome(values.name)) newToast("create_show.exists")
 
         if (sections.length) {
             convertText({ name: values.name, category, text, origin: values.origin })

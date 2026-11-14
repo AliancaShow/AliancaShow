@@ -446,12 +446,15 @@ export type PerguntaEEsta = { rmId: string; nome: string; showId: string; showNo
  * biblioteca com o MESMO nome normalizado, que não é rascunho: o Show pergunta
  * "é esta?". Uma pergunta por linha; só a primeira candidata.
  */
-export function perguntasEEsta(musicas: MusicaDoSirvo[], shows: { [id: string]: { name?: string; category?: string | null; private?: boolean } | undefined }, categoriasMusica: Set<string>, ligacoes: { [rmId: string]: string }, dispensadas: Set<string> = new Set()): PerguntaEEsta[] {
+export function perguntasEEsta(musicas: MusicaDoSirvo[], shows: { [id: string]: { name?: string; category?: string | null; private?: boolean } | undefined }, categoriasMusica: Set<string>, ligacoes: { [rmId: string]: string }, dispensadas: Set<string> = new Set(), semLetra: (showId: string) => boolean = () => false): PerguntaEEsta[] {
     const porNome = new Map<string, string>()
     for (const [id, s] of Object.entries(shows || {})) {
         if (!s?.name || s.private || s.category === CATEGORIA_NOVAS || !categoriasMusica.has(s.category || "")) continue
         const chave = normalizarTitulo(s.name)
-        if (chave && !porNome.has(chave)) porNome.set(chave, id)
+        if (!chave) continue
+        // F4: com dois shows do mesmo nome, o que TEM letra ganha do "sem letra" (a música vazia da banda visitante)
+        const atual = porNome.get(chave)
+        if (!atual || (semLetra(atual) && !semLetra(id))) porNome.set(chave, id)
     }
     const perguntas: PerguntaEEsta[] = []
     for (const m of musicas) {
