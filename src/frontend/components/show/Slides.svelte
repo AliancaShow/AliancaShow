@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
-    import { activeEdit, activeFocus, activePage, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, modoAlianca, notFound, outLocked, outputs, outputSlideCache, showsCache, slidesOptions, special, templates } from "../../stores"
+    import { activeEdit, activeFocus, activePage, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, modoAlianca, notFound, outLocked, outputs, outputSlideCache, popupData, shows, showsCache, slidesOptions, special, templates, textCache } from "../../stores"
+    import { showEstaSemLetra } from "../../utils/aliancaSemLetraLogica"
     import { hasNewerUpdate, wait } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
     import { videoExtensions } from "../../values/extensions"
@@ -350,6 +351,14 @@
     let profile = getAccess("shows")
     $: isLocked = currentShow?.locked || profile.global === "read" || profile[currentShow?.category || ""] === "read"
 
+    // AliançaShow (Preparar F4): música "sem letra" (veio da lista da banda): o botão principal é "Colar letra"
+    $: semLetraAqui = $modoAlianca === "preparar" && !isLocked && showEstaSemLetra(showId, $shows, $categories, $showsCache, $textCache)
+    $: artistaDaMusica = ((($showsCache[showId]?.meta || {}) as any).artist as string) || ""
+    function colarLetra() {
+        popupData.set({ modo: "preencher", showId })
+        activePopup.set("alianca_letra")
+    }
+
     function createSlide() {
         if (isLocked) return
 
@@ -558,6 +567,11 @@
                             <Center absolute>
                                 <span style="opacity: 0.5;font-size: 2em;margin-bottom: 10px;"><T id="empty.slides" /></span>
 
+                                {#if semLetraAqui}
+                                    <MaterialButton variant="contained" icon="add" title="Colar a letra desta música (pode ter acordes em cima)" style="justify-content: start;padding: 8px 14px;margin-bottom: 8px;" on:click={colarLetra}>
+                                        Colar letra{#if artistaDaMusica}&nbsp;· {artistaDaMusica}{/if}
+                                    </MaterialButton>
+                                {/if}
                                 <MaterialButton variant="outlined" disabled={isLocked} icon="add" title="tooltip.project" style="justify-content: start;padding: 8px 14px;" on:click={createSlide}>
                                     <T id="new.slide" />
                                 </MaterialButton>

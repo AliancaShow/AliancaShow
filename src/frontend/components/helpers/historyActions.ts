@@ -4,6 +4,7 @@ import type { Item, Slide, SlideData, Template } from "../../../types/Show"
 import { breakLongLines, removeItemValues } from "../../show/slides"
 import { activeEdit, activePage, activePopup, activeProject, activeShow, alertMessage, cachedShowsData, deletedShows, groups, notFound, projects, refreshEditSlide, renamedShows, shows, showsCache, templates } from "../../stores"
 import { save } from "../../utils/save"
+import { apagarDoDiscoSeGravado, regravarSeGravado } from "../../utils/aliancaGravarShow"
 import { EMPTY_SHOW_SLIDE } from "../../values/empty"
 import { customActionActivation } from "../actions/actions"
 import { getItemText } from "../edit/scripts/textStyle"
@@ -264,10 +265,14 @@ async function handleShows(obj, _data, initializing) {
             if (deleting) {
                 if (replace && show) {
                     a[id] = show
+                    // AliançaShow (F4): desfazer o "colar letra" devolve o texto antigo ao cache (o selo "sem letra" depende dele)
+                    saveTextCache(id, show)
                     return
                 }
                 if (!a[id]) return
                 oldShows[id] = clone(a[id])
+                // AliançaShow (Preparar): música criada e gravada na hora — desfazer tira o arquivo também
+                if (!replace) apagarDoDiscoSeGravado(id, a[id].name)
                 delete a[id]
             } else {
                 if (!show) return
@@ -283,6 +288,7 @@ async function handleShows(obj, _data, initializing) {
                 }
                 a[id] = show
                 saveTextCache(id, show)
+                if (!initializing) regravarSeGravado(id)
             }
         })
         return a
@@ -343,7 +349,22 @@ async function handleShows(obj, _data, initializing) {
         }, 2000)
     }
 
-    if (!deleting && Object.keys(get(showsCache)).length >= 100) {
+    // AliançaShow (F4): desfazer a criação de shows tira os itens deles de QUALQUER projeto (senão fica item órfão, "não encontrado")
+    if (deleting && !initializing && !replace) {
+        const ids = new Set(showsList.map((a: any) => a.id))
+        const comItem = Object.entries(get(projects)).filter(([, p]) => (p.shows || []).some((s) => (s.type || "show") === "show" && ids.has(s.id)))
+        if (comItem.length) {
+            projects.update((todos) => {
+                comItem.forEach(([pid]) => {
+                    if (todos[pid]) todos[pid].shows = (todos[pid].shows || []).filter((s) => !((s.type || "show") === "show" && ids.has(s.id)))
+                })
+                return todos
+            })
+        }
+    }
+
+    // `semLimpar`: quem cria shows de propósito (o "adicionar várias músicas") não quer o showsCache esvaziado nem o show aberto fechado
+    if (!deleting && !obj.newData?.semLimpar && Object.keys(get(showsCache)).length >= 100) {
         if (initializing) save()
         setTimeout(() => {
             showsCache.set({})

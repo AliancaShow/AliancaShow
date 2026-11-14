@@ -45,6 +45,11 @@ export class RastreioDeSalvos {
         this.enviando = null
     }
 
+    /** Gravado no disco agora, fora do save() geral (música nova do Preparar). */
+    gravadoAgora(id: string, cache: CacheLike) {
+        if (cache?.[id]) this.gravado.set(id, this.modificado(cache, id))
+    }
+
     /** Editado em memória e ainda não gravado? */
     naoSalvo(id: string, cache: CacheLike): boolean {
         if (!cache?.[id]) return false

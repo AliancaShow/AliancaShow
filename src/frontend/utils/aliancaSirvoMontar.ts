@@ -29,7 +29,8 @@ import { OutputHelper } from "../components/helpers/OutputHelper"
 import type { Show } from "../../types/Show"
 import { DEFAULT_ITEM_STYLE } from "../components/edit/scripts/itemHelpers"
 import { setShow } from "../components/helpers/setShow"
-import { activeFocus, activeProject, activeRename, activeShow, categories, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, saved, selected, shows, special, undoHistory } from "../stores"
+import { activeFocus, activeProject, activeRename, activeShow, categories, contextActive, folders, loaded, outputs, outputSlideCache, projects, redoHistory, saved, selected, shows, showsCache, special, textCache, undoHistory } from "../stores"
+import { showEstaSemLetra } from "./aliancaSemLetraLogica"
 import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { garantirPastas } from "./aliancaPastas"
 import { registrarPendenciaSirvo, sirvo, sirvoForcarAte, sirvoRoteiro, type Roteiro } from "./aliancaSirvo"
@@ -190,7 +191,7 @@ function primeiraEEsta(r: Roteiro): PerguntaEEsta | null {
     )
     // "Não é" desta sessão, e a linha que o operador tirou do projeto (aliancaSirvoDispensar.ts): não pergunta
     const dispensadas = new Set([...eEstaDispensadas, ...marcasDispensadasSirvo(r.event_id)])
-    return perguntasEEsta(todasAsMusicas(r), get(shows) as any, deMusica, contextoMusicas().ligacoes, dispensadas)[0] || null
+    return perguntasEEsta(todasAsMusicas(r), get(shows) as any, deMusica, contextoMusicas().ligacoes, dispensadas, (id) => showEstaSemLetra(id, get(shows), cats, get(showsCache), get(textCache)))[0] || null
 }
 
 /** "É esta": liga a música nova do Sirvo a este show (vale no projeto já, e no Sirvo na próxima publicação do catálogo) */

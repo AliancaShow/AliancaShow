@@ -2,7 +2,7 @@ import path from "path"
 import { ToMain } from "../../types/IPC/ToMain"
 import type { Show, Shows, TrimmedShow, TrimmedShows } from "../../types/Show"
 import { sendToMain } from "../IPC/main"
-import { deleteFile, getDataFolderPath, parseShow, readFile, readFileAsync, readFolder, readFolderAsync, renameFileAsync } from "./files"
+import { deleteFile, getDataFolderPath, parseShow, readFile, readFileAsync, readFolder, readFolderAsync, renameFileAsync, writeFile } from "./files"
 import { OutputHelper } from "../output/OutputHelper"
 import fs from "fs"
 
@@ -129,6 +129,30 @@ let ultimaGravacaoPropria = 0
 
 export function marcarGravacaoPropria() {
     ultimaGravacaoPropria = Date.now()
+}
+
+/**
+ * AliancaShow (Preparar): grava UM show no disco na hora, sem o save() geral (que manda todos os stores).
+ * A musica criada pelo popup so vivia em memoria ate o Ctrl+S/autosave; se o observador da pasta
+ * recarregasse a lista antes disso, a musica sumia e o item do culto ficava orfao.
+ */
+export function saveShowFile({ id, show, apagarNome }: { id: string; show?: Show; apagarNome?: string }) {
+    if (!id) return
+    if (!show) {
+        // desfazer a criacao: tira o arquivo gravado na hora (senao o observador da pasta traria a musica de volta)
+        marcarGravacaoPropria()
+        const arquivo: string = path.join(getDataFolderPath("shows"), String(apagarNome || id) + ".show")
+        if (parseShow(readFile(arquivo) || "{}")?.[0] === id) deleteFile(arquivo)
+        return
+    }
+    try {
+        JSON.stringify(show)
+    } catch {
+        return
+    }
+    marcarGravacaoPropria()
+    const filePath: string = path.join(getDataFolderPath("shows"), String(show.name || id) + ".show")
+    writeFile(filePath, JSON.stringify([id, show]), id)
 }
 
 export function watchShowsFolder() {

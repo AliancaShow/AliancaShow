@@ -466,6 +466,8 @@ export type Popups =
     | "template_info"
     | "cleaning_utility"
     | "pco_picker"
+    | "alianca_varias"
+    | "alianca_letra"
     | "sync_folders"
     | "node_options"
 

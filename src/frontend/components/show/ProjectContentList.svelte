@@ -4,7 +4,7 @@
     import type { ProjectShowRef, Tree } from "../../../types/Projects"
     import type { ShowType } from "../../../types/Show"
     import { addProjectItem } from "../../converters/project"
-    import { actions, activeFocus, activePopup, activeProject, activeShow, contextActive, drawer, drawerTabsData, editingProjectTemplate, focusMode, fullColors, playerVideos, popupData, outputs, projects, projectTemplates, projectView, selected, shows, special } from "../../stores"
+    import { actions, activeFocus, activePopup, activeProject, activeShow, contextActive, drawer, drawerTabsData, editingProjectTemplate, focusMode, fullColors, modoAlianca, playerVideos, popupData, outputs, projects, projectTemplates, projectView, selected, shows, special } from "../../stores"
     import { triggerFunction } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
     import { getActionIcon } from "../actions/actions"
@@ -432,6 +432,29 @@
                     <Icon id="search" size={0.7} white />
                 </div>
             </MaterialButton>
+
+            {#if $modoAlianca === "preparar" && !isTemplate}
+                <!-- AliançaShow (Preparar F4): a lista da banda visitante, e a música nova com letra -->
+                <MaterialButton variant="outlined" icon="slide" title="Colar uma lista de músicas (uma por linha)" on:click={() => activePopup.set("alianca_varias")} white>
+                    <div class="label">
+                        <p>Várias músicas</p>
+                    </div>
+                </MaterialButton>
+                <MaterialButton
+                    variant="outlined"
+                    icon="slide"
+                    title="Criar uma música nova colando a letra"
+                    on:click={() => {
+                        popupData.set({ modo: "nova" })
+                        activePopup.set("alianca_letra")
+                    }}
+                    white
+                >
+                    <div class="label">
+                        <p>Nova música</p>
+                    </div>
+                </MaterialButton>
+            {/if}
 
             {#if isTemplate}
                 <MaterialButton variant="outlined" icon="slide" title="new.placeholder" on:click={addShowPlaceholder} white>
