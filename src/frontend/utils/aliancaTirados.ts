@@ -119,6 +119,12 @@ export function moverPonteirosAoTirar(projetoId: string, removidos: number[]) {
     moverPonteiros(projetoId, (i) => indiceAposTirar(i, removidos))
 }
 
+/** antes de escrever a lista com `quantos` itens novos a partir da posição `pos` (F4: "adicionar várias músicas") */
+export function moverPonteirosAoInserir(projetoId: string, pos: number, quantos: number) {
+    if (quantos <= 0) return
+    moverPonteiros(projetoId, (i) => (pos <= i ? i + quantos : i))
+}
+
 // ---------------------------------------------------------------- Desfazer (o botão)
 
 /**

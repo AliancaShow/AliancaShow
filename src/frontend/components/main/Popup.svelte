@@ -52,7 +52,11 @@
                             {#key popupId}
                                 <!-- margin-top: -5px; -->
                                 <h2 style="font-size: 1.3em;margin-top: -2px;">
-                                    {#if popupId === "pco_picker"}
+                                    {#if popupId === "alianca_varias"}
+                                        Adicionar várias músicas
+                                    {:else if popupId === "alianca_letra"}
+                                        {$popupData?.modo === "preencher" ? "Colar letra" : "Nova música"}
+                                    {:else if popupId === "pco_picker"}
                                         Planning Center
                                     {:else if popupId === "audio_effect" && $popupData?.effect}
                                         <T id={EFFECTS_LIST.find((a) => a.id === $popupData.effect)?.label || "popup.audio_effect"} />

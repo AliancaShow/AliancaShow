@@ -264,6 +264,8 @@ async function handleShows(obj, _data, initializing) {
             if (deleting) {
                 if (replace && show) {
                     a[id] = show
+                    // AliançaShow (F4): desfazer o "colar letra" devolve o texto antigo ao cache (o selo "sem letra" depende dele)
+                    saveTextCache(id, show)
                     return
                 }
                 if (!a[id]) return
@@ -343,7 +345,22 @@ async function handleShows(obj, _data, initializing) {
         }, 2000)
     }
 
-    if (!deleting && Object.keys(get(showsCache)).length >= 100) {
+    // AliançaShow (F4): desfazer a criação de shows tira os itens deles de QUALQUER projeto (senão fica item órfão, "não encontrado")
+    if (deleting && !initializing && !replace) {
+        const ids = new Set(showsList.map((a: any) => a.id))
+        const comItem = Object.entries(get(projects)).filter(([, p]) => (p.shows || []).some((s) => (s.type || "show") === "show" && ids.has(s.id)))
+        if (comItem.length) {
+            projects.update((todos) => {
+                comItem.forEach(([pid]) => {
+                    if (todos[pid]) todos[pid].shows = (todos[pid].shows || []).filter((s) => !((s.type || "show") === "show" && ids.has(s.id)))
+                })
+                return todos
+            })
+        }
+    }
+
+    // `semLimpar`: quem cria shows de propósito (o "adicionar várias músicas") não quer o showsCache esvaziado nem o show aberto fechado
+    if (!deleting && !obj.newData?.semLimpar && Object.keys(get(showsCache)).length >= 100) {
         if (initializing) save()
         setTimeout(() => {
             showsCache.set({})
