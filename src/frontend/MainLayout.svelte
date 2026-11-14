@@ -6,6 +6,7 @@
     import LazyLoad from "./components/helpers/LazyLoad.svelte"
     import ProfileChangerMenu from "./components/main/ProfileChangerMenu.svelte"
     import Tipbar from "./components/main/Tipbar.svelte"
+    import AliancaFaixa from "./components/main/AliancaFaixa.svelte"
     import Top from "./components/main/Top.svelte"
     import SirvoAviso from "./components/main/SirvoAviso.svelte"
     import SirvoChat from "./components/main/SirvoChat.svelte"
@@ -40,6 +41,7 @@
     {#if !$focusMode}
         <Top {isWindows} />
     {/if}
+    <AliancaFaixa />
     <div class="row">
         <Resizeable id="leftPanel">
             <div class="left panel">

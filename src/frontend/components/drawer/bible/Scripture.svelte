@@ -7,6 +7,7 @@
     import { sanitizeVerseText } from "../../../../common/scripture/sanitizeVerseText"
     import { defaultBibleBookNames } from "../../../converters/bebliaBible"
     import { activeEdit, activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected } from "../../../stores"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { wait } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { clone } from "../../helpers/array"
@@ -842,6 +843,7 @@
                 const enterSwapped = $scriptureSettings.enterSwapped
                 const ctrlKey = e.ctrlKey || e.metaKey
                 if (enterSwapped ? !ctrlKey : ctrlKey) {
+                    if (teclaIgnorada()) return
                     playScripture()
                     ;(document.activeElement as any)?.blur()
                 } else {
@@ -855,7 +857,10 @@
 
             // Ctrl+Enter to play
             if (e.target?.closest?.(".edit")) return
-            if (e.ctrlKey || e.metaKey) playScripture()
+            if (e.ctrlKey || e.metaKey) {
+                if (teclaIgnorada()) return
+                playScripture()
+            }
             return
         }
 
@@ -880,6 +885,7 @@
         if (e.key === "r") {
             if (!isActiveInOutput) return
             e.preventDefault()
+            if (teclaIgnorada(e)) return
             playScripture()
             return
         }
@@ -903,7 +909,8 @@
 
         // go to next/previous verse
         let left = e.key.includes("Left")
-        _moveSelection(left)
+        // AliancaShow: no Preparar a selecao anda, mas nao re-toca no telao
+        _moveSelection(left, teclaIgnorada(e))
     }
 
     /// MOVE SELECTION ///
@@ -911,7 +918,7 @@
     let chapterLengths: { [key: number]: number } = {}
     $: if ($activeTriggerFunction === "scripture_next") _moveSelection(false)
     $: if ($activeTriggerFunction === "scripture_previous") _moveSelection(true)
-    async function _moveSelection(moveLeft: boolean) {
+    async function _moveSelection(moveLeft: boolean, semTocar = false) {
         if (!activeReference.book) return
 
         // WIP this seems like duplicated code
@@ -936,7 +943,7 @@
 
                     await wait(1) // this fixes API next not changing selection
                     openVerse([newSelection])
-                    if (isActiveInOutput) setTimeout(playScripture)
+                    if (isActiveInOutput && !semTocar) setTimeout(playScripture)
                     return
                 } else if (newIndex < 0 || newIndex + selectionCount - 1 >= splittedVerses.length) {
                     // Need to move to next/previous chapter or book
@@ -977,7 +984,7 @@
 
         openBook(newSelection.book, newSelection.chapters, [newSelection.verses])
 
-        if (isActiveInOutput) setTimeout(playScripture)
+        if (isActiveInOutput && !semTocar) setTimeout(playScripture)
     }
 
     $: reference = getReference({ data, activeReference })

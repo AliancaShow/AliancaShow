@@ -10,6 +10,7 @@
     import Button from "../inputs/Button.svelte"
     import TopButton from "../inputs/TopButton.svelte"
     import { DEFAULT_DISPLAY_NAME } from "../../utils/SocketHelper"
+    import AliancaModo from "./AliancaModo.svelte"
     import SirvoIndicador from "./SirvoIndicador.svelte"
 
     export let isWindows = false
@@ -145,6 +146,8 @@
             <span class="marcaTexto">Aliança<span class="marcaShow">Show</span></span>
         </div>
         <span class="divisor" />
+        <!-- AliancaShow: modo Culto | Preparar -->
+        <AliancaModo />
         <!-- AliancaShow: qual culto do Sirvo o Show segue (some sem chave do Sirvo) -->
         <span class="sirvoLugar"><SirvoIndicador /></span>
         <!-- <div class="logo">

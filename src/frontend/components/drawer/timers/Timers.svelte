@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
     import { activePopup, activeTimers, disableDragging, labelsDisabled, timers, activeTimerTagFilter } from "../../../stores"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import Icon from "../../helpers/Icon.svelte"
@@ -96,6 +97,7 @@
 
             // play
             if (e.ctrlKey || e.metaKey) {
+                if (teclaIgnorada()) return
                 playPauseGlobal(timer.id, timer, true)
                 return
             }

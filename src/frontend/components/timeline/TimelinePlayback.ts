@@ -16,6 +16,7 @@ import { VideoPlayer } from "../media/video/videoPlayer"
 import { clearBackground } from "../output/clear"
 import { ShowTimeline } from "./ShowTimeline"
 import { SlideTimeline } from "./SlideTimeline"
+import { destinoRecusaTecla } from "../../utils/aliancaModo"
 import { TimelineType } from "./TimelineActions"
 import { startListeningLTC, stopListeningLTC } from "./timecode"
 import { getProjectShowDurations } from "./timeline"
@@ -99,6 +100,8 @@ export class TimelinePlayback {
     play(isListener: boolean = false) {
         this.listenerPaused = false
         if (isListener) return
+        // AliancaShow: no Preparar, tecla em curso (Espaco) nao inicia a timeline
+        if (destinoRecusaTecla()) return
 
         this.playingAudio = []
         this.playingVideoPaths = []

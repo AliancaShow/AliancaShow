@@ -36,6 +36,8 @@
     export let columns = 1
     export let output: { color: string; line: number; maxLines: number; cached: boolean; clickRevealed?: boolean } | null = null
     export let active = false
+    // AliancaShow: selo "no ar" no canto (so o Preparar passa)
+    export let selo = ""
     export let focused = false
     export let list = false
     export let endIndex: null | number = null
@@ -271,6 +273,9 @@
 </script>
 
 <div class="main" class:active class:focused style="width: {viewMode === 'grid' || viewMode === 'simple' || viewMode === 'groups' || noQuickEdit ? 100 / columns : 100}%;">
+    {#if selo}
+        <span class="selo" class:mudou={selo !== "no ar"} data-title={selo !== "no ar" ? "O telão mostra a versão antiga até você mandar de novo." : ""}>{selo}</span>
+    {/if}
     <!-- group box -->
     {#if $fullColors}
         <div class="group_box" style="background-color: {color};" />
@@ -544,6 +549,27 @@
        claro em volta lia como traco rosa e disputava com a letra. */
     .main.active .slide {
         outline: none;
+    }
+
+    .selo {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        z-index: 5;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #fff;
+        background: rgb(242 26 39 / 0.9);
+        pointer-events: none;
+    }
+    .selo.mudou {
+        background: #e0a030;
+        color: #1a1200;
+        pointer-events: auto;
     }
 
     .group_box {

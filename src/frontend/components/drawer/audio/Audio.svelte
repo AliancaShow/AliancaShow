@@ -7,6 +7,7 @@
     import { AudioPlaylist } from "../../../audio/audioPlaylist"
     import { addProjectItem } from "../../../converters/project"
     import { activePlaylist, activePopup, activeRename, audioFolders, audioPlaylists, drawerTabsData, effectsLibrary, labelsDisabled, media, outLocked, selectAllAudio, selected } from "../../../stores"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
     import T from "../../helpers/T.svelte"
@@ -199,6 +200,7 @@
 
             // play
             if (e.ctrlKey || e.metaKey) {
+                if (teclaIgnorada()) return
                 AudioPlayer.start(file.path, { name: file.name })
                 return
             }

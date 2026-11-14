@@ -100,6 +100,8 @@ export function getSlideTextItems(stageLayout: StageLayout, item: StageItem, _up
     const customOffset = getStageTextLayoutOffset(showRef, slideOffset, slideIndex)
 
     const slideId = (customOffset !== null || slideIndex !== null) && showRef ? showRef[(customOffset ?? slideIndex)!]?.id || null : null
+    // AliancaShow: o slide ATUAL do monitor e a foto (igual ao telao)
+    if (slideOffset === 0 && currentSlide?.foto?.slide?.items) return currentSlide.foto.slide.items
     const currentItems = get(showsCache)[currentSlide?.id]?.slides?.[slideId || ""]?.items || []
     return currentItems
 }

@@ -3,6 +3,7 @@ import type { OutSlide } from "../../../types/Show"
 import { clearAudio } from "../../audio/audioFading"
 import { AudioPlayer } from "../../audio/audioPlayer"
 import { activeEdit, activePage, activePopup, activeStage, contextActive, customMessageCredits, drawSettings, focusMode, lockedOverlays, outLocked, outputCache, outputs, outputSlideCache, overlays, overlayTimers, playingAudio, playingMetronome, selected, slideTimers, topContextActive } from "../../stores"
+import { destinoRecusaTecla } from "../../utils/aliancaModo"
 import { customActionActivation } from "../actions/actions"
 import { startMetronome } from "../drawer/audio/metronome"
 import { clone } from "../helpers/array"
@@ -12,6 +13,8 @@ import { getActiveTimelinePlayback } from "../timeline/TimelinePlayback"
 
 export function clearAll(button = false) {
     if (get(outLocked)) return
+    // AliancaShow: guarda no DESTINO (o `button` nao serve de origem: celular/remoteTalk tambem passam false)
+    if (destinoRecusaTecla()) return
     if (!button && (get(activePopup) || (get(selected).id && get(selected).id !== "scripture") || (get(activePage) === "edit" && get(activeEdit).items.length) || get(activeStage).items.length || get(contextActive) || get(topContextActive))) return
 
     // reset slide cache on Escape
@@ -84,6 +87,7 @@ export function restoreOutput() {
 }
 
 export function clearBackground(specificOutputId = "") {
+    if (destinoRecusaTecla()) return
     const outputIds = specificOutputId ? [specificOutputId] : getAllActiveOutputIds()
 
     outputIds.forEach((outputId) => {
@@ -96,6 +100,7 @@ export function clearBackground(specificOutputId = "") {
 
 // shouldClearAll = don't keep cached previous slide
 export function clearSlide(shouldClearAll = false) {
+    if (destinoRecusaTecla()) return
     if (!shouldClearAll) {
         // store position
         const slideCache: { [key: string]: OutSlide } = {}
@@ -124,6 +129,7 @@ export function clearSlide(shouldClearAll = false) {
 }
 
 export function clearOverlay(overlayId: string) {
+    if (destinoRecusaTecla()) return
     const activeOutputs = getAllActiveOutputs()
 
     activeOutputs.forEach((output) => {
@@ -142,6 +148,7 @@ export function clearOverlay(overlayId: string) {
 }
 
 export function clearOverlays(specificOutputId = "") {
+    if (destinoRecusaTecla()) return
     const outputIds = specificOutputId ? [specificOutputId] : getAllActiveOutputIds()
 
     outputIds.forEach((outputId) => {

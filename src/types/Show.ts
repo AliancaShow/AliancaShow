@@ -601,6 +601,7 @@ export interface OutSlide {
     line?: number // styles limit lines
     revealCount?: number // reveal one by one line
     itemClickReveal?: boolean // reveal item on click
+    foto?: any // AliancaShow: foto do slide no momento do envio (utils/aliancaFoto.ts); nao e salva
     // layout: ID ?
     name?: string // mostly used for PDFs
     type?: ShowType // mostly used for PDFs

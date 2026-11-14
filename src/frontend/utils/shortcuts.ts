@@ -21,11 +21,12 @@ import { importFromClipboard } from "../converters/importHelpers"
 import { addSection } from "../converters/project"
 import { requestMain, sendMain } from "../IPC/main"
 import { changeSlidesView } from "../show/slides"
-import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, drawer, editMode, focusedArea, focusMode, guideActive, media, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
+import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, drawer, editMode, focusedArea, focusMode, guideActive, media, modoAlianca, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
 import { audioExtensions, imageExtensions, videoExtensions } from "../values/extensions"
 import { drawerTabs } from "../values/tabs"
 import { activeShow } from "./../stores"
-import { hideDisplay, isOutputWindow, togglePanels, triggerFunction } from "./common"
+import { teclaIgnorada } from "./aliancaModo"
+import { isOutputWindow, togglePanels, triggerFunction } from "./common"
 import { send } from "./request"
 import { save } from "./save"
 
@@ -44,12 +45,13 @@ const ctrlKeys = {
     n: () => createNew(),
     h: () => (get(activeDrawerTab) === "scripture" ? "" : activePopup.set("history")),
     m: () =>
+        teclaIgnorada({ key: "m", ctrlKey: true }) ||
         audioChannelsData.update((a) => {
             const main = a.main || {}
             a.main = { ...main, isMuted: !main.isMuted }
             return a
         }),
-    o: () => toggleOutputs(),
+    o: () => (teclaIgnorada({ key: "o", ctrlKey: true }) ? null : toggleOutputs()),
     s: () => save(),
     t: () => togglePanels(),
     y: () => redo(),
@@ -115,10 +117,18 @@ const keys = {
         if (popupId && disablePopupClose.includes(popupId)) return
         if (popupId === "alert" && get(alertMessage) === "actions.closing") return
 
+        // AliancaShow (Preparar): Esc fecha/volta e nunca limpa o telao. Decide AGORA (o Editbox limpa os itens num timeout)
+        const voltarDaGaveta = !popupId && !get(selected).id && get(drawer).height > 40
+        const voltarDoEditor = !popupId && !get(selected).id && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
+
         // give time so output don't clear also
         setTimeout(() => {
             if (popupId) activePopup.set(null)
             else if (get(selected).id) selected.set({ id: null, data: [] })
+            else if (get(modoAlianca) === "preparar") {
+                if (voltarDaGaveta) drawer.set({ height: 40, stored: get(drawer).height })
+                else if (voltarDoEditor) activePage.set("show")
+            }
         }, 20)
     },
     Enter: () => {
@@ -147,7 +157,8 @@ export function keydown(e: KeyboardEvent) {
     if (isOutputWindow()) {
         const currentOut = get(outputs)[Object.keys(get(outputs))[0]]?.out || {}
         const contentDisplayed = currentOut.slide?.id || currentOut.background?.path || currentOut.background?.id || currentOut.overlays?.length
-        if (e.key === "Escape" && !contentDisplayed) return hideDisplay()
+        // AliancaShow: a janela de saida nao sabe o modo; pede pro main (que ignora no Preparar)
+        if (e.key === "Escape" && !contentDisplayed) return send(OUTPUT, ["MAIN_SHORTCUT"], { key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey, hide: true })
 
         // allow custom shortcuts through main display (could be useful in some cases when you need output over the main app)
         const allowThroughWindow = ["Escape", "ArrowRight", "ArrowLeft", " ", "PageDown", "PageUp", "Home", "End", ".", "F1", "F2", "F3", "F4", "F5"]
@@ -325,7 +336,7 @@ export function isComposing(e: KeyboardEvent): boolean {
 export const previewCtrlShortcuts = {
     l: () => outLocked.set(!get(outLocked)),
     r: () => {
-        if (!get(outLocked)) refreshOut()
+        if (!get(outLocked)) refreshOut(true, true)
     }
 }
 

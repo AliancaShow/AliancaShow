@@ -4,6 +4,7 @@
     import type { ShowRef } from "../../../../types/Projects"
     import { requestMain, sendMain } from "../../../IPC/main"
     import { activeShow, os, outLocked, outputs, presentationApps, presentationData, special } from "../../../stores"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
     import { getFileName, removeExtension } from "../../helpers/media"
@@ -42,6 +43,7 @@
 
         if (e.key === " ") {
             e.preventDefault()
+            if (teclaIgnorada(e)) return
             if (outSlide?.id === show.id) sendMain(Main.PRESENTATION_CONTROL, { action: "next" })
             else if (!opening) newPresentation()
         }

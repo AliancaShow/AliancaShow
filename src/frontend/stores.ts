@@ -357,6 +357,8 @@ export const styles: Writable<{ [key: string]: Styles }> = writable({}) // {}
 // OUTPUTS
 export const outputs: Writable<Outputs> = writable({}) // {default}
 export const outLocked: Writable<boolean> = writable(false) // false
+// AliancaShow: "culto" = comportamento de sempre; "preparar" = nenhuma tecla mexe no telao. Nao persiste: o app sempre abre no Culto.
+export const modoAlianca: Writable<"culto" | "preparar"> = writable("culto")
 
 // PROFILES
 export const profiles: Writable<Profiles> = writable({}) // {}

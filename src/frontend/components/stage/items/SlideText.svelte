@@ -31,7 +31,8 @@
     $: customOffset = getStageTextLayoutOffset(showRef, slideOffset, slideIndex)
 
     $: slideId = (customOffset !== null || slideIndex !== null) && showRef ? showRef[(customOffset ?? slideIndex)!]?.id || null : null
-    $: slide = currentSlide?.id === "temp" ? getTempSlides(slideOffset) : currentSlide && slideId ? $showsCache[currentSlide?.id]?.slides?.[slideId] : null
+    // AliancaShow: o slide ATUAL do monitor e a foto (igual ao telao); o proximo segue ao vivo
+    $: slide = currentSlide?.id === "temp" ? getTempSlides(slideOffset) : slideOffset === 0 && currentSlide?.foto?.slide ? currentSlide.foto.slide : currentSlide && slideId ? $showsCache[currentSlide?.id]?.slides?.[slideId] : null
 
     function getTempSlides(slideOffset: number) {
         if (slideOffset < 0) {

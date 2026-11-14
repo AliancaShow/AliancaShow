@@ -148,6 +148,8 @@ export function save(closeWhenFinished = false, customTriggers: SaveActions = {}
     Object.values(sanitizedOutputs).forEach((out: any) => {
         if (out.webrtcData) out.webrtcData.streaming = false
         if (out.rtmpData) out.rtmpData.streaming = false
+        // AliancaShow: a foto do slide e so da sessao (ao reabrir, sem foto, le ao vivo como sempre)
+        if (out.out?.slide?.foto) delete out.out.slide.foto
     })
 
     const settings: { [key in SaveListSettings]: any } = {

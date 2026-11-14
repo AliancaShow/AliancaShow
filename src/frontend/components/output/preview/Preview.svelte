@@ -2,6 +2,7 @@
     import { actions, activePage, activePopup, activeShow, activeTimers, contextActive, groups, guideActive, outLocked, outputs, overlayTimers, playingAudio, playingMetronome, resized, slideTimers, special } from "../../../stores"
     import { DEFAULT_WIDTH, isDarkTheme } from "../../../utils/common"
     import { formatSearch } from "../../../utils/search"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { getNormalizedKey, previewCtrlShortcuts, previewShortcuts } from "../../../utils/shortcuts"
     import { runAction } from "../../actions/actions"
     import AudioMeter from "../../drawer/audio/AudioMeter.svelte"
@@ -42,6 +43,12 @@
     function keydown(e: KeyboardEvent) {
         if ($contextActive) return
         if ($guideActive || $activePopup === "assign_shortcut") return
+        // AliancaShow: no Preparar nenhuma tecla mexe no telao (antes de Ctrl+R/L, que rodam antes da checagem de campo)
+        if (teclaIgnorada(e)) {
+            // Ctrl+R/L: no Culto o Preview ja dava preventDefault; sem isso, o "Recarregar" do menu de dev derrubaria o app
+            if ((e.ctrlKey || e.metaKey) && ["r", "l"].includes(e.key.toLowerCase())) e.preventDefault()
+            return
+        }
         if ((e.ctrlKey || e.metaKey || e.altKey) && previewCtrlShortcuts[e.key]) {
             e.preventDefault()
             previewCtrlShortcuts[e.key]()

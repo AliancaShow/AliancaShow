@@ -1,5 +1,6 @@
 <script lang="ts">
     import { actions, actionTags, activeActionTagFilter, activePopup, labelsDisabled, popupData, runningActions, special, timelineRecordingAction } from "../../../stores"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import { getActionIcon, runAction } from "../../actions/actions"
@@ -65,6 +66,7 @@
 
             // play
             if (e.ctrlKey || e.metaKey) {
+                if (teclaIgnorada()) return
                 runAction(action, { source: "click" })
                 return
             }
