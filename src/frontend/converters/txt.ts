@@ -46,14 +46,16 @@ export function convertTexts(files: { content: string; name?: string; extension?
 
 // convert a plain text input into a show
 // , onlySlides: boolean = false, { existingSlides } = { existingSlides: {} }
-export function convertText({ name = "", origin = "", category = null, text, noFormatting = false, returnData = false, open = true }: any) {
+// AliançaShow (Preparar F4): `linhasPorSlide` (número, ou 0 = por parágrafo) vence o `splitLines` global; `semAcordesEmCima` pula a junção
+// "acorde em cima da letra" (o texto já vem limpo; os acordes são pendurados depois). Sem eles, o comportamento é o de sempre.
+export function convertText({ name = "", origin = "", category = null, text, noFormatting = false, returnData = false, open = true, linhasPorSlide = undefined, semAcordesEmCima = false }: any) {
     // remove empty spaces (as groups [] should be used for empty slides)
     // in "Text edit" spaces can be used to create empty "child" slides
     text = text.replaceAll("\r", "").replaceAll("\n \n", "\n\n")
 
     // preprocess chord lines before splitting into sections
     const allLines = text.split("\n")
-    const processedLines = preprocessLines(allLines)
+    const processedLines = semAcordesEmCima ? allLines : preprocessLines(allLines)
     const processedText = processedLines.join("\n")
 
     let sections = processedText.split("\n\n").filter(Boolean)
@@ -114,7 +116,7 @@ export function convertText({ name = "", origin = "", category = null, text, noF
     const show: Show = new ShowObj(false, category, layoutID)
     if (origin) show.origin = origin
     // , existingSlides
-    const { slides, layouts } = createSlides(labeled, noFormatting, autoGroups)
+    const { slides, layouts } = createSlides(labeled, noFormatting, autoGroups, linhasPorSlide)
 
     // if (onlySlides) return { slides, layouts }
 
@@ -295,7 +297,7 @@ function insertChordsIntoLyrics(chordLine: string, lyricLine: string): string {
 
 // TODO: this sometimes splits all slides up with no children (when adding [group])
 // , existingSlides = {}
-function createSlides(labeled: { type: string; text: string }[], noFormatting, autoGroups: boolean) {
+function createSlides(labeled: { type: string; text: string }[], noFormatting, autoGroups: boolean, linhasPorSlide?: number) {
     const slides: { [key: string]: Slide } = {}
     const layouts: SlideData[] = []
 
@@ -369,9 +371,10 @@ function createSlides(labeled: { type: string; text: string }[], noFormatting, a
         const slideLines = allLines[0].split("\n").filter(Boolean)
 
         // split lines into a set amount of lines
-        if (Number(get(splitLines)) && slideLines.length > get(splitLines)) {
+        const porSlide = linhasPorSlide === undefined ? Number(get(splitLines)) : Number(linhasPorSlide)
+        if (porSlide && slideLines.length > porSlide) {
             allLines = []
-            while (slideLines.length) allLines.push(slideLines.splice(0, get(splitLines)).join("\n"))
+            while (slideLines.length) allLines.push(slideLines.splice(0, porSlide).join("\n"))
         }
 
         const children: string[] = []
