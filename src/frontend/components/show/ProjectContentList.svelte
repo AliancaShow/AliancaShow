@@ -532,8 +532,8 @@
     }
 
     .list#projectArea :global(.droparea) {
-        /* "new section" button */
-        padding-bottom: 57px;
+        /* botão "+" flutuante (50px + 10px de margem) + folga: a última linha (Desfazer, ×) nunca fica sob ele */
+        padding-bottom: 78px;
     }
 
     .listSection :global(button) {
