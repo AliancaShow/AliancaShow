@@ -15,6 +15,7 @@ import { clearAll } from "../components/output/clear"
 import { REMOTE } from "./../../types/Channels"
 import { actions, actionTags, activePage, activeProject, activeShow, activeTimers, audioChannelsData, categories, connections, dictionary, folders, language, openedFolders, outLocked, outputs, overlayCategories, overlays, playerVideos, projects, remotePassword, runningActions, scriptures, shows, showsCache, styles, templateCategories, templates, timers, variables, variableTags } from "./../stores"
 import { lastClickTime } from "./common"
+import { outSemFoto } from "./aliancaFoto"
 import { translateText } from "./language"
 import { send } from "./request"
 import { sendData, setConnectedState } from "./sendData"
@@ -132,7 +133,7 @@ export const receiveREMOTE: any = {
     },
     OUT_DATA: (msg: any) => {
         const currentOutput = getFirstActiveOutput()
-        const out = clone(currentOutput?.out || {})
+        const out = outSemFoto(clone(currentOutput?.out || {}))
 
         // Include player video name for online media (YouTube, Vimeo, etc.)
         if (out.background?.type === "player" && out.background?.id) {

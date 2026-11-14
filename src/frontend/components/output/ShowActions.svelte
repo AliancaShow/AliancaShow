@@ -93,7 +93,7 @@
     </MaterialButton>
 
     {#if shouldRefresh}
-        <MaterialButton title="preview._update [Ctrl+R]" disabled={$outLocked} on:click={() => refreshOut()}>
+        <MaterialButton title="preview._update [Ctrl+R]" disabled={$outLocked} on:click={() => refreshOut(true, true)}>
             <Icon id="refresh" size={1.1} />
         </MaterialButton>
     {:else}

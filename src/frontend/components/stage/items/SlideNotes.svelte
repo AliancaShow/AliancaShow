@@ -14,7 +14,8 @@
     $: customOffset = getStageTextLayoutOffset(showRef, slideOffset, slideIndex)
 
     $: slideId = customOffset !== null && currentSlide ? showRef[customOffset]?.id || null : null
-    $: slide = currentSlide && slideId ? $showsCache[currentSlide.id].slides[slideId] : null
+    // AliancaShow: o slide ATUAL e a foto (igual ao telao); offsets diferentes de 0 seguem ao vivo
+    $: slide = slideOffset === 0 && currentSlide?.foto?.slide ? currentSlide.foto.slide : currentSlide && slideId ? $showsCache[currentSlide.id].slides[slideId] : null
     $: notes = slide?.notes ? slide.notes.replaceAll("\n", "<br>") : ""
 </script>
 

@@ -10,6 +10,7 @@ import { AudioAnalyser } from "../../audio/audioAnalyser"
 import { requestMain, sendMain } from "../../IPC/main"
 import { actions, activeFocus, activeProject, activeRename, activeShow, activeTimers, allOutputs, categories, connections, currentOutputSettings, customMessageCredits, disabledServers, effects, focusMode, lockedOverlays, media, outputDisplay, outputs, outputSlideCache, outputState, overlays, overlayTimers, projects, scriptures, scriptureSettings, serverData, showsCache, special, stageShows, styles, templates, theme, themes, transitionData, usageLog } from "../../stores"
 import { isMainWindow, isOutputWindow, newToast } from "../../utils/common"
+import { indiceDaFoto, mesmoSlideDaFoto, podeTerFoto, tirarFoto } from "../../utils/aliancaFoto"
 import { destinoRecusaTecla } from "../../utils/aliancaModo"
 import { translateText } from "../../utils/language"
 import { confirmCustom } from "../../utils/popup"
@@ -111,6 +112,11 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
         }
     }
 
+    // AliancaShow: foto do slide (so show de verdade; sem layout, le ao vivo como antes)
+    let fotoNova: any = undefined
+    const querFoto = type === "slide" && podeTerFoto(data)
+    if (type === "slide" && data) delete data.foto // nunca confia em foto vinda de fora (ex.: `{ ...out.slide, index }`)
+
     const inputData = clone(data)
 
     checkAudio(type, data, allOutputIds, outs)
@@ -152,6 +158,16 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
             if (!output.out) a[id].out = {}
             if (!output.out?.[type]) a[id].out![type] = type === "overlays" || type === "effects" ? [] : null
             data = clone(inputData)
+
+            if (querFoto && data) {
+                // mesmo slide (so mudou line/revealCount/projectIndex): reaproveita a foto, senao a edicao entra no meio do slide
+                const atual = a[id].out?.slide
+                if (mesmoSlideDaFoto(atual, data, ref)) data.foto = atual!.foto
+                else {
+                    if (fotoNova === undefined) fotoNova = tirarFoto(data.id, data.layout, data.index)
+                    if (fotoNova) data.foto = fotoNova
+                }
+            }
 
             if (type === "slide" && data === null && output.out?.slide?.type === "ppt") {
                 sendMain(Main.PRESENTATION_CONTROL, { action: "stop" })
@@ -534,9 +550,22 @@ export function allOutputsHasStyleTemplate(isScripture: boolean = false) {
     })
 }
 
-export function refreshOut(refresh = true) {
+// novaFoto = "mandar de novo": tira uma foto NOVA do slide que esta no ar (Ctrl+R, botao de atualizar, clicar de novo no slide).
+// Sem isso (troca de estilo, etc.) o refresh so redesenha com a foto que ja existe.
+export function refreshOut(refresh = true, novaFoto = false) {
     outputs.update((a) => {
         getAllActiveOutputs().forEach(({ id }) => {
+            const slide = a[id].out?.slide
+            if (refresh && novaFoto && slide?.foto) {
+                // acha o slide da foto no layout vivo (pode ter andado); se sumiu, mantem a foto antiga
+                const ref = _show(slide.id).layouts([slide.layout]).ref()[0] || []
+                const indice = indiceDaFoto(slide.foto, slide.index, ref)
+                const foto = indice > -1 ? tirarFoto(slide.id, slide.layout, indice) : null
+                if (foto) {
+                    slide.index = indice
+                    slide.foto = foto
+                }
+            }
             a[id].out = { ...a[id].out, refresh }
         })
         return a
@@ -1689,10 +1718,13 @@ export function getOutputLines(outSlide: OutSlide, styleLines = 0) {
     if (!outSlide?.id || outSlide.id === "temp") return { start: null, end: null } // , index: 0, max: 0
 
     const ref = _show(outSlide.id).layouts([outSlide.layout]).ref()[0]
+    // AliancaShow: com foto, linhas/revelacao seguem o slide que foi pro ar, nao o que esta sendo editado
     const showSlide: Slide | null =
+        outSlide.foto?.slide ||
         _show(outSlide.id)
             .slides([ref?.[outSlide.index ?? -1]?.id])
-            .get()[0] || null
+            .get()[0] ||
+        null
     const maxLines = showSlide ? getItemWithMostLines(showSlide) : 0
 
     const clickRevealItems = (showSlide?.items || []).filter((a) => a?.clickReveal)

@@ -171,8 +171,10 @@
             return
         }
 
-        currentLayout = clone(_show(slide.id).layouts([slide.layout]).ref()[0] || [])
-        slideData = currentLayout[slide?.index]?.data || null
+        // AliancaShow: com foto, o que foi pro ar nao depende mais do show ao vivo (editar nao mexe no telao)
+        const foto = slide.foto
+        currentLayout = foto ? [] : clone(_show(slide.id).layouts([slide.layout]).ref()[0] || [])
+        slideData = foto ? clone(foto.slideData || null) : currentLayout[slide?.index]?.data || null
 
         // don't refresh content unless it changes
         let newCurrentSlide = getCurrentSlide()
@@ -183,6 +185,7 @@
         function getCurrentSlide() {
             if (!slide && !outputId) return null
             if (slide.id === "temp" || slide.id === "tempText") return { items: slide.tempItems }
+            if (foto?.slide) return clone(foto.slide)
             if (!currentLayout) return null
 
             let slideId: string = currentLayout[slide?.index]?.id || ""

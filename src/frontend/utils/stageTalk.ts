@@ -11,6 +11,7 @@ import { _show } from "../components/helpers/shows"
 import { getCustomStageLabel } from "../components/stage/stage"
 import { actions, activeProject, activeShow, events, groups, media, metronome, metronomeTimer, outputs, projects, showsCache, stageShows, timeFormat, timers, variables } from "../stores"
 import { connections } from "./../stores"
+import { outSemFoto } from "./aliancaFoto"
 import { translateText } from "./language"
 import { send } from "./request"
 import { arrayToObject, filterObjectArray, sendData, setConnectedState } from "./sendData"
@@ -125,6 +126,7 @@ export const receiveSTAGE = {
         const outputId = sourceOutputId && outputStores[sourceOutputId] ? sourceOutputId : getFirstOutput()?.id
         const output = { ...get(outputs)[outputId], id: outputId }
         if (!output?.out) return
+        output.out = outSemFoto(output.out) // AliancaShow: a foto fica no app
 
         const outSlideId = output.out.slide?.id
         if (outSlideId && outSlideId !== "temp") {

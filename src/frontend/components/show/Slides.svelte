@@ -144,7 +144,7 @@
             updateOut(showId, index, slideRef, !e.altKey)
 
             // force update output if index is the same as previous
-            if (activeSlides[index]) refreshOut()
+            if (activeSlides[index]) refreshOut(true, true)
         })
 
         // set to active in focus mode
@@ -288,7 +288,8 @@
             if (projectIndex !== -1 && outSlide.projectIndex !== undefined && outSlide.projectIndex !== projectIndex) return
 
             let ref = outSlide?.id === "temp" ? [{ temp: true, items: outSlide.tempItems, id: "" }] : _show(outSlide.id).layouts([outSlide.layout]).ref()[0] || []
-            let showSlide = outSlide.index !== undefined ? _show(outSlide.id).slides([ref[outSlide.index]?.id]).get()?.[0] : null
+            // AliancaShow: com foto, o progresso das linhas segue o slide que foi pro ar
+            let showSlide = outSlide.foto?.slide || (outSlide.index !== undefined ? _show(outSlide.id).slides([ref[outSlide.index]?.id]).get()?.[0] : null)
 
             // get progress of current line division
             // let amountOfLinesToShow: number = currentStyle.lines !== undefined ? Number(currentStyle.lines) : 0
@@ -323,6 +324,28 @@
             }
         })
     }
+
+    // AliancaShow: "no ar · mudou" = o slide no ar difere da foto (so conta o texto/itens; com debounce)
+    let mudouNoAr: { [index: number]: boolean } = {}
+    let mudouTimer: ReturnType<typeof setTimeout> | undefined
+    $: agendarMudou(currentShow, $outputs, activeLayout, showId)
+    function agendarMudou(..._deps: any[]) {
+        clearTimeout(mudouTimer)
+        mudouTimer = setTimeout(avaliarMudou, 250)
+    }
+    function avaliarMudou() {
+        const novo: { [index: number]: boolean } = {}
+        getActiveOutputs($outputs, false, true).forEach((outputId) => {
+            const outSlide = $outputs[outputId]?.out?.slide
+            if (!outSlide?.foto || outSlide.id !== showId || outSlide.layout !== activeLayout || typeof outSlide.index !== "number") return
+            if (novo[outSlide.index] !== undefined) return
+            const ref = _show(showId).layouts([activeLayout]).ref()[0] || []
+            const aoVivo = _show(showId).slides([ref[outSlide.index]?.id]).get()?.[0]
+            novo[outSlide.index] = JSON.stringify(aoVivo?.items || []) !== JSON.stringify(outSlide.foto.slide?.items || [])
+        })
+        if (JSON.stringify(novo) !== JSON.stringify(mudouNoAr)) mudouNoAr = novo
+    }
+    onDestroy(() => clearTimeout(mudouTimer))
 
     let profile = getAccess("shows")
     $: isLocked = currentShow?.locked || profile.global === "read" || profile[currentShow?.category || ""] === "read"
@@ -506,7 +529,26 @@
                                 {@const currentSlide = currentShow?.slides?.[slide.id]}
                                 {#if hasMounted && (loaded || i < lazyLoader)}
                                     {#if currentSlide && (mode === "grid" || mode === "groups" || !slide.disabled) && (mode !== "groups" || currentSlide.group !== null || activeSlides[i] !== undefined)}
-                                        <Slide {showId} slide={currentSlide} show={currentShow} {layoutSlides} layoutSlide={slide} index={i} color={slide.color} output={activeSlides[i]} active={activeSlides[i] !== undefined} selo={$modoAlianca === "preparar" && activeSlides[i] !== undefined ? "no ar" : ""} {endIndex} list={!gridMode} columns={$slidesOptions.columns} icons {altKeyPressed} disableThumbnails={isLessons && !loaded} centerPreview on:click={(e) => slideClick(e, i)} />
+                                        <Slide
+                                            {showId}
+                                            slide={currentSlide}
+                                            show={currentShow}
+                                            {layoutSlides}
+                                            layoutSlide={slide}
+                                            index={i}
+                                            color={slide.color}
+                                            output={activeSlides[i]}
+                                            active={activeSlides[i] !== undefined}
+                                            selo={$modoAlianca === "preparar" && activeSlides[i] !== undefined ? (mudouNoAr[i] ? "no ar · mudou" : "no ar") : ""}
+                                            {endIndex}
+                                            list={!gridMode}
+                                            columns={$slidesOptions.columns}
+                                            icons
+                                            {altKeyPressed}
+                                            disableThumbnails={isLessons && !loaded}
+                                            centerPreview
+                                            on:click={(e) => slideClick(e, i)}
+                                        />
                                     {/if}
                                 {:else}
                                     <SkeletonSlide slide={currentSlide} index={i} color={slide.color} columns={$slidesOptions.columns} active={activeSlides[i] !== undefined} on:click={(e) => slideClick(e, i)} />

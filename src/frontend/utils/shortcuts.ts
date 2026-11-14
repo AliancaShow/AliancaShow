@@ -328,7 +328,7 @@ export function isComposing(e: KeyboardEvent): boolean {
 export const previewCtrlShortcuts = {
     l: () => outLocked.set(!get(outLocked)),
     r: () => {
-        if (!get(outLocked)) refreshOut()
+        if (!get(outLocked)) refreshOut(true, true)
     }
 }
 

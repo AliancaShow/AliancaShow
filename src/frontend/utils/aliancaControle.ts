@@ -219,7 +219,8 @@ function montarEstado() {
             total = refs.length || undefined
             indice = typeof slide.index === "number" ? slide.index : undefined
             const slideId = refs[slide.index ?? -1]?.id
-            texto = textoDosItens(cache.slides?.[slideId]?.items)
+            // com foto, o celular mostra o que esta no telao (nao o que esta sendo editado)
+            texto = textoDosItens(slide.foto?.slide?.items || cache.slides?.[slideId]?.items)
         }
         // versiculo e outros slides temporarios trazem o texto na propria saida
         if (!texto && slide.tempItems) texto = textoDosItens(slide.tempItems)

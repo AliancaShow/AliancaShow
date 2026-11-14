@@ -14,6 +14,7 @@ import { loadShows } from "./setShow"
 import { checkActionTrigger, getFewestOutputLines, getItemWithMostLines, playPdf, updateOut } from "./showActions"
 import { _show } from "./shows"
 import { runActionId } from "../actions/actions"
+import { indiceDaFoto } from "../../utils/aliancaFoto"
 
 type Options = { isSpace: boolean; slideLayers: boolean; playNext: boolean }
 
@@ -354,7 +355,19 @@ export class OutputHelper {
 
         if (typeof data.index !== "number") data.index = -1
 
-        const showSlide: Slide | null = _show(data.id).slides([layoutRef?.[data.index]?.id]).get()?.[0] || null
+        // AliancaShow: o slide no ar e o da foto. Acha onde ele esta no layout vivo (pode ter andado com edicao); se sumiu, o "proximo" e o que esta no lugar dele
+        let showSlide: Slide | null = data.foto?.slide || _show(data.id).slides([layoutRef?.[data.index]?.id]).get()?.[0] || null
+        if (data.foto) {
+            const onde = indiceDaFoto(data.foto, data.index, layoutRef)
+            if (onde > -1) data.index = onde
+            else {
+                data.index = data.index - 1
+                showSlide = null
+                delete data.line
+                delete data.itemClickReveal
+                delete data.revealCount
+            }
+        }
 
         let outSlideData: OutSlide = { id: data.id }
 
@@ -389,7 +402,18 @@ export class OutputHelper {
 
         if (typeof data.index !== "number") data.index = layoutRef.length
 
-        const showSlide: Slide | null = _show(data.id).slides([layoutRef?.[data.index]?.id]).get()?.[0] || null
+        // AliancaShow: ver getNextSlide. Se o slide sumiu, o "anterior" e o que vem antes do lugar dele
+        let showSlide: Slide | null = data.foto?.slide || _show(data.id).slides([layoutRef?.[data.index]?.id]).get()?.[0] || null
+        if (data.foto) {
+            const onde = indiceDaFoto(data.foto, data.index, layoutRef)
+            if (onde > -1) data.index = onde
+            else {
+                showSlide = null
+                delete data.line
+                delete data.itemClickReveal
+                delete data.revealCount
+            }
+        }
 
         let outSlideData: OutSlide = { id: data.id }
 
