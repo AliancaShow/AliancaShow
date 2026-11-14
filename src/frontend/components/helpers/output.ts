@@ -10,6 +10,7 @@ import { AudioAnalyser } from "../../audio/audioAnalyser"
 import { requestMain, sendMain } from "../../IPC/main"
 import { actions, activeFocus, activeProject, activeRename, activeShow, activeTimers, allOutputs, categories, connections, currentOutputSettings, customMessageCredits, disabledServers, effects, focusMode, lockedOverlays, media, outputDisplay, outputs, outputSlideCache, outputState, overlays, overlayTimers, projects, scriptures, scriptureSettings, serverData, showsCache, special, stageShows, styles, templates, theme, themes, transitionData, usageLog } from "../../stores"
 import { isMainWindow, isOutputWindow, newToast } from "../../utils/common"
+import { destinoRecusaTecla } from "../../utils/aliancaModo"
 import { translateText } from "../../utils/language"
 import { confirmCustom } from "../../utils/popup"
 import { send } from "../../utils/request"
@@ -29,6 +30,8 @@ import { _show } from "./shows"
 import { getStyles } from "./style"
 
 export function toggleOutputs(outputIds: string[] | null = null, options: { force?: boolean; autoStartup?: boolean; state?: boolean } = {}) {
+    // AliancaShow: no Preparar, tecla em curso nao liga/desliga a saida
+    if (destinoRecusaTecla()) return
     if (outputIds === null) outputIds = getActiveOutputs(get(outputs), false)
     // if (outputIds === null) outputIds = Object.keys(get(outputs))
 
@@ -56,6 +59,9 @@ export function toggleOutput(id: string) {
 // transition: null,
 let resetActionTrigger = false
 export function setOutput(type: string, data: any, toggle = false, outputId = "", add = false) {
+    // AliancaShow: guarda no DESTINO. No Preparar, o que chegar aqui por tecla em curso e recusado
+    if (destinoRecusaTecla()) return
+
     const ref = data?.layout ? _show(data.id).layouts([data.layout]).ref()[0] || [] : []
 
     // stop any active break slide recording when the slide changes

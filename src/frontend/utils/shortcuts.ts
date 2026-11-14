@@ -25,7 +25,8 @@ import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, acti
 import { audioExtensions, imageExtensions, videoExtensions } from "../values/extensions"
 import { drawerTabs } from "../values/tabs"
 import { activeShow } from "./../stores"
-import { hideDisplay, isOutputWindow, togglePanels, triggerFunction } from "./common"
+import { teclaIgnorada } from "./aliancaModo"
+import { isOutputWindow, togglePanels, triggerFunction } from "./common"
 import { send } from "./request"
 import { save } from "./save"
 
@@ -44,12 +45,13 @@ const ctrlKeys = {
     n: () => createNew(),
     h: () => (get(activeDrawerTab) === "scripture" ? "" : activePopup.set("history")),
     m: () =>
+        teclaIgnorada({ key: "m", ctrlKey: true }) ||
         audioChannelsData.update((a) => {
             const main = a.main || {}
             a.main = { ...main, isMuted: !main.isMuted }
             return a
         }),
-    o: () => toggleOutputs(),
+    o: () => (teclaIgnorada({ key: "o", ctrlKey: true }) ? null : toggleOutputs()),
     s: () => save(),
     t: () => togglePanels(),
     y: () => redo(),
@@ -147,7 +149,8 @@ export function keydown(e: KeyboardEvent) {
     if (isOutputWindow()) {
         const currentOut = get(outputs)[Object.keys(get(outputs))[0]]?.out || {}
         const contentDisplayed = currentOut.slide?.id || currentOut.background?.path || currentOut.background?.id || currentOut.overlays?.length
-        if (e.key === "Escape" && !contentDisplayed) return hideDisplay()
+        // AliancaShow: a janela de saida nao sabe o modo; pede pro main (que ignora no Preparar)
+        if (e.key === "Escape" && !contentDisplayed) return send(OUTPUT, ["MAIN_SHORTCUT"], { key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey, hide: true })
 
         // allow custom shortcuts through main display (could be useful in some cases when you need output over the main app)
         const allowThroughWindow = ["Escape", "ArrowRight", "ArrowLeft", " ", "PageDown", "PageUp", "Home", "End", ".", "F1", "F2", "F3", "F4", "F5"]

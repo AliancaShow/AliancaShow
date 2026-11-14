@@ -156,7 +156,7 @@ function executar(agenda: Agenda, comando: any) {
 
     if (comando.acao === "proximo") OutputHelper.advanceOutputs("next")
     else if (comando.acao === "anterior") OutputHelper.advanceOutputs("previous")
-    else if (comando.acao === "limpar") clearAll()
+    else if (comando.acao === "limpar") clearAll(true)
     else if (comando.acao === "abrir" && Number.isInteger(comando.indice)) {
         if (Date.now() - estruturaMudouEm < ABRIR_RECUSADO_MS) {
             console.warn("AliançaShow Remote: 'abrir' recusado: a ordem do culto acabou de mudar")

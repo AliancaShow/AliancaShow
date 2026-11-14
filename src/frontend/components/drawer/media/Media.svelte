@@ -6,6 +6,7 @@
     import { requestMain } from "../../../IPC/main"
     import { addProjectItem } from "../../../converters/project"
     import { activeDrawerTab, activeEdit, activeFocus, activeMediaTagFilter, activePopup, activeShow, audioFolders, cloudSyncData, drawerTabsData, focusMode, labelsDisabled, media, mediaFolders, mediaOptions, openedMediaFolders, outLocked, outputs, popupData, providerConnections, selectAllMedia, selected, sorted, special, styles } from "../../../stores"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
     import Icon from "../../helpers/Icon.svelte"
     import T from "../../helpers/T.svelte"
     import { clone, keysToID, sortFilenames } from "../../helpers/array"
@@ -392,6 +393,7 @@
 
             // play
             if (e.ctrlKey || e.metaKey) {
+                if (teclaIgnorada()) return
                 const currentOutput = getFirstActiveOutput()
                 const outputStyle = $styles[currentOutput?.style || ""]
                 const mediaStyle = getMediaStyle($media[file.path], outputStyle)

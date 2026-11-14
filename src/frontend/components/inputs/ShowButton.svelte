@@ -300,6 +300,8 @@
                 <HiddenInput value={type === "show_placeholder" ? showTemplateName : newName} id={index !== null ? "show_" + id + "#" + index : "show_drawer_" + id} on:edit={rename} bind:edit={editActive} allowEmpty={false} allowEdit={!readOnly && ((type === "show_placeholder" && !!$editingProjectTemplate) || !show.type || show.type === "show")} />
 
                 {#if isProject}
+                    <!-- AliancaShow: selo "no ar" (Culto e Preparar) -->
+                    {#if activeOutput !== null}<span class="noArSelo">no ar</span>{/if}
                     {#if show.layoutInfo?.name}
                         <span class="layout" style="opacity: 0.6;font-style: italic;font-size: 0.9em;">{show.layoutInfo.name}</span>
                     {/if}
@@ -359,6 +361,18 @@
 </div>
 
 <style>
+    .noArSelo {
+        flex: none;
+        margin-inline-start: 6px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #fff;
+        background: rgb(242 26 39 / 0.85);
+    }
     .main {
         width: 100%;
 

@@ -61,13 +61,14 @@ import {
     variables,
     visualizerData
 } from "../stores"
-import { newToast } from "./common"
+import { hideDisplay, newToast } from "./common"
 import { syncDrive } from "./drive"
 import { setLanguage } from "./language"
 import { sendInitialOutputData } from "./listeners"
 import { receive, send } from "./request"
 import { closeApp, save } from "./save"
 import { client } from "./sendData"
+import { teclaIgnorada } from "./aliancaModo"
 import { previewShortcuts } from "./shortcuts"
 import { restartOutputs } from "./updateSettings"
 
@@ -182,7 +183,11 @@ const receiveOUTPUTasMAIN: any = {
         alertMessage.set(data)
         activePopup.set("alert")
     },
-    MAIN_SHORTCUT: (data: { key: string }) => {
+    MAIN_SHORTCUT: (data: { key: string; hide?: boolean }) => {
+        // AliancaShow: tecla vinda da janela de saida tambem respeita o modo (a saida nao tem o store do modo)
+        if (teclaIgnorada(data)) return
+        // Esc na janela de saida sem nada no ar: quem fecha a exibicao e o main, que sabe o modo
+        if (data.hide) return hideDisplay()
         if (previewShortcuts[data.key]) {
             previewShortcuts[data.key]({ ...data, preventDefault: () => "" })
         }

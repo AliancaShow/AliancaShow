@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
     import { activeDrawerTab, activeEdit, activePage, activePopup, activeProject, activeShow, activeTriggerFunction, dictionary, drawer, drawerOpenedInEdit, drawerTabsData, focusMode, forceClock, labelsDisabled, mediaOptions, os, previousShow, projects, quickTextCache, scriptureSettings, selected, showsCache } from "../../stores"
+    import { teclaIgnorada } from "../../utils/aliancaModo"
     import { DEFAULT_DRAWER_HEIGHT, DEFAULT_WIDTH, MENU_BAR_HEIGHT } from "../../utils/common"
     import { startResizing, stopResizing } from "../../utils/cursor"
     import { translateText } from "../../utils/language"
@@ -191,6 +192,7 @@
 
             // play
             if (e.ctrlKey || e.metaKey) {
+                if (teclaIgnorada()) return
                 const showId = match.id
                 await loadShows([showId])
                 if (!$showsCache[showId]) return
