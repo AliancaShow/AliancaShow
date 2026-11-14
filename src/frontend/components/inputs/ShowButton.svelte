@@ -5,6 +5,7 @@
     import { activeEdit, activeFocus, activePage, activeProject, activeShow, categories, editingProjectTemplate, effects, focusMode, modoAlianca, globalTags, media, notFound, outLocked, outputs, overlayCategories, overlays, playerVideos, playingAudio, projects, projectTemplates, refreshEditSlide, shows, showsCache, special, styles, textCache } from "../../stores"
     import { itemPrecisaConferir, marcarConferidoPorIndice } from "../../utils/aliancaConferir"
     import { sirvoRoteiro } from "../../utils/aliancaSirvo"
+    import { showEstaSemLetra } from "../../utils/aliancaSemLetraLogica"
     import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
     import { customIconsColors } from "../../values/customIcons"
@@ -104,6 +105,8 @@
     // AliançaShow (Preparar F3): selo "conferir" (música que o Sirvo pôs e ninguém abriu) e o × de tirar (só no Preparar)
     $: projetoDoSirvo = isProject && !$editingProjectTemplate && $activeProject ? $projects[$activeProject]?.sirvo : null
     $: conferir = !!projetoDoSirvo?.eventId && itemPrecisaConferir(show, projetoDoSirvo.eventId, $sirvoRoteiro, $special.aliancaConferidos)
+    // AliançaShow (Preparar F4): música da lista da banda visitante que ainda não tem letra (nos dois modos; no Culto é só informativo)
+    $: semLetra = isProject && type === "show" && showEstaSemLetra(show.id, $shows, $categories, $showsCache, $textCache)
     $: mostrarTirar = isProject && podeTirar && index !== null && $modoAlianca === "preparar" && type !== "show_placeholder" && !($shows[show.id]?.private && type === "show")
     function tirarDaLista() {
         if (index === null) return
@@ -319,6 +322,7 @@
                     <!-- AliancaShow: selo "no ar" (Culto e Preparar) -->
                     {#if activeOutput !== null}<span class="noArSelo">no ar</span>{/if}
                     {#if conferir}<span class="conferirSelo" data-title="Música nova do Sirvo: abra pra conferir a letra">conferir</span>{/if}
+                    {#if semLetra}<span class="semLetraSelo" data-title="Só o nome: a letra ainda não chegou. Abra a música pra colar a letra.">sem letra</span>{/if}
                     {#if show.layoutInfo?.name}
                         <span class="layout" style="opacity: 0.6;font-style: italic;font-size: 0.9em;">{show.layoutInfo.name}</span>
                     {/if}
@@ -406,6 +410,18 @@
         text-transform: uppercase;
         color: #1c1400;
         background: #e0a030;
+    }
+    .semLetraSelo {
+        flex: none;
+        margin-inline-start: 6px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text);
+        background: rgb(255 255 255 / 0.18);
     }
     .main button.tirarItem {
         position: absolute;
