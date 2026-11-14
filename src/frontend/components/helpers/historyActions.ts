@@ -4,6 +4,7 @@ import type { Item, Slide, SlideData, Template } from "../../../types/Show"
 import { breakLongLines, removeItemValues } from "../../show/slides"
 import { activeEdit, activePage, activePopup, activeProject, activeShow, alertMessage, cachedShowsData, deletedShows, groups, notFound, projects, refreshEditSlide, renamedShows, shows, showsCache, templates } from "../../stores"
 import { save } from "../../utils/save"
+import { apagarDoDiscoSeGravado, regravarSeGravado } from "../../utils/aliancaGravarShow"
 import { EMPTY_SHOW_SLIDE } from "../../values/empty"
 import { customActionActivation } from "../actions/actions"
 import { getItemText } from "../edit/scripts/textStyle"
@@ -270,6 +271,8 @@ async function handleShows(obj, _data, initializing) {
                 }
                 if (!a[id]) return
                 oldShows[id] = clone(a[id])
+                // AliançaShow (Preparar): música criada e gravada na hora — desfazer tira o arquivo também
+                if (!replace) apagarDoDiscoSeGravado(id, a[id].name)
                 delete a[id]
             } else {
                 if (!show) return
@@ -285,6 +288,7 @@ async function handleShows(obj, _data, initializing) {
                 }
                 a[id] = show
                 saveTextCache(id, show)
+                if (!initializing) regravarSeGravado(id)
             }
         })
         return a

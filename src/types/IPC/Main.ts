@@ -82,6 +82,7 @@ export enum Main {
     SET_STORE_VALUE = "SET_STORE_VALUE",
     DELETE_SHOWS = "DELETE_SHOWS",
     DELETE_SHOWS_NI = "DELETE_SHOWS_NI",
+    SAVE_SHOW_FILE = "SAVE_SHOW_FILE",
     REFRESH_SHOWS = "REFRESH_SHOWS",
     GET_EMPTY_SHOWS = "GET_EMPTY_SHOWS",
     FULL_SHOWS_LIST = "FULL_SHOWS_LIST",
@@ -216,6 +217,7 @@ export interface MainSendPayloads {
     [Main.SET_STORE_VALUE]: { file: "config" | keyof typeof _store; key: string; value: any }
     [Main.DELETE_SHOWS]: { shows: { id: string; name: string }[] }
     [Main.DELETE_SHOWS_NI]: { shows: TrimmedShows }
+    [Main.SAVE_SHOW_FILE]: { id: string; show?: Show; apagarNome?: string }
     [Main.GET_EMPTY_SHOWS]: { cached: Shows }
     [Main.OUTPUT]: "true" | "false"
     [Main.DOES_MEDIA_EXIST]: { path: string; creationTime?: number; noCache?: boolean }

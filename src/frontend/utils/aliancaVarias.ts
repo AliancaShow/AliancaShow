@@ -16,6 +16,7 @@ import { PREFIXO_RASCUNHO, CATEGORIA_NOVAS } from "./aliancaSirvoMusicas"
 import { posicaoDeEntrada, type MusicaDoCatalogo } from "./aliancaLista"
 import { linhasPorSlideDoModo, prepararLetraColada, type AcordeNaLinha, type ModoDeDivisao, type OpcoesDoPreparo } from "./aliancaLetra"
 import { categoriasDeMusica } from "./aliancaSemLetraLogica"
+import { gravarNoDisco } from "./aliancaGravarShow"
 
 // ----- AliançaShow · Preparar, fatia 4: o que os dois popups fazem nos stores -----
 //
@@ -107,7 +108,10 @@ export function confirmarVarias(itens: ItemConfirmado[], onde: "fim" | "depois")
         aCriar.push({ id, show: showVazio(it.nome, it.cantor) })
         ids.push(id)
     }
-    if (aCriar.length) history({ id: "SHOWS", newData: { data: aCriar, semLimpar: true }, location: { page: "show" } })
+    if (aCriar.length) {
+        history({ id: "SHOWS", newData: { data: aCriar, semLimpar: true }, location: { page: "show" } })
+        for (const c of aCriar) gravarNoDisco(c.id)
+    }
 
     if (!projeto || !projetoDoUsuario) {
         newToast(`${aCriar.length} ${aCriar.length === 1 ? "música criada" : "músicas criadas"} na biblioteca`)
@@ -209,6 +213,7 @@ export async function preencherLetra(showId: string, previa: PreviaDaLetra): Pro
     novo.layouts = { ...(novo.layouts || {}), [layoutId]: { ...(novo.layouts?.[layoutId] || { name: layoutNovo?.name || "", notes: "" }), slides: clone(layoutNovo?.slides || []) } }
     novo.timestamps = { ...(velho.timestamps || {}), modified: Date.now() }
     history({ id: "SHOWS", newData: { data: [{ id: showId, show: novo }], replace: true, semLimpar: true }, location: { page: "show" } })
+    gravarNoDisco(showId)
     return true
 }
 
@@ -222,6 +227,7 @@ export function criarMusicaComLetra(nome: string, cantor: string, previa: Previa
     show.meta = { title: nome, ...(cantor ? { artist: cantor } : {}) }
     show.timestamps = { ...(show.timestamps || {}), created: Date.now(), modified: Date.now() }
     history({ id: "SHOWS", newData: { data: [{ id, show }], semLimpar: true }, location: { page: "show" } })
+    gravarNoDisco(id)
     activeShow.set({ id, type: "show" })
     return id
 }

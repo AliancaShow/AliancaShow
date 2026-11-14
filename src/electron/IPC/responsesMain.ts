@@ -33,7 +33,7 @@ import { addToMediaFolder, bundleMediaFiles, getDataFolderPath, getDataFolderRoo
 import { getMachineId } from "../utils/helpers"
 import { LyricSearch } from "../utils/LyricSearch"
 import { closeMidiInPorts, getMidiInputs, getMidiOutputs, receiveMidi, sendMidi } from "../utils/midi"
-import { deleteShows, deleteShowsNotIndexed, getAllShows, getEmptyShows, refreshAllShows } from "../utils/shows"
+import { deleteShows, deleteShowsNotIndexed, getAllShows, getEmptyShows, refreshAllShows, saveShowFile } from "../utils/shows"
 import { correctSpelling } from "../utils/spellcheck"
 import { executeSpotifyCommand, getSpotifyState } from "../utils/spotify"
 import { testarLixeira } from "../sirvo/limpeza"
@@ -104,6 +104,7 @@ export const mainResponses: MainResponses = {
     // SHOWS
     [Main.DELETE_SHOWS]: (data) => deleteShows(data),
     [Main.DELETE_SHOWS_NI]: (data) => deleteShowsNotIndexed(data),
+    [Main.SAVE_SHOW_FILE]: (data) => saveShowFile(data),
     [Main.REFRESH_SHOWS]: () => refreshAllShows(),
     [Main.GET_EMPTY_SHOWS]: (data) => getEmptyShows(data),
     [Main.FULL_SHOWS_LIST]: () => getAllShows(),
