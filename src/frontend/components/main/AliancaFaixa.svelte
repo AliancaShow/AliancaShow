@@ -3,6 +3,7 @@
     // Com algo no ar ela fica mais forte; tecla ignorada troca o texto por 3 s.
     import { onDestroy } from "svelte"
     import { modoAlianca, outputs } from "../../stores"
+    import { paraConferir } from "../../utils/aliancaConferir"
     import { algoNoAr, avisoTecla } from "../../utils/aliancaModo"
 
     $: noAr = $outputs ? algoNoAr() : false
@@ -31,9 +32,9 @@
         {#if aviso}
             Tecla ignorada: você está no Preparar. Vá pro Culto pra controlar o telão.
         {:else if noAr}
-            Preparando, com algo no ar: o teclado não mexe no telão. Pra controlar o telão, vá pro Culto.
+            Preparando, com algo no ar: o teclado não mexe no telão. Pra controlar o telão, vá pro Culto.{#if $paraConferir > 0}&nbsp;· {$paraConferir} pra conferir{/if}
         {:else}
-            Preparando: o teclado não mexe no telão. Pra controlar o telão, vá pro Culto.
+            Preparando: o teclado não mexe no telão. Pra controlar o telão, vá pro Culto.{#if $paraConferir > 0}&nbsp;· {$paraConferir} pra conferir{/if}
         {/if}
     </div>
 {/if}

@@ -4,7 +4,7 @@
     import type { ProjectShowRef, Tree } from "../../../types/Projects"
     import type { ShowType } from "../../../types/Show"
     import { addProjectItem } from "../../converters/project"
-    import { actions, activeFocus, activePopup, activeProject, activeShow, contextActive, drawer, drawerTabsData, editingProjectTemplate, focusMode, fullColors, playerVideos, popupData, projects, projectTemplates, projectView, selected, shows, special } from "../../stores"
+    import { actions, activeFocus, activePopup, activeProject, activeShow, contextActive, drawer, drawerTabsData, editingProjectTemplate, focusMode, fullColors, playerVideos, popupData, outputs, projects, projectTemplates, projectView, selected, shows, special } from "../../stores"
     import { triggerFunction } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
     import { getActionIcon } from "../actions/actions"
@@ -28,6 +28,10 @@
     import SirvoProjetoFaixa from "./SirvoProjetoFaixa.svelte"
     // AliançaShow: o cabeçalho de um bloco do Sirvo tranca sozinho (isLocked); o resto do projeto continua livre
     import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
+    // AliançaShow (Preparar F3): o item que o operador tirou fica riscado no lugar, com Desfazer
+    import { sirvoRoteiro } from "../../utils/aliancaSirvo"
+    import { lerDispensas } from "../../utils/aliancaSirvoDispensar"
+    import { desfazerTirado, desfazerTiradoDoSirvo, rastrosParaLista, tirados, type RastroNaLista } from "../../utils/aliancaTirados"
 
     export let tree: Tree[]
     export let recentlyUsedList: any[] = []
@@ -103,6 +107,23 @@
 
     $: projectItemsList = currentProject?.shows || []
 
+    // tirar item pela lista (×) e Desfazer: só em projeto de verdade, que o perfil deixa mexer
+    $: podeTirar = !projectReadOnly && !isTemplate
+    const dispensasDe = (_special: any) => lerDispensas()
+    $: dispensasSirvo = dispensasDe($special)
+    $: rastros = isTemplate ? [] : rastrosParaLista(projectId || null, currentProject, $tirados, dispensasSirvo, $sirvoRoteiro, $shows, !!projectReadOnly)
+    $: rastroPorChave = new Map(rastros.map((r) => [r.chave, r]))
+    // ids com slide no ar: o item tirado que ainda está lá avisa "ainda no ar"
+    $: idsNoAr = new Set(
+        Object.values($outputs || {})
+            .map((o: any) => (o?.enabled ? o?.out?.slide?.id : null))
+            .filter(Boolean)
+    )
+    const rastroDe = (map: Map<string, RastroNaLista>, chave: string) => map.get(chave)
+    const ehTirado = (item: any) => item?.type === "TIRADO"
+    const primeiroReal = (itens: any[]) => itens.findIndex((x) => !ehTirado(x))
+    const ultimoReal = (itens: any[]) => itens.reduce((u, x, i) => (ehTirado(x) ? u : i), -1)
+
     $: lessVisibleSection = projectItemsList.length > 10 || projectItemsList.length < 1 || projectItemsList.some((a) => a.type === "section")
 
     let shouldPasteText = false
@@ -121,7 +142,7 @@
     }
 
     let splittedProjectsList: { color: string; items: ProjectShowRef[] }[] = []
-    $: if (projectItemsList) splitProjectItemsToSections()
+    $: if (projectItemsList || rastros) splitProjectItemsToSections()
     function splitProjectItemsToSections() {
         splittedProjectsList = []
 
@@ -154,6 +175,22 @@
                 splittedProjectsList.push({ color: a.color || "", items: [] })
             }
         })
+
+        // AliançaShow (Preparar F3): as linhas "tirado" entram DEPOIS do laço (o laço escreve `index` nos objetos do store; elas não têm)
+        const porPos = new Map<number, RastroNaLista[]>()
+        for (const r of rastros) porPos.set(r.pos, [...(porPos.get(r.pos) || []), r])
+        for (const [pos, grupo] of porPos) {
+            const marcadores: ProjectShowRef[] = grupo.map((r) => ({ type: "TIRADO", id: r.chave }) as any)
+            if (!splittedProjectsList.length) splittedProjectsList.push({ color: "", items: [] })
+            if (pos <= 0) {
+                splittedProjectsList[0].items.unshift(...marcadores)
+                continue
+            }
+            const ancora = projectItemsList[pos - 1]
+            const secao = splittedProjectsList.find((s) => s.items.includes(ancora)) || splittedProjectsList.at(-1)!
+            const i = secao.items.indexOf(ancora)
+            secao.items.splice(i < 0 ? secao.items.length : i + 1, 0, ...marcadores)
+        }
     }
 
     // function createShow() {
@@ -268,15 +305,15 @@
     <Autoscroll {offset} bind:scrollElem timeout={150}>
         <!-- WIP dragging content to this sometimes does not drop it -->
         <DropArea id="project" selectChildren hoverTimeout={150} let:fileOver file>
-            {#if projectItemsList.length}
+            {#if projectItemsList.length || rastros.length}
                 {#each splittedProjectsList as splittedItemsList}
                     <div class="listSection" style="--border-color: {splittedItemsList.color};">
                         {#each splittedItemsList.items as show, i}
                             {@const index = show.index}
                             {@const triggerAction = show.data?.settings?.triggerAction || $special.sectionTriggerAction}
                             {@const pcoLink = !!$shows[show.id]?.quickAccess?.pcoLink}
-                            {@const isFirst = i === 0}
-                            {@const isLast = i === splittedItemsList.items.length - 1}
+                            {@const isFirst = i === primeiroReal(splittedItemsList.items)}
+                            {@const isLast = i === ultimoReal(splittedItemsList.items)}
                             {@const borderRadiusStyle = `${isFirst ? "border-top-right-radius: 10px;" : ""}${isLast ? "border-bottom-right-radius: 10px;" : ""}`}
                             {@const sectionTime = show.data?.time ? getTimeUntilClock(show.data.time, today) : 0}
                             {@const isActive = show.type === "section" ? ($focusMode ? $activeFocus.id === show.id : $activeShow?.id === show.id) : false}
@@ -284,6 +321,21 @@
 
                             {#if show.type === "DIVIDER"}
                                 <div style="border-top: 1px solid var(--primary-lighter);margin: 5px 0;"></div>
+                            {:else if ehTirado(show)}
+                                <!-- AliançaShow (Preparar F3): rastro do item tirado. Fora do SelectElem: não seleciona, não arrasta, não recebe drop -->
+                                {#if rastroDe(rastroPorChave, show.id)}
+                                    <div class="tirado" role="listitem" data-chave={show.id}>
+                                        <span class="tiradoNome">{rastroDe(rastroPorChave, show.id)?.nome}</span>
+                                        <span class="tiradoRotulo"
+                                            >tirado{#if rastroDe(rastroPorChave, show.id)?.noAr && idsNoAr.has(rastroDe(rastroPorChave, show.id)?.itemId || "")}
+                                                · ainda no ar{/if}</span
+                                        >
+                                        {#if rastroDe(rastroPorChave, show.id)?.nota}<span class="tiradoRotulo">{rastroDe(rastroPorChave, show.id)?.nota}</span>{/if}
+                                        {#if !rastroDe(rastroPorChave, show.id)?.semBotao}
+                                            <button class="tiradoDesfazer" tabindex="-1" on:mousedown|stopPropagation on:click|stopPropagation={() => (rastroDe(rastroPorChave, show.id)?.sintetico ? desfazerTiradoDoSirvo(rastroDe(rastroPorChave, show.id)?.rmId || "") : desfazerTirado(show.id))}>Desfazer</button>
+                                        {/if}
+                                    </div>
+                                {/if}
                             {:else}
                                 <SelectElem id="show" dropAbove={isFirst} triggerOnHover data={{ ...show, name: show.name || removeExtension(getFileName(show.id)), index }} {fileOver} borders={show.type === "show_placeholder" ? "all" : "edges"} trigger="column" draggable={!isLocked} selectable={!isLocked}>
                                     {#if show.type === "section"}
@@ -333,7 +385,7 @@
                                             {/if}
                                         </MaterialButton>
                                     {:else}
-                                        <ShowButton id={show.id} {show} {index} class={projectReadOnly ? "" : `context #${pcoLink ? "pco_item__" : ""}project_${getContextMenuId(show.type)}`} style={borderRadiusStyle} icon isProject />
+                                        <ShowButton id={show.id} {show} {index} class={projectReadOnly ? "" : `context #${pcoLink ? "pco_item__" : ""}project_${getContextMenuId(show.type)}`} style={borderRadiusStyle} icon isProject {podeTirar} />
                                     {/if}
                                 </SelectElem>
                             {/if}
@@ -486,6 +538,45 @@
 
     .listSection :global(button) {
         outline-offset: -2px;
+    }
+
+    .tirado {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 26px;
+        padding: 0.15em 0.8em;
+        font-size: 0.9em;
+        opacity: 0.55;
+        user-select: none;
+    }
+    .tiradoNome {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-decoration: line-through;
+    }
+    .tiradoRotulo {
+        flex: none;
+        font-size: 0.8em;
+        font-style: italic;
+    }
+    .listSection .tirado button.tiradoDesfazer {
+        flex: none;
+        width: auto;
+        padding: 1px 8px;
+        border-radius: 4px;
+        border: 1px solid var(--primary-lighter);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 0.85em;
+        opacity: 1;
+    }
+    .listSection .tirado button.tiradoDesfazer:hover {
+        background: var(--primary-lighter);
     }
 
     .list :global(.section) {

@@ -9,6 +9,7 @@ import { deselect } from "./select"
 import { loadShows } from "./setShow"
 import { removeTemplatesFromShow } from "./show"
 import { _show } from "./shows"
+import { durante } from "../../utils/aliancaTiradosLogica"
 
 // override previous history
 const override = ["textAlign", "textStyle", "deleteItem", "setItems", "setStyle", "slideStyle", "STAGE"]
@@ -319,7 +320,8 @@ export const undo = () => {
 
     if (get(isDev)) console.info("UNDO", [...get(undoHistory)], [...get(redoHistory)])
 
-    history(lastUndo!, true)
+    // AliançaShow (Preparar F3): o rastro "tirado" só acorda se o item sair por Ctrl+Z/Ctrl+Shift+Z
+    durante(() => history(lastUndo!, true))
 }
 
 export const redo = () => {
@@ -357,7 +359,7 @@ export const redo = () => {
 
     if (get(isDev)) console.info("REDO", [...get(undoHistory)], [...get(redoHistory)])
 
-    history(lastRedo!, false)
+    durante(() => history(lastRedo!, false))
 }
 
 // {
