@@ -56,6 +56,7 @@
         "test:format": "npx prettier --config config/formatting/.prettierrc.yaml --check src scripts",
         "test:svelte": "svelte-check",
         "test:fv": "node --test scripts/fv-guarda.test.mjs && node scripts/fv-guarda.mjs",
+        "test:fvb": "node --test scripts/fvb-guarda.test.mjs && node scripts/fvb-guarda.mjs",
         "format:prettier": "npx prettier --config config/formatting/.prettierrc.yaml --write src scripts",
         "lint": "npm-run-all -s lint:electron lint:frontend lint:svelte lint:styles",
         "lint:electron": "eslint -c config/linting/eslint.electron.json --ext .js,.ts src/electron --fix",

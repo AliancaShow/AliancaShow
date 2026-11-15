@@ -1,0 +1,29 @@
+{
+    "base": "fbbb205",
+    "arquivos": [
+        {
+            "arquivo": "src/frontend/MainLayout.svelte",
+            "blocos": [{ "sha": "A-GERAR" }, { "sha": "A-GERAR" }],
+            "pares": []
+        },
+        {
+            "arquivo": "src/frontend/components/show/ShowHeader.svelte",
+            "blocos": [{ "sha": "A-GERAR" }, { "sha": "A-GERAR" }],
+            "pares": []
+        },
+        {
+            "arquivo": "src/frontend/utils/aliancaAbasEditor.ts",
+            "blocos": [{ "sha": "A-GERAR" }],
+            "pares": [
+                {
+                    "antes": "import { abaAoEntrarNoEditor, abasEscondidasNoEditor } from \"./aliancaGavetaLogica\"",
+                    "depois": "import { abaAoEntrarNoEditor } from \"./aliancaGavetaLogica\""
+                },
+                {
+                    "antes": "export const abasEscondidas = derived([modoAlianca, activePage, activeEdit], ([$modo, $pagina, $edit]) => new Set(abasEscondidasNoEditor(TODAS, { preparar: $modo === \"preparar\", noEditor: $pagina === \"edit\", tipoEditado: ($edit as any)?.type })))",
+                    "depois": "export const abasEscondidas = derived([modoAlianca, activePage, activeEdit, abaLateral], ([$modo, $pagina, $edit, $aba]) => new Set(abasEscondidasNaBiblioteca(TODAS, { preparar: $modo === \"preparar\", naBiblioteca: $aba === \"biblioteca\" && $pagina === \"show\", noEditor: $pagina === \"edit\", tipoEditado: ($edit as any)?.type })))"
+                }
+            ]
+        }
+    ]
+}
