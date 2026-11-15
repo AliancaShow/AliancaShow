@@ -3,6 +3,11 @@
     import { Main } from "../../../types/IPC/Main"
     import { sendMain } from "../../IPC/main"
     import { activePopup, modoAlianca, openToolsTab, outputs, showNotesActive, shows, showsCache, special, styles, templates } from "../../stores"
+    // FVB:INICIO
+    import { abrirEditorDoShow, acessoAosShows } from "../../utils/aliancaBiblioteca"
+    import { activeProfile } from "../../stores"
+    import { motivoSemEditar } from "../../utils/aliancaBibliotecaLogica"
+    // FVB:FIM
     import { abrirDividir, dividirAberto, fecharDividir } from "../../utils/aliancaDividir"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
@@ -119,6 +124,14 @@
             <Icon size={0.9} id="zoomIn" white />
         </MaterialButton> -->
 
+        <!-- FVB:INICIO -->
+        {#if $modoAlianca === "preparar"}
+            {@const motivoEditar = motivoSemEditar({ carregado: !!currentShow, bloqueado: !!currentShow?.locked, acesso: acessoAosShows($activeProfile), categoria: $shows[showId]?.category })}
+            <MaterialButton title={motivoEditar || "Editar os slides e os textos deste show (tecla 2)"} icon="edit" disabled={!!motivoEditar} style="height: 100%;padding: 0.3em 0.7em;" on:click={() => abrirEditorDoShow(showId)}>
+                <span style="font-size: 0.85em;margin-left: 0.3em;">Editar</span>
+            </MaterialButton>
+        {/if}
+        <!-- FVB:FIM -->
         <!-- AliançaShow (Preparar F5): a tesoura entre linhas -->
         {#if $modoAlianca === "preparar" && !hideOptions}
             <MaterialButton title="Dividir ou juntar slides, entre as linhas (Esc volta)" icon="cut_in_half" isActive={$dividirAberto === showId} style="height: 100%;padding: 0.3em 0.7em;" on:click={() => ($dividirAberto === showId ? fecharDividir() : abrirDividir(showId))}>

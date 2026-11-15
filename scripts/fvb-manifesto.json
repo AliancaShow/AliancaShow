@@ -3,17 +3,35 @@
     "arquivos": [
         {
             "arquivo": "src/frontend/MainLayout.svelte",
-            "blocos": [{ "sha": "A-GERAR" }, { "sha": "A-GERAR" }],
+            "blocos": [
+                {
+                    "sha": "90457904057d178d8717633c7e979a691bc99e83b245bac0bf89c3b10241b249"
+                },
+                {
+                    "sha": "bc11f138d2423e109e89f197724376c85773e31217e9efdfe09862e59e86efba"
+                }
+            ],
             "pares": []
         },
         {
             "arquivo": "src/frontend/components/show/ShowHeader.svelte",
-            "blocos": [{ "sha": "A-GERAR" }, { "sha": "A-GERAR" }],
+            "blocos": [
+                {
+                    "sha": "f01f10c165673f29d224807d6eb1ab64009c5898bd33a1a641708d65653d932d"
+                },
+                {
+                    "sha": "a88f436f4882f0e9427d4fb0fecaecfde0a484200ce02a9fdba21b7df43e4829"
+                }
+            ],
             "pares": []
         },
         {
             "arquivo": "src/frontend/utils/aliancaAbasEditor.ts",
-            "blocos": [{ "sha": "A-GERAR" }],
+            "blocos": [
+                {
+                    "sha": "fed59b51cc32fb3994edef4574ff75a2e87a0a6cae63837c7a12182b4386cbad"
+                }
+            ],
             "pares": [
                 {
                     "antes": "import { abaAoEntrarNoEditor, abasEscondidasNoEditor } from \"./aliancaGavetaLogica\"",
