@@ -1,7 +1,6 @@
 <script lang="ts">
     import { AudioPlayer } from "../../audio/audioPlayer"
     import { cameraManager } from "../../media/cameraManager"
-    import { modoAlianca } from "../../stores"
     import { actions, activeEdit, activeProject, activeRecording, activeShow, categories, colorbars, dictionary, disabledServers, drawerTabsData, effects, effectsLibrary, events, forceClock, globalTags, livePrepare, media, mediaFolders, os, outputs, overlayCategories, overlays, projects, redoHistory, scriptures, selected, shows, showsCache, slidesOptions, special, spellcheck, stageShows, styles, templateCategories, timers, topContextActive, undoHistory } from "../../stores"
     import { translateText } from "../../utils/language"
     import { closeContextMenu } from "../../utils/shortcuts"
@@ -194,18 +193,6 @@
         },
         insert_virtual_break: () => {
             if (window.getSelection()?.toString()) hide = true
-        },
-        // AliancaShow F7: pastas de midia so no Preparar; "ao terminar" e "camada" so para video
-        alianca_mover: () => {
-            hide = $modoAlianca !== "preparar"
-        },
-        alianca_fim: () => {
-            const path = $selected.data[0]?.path || $selected.data[0]?.id
-            hide = $modoAlianca !== "preparar" || getMediaType(getExtension(path || "")) !== "video"
-        },
-        alianca_camada: () => {
-            const path = $selected.data[0]?.path || $selected.data[0]?.id
-            hide = $modoAlianca !== "preparar" || getMediaType(getExtension(path || "")) !== "video"
         },
         createSlideshow: () => {
             hide = $selected.id !== "media" || $selected.data.length < 2

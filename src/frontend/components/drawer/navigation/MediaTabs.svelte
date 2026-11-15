@@ -50,7 +50,7 @@
 
     // AliancaShow F7: a raiz "Midias" e as pastas (etiquetas). A raiz e o 1o nivel das pastas do sistema menos o que ja esta numa pasta
     $: raizCount = arquivosDaRaiz.filter((p) => !pastaDaMidia($media[p]?.tags, $mediaTags)).length
-    $: secaoPastas = [{ id: "TITLE", label: "Pastas" }, { id: PASTA_RAIZ, label: "Mídias", icon: "media", count: raizCount }, ...$pastas.map((p) => ({ id: abaDaPasta(p.id), label: p.tag.name || "Pasta", icon: "folder", count: ($membros[p.id] || []).length, boxedIcon: true })), { id: PASTA_SIRVO, label: "Do Sirvo", icon: "web" }]
+    $: secaoPastas = [{ id: "TITLE", label: "Pastas de mídia" }, { id: PASTA_RAIZ, label: "Mídias", icon: "media", count: raizCount }, ...$pastas.map((p) => ({ id: abaDaPasta(p.id), label: p.tag.name || "Pasta", icon: "folder", count: ($membros[p.id] || []).length, boxedIcon: true })), { id: PASTA_SIRVO, label: "Do Sirvo", icon: "web" }]
 
     function novaPasta() {
         const id = criarPasta()

@@ -140,6 +140,7 @@
     }
     .aviso {
         margin: 0;
+        white-space: normal;
         font-size: 0.85em;
         opacity: 0.6;
     }

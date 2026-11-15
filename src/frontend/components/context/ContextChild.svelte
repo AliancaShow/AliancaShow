@@ -80,7 +80,11 @@
         <div class="left" style="display: flex;align-items: center;gap: 15px;">
             {#if menu?.icon}<Icon style="opacity: 0.7;color: {(topBar ? '' : menu.iconColor) || 'var(--text)'};" id={menu.icon} white />{/if}
             {#key menu}
-                <T id={menu?.label || id} />
+                {#if menu?.translate === false}
+                    {menu.label}
+                {:else}
+                    <T id={menu?.label || id} />
+                {/if}
             {/key}
         </div>
         <div class="right" style="display: flex;align-self: center;opacity: 0.5;">

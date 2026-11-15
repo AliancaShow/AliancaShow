@@ -633,15 +633,24 @@
             </button>
         {/if}
     </div>
-    {#if cfgAberta && $modoAlianca === "preparar" && pastaId && tagDaPasta}
-        <AliancaPastaCfg {pastaId} />
-    {/if}
 {/if}
 
 <!-- MAIN -->
 
-<div class="scroll" style="flex: 1;overflow-y: auto;" bind:this={scrollElem}>
+<div class="scroll" style="flex: 1;overflow-y: auto;{ehPastaView ? 'padding-bottom: 56px;' : ''}" bind:this={scrollElem}>
+    <!-- o painel da pasta rola junto com a grade: numa gaveta baixa o rodape dele nao fica escondido atras do zoom -->
+    {#if ehPastaView && cfgAberta && $modoAlianca === "preparar" && pastaId && tagDaPasta}
+        <AliancaPastaCfg {pastaId} />
+    {/if}
     <div class="grid" class:list={$mediaOptions.mode === "list"} style="height: 100%;">
+        <!-- AliancaShow F7: os audios da pasta ficam em cima (a grade de video/foto ocupa a altura toda e empurraria a lista para fora da tela) -->
+        {#if audiosVisiveis.length}
+            <div class="audiosDaPasta" data-audios-da-pasta>
+                {#each audiosVisiveis as a, i (a.path)}
+                    <AudioFile path={a.path} name={a.name} {active} index={i} />
+                {/each}
+            </div>
+        {/if}
         {#if isProviderSection && activeProviderId}
             <ContentLibraryBrowser providerId={activeProviderId} columns={$mediaOptions.columns} {searchValue} />
         {:else if active === "online" && (onlineTab === "youtube" || onlineTab === "vimeo")}
@@ -714,14 +723,6 @@
                         <Icon id="noImage" size={5} white />
                     {/if}
                 </Center>
-            </div>
-        {/if}
-
-        {#if audiosVisiveis.length}
-            <div class="audiosDaPasta" data-audios-da-pasta>
-                {#each audiosVisiveis as a, i (a.path)}
-                    <AudioFile path={a.path} name={a.name} {active} index={i} />
-                {/each}
             </div>
         {/if}
     </div>
@@ -874,12 +875,15 @@
         background: var(--secondary-opacity);
         border-color: var(--secondary);
     }
+    .audiosDaPasta :global(.selectElem),
+    .audiosDaPasta :global(.selectElem > button) {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
     .audiosDaPasta {
         width: 100%;
         padding: 5px;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
     }
 
     .grid {
