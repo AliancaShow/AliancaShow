@@ -49,7 +49,7 @@
     }
 
     .main.active {
-        outline: 2px solid var(--secondary-opacity);
+        outline: 2px solid var(--live-opacity, var(--secondary-opacity));
         outline-offset: -1px;
     }
 

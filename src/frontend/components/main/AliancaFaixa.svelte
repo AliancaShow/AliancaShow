@@ -52,12 +52,12 @@
         border-bottom: 1px solid rgb(255 255 255 / 0.08);
     }
     .faixa.forte {
-        background: rgb(224 160 48 / 0.2);
-        border-bottom-color: rgb(224 160 48 / 0.5);
+        background: rgb(var(--prep-rgb, 224 160 48) / 0.2);
+        border-bottom-color: rgb(var(--prep-rgb, 224 160 48) / 0.5);
     }
     .faixa.aviso {
-        background: rgb(224 160 48 / 0.45);
-        border-bottom-color: #e0a030;
+        background: rgb(var(--prep-rgb, 224 160 48) / 0.45);
+        border-bottom-color: var(--prep, #e0a030);
         font-weight: 600;
     }
 </style>

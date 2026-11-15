@@ -264,8 +264,8 @@
     .aviso {
         padding: 6px 10px;
         border-radius: 6px;
-        background: rgb(224 160 48 / 0.18);
-        border: 1px solid rgb(224 160 48 / 0.5);
+        background: rgb(var(--prep-rgb, 224 160 48) / 0.18);
+        border: 1px solid rgb(var(--prep-rgb, 224 160 48) / 0.5);
         display: flex;
         flex-direction: column;
         gap: 4px;

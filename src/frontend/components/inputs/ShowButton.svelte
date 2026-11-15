@@ -425,7 +425,7 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
         color: #1c1400;
-        background: #e0a030;
+        background: var(--aviso, #e0a030);
     }
     .marcadoSelo {
         flex: none;
@@ -436,7 +436,7 @@
         font-weight: 600;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: #fff;
+        color: var(--sobre-acento, #fff);
         background: var(--secondary);
     }
     .semLetraSelo {
@@ -547,7 +547,7 @@
     .main :global(button.showOutline) {
         outline: none !important;
         background: rgb(242 26 39 / 0.16) !important;
-        box-shadow: inset 3px 0 0 0 var(--secondary);
+        box-shadow: inset 3px 0 0 0 var(--live, var(--secondary));
     }
 
     .main.played :global(button:not(.isActive)) {

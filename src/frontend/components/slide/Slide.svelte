@@ -569,7 +569,7 @@
         pointer-events: none;
     }
     .selo.mudou {
-        background: #e0a030;
+        background: var(--aviso, #e0a030);
         color: #1a1200;
         pointer-events: auto;
     }

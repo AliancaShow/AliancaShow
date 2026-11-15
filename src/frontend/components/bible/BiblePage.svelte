@@ -554,8 +554,8 @@
        Vermelho cheio e exclusivo do "Limpar tudo". A regua de 3px do
        versiculo ativo permanece -- e a unica que sobrevive no redesign. */
     .num.active {
-        background-color: rgb(242 26 39 / 0.16);
-        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+        background-color: var(--sel-wash, rgb(242 26 39 / 0.16));
+        box-shadow: inset 0 0 0 1px var(--sel-line, rgb(242 26 39 / 0.3));
         color: #fff;
         font-weight: 700;
     }

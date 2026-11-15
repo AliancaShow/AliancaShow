@@ -316,7 +316,7 @@
         color: var(--secondary-text, #fff);
     }
     .selo.mudou {
-        background: #e0a030;
+        background: var(--aviso, #e0a030);
         color: #1a1200;
     }
     .selo.esc,
@@ -404,7 +404,7 @@
     }
     .vao.juntar.confirma .rotulo {
         opacity: 1;
-        color: #e0a030;
+        color: var(--prep, #e0a030);
     }
     .vao:disabled {
         cursor: not-allowed;

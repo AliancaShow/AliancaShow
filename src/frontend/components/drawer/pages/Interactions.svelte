@@ -302,7 +302,7 @@
         </div>
     {:else}
         <div class="inputs">
-            {#if $activeInteractions.includes(openedId) && inputIndex === -1 && openedInteraction?.options?.allAtOnce !== true}<div style="border: 1px solid var(--secondary);"></div>{/if}
+            {#if $activeInteractions.includes(openedId) && inputIndex === -1 && openedInteraction?.options?.allAtOnce !== true}<div style="border: 1px solid var(--live, var(--secondary));"></div>{/if}
             <!-- <div style="border: 1px solid {inputIndex === -1 ? 'var(--secondary)' : 'transparent'};"></div> -->
 
             {#each openedInteraction?.inputs || [] as input, i}
@@ -509,7 +509,7 @@
         font-weight: bold;
     }
     .interaction.active {
-        outline: 2px solid var(--secondary);
+        outline: 2px solid var(--live, var(--secondary));
         outline-offset: -2px;
     }
 
@@ -560,7 +560,7 @@
     }
 
     .input.active {
-        outline: 2px solid var(--secondary);
+        outline: 2px solid var(--live, var(--secondary));
         outline-offset: -2px;
     }
 

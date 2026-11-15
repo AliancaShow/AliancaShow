@@ -140,7 +140,7 @@
        -- e por isso a regra e escopada em .styled, que o palco nao usa
        (Stagebox passa style={false}). */
     .colored {
-        color: var(--secondary);
+        color: var(--conteudo-acento, var(--secondary));
     }
     .align.styled .colored {
         color: var(--text);

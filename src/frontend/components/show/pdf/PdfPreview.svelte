@@ -312,7 +312,7 @@
     }
 
     .main.active {
-        outline: 2px solid var(--secondary);
+        outline: 2px solid var(--live, var(--secondary));
         outline-offset: -1px;
     }
 
