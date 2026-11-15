@@ -57,6 +57,7 @@
         "test:svelte": "svelte-check",
         "test:fv": "node --test scripts/fv-guarda.test.mjs && node scripts/fv-guarda.mjs",
         "test:fvb": "node --test scripts/fvb-guarda.test.mjs && node scripts/fvb-guarda.mjs",
+        "test:fvs": "node --test scripts/fvs-guarda.test.mjs && node scripts/fvb-guarda.mjs fbbb205 c6c2085 && node scripts/fvs-guarda.mjs c6c2085 HEAD",
         "format:prettier": "npx prettier --config config/formatting/.prettierrc.yaml --write src scripts",
         "lint": "npm-run-all -s lint:electron lint:frontend lint:svelte lint:styles",
         "lint:electron": "eslint -c config/linting/eslint.electron.json --ext .js,.ts src/electron --fix",

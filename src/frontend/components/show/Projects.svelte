@@ -26,6 +26,7 @@
     import ProjectContentList from "./ProjectContentList.svelte"
     import ProjectList from "./ProjectList.svelte"
     import ProjectStrip from "./ProjectStrip.svelte"
+    import SeletorDeCulto from "./SeletorDeCulto.svelte"
     import { AGENDAS } from "../../utils/agendas"
     import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
 
@@ -434,12 +435,16 @@
 
 <div class="main" class:focusMode={$focusMode}>
     {#if !$focusMode}
-        <div class="agendas" role="tablist" aria-label="Agendas">
-            {#each ABAS as aba (aba.id)}
-                <button type="button" role="tab" class:ativa={agendaAtiva === aba.id} aria-selected={agendaAtiva === aba.id} on:click={() => escolherAba(aba.id)}>{aba.nome}</button>
-            {/each}
-        </div>
-        <ProjectStrip {tree} />
+        {#if $special.aliancaSeletorCompacto !== false}
+            <SeletorDeCulto {tree} abas={ABAS} {agendaAtiva} on:agenda={(e) => escolherAba(e.detail)} />
+        {:else}
+            <div class="agendas" role="tablist" aria-label="Agendas">
+                {#each ABAS as aba (aba.id)}
+                    <button type="button" role="tab" class:ativa={agendaAtiva === aba.id} aria-selected={agendaAtiva === aba.id} on:click={() => escolherAba(aba.id)}>{aba.nome}</button>
+                {/each}
+            </div>
+            <ProjectStrip {tree} />
+        {/if}
     {/if}
     <span class="tabs">
         {#if projectActive || recentlyUsedList.length}
@@ -602,6 +607,7 @@
         <div class="options">
             <MaterialTextInput label="settings.default_project_name<span style='opacity: 0.5;padding-left: 8px;font-size: 0.8em;color: var(--text);'>{getProjectName($special)}</span>" title={projectReplacerTitle} value={projectName} defaultValue={getDefaultProjectName()} on:change={(e) => updateSpecial(e.detail, "default_project_name", true)} />
             <MaterialToggleSwitch label="settings.startup_projects_list" checked={$special.startupProjectsList} defaultValue={false} on:change={(e) => updateSpecial(e.detail, "startupProjectsList")} />
+            <MaterialToggleSwitch label="Seletor compacto de cultos" checked={$special.aliancaSeletorCompacto !== false} defaultValue={true} on:change={(e) => updateSpecial(e.detail, "aliancaSeletorCompacto", true)} />
         </div>
     {:else}
         <div id="projectsArea" class:float={!templates.length} class="list projects {readOnly ? '' : 'context #projects'}">
