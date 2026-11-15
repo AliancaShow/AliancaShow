@@ -4,9 +4,18 @@ import type { LayoutRef, OutSlide } from "../../types/Show"
 
 export type FotoDoSlide = {
     slideId: string // id do slide no momento do envio (a posicao no layout pode andar depois)
+    ocorrencia?: number // a n-esima vez (de 0) que o slideId aparece no layout no momento do envio (refrao repetido)
     index: number // posicao no layout no momento do envio
     slide: any // o slide inteiro (items, settings, customDynamicValues...)
     slideData: any // o `data` do layout ref: transicao, filtros, cor, actions.animate...
+}
+
+/** A n-esima vez (de 0) que o slide da posição `index` aparece no layout. */
+export function ocorrenciaNoLayout(layoutRef: LayoutRef[], index: number): number {
+    const id = layoutRef[index]?.id
+    let n = 0
+    for (let i = 0; i < index; i++) if (layoutRef[i]?.id === id) n++
+    return n
 }
 
 /** So show de verdade. Temp (Biblia), tempText, PDF, PPT e outros tipos seguem lendo ao vivo. */
@@ -30,10 +39,20 @@ export function mesmoSlideDaFoto(atual: OutSlide | null | undefined, novo: any, 
  * Senao, a ocorrencia mais proxima do index antigo (refrao repetido aparece varias vezes no layout achatado).
  * -1 = o slide sumiu do layout.
  */
-export function indiceDaFoto(foto: { slideId: string } | undefined | null, index: number | undefined, layoutRef: LayoutRef[]): number {
+export function indiceDaFoto(foto: { slideId: string; ocorrencia?: number } | undefined | null, index: number | undefined, layoutRef: LayoutRef[]): number {
     const idx = typeof index === "number" ? index : -1
     if (!foto) return idx
-    if (layoutRef[idx]?.id === foto.slideId) return idx
+
+    // com a ocorrencia gravada no envio, a n-esima vez que o slide aparece e a certa (cortar/juntar nao a embaralha);
+    // "a mais proxima" so vale quando a n-esima nao existe mais (ou foto antiga, sem ocorrencia)
+    if (typeof foto.ocorrencia === "number") {
+        let n = 0
+        for (let i = 0; i < layoutRef.length; i++) {
+            if (layoutRef[i]?.id !== foto.slideId) continue
+            if (n === foto.ocorrencia) return i
+            n++
+        }
+    } else if (layoutRef[idx]?.id === foto.slideId) return idx
 
     let melhor = -1
     let distancia = Infinity

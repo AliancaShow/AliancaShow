@@ -1,7 +1,7 @@
 import type { LayoutRef } from "../../types/Show"
 import { clone } from "../components/helpers/array"
 import { _show } from "../components/helpers/shows"
-import type { FotoDoSlide } from "./aliancaFotoLogica"
+import { ocorrenciaNoLayout, type FotoDoSlide } from "./aliancaFotoLogica"
 
 export * from "./aliancaFotoLogica"
 
@@ -23,5 +23,5 @@ export function tirarFoto(id: string, layout: string | undefined, index: number 
     if (!item) return null
     const slide = _show(id).get("slides")?.[item.id]
     if (!slide) return null
-    return { slideId: item.id, index, slide: clone(slide), slideData: clone(item.data || {}) }
+    return { slideId: item.id, ocorrencia: ocorrenciaNoLayout(ref, index), index, slide: clone(slide), slideData: clone(item.data || {}) }
 }

@@ -2,7 +2,8 @@
     import { fade } from "svelte/transition"
     import { Main } from "../../../types/IPC/Main"
     import { sendMain } from "../../IPC/main"
-    import { activePopup, openToolsTab, outputs, showNotesActive, shows, showsCache, special, styles, templates } from "../../stores"
+    import { activePopup, modoAlianca, openToolsTab, outputs, showNotesActive, shows, showsCache, special, styles, templates } from "../../stores"
+    import { abrirDividir, dividirAberto, fecharDividir } from "../../utils/aliancaDividir"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
     import { allOutputsHasStyleTemplate, getFirstActiveOutput } from "../helpers/output"
@@ -117,6 +118,13 @@
         <!-- <MaterialButton style="width: 32px;height: 100%;padding: 0.3em 0.5em;" title="actions.zoom" on:click={() => }>
             <Icon size={0.9} id="zoomIn" white />
         </MaterialButton> -->
+
+        <!-- AliançaShow (Preparar F5): a tesoura entre linhas -->
+        {#if $modoAlianca === "preparar" && !hideOptions}
+            <MaterialButton title="Dividir ou juntar slides, entre as linhas (Esc volta)" icon="cut_in_half" isActive={$dividirAberto === showId} style="height: 100%;padding: 0.3em 0.7em;" on:click={() => ($dividirAberto === showId ? fecharDividir() : abrirDividir(showId))}>
+                <span style="font-size: 0.85em;margin-left: 0.3em;">Dividir</span>
+            </MaterialButton>
+        {/if}
 
         {#if !hideOptions}
             <!-- show more -->
