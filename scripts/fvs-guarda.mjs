@@ -71,9 +71,12 @@ export function checarComponente(nome, texto) {
     linhas.forEach((l, i) => {
         if (/addEventListener\(/.test(l) && !/removeEventListener\(/.test(l) && !/^\s{8,}/.test(l)) erros.push(`${nome}: addEventListener fora de funcao (linha ${i + 1})`)
     })
-    const adds = (t.match(/[^e]addEventListener\(/g) || []).length
-    const rems = (t.match(/removeEventListener\(/g) || []).length
-    if (adds !== rems) erros.push(`${nome}: ${adds} addEventListener contra ${rems} removeEventListener`)
+    // cada ouvinte ligado tem de ter, pelo menos, um desligamento do MESMO evento (varios caminhos de fechamento podem desligar)
+    const eventos = (re) => [...t.matchAll(re)].map((m) => m[1].trim())
+    const adds = eventos(/[^e]addEventListener\(\s*([^,]+),/g)
+    const rems = eventos(/removeEventListener\(\s*([^,]+),/g)
+    for (const ev of new Set(adds)) if (!rems.includes(ev)) erros.push(`${nome}: addEventListener(${ev}) sem removeEventListener correspondente`)
+    if (rems.length < adds.length) erros.push(`${nome}: ${adds.length} addEventListener contra ${rems.length} removeEventListener`)
     return erros
 }
 
