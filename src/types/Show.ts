@@ -633,9 +633,20 @@ export interface SlideTimer {
     data?: string // used for project media folder loop
 }
 
+// AliancaShow (Preparar F7): uma etiqueta de midia pode ser uma PASTA virtual (o arquivo nunca sai do lugar no disco)
+export type AliancaFimMidia = "repetir" | "parar"
+export interface AliancaPasta {
+    /** ao terminar o video: repetir, ou parar congelado no ultimo quadro */
+    fim: AliancaFimMidia
+    /** fundo = sem som; frente = com som e limpa os slides */
+    camada: "fundo" | "frente"
+    /** audio so repete se isto for ligado de proposito (padrao: o audio para) */
+    repetirAudio?: boolean
+}
 export interface Tag {
     name: string
     color: string
+    aliancaPasta?: AliancaPasta
 }
 
 // types

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { derived } from "svelte/store"
+    import { derived, get } from "svelte/store"
     import type { ContentFile, ContentProviderId } from "../../../../electron/contentProviders/base/types"
     import type { MediaStyle } from "../../../../types/Main"
     import type { ShowType } from "../../../../types/Show"
@@ -7,6 +7,7 @@
     import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, modoAlianca, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
     import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, gavetaNaoToca, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
     import { chaveDe } from "../../../utils/aliancaGavetaLogica"
+    import { camadaNaHora, ehAbaDePasta, pastaDaMidia, resolverFim, tagsSemPasta } from "../../../utils/aliancaPastasMidiaLogica"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
     import { getMediaLayerType, getMediaStyle, getMediaType, loadThumbnail } from "../../helpers/media"
@@ -189,8 +190,15 @@
         const mediaData = $media[path]
         isFavourite = mediaData?.favourite === true
         icon = type === "video" ? "movie" : "image"
-        tags = mediaData?.tags || []
+        // AliancaShow F7: o selo de etiquetas nao mostra a pasta (ela tem o proprio chip)
+        tags = tagsSemPasta(mediaData?.tags, $mediaTags)
     }
+
+    // chips da pasta (so nas vistas "pasta:*"): o que o video faz ao terminar e em qual camada; borda = ajuste proprio da midia
+    $: pastaId = pastaDaMidia($media[path]?.tags, $mediaTags)
+    $: mostraChips = !!pastaId && ehAbaDePasta(active) && type === "video"
+    $: fimEf = resolverFim({ midia: $media[path], mediaTags: $mediaTags })
+    $: camadaEf = camadaNaHora($media[path], $mediaTags)
 
     let iconClicked: NodeJS.Timeout | null = null
     function removeStyle(key: string) {
@@ -207,7 +215,9 @@
                 delete a[path].filter
                 delete a[path].cropping
             } else if (key === "tags") {
-                a[path].tags = []
+                // a pasta (F7) nao e uma etiqueta comum: "remover etiquetas" a preserva
+                const pasta = pastaDaMidia(a[path].tags, get(mediaTags))
+                a[path].tags = pasta ? [pasta] : []
             } else {
                 delete a[path][key]
             }
@@ -285,6 +295,13 @@
             {/if}
         </div>
 
+        {#if mostraChips}
+            <div class="chips">
+                <span class:proprio={fimEf.origem === "proprio"} data-title={fimEf.origem === "proprio" ? "Ajuste próprio desta mídia" : "Segue a pasta"}>{fimEf.loop === false ? "para" : "repete"}</span>
+                <span class:proprio={!!$media[path]?.videoType} data-title={$media[path]?.videoType ? "Ajuste próprio desta mídia" : "Segue a pasta"}>{camadaEf === "foreground" ? "frente" : "fundo"}</span>
+            </div>
+        {/if}
+
         {#if failed}
             <div class="icon">
                 <Icon size={2.5} id="close" style="color: var(--disconnected);" white />
@@ -338,6 +355,30 @@
         background-color: rgb(0 0 0 / 0.6);
         pointer-events: all;
     }
+    .chips {
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        display: flex;
+        gap: 2px;
+        padding: 2px;
+    }
+    .chips span {
+        pointer-events: all;
+        background-color: rgb(0 0 0 / 0.6);
+        color: var(--text);
+        padding: 1px 5px;
+        font-size: 0.7em;
+        font-weight: bold;
+        border-radius: 3px;
+        outline: 1px solid transparent;
+    }
+    .chips span.proprio {
+        outline-color: var(--secondary);
+    }
+
     .icons span {
         pointer-events: all;
         background-color: rgb(0 0 0 / 0.6);

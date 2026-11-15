@@ -4,6 +4,7 @@ import type { Item, Slide, SlideData, Template } from "../../../types/Show"
 import { breakLongLines, removeItemValues } from "../../show/slides"
 import { activeEdit, activePage, activePopup, activeProject, activeShow, alertMessage, cachedShowsData, deletedShows, groups, notFound, projects, refreshEditSlide, renamedShows, shows, showsCache, templates } from "../../stores"
 import { save } from "../../utils/save"
+import { aplicarNosStores } from "../../utils/aliancaPastasMidiaEstado"
 import { apagarDoDiscoSeGravado, regravarSeGravado } from "../../utils/aliancaGravarShow"
 import { EMPTY_SHOW_SLIDE } from "../../values/empty"
 import { customActionActivation } from "../actions/actions"
@@ -30,7 +31,9 @@ export const historyActions = ({ obj, undo = null }: any) => {
         SLIDES: () => handleSlides(obj, data, initializing),
         TEMPLATE: () => handleTemplate(obj, data, initializing),
         SHOW_LAYOUT: () => handleShowLayout(obj, data, initializing),
-        SHOW_ITEMS: () => handleShowItems(obj, data, initializing)
+        SHOW_ITEMS: () => handleShowItems(obj, data, initializing),
+        // AliancaShow (Preparar F7): pastas de midia. undo()/redo() ja trocam oldData e newData antes de chamar, entao e sempre o newData; so mexe nas chaves citadas
+        MEDIA_PASTA: () => aplicarNosStores(obj.newData)
     }
 
     if (obj) console.info("HISTORY " + (initializing ? "INIT" : undo ? "UNDO" : "REDO") + ` [${obj.id}]:`, clone(obj))

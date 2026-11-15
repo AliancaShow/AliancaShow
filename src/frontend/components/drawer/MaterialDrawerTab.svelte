@@ -69,7 +69,7 @@
     const defaultFolders = ["all", "unlabeled", "number", "favourites", "effects_library", "effects", "online", "inputs", "metronome"]
     const tabsWithCategories = ["shows", "media", "audio", "overlays", "templates", "scripture"]
 
-    $: noEdit = !tabsWithCategories.includes(drawerId) || defaultFolders.includes(id)
+    $: noEdit = !tabsWithCategories.includes(drawerId) || defaultFolders.includes(id) || String(id).startsWith("pasta:")
     $: className = noEdit ? "" : $audioPlaylists[id] ? "context #playlist" : `context #category_${drawerId}_button${readOnly ? "_readonly" : ""}`
 
     // drag and drop audio playlists

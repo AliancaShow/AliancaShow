@@ -444,7 +444,7 @@ export class TimelinePlayback {
             const currentBackground = get(outputs)[outputId]?.out?.background
             if (currentBackground?.path !== path) {
                 if (hasBeenPlaying) return // was playing but cleared manually
-                setOutput("background", { name: action.name, path, type: "video" }, false, outputId)
+                setOutput("background", { name: action.name, path, type: "video", semPasta: true }, false, outputId)
             }
 
             const key = `${path}_${outputId}`

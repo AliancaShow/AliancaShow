@@ -60,7 +60,7 @@ import {
     variables
 } from "./../../stores"
 import { clone, keysToID, sortByName } from "./array"
-import { downloadOnlineMedia, encodeFilePath, getExtension, getFileName, getMedia, getMediaStyle, getMediaType, removeExtension } from "./media"
+import { camadaDoSlide, downloadOnlineMedia, encodeFilePath, getExtension, getFileName, getMedia, getMediaStyle, getMediaType, removeExtension } from "./media"
 import { defaultLayers, getActiveOutputs, getAllActiveOutputIds, getAllNormalOutputs, getAllStageOutputs, getFirstActiveOutput, getFirstOutput, getWindowOutputId, isOutCleared, refreshOut, setOutput, startFolderTimer } from "./output"
 import { OutputHelper } from "./OutputHelper"
 import { getSetChars } from "./randomValue"
@@ -350,7 +350,7 @@ export function updateOut(showId: string, index: number, layout: LayoutRef[], ex
                     const mediaData = get(media)[showMedia?.path || ""] || {}
                     // WIP getMediaLayerType - use what is set in show only
                     // const mediaType = getMediaLayerType(a.data.background || "", mediaData)
-                    if (showMedia && (showMedia?.loop === false || mediaData.videoType === "foreground")) background = null
+                    if (showMedia && (showMedia?.loop === false || camadaDoSlide(showMedia?.path || "", mediaData) === "foreground")) background = null
                 }
             })
         }
@@ -389,7 +389,7 @@ export function updateOut(showId: string, index: number, layout: LayoutRef[], ex
                     loop,
                     muted,
                     ...mediaStyle,
-                    ignoreLayer: mediaStyle.videoType === "foreground",
+                    ignoreLayer: camadaDoSlide(m.path, mediaStyle) === "foreground",
                     bindings
                 }
 

@@ -190,7 +190,7 @@
                                     style.fit = media.data?.fit || ""
                                     delete style.fitOptions
 
-                                    setOutput("background", { path: media.path, type: background.type, loop: background.loop !== false, muted: background.muted !== false, ...style })
+                                    setOutput("background", { path: media.path, type: background.type, loop: background.loop !== false, muted: background.muted !== false, semPasta: true, ...style })
                                 }
                             }}
                         >
@@ -230,7 +230,7 @@
                                 size={3}
                                 on:click={() => {
                                     if (!$outLocked) {
-                                        setOutput("background", { path: background.path, type, loop: true, muted: true, ...mediaStyle })
+                                        setOutput("background", { path: background.path, type, loop: true, muted: true, semPasta: true, ...mediaStyle })
                                     }
                                 }}
                             >

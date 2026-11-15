@@ -1,12 +1,13 @@
 // const captureFrameRate = 24
 
 import { get } from "svelte/store"
+import { audioRepete } from "../utils/aliancaPastasMidiaLogica"
 import { Main } from "../../types/IPC/Main"
 import { customActionActivation } from "../components/actions/actions"
 import { encodeFilePath, getFileName, locateMediaFile, removeExtension } from "../components/helpers/media"
 import { checkNextAfterMedia } from "../components/helpers/showActions"
 import { requestMain, sendMain } from "../IPC/main"
-import { activePlaylist, dictionary, media, outLocked, playingAudio, playingAudioPaths, special } from "../stores"
+import { activePlaylist, dictionary, media, mediaTags, outLocked, playingAudio, playingAudioPaths, special } from "../stores"
 import { addToMediaFolder } from "../utils/cloudSync"
 import { AudioAnalyser } from "./audioAnalyser"
 import { AudioAnalyserMerger } from "./audioAnalyserMerger"
@@ -421,8 +422,10 @@ export class AudioPlayer {
         const endingTime = AudioPlayer.getEndTime(id, audio.duration)
         if (audio.currentTime < endingTime && !force) return
 
-        // loop single audio
-        if (get(media)[id]?.loop) {
+        // loop single audio. AliancaShow F7: o loop proprio vale; a pasta so manda repetir se "repetir audio" foi ligado nela (e nunca durante uma playlist).
+        // O audio le a regra NO FIM (excecao ao "so vale na proxima vez que tocar", como o loop proprio que ja existia)
+        const repete = AudioPlaylist.getPlayingKey() === id ? !!get(media)[id]?.loop : audioRepete(get(media)[id], get(mediaTags))
+        if (repete) {
             const startTime = AudioPlayer.getStartTime(id)
             const audioObj = get(playingAudio)[id]?.audio
             if (audioObj) {

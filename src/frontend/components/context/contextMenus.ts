@@ -112,6 +112,10 @@ export const contextMenuItems: { [key: string]: ContextMenuItem } = {
     sort_projects_by: { label: "sort.sort_by", icon: "sort", iconColor: "#979aff", items: ["LOAD_sort_projects"] },
     sort_media_by: { label: "sort.sort_by", icon: "sort", iconColor: "#979aff", items: ["LOAD_sort_media"] },
     media_view: { label: "titlebar.view", icon: "media", items: ["LOAD_media_view"] },
+    // AliancaShow F7 (so no Preparar): pastas de midia. Classe propria, nao a do botao de categoria (category_media_button)
+    alianca_mover: { label: "Mover para", icon: "folder", iconColor: "#979aff", items: ["LOAD_alianca_mover"], translate: false },
+    alianca_fim: { label: "Ao terminar", icon: "loop", iconColor: "#979aff", items: ["LOAD_alianca_fim"], translate: false },
+    alianca_camada: { label: "Camada", icon: "media", iconColor: "#979aff", items: ["LOAD_alianca_camada"], translate: false },
     // SHOWS
     lock_group: { label: "context.lockForChanges", icon: "lock", iconColor: "#ff5454" },
     remove: { label: "actions.remove", icon: "delete", iconColor: "#ff6b54" },
@@ -290,7 +294,7 @@ export const contextMenuLayouts: { [key: string]: string[] } = {
     // , "addToShow"
     // show_in_explorer!!
     media: ["manage_media_tags", "media_tag_filter", "sort_media_by", "media_view"],
-    media_card: ["GROUP_open", "createSlideshow", "play_no_audio", "play_no_filters", "SEPARATOR", "favourite", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open"],
+    media_card: ["GROUP_open", "createSlideshow", "play_no_audio", "play_no_filters", "SEPARATOR", "favourite", "SEPARATOR", "alianca_mover", "alianca_fim", "alianca_camada", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open"],
     // "addToFirstSlide",
     drawer_overlays: ["reset_defaults"],
     overlay_card: ["GROUP_open", "overlay_actions", "display_duration", "SEPARATOR", "lock_to_output", "place_under_slide", "SEPARATOR", "rename", "recolor", "duplicate", "delete"], // "GROUP_rename_color"
@@ -305,7 +309,7 @@ export const contextMenuLayouts: { [key: string]: string[] } = {
     effect_card_default: ["GROUP_open", "duplicate", "delete"],
     player: ["manage_player_tags", "player_tag_filter"],
     player_button: ["GROUP_open", "player_tag_set", "player_tag_filter", "SEPARATOR", "rename", "delete"],
-    audio_button: ["GROUP_open", "effects_library_add", "favourite", "SEPARATOR", "system_open"],
+    audio_button: ["GROUP_open", "effects_library_add", "favourite", "SEPARATOR", "alianca_mover", "SEPARATOR", "system_open"],
     audio_effect_button: ["GROUP_rename_only", "remove", "SEPARATOR", "system_open"],
     audio_button_playlist: ["GROUP_open", "remove"],
     // "addToFirstSlide"

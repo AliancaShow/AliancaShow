@@ -5,10 +5,11 @@
     import { Main } from "../../../types/IPC/Main"
     import type { MediaStyle } from "../../../types/Main"
     import { requestMain, sendMain } from "../../IPC/main"
-    import { activeProject, activeRename, audioChannelsData, focusMode, media, outLocked, outputs, playingVideos, projects, videoMarkers } from "../../stores"
+    import { activeProject, activeRename, audioChannelsData, focusMode, media, mediaTags, outLocked, outputs, playingVideos, projects, videoMarkers } from "../../stores"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
+    import { resolverFim } from "../../utils/aliancaPastasMidiaLogica"
     import { enableSubtitle, encodeFilePath, getExtension, getFileName, getMediaLayerType, removeExtension } from "../helpers/media"
     import { getFirstActiveOutput, setOutput } from "../helpers/output"
     import { joinTime, secondsToTime } from "../helpers/time"
@@ -179,7 +180,9 @@
     $: videoType = getMediaLayerType(mediaPath, mediaStyle)
     $: projectItem = $projects[$activeProject || ""]?.shows?.[show?.index]
     $: if (mediaPath) {
-        shouldLoop = typeof projectItem?.loop === "boolean" ? projectItem.loop : videoType === "background" ? true : false
+        // AliancaShow F7: sem escolha do item, o botao de repetir mostra o que a pasta (ou o ajuste proprio) vai fazer
+        const daPasta = resolverFim({ midia: $media[mediaPath], mediaTags: $mediaTags })
+        shouldLoop = typeof projectItem?.loop === "boolean" ? projectItem.loop : daPasta.origem === "pasta" || daPasta.origem === "proprio" ? !!daPasta.loop : videoType === "background" ? true : false
         shouldBeMuted = typeof projectItem?.muted === "boolean" ? projectItem.muted : videoType === "background" ? true : false
     }
     function playVideo(startAt = 0) {
@@ -189,6 +192,8 @@
         let muted = shouldBeMuted
         if (videoType === "foreground" || (videoType !== "background" && !shouldLoop)) clearSlide()
         let bg: any = { type, startAt, muted, loop, ...mediaStyle, ignoreLayer: videoType === "foreground" }
+        // AliancaShow F7: so o "repetir" que o item do culto ESCOLHEU vence a pasta
+        if (typeof projectItem?.loop === "boolean") bg.loopDoItem = projectItem.loop
 
         if (type === "player") bg.id = mediaPath
         else {

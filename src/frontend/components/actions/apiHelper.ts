@@ -163,7 +163,7 @@ export async function startProjectItemByName(name: string) {
         const shouldLoop = videoType === "background" ? item.loop || true : false
         const shouldBeMuted = videoType === "background" ? item.muted || true : false
 
-        let out = { path: item.id, muted: shouldBeMuted, loop: shouldLoop, startAt: 0, type: item.type, ...mediaStyle }
+        let out = { path: item.id, muted: shouldBeMuted, loop: shouldLoop, startAt: 0, type: item.type, ...(typeof item.loop === "boolean" ? { loopDoItem: item.loop } : {}), ...mediaStyle }
 
         // clear slide
         if (videoType === "foreground" || (videoType !== "background" && (item.type === "image" || !shouldLoop))) clearSlide()
@@ -729,7 +729,7 @@ export function playMedia(data: API_media) {
         setOutput("background", { type: "player", id: data.path, loop, muted, ...mediaStyle })
     } else {
         const type = mediaType || extension || "video"
-        setOutput("background", { type, path: data.path, loop, muted, ...mediaStyle })
+        setOutput("background", { type, path: data.path, loop, muted, semPasta: true, ...mediaStyle })
     }
 }
 
@@ -754,6 +754,13 @@ export function toggleMediaLoop() {
     if (!currentBg) return
 
     const isLooping = currentBg.loop !== false
+    const caminho = currentBg.path || currentBg.id || ""
+    if (caminho && VideoPlayer.getPlaying(caminho, [activeOutput.id])) {
+        VideoPlayer.toggleLoop(caminho, activeOutput.id)
+        const agora = !!VideoPlayer.getPlaying(caminho, [activeOutput.id])?.loop
+        setOutput("background", { ...currentBg, loop: agora })
+        return
+    }
     setOutput("background", { ...currentBg, loop: !isLooping })
 }
 

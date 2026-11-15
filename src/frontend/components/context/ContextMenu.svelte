@@ -1,5 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition"
+    import { modoAlianca, selected } from "../../stores"
+    import { getExtension, getMediaType } from "../helpers/media"
     import { activePage, activePopup, companion, contextActive, contextData, currentWindow, dictionary, localeDirection, os, special, spellcheck, theme, themes } from "../../stores"
     import { translateText } from "../../utils/language"
     import { closeContextMenu } from "../../utils/shortcuts"
@@ -148,6 +150,9 @@
         if (id === "remove_layers") return $contextData.layers
         if (id === "tag_filter") return $contextData.tags
         if (id === "media_tag_filter") return $contextData.media_tags
+        // AliancaShow F7: pastas de midia so no Preparar; "ao terminar" e "camada" so para video
+        if (id === "alianca_mover") return $modoAlianca === "preparar"
+        if (id === "alianca_fim" || id === "alianca_camada") return $modoAlianca === "preparar" && getMediaType(getExtension($selected.data?.[0]?.path || $selected.data?.[0]?.id || "")) === "video"
         if (id === "player_tag_filter") return $contextData.player_tags
         if (id === "action_tag_filter") return $contextData.action_tags
         if (id === "variable_tag_filter") return $contextData.variable_tags

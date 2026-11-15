@@ -5,12 +5,15 @@
     import { Main } from "../../../../types/IPC/Main"
     import { ToMain } from "../../../../types/IPC/ToMain"
     import { destroyMain, receiveToMain, requestMain, sendMain } from "../../../IPC/main"
-    import { drawerTabsData, labelsDisabled, media, mediaFolders, providerConnections, special } from "../../../stores"
+    import { drawerTabsData, labelsDisabled, media, mediaFolders, mediaTags, modoAlianca, providerConnections, special } from "../../../stores"
+    import { criarPasta } from "../../../utils/aliancaPastasMidia"
+    import { membros, pastas } from "../../../utils/aliancaPastasMidiaEstado"
+    import { PASTA_RAIZ, PASTA_SIRVO, abaDaPasta, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
     import { getAccess } from "../../../utils/profile"
     import { keysToID, sortObject } from "../../helpers/array"
     import { addDrawerFolder } from "../../helpers/dropActions"
     import Icon from "../../helpers/Icon.svelte"
-    import { countFolderMediaItems } from "../../helpers/media"
+    import { countFolderMediaItems, getExtension, isMediaExtension } from "../../helpers/media"
     import T from "../../helpers/T.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import NavigationSections from "./NavigationSections.svelte"
@@ -24,6 +27,7 @@
     $: favoritesListLength = Object.values($media).filter((a) => !a.audio && a.favourite).length
 
     let allCount = 0
+    let arquivosDaRaiz: string[] = []
     let folderLengths: { [key: string]: number } = {}
     $: if (foldersList.length) getCounts()
     async function getCounts() {
@@ -39,6 +43,22 @@
         })
 
         folderLengths = newFolderLengths
+        arquivosDaRaiz = Object.values(data)
+            .filter((a: any) => !a.isFolder && isMediaExtension(getExtension(a.name)))
+            .map((a: any) => a.path)
+    }
+
+    // AliancaShow F7: a raiz "Midias" e as pastas (etiquetas). A raiz e o 1o nivel das pastas do sistema menos o que ja esta numa pasta
+    $: raizCount = arquivosDaRaiz.filter((p) => !pastaDaMidia($media[p]?.tags, $mediaTags)).length
+    $: secaoPastas = [{ id: "TITLE", label: "Pastas de mídia" }, { id: PASTA_RAIZ, label: "Mídias", icon: "media", count: raizCount }, ...$pastas.map((p) => ({ id: abaDaPasta(p.id), label: p.tag.name || "Pasta", icon: "folder", count: ($membros[p.id] || []).length, boxedIcon: true })), { id: PASTA_SIRVO, label: "Do Sirvo", icon: "web" }]
+
+    function novaPasta() {
+        const id = criarPasta()
+        drawerTabsData.update((a) => {
+            if (!a.media) a.media = { enabled: true, activeSubTab: abaDaPasta(id) }
+            a.media.activeSubTab = abaDaPasta(id)
+            return a
+        })
     }
 
     // Content providers with libraries, and are currently connected
@@ -62,6 +82,7 @@
 
     let sections: any[] = []
     $: sections = [
+        secaoPastas,
         [
             { id: "all", label: "category.all", icon: "all", count: allCount },
             { id: "favourites", label: "category.favourites", icon: "star", count: favoritesListLength, hidden: !favoritesListLength && activeSubTab !== "favourites" }
@@ -100,7 +121,15 @@
 </script>
 
 <NavigationSections {sections} active={activeSubTab} on:rename={updateName}>
-    <div slot="section_2" style="{!curriculumProviders.length ? 'padding: 8px;' : ''}{foldersList.length && !curriculumProviders.length ? 'padding-top: 12px;' : ''}">
+    <div slot="section_0" style="padding: 8px;">
+        {#if $modoAlianca === "preparar"}
+            <MaterialButton style="width: 100%;" title="Nova pasta de mídia" variant="outlined" disabled={readOnly} on:click={novaPasta} small>
+                <Icon id="add" size={$labelsDisabled ? 0.9 : 1} white={$labelsDisabled} />
+                {#if !$labelsDisabled}Nova pasta{/if}
+            </MaterialButton>
+        {/if}
+    </div>
+    <div slot="section_3" style="{!curriculumProviders.length ? 'padding: 8px;' : ''}{foldersList.length && !curriculumProviders.length ? 'padding-top: 12px;' : ''}">
         {#if !curriculumProviders.length}
             <MaterialButton style="width: 100%;" title="new.system_folder" variant="outlined" disabled={readOnly} on:click={addFolder} small>
                 <Icon id="add" size={$labelsDisabled ? 0.9 : 1} white={$labelsDisabled} />
@@ -108,7 +137,7 @@
             </MaterialButton>
         {/if}
     </div>
-    <div slot="section_3" style="padding: 8px;{foldersList.length ? 'padding-top: 12px;' : ''}">
+    <div slot="section_4" style="padding: 8px;{foldersList.length ? 'padding-top: 12px;' : ''}">
         <MaterialButton style="width: 100%;" title="new.system_folder" variant="outlined" disabled={readOnly} on:click={addFolder} small>
             <Icon id="add" size={$labelsDisabled ? 0.9 : 1} white={$labelsDisabled} />
             {#if !$labelsDisabled}<T id="new.system_folder" />{/if}

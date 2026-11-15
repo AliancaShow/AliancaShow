@@ -204,7 +204,7 @@
             const located = await getMedia(id)
             if (!located) return
 
-            let out = { path: located.path, muted: shouldBeMuted, loop: shouldLoop, startAt: 0, type, ...mediaStyle }
+            let out = { path: located.path, muted: shouldBeMuted, loop: shouldLoop, startAt: 0, type, ...(typeof show.loop === "boolean" ? { loopDoItem: show.loop } : {}), ...mediaStyle }
 
             // clear slide
             if (videoType === "foreground" || (videoType !== "background" && (type === "image" || !shouldLoop))) clearSlide()

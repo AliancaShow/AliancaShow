@@ -29,7 +29,7 @@
     function setSubTab(tabId: string) {
         const drawerId = $activeDrawerTab
         drawerTabsData.update((a) => {
-            a[drawerId] = { activeSubTab: tabId, enabled: a[drawerId]?.enabled !== false }
+            a[drawerId] = { ...a[drawerId], activeSubTab: tabId, enabled: a[drawerId]?.enabled !== false }
             return a
         })
 
