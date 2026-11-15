@@ -21,10 +21,11 @@ import { importFromClipboard } from "../converters/importHelpers"
 import { addSection } from "../converters/project"
 import { requestMain, sendMain } from "../IPC/main"
 import { changeSlidesView } from "../show/slides"
-import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, drawer, editMode, focusedArea, focusMode, guideActive, media, modoAlianca, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
+import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, drawer, editMode, focusedArea, focusMode, guideActive, media, modoAlianca, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, refreshListBoxes, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
 import { audioExtensions, imageExtensions, videoExtensions } from "../values/extensions"
 import { drawerTabs } from "../values/tabs"
 import { activeShow } from "./../stores"
+import { dividirAberto } from "./aliancaDividir"
 import { teclaIgnorada } from "./aliancaModo"
 import { isOutputWindow, togglePanels, triggerFunction } from "./common"
 import { send } from "./request"
@@ -33,7 +34,8 @@ import { save } from "./save"
 const menus: TopViews[] = ["show", "edit", "stage", "draw", "settings", "scripture"]
 
 const ctrlKeys = {
-    a: () => selectAll(),
+    // com a vista Dividir aberta não há grade: Ctrl+A não seleciona slide escondido atrás dela
+    a: () => (get(dividirAberto) ? null : selectAll()),
     c: () => copy(),
     f: () => (shouldOpenReplace() ? activePopup.set("find_replace") : null),
     v: () => paste(),
@@ -54,8 +56,8 @@ const ctrlKeys = {
     o: () => (teclaIgnorada({ key: "o", ctrlKey: true }) ? null : toggleOutputs()),
     s: () => save(),
     t: () => togglePanels(),
-    y: () => redo(),
-    z: () => undo(),
+    y: () => (redo(), atualizarCaixasDaLista()),
+    z: () => (undo(), atualizarCaixasDaLista()),
     "?": () => activePopup.set("shortcuts")
 }
 
@@ -77,7 +79,13 @@ const shiftCtrlKeys = {
     f: () => menuClick("focus_mode"),
     n: () => activePopup.set("show"),
     v: () => changeSlidesView(),
-    z: () => redo()
+    z: () => (redo(), atualizarCaixasDaLista())
+}
+
+// AliançaShow (Preparar F5): as caixas de edição rápida da lista só redesenham o texto quando elas mesmas mudam; depois de
+// desfazer/refazer o texto do histórico tem que voltar pra tela, senão o próximo toque grava o texto velho por cima
+function atualizarCaixasDaLista() {
+    if (get(modoAlianca) === "preparar") setTimeout(() => refreshListBoxes.set(9999), 40)
 }
 
 const altKeys = {
@@ -118,15 +126,17 @@ const keys = {
         if (popupId === "alert" && get(alertMessage) === "actions.closing") return
 
         // AliancaShow (Preparar): Esc fecha/volta e nunca limpa o telao. Decide AGORA (o Editbox limpa os itens num timeout)
-        const voltarDaGaveta = !popupId && !get(selected).id && get(drawer).height > 40
-        const voltarDoEditor = !popupId && !get(selected).id && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
+        const fecharDividir = !popupId && !get(selected).id && !!get(dividirAberto)
+        const voltarDaGaveta = !popupId && !get(selected).id && !fecharDividir && get(drawer).height > 40
+        const voltarDoEditor = !popupId && !get(selected).id && !fecharDividir && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
 
         // give time so output don't clear also
         setTimeout(() => {
             if (popupId) activePopup.set(null)
             else if (get(selected).id) selected.set({ id: null, data: [] })
             else if (get(modoAlianca) === "preparar") {
-                if (voltarDaGaveta) drawer.set({ height: 40, stored: get(drawer).height })
+                if (fecharDividir) dividirAberto.set(null)
+                else if (voltarDaGaveta) drawer.set({ height: 40, stored: get(drawer).height })
                 else if (voltarDoEditor) activePage.set("show")
             }
         }, 20)
@@ -138,7 +148,8 @@ const keys = {
             if (lastUsedProject) openProject(lastUsedProject.id)
         }
     },
-    Delete: () => (get(contextActive) ? null : deleteAction(get(selected), "remove")),
+    // no Preparar, Del/Backspace na grade de slides são inertes (sem aviso): tirar slide do layout é coisa do Culto ou do menu
+    Delete: () => (get(contextActive) || (get(modoAlianca) === "preparar" && get(selected).id === "slide") ? null : deleteAction(get(selected), "remove")),
     Backspace: () => keys.Delete(),
     // give time so it don't clear slide
     F2: () => (get(focusMode) ? null : setTimeout(() => menuClick("rename", true, null, null, null, get(selected)))),

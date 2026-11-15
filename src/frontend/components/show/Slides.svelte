@@ -1,6 +1,8 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
     import { activeEdit, activeFocus, activePage, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, modoAlianca, notFound, outLocked, outputs, outputSlideCache, popupData, shows, showsCache, slidesOptions, special, templates, textCache } from "../../stores"
+    import { dividirAberto } from "../../utils/aliancaDividir"
+    import { indiceDaFoto } from "../../utils/aliancaFotoLogica"
     import { showEstaSemLetra } from "../../utils/aliancaSemLetraLogica"
     import { hasNewerUpdate, wait } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
@@ -21,6 +23,7 @@
     import Autoscroll from "../system/Autoscroll.svelte"
     import Center from "../system/Center.svelte"
     import DropArea from "../system/DropArea.svelte"
+    import AliancaDividir from "./AliancaDividir.svelte"
     import ShowHeader from "./ShowHeader.svelte"
 
     export let showId: string
@@ -277,6 +280,8 @@
 
     let activeSlides: any[] = []
     $: {
+        // AliançaShow: o layout vivo mexe (cortar/juntar/inserir): a posição do slide no ar tem que ser refeita
+        layoutSlides
         activeSlides = []
         activeOutputs.forEach((a) => {
             let currentOutput = $outputs[a]
@@ -285,12 +290,15 @@
             // let currentStyle = $styles[currentOutput?.style || ""] || {}
             let outSlide = currentOutput.out?.slide || $outputSlideCache[a] || {}
 
-            if (activeSlides[outSlide.index] || outSlide.id !== showId || outSlide.layout !== activeLayout) return
+            if (outSlide.id !== showId || outSlide.layout !== activeLayout) return
             if (projectIndex !== -1 && outSlide.projectIndex !== undefined && outSlide.projectIndex !== projectIndex) return
 
             let ref = outSlide?.id === "temp" ? [{ temp: true, items: outSlide.tempItems, id: "" }] : _show(outSlide.id).layouts([outSlide.layout]).ref()[0] || []
+            // AliancaShow: com foto, o slide no ar e o da foto: a posicao dele no layout VIVO (refrao repetido, corte e juncao mexem nela)
+            const posNoAr: number | undefined = outSlide.foto ? indiceDaFoto(outSlide.foto, outSlide.index, ref as any) : outSlide.index
+            if (posNoAr === -1 || activeSlides[posNoAr as number]) return
             // AliancaShow: com foto, o progresso das linhas segue o slide que foi pro ar
-            let showSlide = outSlide.foto?.slide || (outSlide.index !== undefined ? _show(outSlide.id).slides([ref[outSlide.index]?.id]).get()?.[0] : null)
+            let showSlide = outSlide.foto?.slide || (posNoAr !== undefined ? _show(outSlide.id).slides([ref[posNoAr]?.id]).get()?.[0] : null)
 
             // get progress of current line division
             // let amountOfLinesToShow: number = currentStyle.lines !== undefined ? Number(currentStyle.lines) : 0
@@ -316,7 +324,7 @@
                 maxLines = getItemWithMostLines({ items: linesRevealItems })
             }
 
-            activeSlides[outSlide.index] = {
+            activeSlides[posNoAr as number] = {
                 color: $outputs[a].color,
                 line: lineIndex,
                 maxLines,
@@ -339,10 +347,11 @@
         getActiveOutputs($outputs, false, true).forEach((outputId) => {
             const outSlide = $outputs[outputId]?.out?.slide
             if (!outSlide?.foto || outSlide.id !== showId || outSlide.layout !== activeLayout || typeof outSlide.index !== "number") return
-            if (novo[outSlide.index] !== undefined) return
             const ref = _show(showId).layouts([activeLayout]).ref()[0] || []
-            const aoVivo = _show(showId).slides([ref[outSlide.index]?.id]).get()?.[0]
-            novo[outSlide.index] = JSON.stringify(aoVivo?.items || []) !== JSON.stringify(outSlide.foto.slide?.items || [])
+            const pos = indiceDaFoto(outSlide.foto, outSlide.index, ref)
+            if (pos < 0 || novo[pos] !== undefined) return
+            const aoVivo = _show(showId).slides([ref[pos]?.id]).get()?.[0]
+            novo[pos] = JSON.stringify(aoVivo?.items || []) !== JSON.stringify(outSlide.foto.slide?.items || [])
         })
         if (JSON.stringify(novo) !== JSON.stringify(mudouNoAr)) mudouNoAr = novo
     }
@@ -531,6 +540,8 @@
                             <T id="error.no_show" />
                         {/if}
                     </Center>
+                {:else if $modoAlianca === "preparar" && $dividirAberto === showId}
+                    <AliancaDividir {showId} />
                 {:else}
                     <div class="grid" style={$focusMode ? "" : "padding-bottom: 60px;"}>
                         {#if layoutSlides.length}

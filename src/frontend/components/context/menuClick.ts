@@ -114,7 +114,8 @@ import { _show } from "../helpers/shows"
 import { getMenuTagId, openTagManager, toggleSelectionTags, toggleTagFilter } from "../helpers/tags"
 import { clearSlide } from "../output/clear"
 import { defaultThemes } from "../settings/tabs/defaultThemes"
-import { activeProject } from "./../../stores"
+import { activeProject, modoAlianca as modoAliancaStore } from "./../../stores"
+import { cortarAoMeio, juntarSelecao } from "../../utils/aliancaTesoura"
 import type { ContextMenuItem } from "./contextMenus"
 import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
 
@@ -1936,6 +1937,14 @@ const clickActions = {
         if (obj.sel?.id === "slide") {
             if (!Array.isArray(obj.sel?.data) || !obj.sel.data.length) return
 
+            // AliançaShow (Preparar F5): corta ao meio ENTRE as linhas (acordes e linha vazia no lugar), uma entrada de histórico
+            if (get(modoAliancaStore) === "preparar") {
+                const showId = get(activeShow)?.id
+                const ref = getLayoutRef()
+                if (showId) cortarAoMeio(showId, obj.sel.data.map(({ index }) => ref[index]?.id).filter(Boolean))
+                return
+            }
+
             const oldLayoutRef = clone(getLayoutRef())
             const previousSpiltIds: string[] = []
 
@@ -1979,6 +1988,14 @@ const clickActions = {
     merge: (obj: ObjData) => {
         if (obj.sel?.id === "slide") {
             const selectedSlides = obj.sel.data // .sort((a, b) => a.index - b.index) [merge based on selected order]
+
+            // AliançaShow (Preparar F5): junta slides vizinhos do mesmo grupo SEM tirar as outras ocorrências do layout
+            if (get(modoAliancaStore) === "preparar") {
+                const showId = get(activeShow)?.id
+                const ref = getLayoutRef()
+                if (showId && selectedSlides?.length) juntarSelecao(showId, selectedSlides.map(({ index }) => ref[index]?.id).filter(Boolean))
+                return
+            }
             if (selectedSlides.length > 1) mergeSlides(selectedSlides)
             else if (selectedSlides[0]?.index) mergeTextboxes(selectedSlides[0].index)
         } else if (!obj.sel?.id) {
