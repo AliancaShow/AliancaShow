@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ClickEvent } from "../../../types/Main"
-    import { activeEdit, activePage, activeShow, editHistory, editMode, effects, focusMode, labelsDisabled, overlays, refreshEditSlide, shows, templates } from "../../stores"
+    import { activeEdit, activePage, activeShow, editHistory, editMode, effects, focusMode, labelsDisabled, modoAlianca, overlays, refreshEditSlide, shows, templates } from "../../stores"
+    import { mostrarRecentes } from "../../utils/aliancaEditorLogica"
     import { getAccess } from "../../utils/profile"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -95,7 +96,7 @@
     function handleKeyDown(e: KeyboardEvent) {
         if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return
 
-        const showRecent = !($focusMode && currentShowId) && ($activeEdit.id || ((!currentShowId || !$shows[currentShowId]) && $editHistory.length) || $editMode === "text_edit")
+        const showRecent = !($focusMode && currentShowId) && recentes
         if (!showRecent || clonedHistory.length === 0) return
 
         if (e.key === "ArrowDown") {
@@ -120,6 +121,9 @@
         }
     }
 
+    // Preparar (8a): num show, o modo Texto continua com os slides a esquerda (so template/overlay usam "recentes")
+    $: recentes = mostrarRecentes({ modo: $modoAlianca, editId: $activeEdit.id || "", showAberto: !!currentShowId && !!$shows[currentShowId], temHistorico: $editHistory.length > 0, editMode: $editMode })
+
     let profile = getAccess("shows")
     $: isLocked = $shows[currentShowId]?.locked || profile.global === "read" || profile[$shows[currentShowId]?.category || ""] === "read"
 </script>
@@ -135,7 +139,7 @@
 
 {#if $focusMode && currentShowId}
     <Slides />
-{:else if $activeEdit.id || ((!currentShowId || !$shows[currentShowId]) && $editHistory.length) || $editMode === "text_edit"}
+{:else if recentes}
     <div class="title">
         <h3 style="font-style: italic;opacity: 0.7;"><T id="edit.recent" /></h3>
     </div>

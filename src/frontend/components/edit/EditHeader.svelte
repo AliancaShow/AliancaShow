@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade } from "svelte/transition"
-    import { activeEdit, activePopup, editMode, groups, showsCache, slideNotesActive, special, templates } from "../../stores"
+    import { activeEdit, activePopup, editMode, groups, modoAlianca, showsCache, slideNotesActive, special, templates } from "../../stores"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
@@ -48,14 +48,14 @@
                 </MaterialButton>
             {/if}
 
-            {#if !hideOptions}
+            {#if !hideOptions && $modoAlianca !== "preparar"}
                 <MaterialButton style="width: 32px;height: 100%;padding: 0.3em 0.5em;border-bottom-right-radius: 10px;{showDropdown ? '' : 'opacity: 0.8;'}" title="create_show.more_options" icon="more" on:click={() => (showDropdown = !showDropdown)} white={!showDropdown}>
                     <!-- prevent force "white" -->
                     <span style="display: none;"></span>
                 </MaterialButton>
             {/if}
 
-            {#if showDropdown && currentShow}
+            {#if showDropdown && currentShow && $modoAlianca !== "preparar"}
                 <div class="showDropdown" transition:fade={{ duration: 100 }} role="none" on:click={() => (showDropdown = false)}>
                     <MaterialButton title="tooltip.notes" on:click={() => slideNotesActive.set(!$slideNotesActive)}>
                         <Icon id="notes" white={!$slideNotesActive} />

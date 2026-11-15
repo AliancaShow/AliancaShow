@@ -250,6 +250,9 @@
     // $: enablePreview = ["show", "edit", "settings"].includes($activePage)
     // $: if ($activePage === "draw") enablePreview = false
 
+    // Preparar (8a): some por CSS, nunca desmonta (os temporizadores de slide no ar moram aqui)
+    export let escondida = false
+
     const light = !isDarkTheme()
     $: isOptimized = $special.optimizedMode
     $: isSplitted = $resized.rightPanel > DEFAULT_WIDTH * 1.8
@@ -257,7 +260,7 @@
 
 <svelte:window on:keydown={keydown} />
 
-<div id="previewArea" class="main">
+<div id="previewArea" class="main" class:escondida>
     {#if enablePreview}
         <PreviewOutputs />
 
@@ -310,6 +313,10 @@
 </div>
 
 <style>
+    .main.escondida {
+        display: none;
+    }
+
     .main {
         /* max-height: 50%; */
         flex: 1;

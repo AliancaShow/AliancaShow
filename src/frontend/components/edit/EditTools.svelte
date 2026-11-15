@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Item, ItemType, Line, Slide } from "../../../types/Show"
     import type { TabsObj } from "../../../types/Tabs"
-    import { activeEdit, activeShow, copyPasteEdit, overlays, selected, showsCache, storedEditMenuState, templates } from "../../stores"
+    import { activeEdit, activeShow, copyPasteEdit, modoAlianca, overlays, selected, showsCache, storedEditMenuState, templates } from "../../stores"
     import { getAccess } from "../../utils/profile"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -18,6 +18,7 @@
     import { DEFAULT_ITEM_STYLE } from "./scripts/itemHelpers"
     import { addStyleString } from "./scripts/textStyle"
     import BoxStyle from "./tools/BoxStyle.svelte"
+    import ItemsList from "./tools/ItemsList.svelte"
     import ItemStyle from "./tools/ItemStyle.svelte"
     import OverlayStyle from "./tools/OverlayStyle.svelte"
     import SlideFilters from "./tools/SlideFilters.svelte"
@@ -412,6 +413,9 @@
 
         {#if active === "text"}
             <div class="content">
+                {#if $modoAlianca === "preparar"}
+                    <ItemsList {allSlideItems} recolhivel />
+                {/if}
                 {#if item}
                     <BoxStyle id={item?.type || "text"} bind:allSlideItems bind:item />
                 {:else}
@@ -422,6 +426,9 @@
             </div>
         {:else if active === "item"}
             <div class="content">
+                {#if $modoAlianca === "preparar"}
+                    <ItemsList {allSlideItems} recolhivel />
+                {/if}
                 <ItemStyle bind:allSlideItems bind:item />
             </div>
         {:else if active === "filters"}

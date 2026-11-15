@@ -28,7 +28,7 @@ import { activeShow } from "./../stores"
 import { abaEscondidaNoEditor } from "./aliancaAbasEditor"
 import { dividirAberto } from "./aliancaDividir"
 import { listaAberta } from "./aliancaGavetaEstado"
-import { teclaIgnorada } from "./aliancaModo"
+import { teclaIgnorada, timelineAtiva } from "./aliancaModo"
 import { isOutputWindow, togglePanels, triggerFunction } from "./common"
 import { send } from "./request"
 import { save } from "./save"
@@ -453,7 +453,7 @@ export const previewShortcuts = {
 
 function isTimelineActive() {
     if (get(activePage) === "show") return get(special).timelineActive || get(special).projectTimelineActive
-    if (get(activePage) === "edit") return get(special).slideTimelineActive
+    if (get(activePage) === "edit") return get(timelineAtiva)
     return false
 }
 
