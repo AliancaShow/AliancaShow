@@ -11,7 +11,6 @@ import { loadShows } from "../components/helpers/setShow"
 import { activeProject, activeShow, categories, drawerTabsData, editingProjectTemplate, projects, shows, showsCache } from "../stores"
 import { newToast } from "./common"
 import { translateText } from "./language"
-import { moverPonteirosAoInserir } from "./aliancaTirados"
 import { PREFIXO_RASCUNHO, CATEGORIA_NOVAS } from "./aliancaSirvoMusicas"
 import { posicaoDeEntrada, type MusicaDoCatalogo } from "./aliancaLista"
 import { linhasPorSlideDoModo, prepararLetraColada, type AcordeNaLinha, type ModoDeDivisao, type OpcoesDoPreparo } from "./aliancaLetra"
@@ -122,11 +121,7 @@ export function confirmarVarias(itens: ItemConfirmado[], onde: "fim" | "depois")
     const novos: ProjectShowRef[] = ids.map((id) => ({ id, type: "show" }) as ProjectShowRef)
     const lista = [...projeto.shows.slice(0, pos), ...novos, ...projeto.shows.slice(pos)]
 
-    // o que está no ar e o item aberto apontam por POSIÇÃO: quem vem depois da inserção anda junto (F3)
-    moverPonteirosAoInserir(projeto.id, pos, novos.length)
-    const aberto = get(activeShow)
-    if (aberto && typeof aberto.index === "number" && aberto.index >= pos) activeShow.set({ ...aberto, index: aberto.index + novos.length })
-
+    // o que está no ar e o item aberto apontam por POSIÇÃO: aliancaPonteiros.ts leva os ponteiros junto (por id)
     history({ id: "UPDATE", newData: { key: "shows", data: lista }, oldData: { id: projeto.id }, location: { page: "show", id: "project_key" } })
     newToast(`${novos.length} ${novos.length === 1 ? "música entrou" : "músicas entraram"}${aCriar.length ? ` · ${aCriar.length} sem letra, esperando` : ""}`)
     return { colocadas: novos.length, criadas: aCriar.length, foraDoCulto: false }

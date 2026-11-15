@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { metronome, outLocked, playingMetronome, special } from "../../../stores"
     import type { MetronomeSettings } from "../../../types/Audio"
     import { translateText } from "../../../utils/language"
@@ -18,6 +19,7 @@
     import { toggleMetronome, updateMetronome } from "./metronome"
 
     function playPause() {
+        if (gavetaNaoToca()) return
         paused = !paused
         toggleMetronome()
     }

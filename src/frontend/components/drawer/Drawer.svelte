@@ -20,6 +20,7 @@
     import T from "../helpers/T.svelte"
     import Button from "../inputs/Button.svelte"
     import Resizeable from "../system/Resizeable.svelte"
+    import AliancaMarcacoes from "./AliancaMarcacoes.svelte"
     import Info from "./info/Info.svelte"
 
     const minHeight = 40
@@ -30,7 +31,7 @@
     let move = false
     let mouse: null | { x: number; y: number; offsetY: number } = null
     function mousedown(e: any) {
-        if (e.target.closest(".search")) return
+        if (e.target.closest(".search") || e.target.closest(".marcacoes")) return
 
         startResizing("ns-resize")
 
@@ -267,6 +268,9 @@
                 </span>
             {/if}
         </span>
+
+        <!-- Preparar F6: as marcações da gaveta (contador, Pôr no culto, Juntar fotos, Limpar); só no Preparar, dentro da faixa de 40px -->
+        <AliancaMarcacoes />
 
         <!-- Layout D: opcoes da aba vieram do painel Info para ca, ao lado do Pesquisar.
              stopPropagation porque a barra inteira e alca de redimensionamento. -->

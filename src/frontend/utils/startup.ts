@@ -20,6 +20,8 @@ import { entrarSalvo } from "./aliancaRemote"
 import { iniciarSirvo } from "./aliancaSirvo"
 import { iniciarCatalogoSirvo } from "./aliancaSirvoCatalogo"
 import { iniciarMontagemSirvo } from "./aliancaSirvoMontar"
+import { iniciarPonteiros } from "./aliancaPonteiros"
+import { iniciarAbasDoEditor } from "./aliancaAbasEditor"
 
 let initialized = false
 let startupProfile = ""
@@ -87,6 +89,10 @@ async function startupMain() {
     iniciarCatalogoSirvo()
     // e monta os blocos do roteiro no projeto do culto (F0b)
     iniciarMontagemSirvo()
+    // e leva o que está no ar para onde o item foi parar sempre que a lista do projeto muda (Preparar F6)
+    iniciarPonteiros()
+    // e esconde as abas da gaveta que não viram conteúdo do slide no editor de um show (Preparar F6)
+    iniciarAbasDoEditor()
 
     // custom alert
     // if (Math.random() < 0.01) {

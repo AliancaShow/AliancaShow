@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onMount } from "svelte"
     import { activeEdit, activePage, activeShow, effects, mediaOptions, outLocked, outputs, styles } from "../../../stores"
     import { addProjectItem } from "../../../converters/project"
@@ -66,7 +67,7 @@
                     color={effect.color}
                     showPlayOnHover
                     on:click={(e) => {
-                        if ($outLocked || e.ctrlKey || e.metaKey) return
+                        if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
                         if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
 
                         setOutput("effects", effect.id, true)
@@ -74,6 +75,8 @@
                     on:dblclick={(e) => {
                         if (e.ctrlKey || e.metaKey) return
                         if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
+                        // Preparar F6: o duplo clique não põe nem abre nada (Efeitos não têm marcação)
+                        if (gavetaNaoToca()) return
 
                         addProjectItem({ id: effect.id, name: effect.name || "", type: "effect" })
                     }}

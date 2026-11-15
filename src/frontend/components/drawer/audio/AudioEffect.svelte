@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onDestroy } from "svelte"
     import { AudioPlayer } from "../../../audio/audioPlayer"
     import { activeShow, outLocked, playingAudio } from "../../../stores"
@@ -51,7 +52,7 @@
         title={getFileName(path)}
         bold={false}
         on:click={(e) => {
-            if ($outLocked || e.ctrlKey || e.metaKey) return
+            if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
 
             AudioPlayer.start(path, { name }, { playMultiple: true, stopIfPlaying: true, clearTime: 0.3 })
         }}

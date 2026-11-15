@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onDestroy, onMount } from "svelte"
     import { Main } from "../../../../types/IPC/Main"
     import { AudioMicrophone } from "../../../audio/audioMicrophone"
@@ -83,7 +84,7 @@
         bold={false}
         disabled={!context}
         on:click={() => {
-            if (!context) return
+            if (!context || gavetaNaoToca()) return
             AudioMicrophone.start(mic.id, { name: mic.name }, { pauseIfPlaying: true })
         }}
         on:dblclick={(e) => {

@@ -10,6 +10,14 @@ export function tecladoPodeMexerNaSaida(): boolean {
     return get(modoAlianca) !== "preparar"
 }
 
+/**
+ * Preparar, fatia 6: na GAVETA nenhum gesto (clique, duplo clique, Enter) vai para o ar. O clique marca o item
+ * para levar ao culto. Uma regra so, chamada no topo de cada porta da gaveta.
+ */
+export function gavetaNaoToca(): boolean {
+    return get(modoAlianca) === "preparar"
+}
+
 /** Cada tecla ignorada incrementa; a faixa/seletor piscam quando muda. */
 export const avisoTecla = writable(0)
 

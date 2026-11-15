@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { AudioPlayer } from "../../../audio/audioPlayer"
     import { audioStreams, playingAudio } from "../../../stores"
     import T from "../../helpers/T.svelte"
@@ -12,7 +13,7 @@
 
     let loadingStreams = new Set<string>()
     async function loadStream(stream: string) {
-        if (loadingStreams.has(stream)) return
+        if (gavetaNaoToca() || loadingStreams.has(stream)) return
         loadingStreams.add(stream)
         loadingStreams = loadingStreams
 

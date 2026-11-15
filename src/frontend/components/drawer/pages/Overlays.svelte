@@ -3,7 +3,7 @@
     import type { Overlay } from "../../../../types/Show"
     import { addProjectItem } from "../../../converters/project"
     import { activeEdit, activePage, activeShow, labelsDisabled, mediaOptions, outLocked, outputs, overlayCategories, overlays, styles, timelineRecordingAction } from "../../../stores"
-    import { destinoRecusaTecla, teclaIgnorada } from "../../../utils/aliancaModo"
+    import { destinoRecusaTecla, gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import { clone, keysToID, sortByName } from "../../helpers/array"
@@ -96,6 +96,7 @@
     }
 
     function overlayClick(e: any, id: string) {
+        if (gavetaNaoToca()) return
         if ($outLocked || e.ctrlKey || e.metaKey) return
         if (destinoRecusaTecla()) return
         if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
@@ -161,6 +162,8 @@
                                 on:dblclick={(e) => {
                                     if (e.ctrlKey || e.metaKey) return
                                     if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
+                                    // Preparar F6: o duplo clique não põe nem abre nada (Overlays não têm marcação)
+                                    if (gavetaNaoToca()) return
 
                                     addProjectItem({ id: overlay.id, name: overlay.name || "", type: "overlay" })
                                 }}

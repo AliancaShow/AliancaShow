@@ -4,6 +4,7 @@
     // do centro (o Drawer), logo abaixo da grade de slides.
     import type { DrawerTabIds } from "../../../types/Tabs"
     import { activeDrawerTab, drawer, drawerOpenedInEdit, drawerTabsData, focusMode } from "../../stores"
+    import { abasEscondidas } from "../../utils/aliancaAbasEditor"
     import { DEFAULT_DRAWER_HEIGHT } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
     import { drawerTabs } from "../../values/tabs"
@@ -44,7 +45,7 @@
 
     <div class="tabs">
         {#each tabs as tab, i}
-            {#if $drawerTabsData[tab.id]?.enabled !== false && getAccess(tab.id).global !== "none" && (!$focusMode || !hiddenInFocusMode.includes(tab.id))}
+            {#if $drawerTabsData[tab.id]?.enabled !== false && getAccess(tab.id).global !== "none" && (!$focusMode || !hiddenInFocusMode.includes(tab.id)) && !$abasEscondidas.has(tab.id)}
                 <button class="tab" class:active={$activeDrawerTab === tab.id && !isClosed} title="[Ctrl+{i + 1}]" on:click={() => openTab(tab)}>
                     <Icon id={tab.icon} size={1.2} white={$activeDrawerTab === tab.id && !isClosed} />
                     <span class="label"><T id={tab.name} /></span>

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import type { Category } from "../../../../types/Tabs"
     import { activeFocus, activePlayerTagFilter, activeShow, focusMode, outLocked, outputs, playerTags, playerVideos } from "../../../stores"
     import { translateText } from "../../../utils/language"
@@ -86,7 +87,7 @@
             title={video.id || ""}
             showPlayOnHover
             on:click={(e) => {
-                if ($outLocked || e.ctrlKey || e.metaKey || iconClicked) return
+                if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey || iconClicked) return
                 if (e.target?.closest?.(".edit")) return
 
                 if (findMatchingOut(video.rid, $outputs)) {

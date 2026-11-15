@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onDestroy } from "svelte"
     import { NDI } from "../../../../types/Channels"
     import { outLocked, outputs, special } from "../../../stores"
@@ -40,7 +41,7 @@
         <NDIStream
             {screen}
             on:click={(e) => {
-                if ($outLocked || e.ctrlKey || e.metaKey) return
+                if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
                 if (currentOutput?.out?.background?.id === screen.id) clearBackground()
                 else setOutput("background", { id: screen.id, type: "ndi" })
             }}

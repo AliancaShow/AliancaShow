@@ -3,13 +3,11 @@ import { uid } from "uid"
 import type { ProjectShowRef } from "../../types/Projects"
 import { clone } from "../components/helpers/array"
 import { history } from "../components/helpers/history"
-import { OutputHelper } from "../components/helpers/OutputHelper"
-import { outputs, outputSlideCache, projects } from "../stores"
+import { outputs, projects } from "../stores"
 import { sirvoRoteiro } from "./aliancaSirvo"
-import { estruturaDoProjetoMudou } from "./aliancaControle"
 import { desfazerDispensasSirvo, lerDispensas } from "./aliancaSirvoDispensar"
 import { linhasDoRoteiro, tirarMarca } from "./aliancaSirvoMusicas"
-import { desfazendoAgora, indiceAposRepor, indiceAposTirar, limitar, novosRastros, ordenarMarcadores, podar, posicaoDoRastro, semDormindoRepetido, sinteticosDoSirvo, tipoDe, type Tirado } from "./aliancaTiradosLogica"
+import { desfazendoAgora, limitar, novosRastros, ordenarMarcadores, podar, posicaoDoRastro, semDormindoRepetido, sinteticosDoSirvo, tipoDe, type Tirado } from "./aliancaTiradosLogica"
 
 // ----- AliançaShow · Preparar, fatia 3: o item tirado fica riscado, com Desfazer -----
 //
@@ -78,53 +76,6 @@ projects.subscribe((todos) => {
     }
 })
 
-// ---------------------------------------------------------------- ponteiros por posição (F5)
-
-/**
- * O que está no ar aponta para o projeto por POSIÇÃO (`projectIndex`). Tirou/pôs item acima: a posição anda.
- * Só escreve se mudou (trocar só a posição não reenvia o slide: Output.svelte).
- */
-function moverPonteiros(projetoId: string, novoIndice: (i: number) => number) {
-    if (get(projects)[projetoId] === undefined) return
-    const mexe = (s: any) => s && typeof s.projectIndex === "number" && s.projectIndex >= 0 && novoIndice(s.projectIndex) !== s.projectIndex
-    let mexeu = false
-    if (Object.values(get(outputs) || {}).some((o: any) => mexe(o?.out?.slide))) {
-        mexeu = true
-        outputs.update((a) => {
-            for (const o of Object.values(a) as any[]) {
-                const s = o?.out?.slide
-                if (mexe(s)) o.out.slide = { ...s, projectIndex: novoIndice(s.projectIndex) }
-            }
-            return a
-        })
-    }
-    if (Object.values(get(outputSlideCache) || {}).some((s: any) => mexe(s))) {
-        mexeu = true
-        outputSlideCache.update((a) => {
-            for (const [id, s] of Object.entries(a || {}) as [string, any][]) if (mexe(s)) a[id] = { ...s, projectIndex: novoIndice(s.projectIndex) }
-            return a
-        })
-    }
-    OutputHelper.esquecerItemAtivo()
-    try {
-        estruturaDoProjetoMudou()
-    } catch (erro) {
-        console.error("Preparar: falha ao avisar o celular da ordem nova", erro)
-    }
-    return mexeu
-}
-
-/** antes de escrever a lista sem os itens `removidos` (índices de antes) */
-export function moverPonteirosAoTirar(projetoId: string, removidos: number[]) {
-    moverPonteiros(projetoId, (i) => indiceAposTirar(i, removidos))
-}
-
-/** antes de escrever a lista com `quantos` itens novos a partir da posição `pos` (F4: "adicionar várias músicas") */
-export function moverPonteirosAoInserir(projetoId: string, pos: number, quantos: number) {
-    if (quantos <= 0) return
-    moverPonteiros(projetoId, (i) => (pos <= i ? i + quantos : i))
-}
-
 // ---------------------------------------------------------------- Desfazer (o botão)
 
 /**
@@ -154,7 +105,6 @@ export function desfazerTirado(chave: string) {
         const pos = posicaoDoRastro(vivos, r)
         const nova = [...vivos]
         nova.splice(pos, 0, item)
-        moverPonteiros(projetoId, (i) => indiceAposRepor(i, pos))
         history({ id: "UPDATE", newData: { key: "shows", data: nova }, oldData: { id: projetoId }, location: { page: "show", id: "project_key" } })
     } catch (erro) {
         console.error("Preparar: falha ao desfazer o item tirado", erro)

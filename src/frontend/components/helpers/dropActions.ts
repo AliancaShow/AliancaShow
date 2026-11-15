@@ -27,6 +27,7 @@ import { getLayoutRef } from "./show"
 import { getVariableNameId } from "./showActions"
 import { _show } from "./shows"
 import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
+import { cargaDoDropNoCulto, marcadoDoArrasto } from "../../utils/aliancaGaveta"
 
 function getId(drag: Selected): string {
     const id = ""
@@ -151,6 +152,11 @@ export const dropActions = {
             h.newData = { key: "shows", data: projectShows }
             return h
         }
+
+        // AliançaShow (Preparar F6): arrastar um item MARCADO leva todos os marcados do mesmo tipo (os de outro tipo continuam marcados)
+        const arrastado = marcadoDoArrasto(drag.id, drag.data?.[0])
+        const carga = arrastado ? cargaDoDropNoCulto(arrastado) : null
+        if (carga) drag = { ...drag, data: carga.map((m) => m.dado) }
 
         if (drop.index === undefined) drop.index = projectShows.length
         if ((drag.id === "files" || drag.id === "urls") && drop.trigger?.includes("end")) drop.index++
