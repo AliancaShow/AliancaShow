@@ -3,7 +3,8 @@
     import { uid } from "uid"
     import type { Item, Line } from "../../../../types/Show"
     import { splitCustomDynamicValues } from "../../../show/slides"
-    import { activeEdit, activeShow, activeStage, overlays, redoHistory, refreshListBoxes, showsCache, special, stageShows, templates } from "../../../stores"
+    import { activeEdit, activePopup, activeShow, activeStage, contextActive, modoAlianca, overlays, quickSearchActive, redoHistory, refreshListBoxes, showsCache, special, stageShows, templates, topContextActive } from "../../../stores"
+    import { cancelarEdicao, cortarNoCursor, guardarRetrato } from "../../../utils/aliancaTesoura"
     import { newToast } from "../../../utils/common"
     import { getNormalizedKey, isComposing, isFormattingKey } from "../../../utils/shortcuts"
     import T from "../../helpers/T.svelte"
@@ -148,7 +149,10 @@
             if (e.target.closest(".quickEdit") && Number(e.target.closest(".quickEdit").getAttribute("data-index")) !== editIndex) return
             if (!e.target.closest(".quickEdit") && !$activeEdit.items.includes(index)) return
 
-            if (!e.altKey) return
+            // AliançaShow (Preparar F5): Ctrl+Enter quebra no cursor (como o ProPresenter); no Culto fica só o Alt+Enter
+            const ctrlEnter = $modoAlianca === "preparar" && (e.ctrlKey || e.metaKey) && !e.altKey
+            if (!e.altKey && !ctrlEnter) return
+            if (ctrlEnter) e.preventDefault()
 
             // split
             let sel = getSelectionRange()
@@ -168,6 +172,12 @@
     function cutInTwo({ e, sel, lines, currentIndex, textPos, start }) {
         if ((ref.type || "show") !== "show") return
         let { firstLines, secondLines } = EditboxHelper.cutLinesInTwo({ sel, lines, currentIndex, textPos, start })
+
+        // AliançaShow (Preparar F5): uma entrada de histórico só (o Ctrl+Z volta ao estado de antes da quebra)
+        if ($modoAlianca === "preparar") {
+            cortarNoCursorDoPreparar(e, firstLines, secondLines)
+            return
+        }
 
         // in list view the component's own indexes are correct, $activeEdit might hold a stale edit tab state
         if (!plain && typeof $activeEdit.slide === "number") editIndex = $activeEdit.slide
@@ -263,11 +273,75 @@
         })
     }
 
+    // AliançaShow (Preparar F5): depois de um corte/cancelamento, o updateLines agendado (10 ms após a digitação) NÃO pode
+    // gravar o texto de antes por cima: segura por um instante
+    let segurarAtualizacaoAte = 0
+
+    async function cortarNoCursorDoPreparar(e: any, firstLines: Line[], secondLines: Line[]) {
+        const vazio = (ls: Line[]) => !ls.some((l) => (l.text || []).some((t) => (t.value || "").length))
+        if (vazio(firstLines) || vazio(secondLines)) {
+            newToast("Ponha o cursor no meio do texto pra quebrar.")
+            return
+        }
+
+        // na lista os índices do componente valem; no editor, os do activeEdit (como o corte do Culto)
+        if (!plain && typeof $activeEdit.slide === "number") editIndex = $activeEdit.slide
+        const domItemIndex = Number(e?.target?.closest(".editItem")?.getAttribute("data-index"))
+        const editItemIndex: number = plain ? index : ($activeEdit.items[0] ?? (isNaN(domItemIndex) ? 0 : domItemIndex))
+        const showId = ref.showId || $activeShow?.id || ""
+
+        const layoutRef = getLayoutRef()
+        const slideRef = layoutRef[editIndex]
+        if (!slideRef || !showId) return
+
+        segurarAtualizacaoAte = Date.now() + 200
+        const novoId = cortarNoCursor(showId, ref.id, editItemIndex, firstLines, secondLines)
+        if (!novoId) return
+
+        // o histórico trocou o texto do slide: o DOM ainda tem o de antes (B3)
+        await tick()
+        getStyle()
+        if (plain) refreshListBoxes.set(editIndex)
+
+        if (!e?.target?.closest(".item")) return
+
+        const parentId = slideRef.type === "child" ? slideRef.parent!.id : slideRef.id
+        const parentIndex = slideRef.type === "child" ? slideRef.parent!.layoutIndex : slideRef.layoutIndex
+        const parentsBefore = layoutRef.filter((a, i) => i < parentIndex && a.id === parentId)?.length
+        const newIndex = $activeEdit.slide! + (parentsBefore + 1)
+
+        // foco no slide novo, com o cursor no fim
+        activeEdit.set({ slide: newIndex, items: [0], showId: $activeShow?.id })
+        setTimeout(() => {
+            const elem = document.querySelector(".editItem")?.querySelector(".edit")
+            if (elem) (elem as HTMLElement).focus()
+            const sel = getSelectionRange()
+            setCaret(elem, { line: sel.length - 1, pos: 999 })
+        })
+    }
+
+    // AliançaShow (Preparar F5): só a edição rápida da lista guarda o retrato e aceita o Esc que desfaz
+    const ehEdicaoRapida = () => $modoAlianca === "preparar" && plain && (ref.type || "show") === "show" && !!textElem?.closest(".quickEdit")
+    function aoFocar() {
+        if (ehEdicaoRapida()) guardarRetrato(ref.showId || $activeShow?.id || "", ref.id, index)
+    }
+    async function escCancela(e: KeyboardEvent) {
+        if (e.key !== "Escape" || e.isComposing || !ehEdicaoRapida()) return
+        if ($contextActive || $topContextActive || $quickSearchActive || $activePopup) return
+        if (!cancelarEdicao(ref.showId || $activeShow?.id || "", ref.id, index)) return
+        segurarAtualizacaoAte = Date.now() + 200
+        newToast("Edição desfeita · Ctrl+Z devolve")
+        await tick()
+        getStyle()
+        refreshListBoxes.set(editIndex)
+    }
+
     let HISTORY_UPDATE_KEY = 0
     let updates = 0
     let recentKeyboardLineMutationAt = 0
     function updateLines(newLines: Line[] = []) {
         if (composing) return
+        if (!newLines?.length && Date.now() < segurarAtualizacaoAte) return
 
         // updateItem = true
         if (!newLines?.length) newLines = getNewLines()
@@ -648,6 +722,8 @@
     }
 
     function textElemKeydown(e: KeyboardEvent) {
+        escCancela(e)
+
         if ((e.key === "Enter" || e.key === "Backspace" || e.key === "Delete") && !isComposing(e)) {
             recentKeyboardLineMutationAt = Date.now()
         }
@@ -747,6 +823,7 @@
                 class:autoSize={isAuto && autoSize && !plain}
                 contenteditable
                 on:keydown={textElemKeydown}
+                on:focus={aoFocar}
                 on:input={() => scheduleAutoSize()}
                 on:compositionstart={() => (composing = true)}
                 on:compositionend={() => {
