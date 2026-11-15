@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import type { Tree } from "../../../types/Projects"
-    import { activeProfile, activeProject, folders, labelsDisabled, openedFolders, projects, projectView } from "../../stores"
+    import { activeProfile, activeProject, folders, labelsDisabled, openedFolders, projects, projectView, special } from "../../stores"
+    import { removerGruposVazios } from "../../utils/aliancaSeletorLogica"
     import { history } from "../helpers/history"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -62,13 +63,17 @@
         })
     }
 
+    // Com o seletor compacto, grupo cujos projetos estao todos arquivados e escondidos nao desenha o cabecalho solto (os arquivados
+    // seguem no popover do seletor). Com o seletor desligado a lista e a de sempre.
+    $: arvoreVisivel = $special.aliancaSeletorCompacto !== false ? removerGruposVazios(tree, (a) => !a.archived || visibleArchives.includes(a.parent)) : tree
+
     let splittedTree: Tree[][] = []
-    $: if (tree) splitRootFoldersToSections()
+    $: if (arvoreVisivel) splitRootFoldersToSections()
     function splitRootFoldersToSections() {
         splittedTree = [[]]
         let rootProjects: Tree[] = []
 
-        tree.forEach((a) => {
+        arvoreVisivel.forEach((a) => {
             if (a.parent === "/" && a.type !== "folder") {
                 rootProjects.push(a)
                 return

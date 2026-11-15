@@ -163,6 +163,33 @@ export function montarOpcoesDeDia({ itens, resolver, contar, hoje, ativoId, emTo
     return grupos
 }
 
+/**
+ * Grupo sem nenhuma linha embaixo nao se desenha. `temLinha` diz se o item vira uma linha de verdade na tela (um projeto
+ * arquivado e escondido nao vira); pasta conta sempre como linha. O grupo vazio sai inteiro (o cabecalho e os itens escondidos
+ * dele, que nao tem linha para mostrar); o que vem antes do primeiro grupo e os grupos com linha ficam como vieram, na ordem.
+ */
+export function removerGruposVazios<T extends { type?: string }>(itens: T[], temLinha: (item: T) => boolean): T[] {
+    const saida: T[] = []
+    let cabecalho = -1
+    let comLinha = false
+    const fechar = () => {
+        if (cabecalho >= 0 && !comLinha) saida.splice(cabecalho)
+        cabecalho = -1
+        comLinha = false
+    }
+    for (const item of itens) {
+        if (item.type === "grupo") {
+            fechar()
+            cabecalho = saida.length
+        } else if (item.type === "folder" || temLinha(item)) {
+            comLinha = true
+        }
+        saida.push(item)
+    }
+    fechar()
+    return saida
+}
+
 export const opcoesPlanas = (grupos: GrupoDeDias[]): OpcaoDeDia[] => grupos.flatMap((g) => g.opcoes)
 
 /** o que o teclado destaca ao abrir: o culto aberto; senao o 1o de hoje em diante; senao o ultimo; senao -1 */

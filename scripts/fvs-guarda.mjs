@@ -32,6 +32,13 @@ export const NOVOS_PERMITIDOS = [/^src\/frontend\/utils\/aliancaSeletor(Logica)?
 // quem pode importar o .svelte novo
 export const IMPORTADORES_PERMITIDOS = [/^src\/frontend\/components\/show\/Projects\.svelte$/]
 
+// Correcoes posteriores a FV-S que tocam um arquivo existente ALEM do manifesto. Cada uma e uma excecao NOMEADA e travada pelo SHA do
+// conteudo inteiro do arquivo no head: qualquer outra mudanca nele reprova ate esta linha ser revista (nao ha excecao em branco).
+//   ProjectList.svelte: grupo sem linha embaixo nao desenha o cabecalho (fix 978bde5; logica em aliancaSeletorLogica.ts)
+export const EXCECOES_EXISTENTES = {
+    "src/frontend/components/show/ProjectList.svelte": "39c9f7553d8f32b67861d429e0f804d38c9dcda29a94d99227aafe7ac6c770f2"
+}
+
 const unificar = (t) => t.replace(/\r\n/g, "\n")
 export const sha = (t) => createHash("sha256").update(unificar(t), "utf8").digest("hex")
 const contar = (texto, trecho) => (trecho ? texto.split(trecho).length - 1 : 0)
@@ -93,7 +100,8 @@ export function checarLogica(nome, texto) {
  * @param {{ manifesto: any, alterados: {caminho:string,status:string}[], base: Record<string,string|null>, head: Record<string,string|null> }} e
  * @returns {string[]} erros (vazio = passou)
  */
-export function verificar({ manifesto, alterados, base, head, fixos = PARES_FIXOS }) {
+export function verificar({ manifesto, alterados, base, head, fixos = PARES_FIXOS, excecoes = EXCECOES_EXISTENTES }) {
+    const excecaoValida = (caminho) => !!excecoes[caminho] && head[caminho] != null && sha(head[caminho]) === excecoes[caminho]
     const erros = []
     const arquivos = manifesto?.arquivos || []
     if (!arquivos.length) erros.push("manifesto vazio")
@@ -103,7 +111,7 @@ export function verificar({ manifesto, alterados, base, head, fixos = PARES_FIXO
     if (!alteradosCaminhos.includes(PROJECTS)) erros.push(`${PROJECTS}: esta no manifesto mas nao foi alterado`)
     for (const { caminho, status } of alterados) {
         if (caminho === PACKAGE) continue
-        if (status === "M" && caminho !== PROJECTS) erros.push(`${caminho}: arquivo existente alterado fora do manifesto`)
+        if (status === "M" && caminho !== PROJECTS && !excecaoValida(caminho)) erros.push(`${caminho}: arquivo existente alterado fora do manifesto`)
     }
 
     let comparados = 0
@@ -161,6 +169,7 @@ export function verificar({ manifesto, alterados, base, head, fixos = PARES_FIXO
             continue
         }
         if (status === "A" && NOVOS_PERMITIDOS.some((r) => r.test(caminho))) continue
+        if (status === "M" && excecaoValida(caminho)) continue
         erros.push(`${caminho}: arquivo fora da lista permitida (status ${status})`)
     }
 

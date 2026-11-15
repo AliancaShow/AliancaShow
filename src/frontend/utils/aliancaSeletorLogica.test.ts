@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { INERTE_MS, TETO_INERTE_MS, assinaturaDasOpcoes, camadaPodeSair, dataLocalISO, dataValida, decidirTecla, dentroDaCarencia, estadoDoBotaoDia, eventoDoNome, hojeLocalISO, indiceInicial, larguraDoLayout, larguraDoPopover, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, posicaoDoPopover, rotuloDoDia, somarDias } from "./aliancaSeletorLogica"
+import { INERTE_MS, TETO_INERTE_MS, assinaturaDasOpcoes, camadaPodeSair, dataLocalISO, dataValida, decidirTecla, dentroDaCarencia, estadoDoBotaoDia, eventoDoNome, hojeLocalISO, indiceInicial, larguraDoLayout, larguraDoPopover, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, posicaoDoPopover, removerGruposVazios, rotuloDoDia, somarDias } from "./aliancaSeletorLogica"
 import type { ItemDaArvore, ResolvidoDoCulto } from "./aliancaSeletorLogica"
 
 describe("datas locais", () => {
@@ -348,5 +348,40 @@ describe("estadoDoBotaoDia", () => {
         const e = estadoDoBotaoDia({ ...base, agendaNome: "Extra", ativo: { nome: "07 - Rede de Mulheres", cultoId: "2026-11-07" }, agendaDoAtivo: "Extra" })
         expect(e.texto).toBe("Sáb 07/nov")
         expect(e.dica).toContain("Rede de Mulheres")
+    })
+})
+
+describe("removerGruposVazios (lista de baixo: cabecalho solto)", () => {
+    type It = { id: string; type?: string; archived?: boolean; parent?: string }
+    const g = (id: string): It => ({ id, type: "grupo" })
+    const p = (id: string, archived = false): It => ({ id, archived })
+    const linha = (a: It) => !a.archived
+    const ids = (l: It[]) => l.map((x) => x.id)
+
+    it("Todos: grupo so com projetos arquivados e escondidos some inteiro (cabecalho e itens), o resto fica", () => {
+        const itens = [g("out"), p("o1", true), p("o2", true), g("nov"), p("n1"), p("n2", true)]
+        expect(ids(removerGruposVazios(itens, linha))).toEqual(["nov", "n1", "n2"])
+    })
+    it("grupo com ao menos uma linha visivel fica com os arquivados dentro (o botao de mostrar arquivados continua)", () => {
+        const itens = [g("nov"), p("n1"), p("n2", true)]
+        expect(ids(removerGruposVazios(itens, linha))).toEqual(["nov", "n1", "n2"])
+    })
+    it("grupo vazio de fato (cabecalho seguido de outro cabecalho, ou no fim) some", () => {
+        expect(ids(removerGruposVazios([g("a"), g("b"), p("b1")], linha))).toEqual(["b", "b1"])
+        expect(ids(removerGruposVazios([g("a"), p("a1"), g("b")], linha))).toEqual(["a", "a1"])
+        expect(removerGruposVazios([g("a")], linha)).toEqual([])
+    })
+    it("depois de mostrar os arquivados o grupo volta", () => {
+        const itens = [g("out"), p("o1", true)]
+        expect(ids(removerGruposVazios(itens, () => true))).toEqual(["out", "o1"])
+    })
+    it("pasta conta como linha; item antes do primeiro grupo nao e tocado; ordem mantida; nao muda a entrada", () => {
+        const itens: It[] = [p("solto"), g("a"), { id: "pasta", type: "folder" }, g("b"), p("b1", true)]
+        const copia = JSON.stringify(itens)
+        expect(ids(removerGruposVazios(itens, linha))).toEqual(["solto", "a", "pasta"])
+        expect(JSON.stringify(itens)).toBe(copia)
+    })
+    it("lista vazia", () => {
+        expect(removerGruposVazios([], linha)).toEqual([])
     })
 })

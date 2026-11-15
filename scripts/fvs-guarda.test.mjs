@@ -74,6 +74,13 @@ const mutacoes = {
         c.base["src/frontend/components/show/ProjectStrip.svelte"] = "a"
         c.head["src/frontend/components/show/ProjectStrip.svelte"] = "b"
     },
+    // a excecao do ProjectList e travada pelo SHA do conteudo: qualquer outra mudanca nele reprova
+    "ProjectList.svelte alem da excecao travada": (c) => {
+        const f = "src/frontend/components/show/ProjectList.svelte"
+        const alt = c.head[f] ?? "x"
+        c.head[f] = alt + " // a mais"
+        if (!c.alterados.some((a) => a.caminho === f)) c.alterados.push({ caminho: f, status: "M" })
+    },
     "edita global.css": (c) => {
         c.alterados.push({ caminho: "public/global.css", status: "M" })
         c.base["public/global.css"] = "a"
