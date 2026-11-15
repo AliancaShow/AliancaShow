@@ -248,8 +248,9 @@
         border-color: var(--secondary);
         background: var(--sel-wash, rgb(242 26 39 / 0.16));
     }
+    /* o aviso é a BORDA (o texto fica na cor do tema: em tema claro o âmbar sobre fundo claro não lê) */
     .chip.alerta {
-        color: var(--aviso, #ffa94d);
+        border-color: var(--aviso, #ffa94d);
     }
 
     .lista {
