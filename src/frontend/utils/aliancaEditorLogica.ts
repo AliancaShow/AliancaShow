@@ -82,3 +82,23 @@ export function itensDoMenuAdicionar<T extends ItemMenu>(grupos: GrupoMenu<T>[])
         items: g.items.map((it) => (it.id === "more" ? ({ ...it, children: [...movidos, ...(it.children || [])] } as T) : it))
     }))
 }
+
+// ----- fatia 8b, passo 0: desfazer AGRUPADO -----
+
+export type EntradaAgrupada = {
+    id: "UPDATE"
+    location: { page: "edit"; id: "show_key" }
+    oldData: { id: string }
+    newData: { key: "slides"; data: any; previousData: any }
+    time: number
+}
+
+/**
+ * Uma acao em grupo (colar/"em todos"/reset de varios slides) vira UMA entrada de historico: o estado dos slides antes e depois.
+ * Devolve null se nada mudou (nao cria entrada nem limpa o "refazer"). `page: "edit"` para o history nao cair no `deselect()`.
+ */
+export function entradaAgrupada(showId: string, antes: any, depois: any, time: number): EntradaAgrupada | null {
+    if (!showId) return null
+    if (JSON.stringify(antes) === JSON.stringify(depois)) return null
+    return { id: "UPDATE", location: { page: "edit", id: "show_key" }, oldData: { id: showId }, newData: { key: "slides", data: depois, previousData: antes }, time }
+}

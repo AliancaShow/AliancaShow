@@ -102,7 +102,9 @@ export function getFilterStyle(): StyleClipboard {
 
 // PASTE //
 
-export async function setBoxStyle(styles: StyleClipboard[], slides: any, type: ItemType) {
+/** `semHistorico` (Preparar 8b): grava os slides sem entrada de desfazer; quem chama empurra UMA entrada agrupada. */
+export async function setBoxStyle(styles: StyleClipboard[], slides: any, type: ItemType, semHistorico = false) {
+    const semEntrada = semHistorico ? { save: false } : {}
     const itemKeys = getItemKeys(true)
 
     for (const slide of slides) {
@@ -129,6 +131,7 @@ export async function setBoxStyle(styles: StyleClipboard[], slides: any, type: I
             const value = style.keys[key]
             history({
                 id: "setItems",
+                ...semEntrada,
                 newData: { style: { key, values: [style.keys[key]] } },
                 location: { page: "edit", show: get(activeShow)!, slide: slide.id, items }
             })
@@ -136,6 +139,7 @@ export async function setBoxStyle(styles: StyleClipboard[], slides: any, type: I
             if (key === "textFit") {
                 history({
                     id: "setItems",
+                    ...semEntrada,
                     newData: { style: { key: "auto", values: [value && value !== "none"] } },
                     location: { page: "edit", show: get(activeShow)!, slide: slide.id, items }
                 })
@@ -169,6 +173,7 @@ export async function setBoxStyle(styles: StyleClipboard[], slides: any, type: I
             // TEXTBOX or OTHER ITEMS
             history({
                 id: type === "text" ? "textStyle" : "setStyle",
+                ...semEntrada,
                 newData: { style: { key: type === "text" ? "text" : "style", values } },
                 location: { page: "edit", show: get(activeShow)!, slide: slide.id, items }
             })
@@ -280,7 +285,7 @@ export async function setItemStyle(styles: StyleClipboard[], slides: any) {
     }
 }
 
-export async function setSlideStyle(style: StyleClipboard, slides: any) {
+export async function setSlideStyle(style: StyleClipboard, slides: any, semHistorico = false) {
     for (const slide of slides) {
         if (isSlideLocked(get(activeShow)?.id || "", slide.id)) continue
 
@@ -295,6 +300,7 @@ export async function setSlideStyle(style: StyleClipboard, slides: any) {
 
         history({
             id: "slideStyle",
+            ...(semHistorico ? { save: false } : {}),
             oldData,
             newData: { style: style.keys?.settings || {} },
             location: { page: "edit", show: get(activeShow)!, slide: slide.id }

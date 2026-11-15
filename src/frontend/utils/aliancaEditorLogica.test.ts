@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { camadasAbertasPorPadrao, editToolsRenderizado, itensDoMenuAdicionar, mostrarRecentes, notasLigadas, notasVisiveis, previaEscondida, timelineLigada } from "./aliancaEditorLogica"
+import { camadasAbertasPorPadrao, editToolsRenderizado, entradaAgrupada, itensDoMenuAdicionar, mostrarRecentes, notasLigadas, notasVisiveis, previaEscondida, timelineLigada } from "./aliancaEditorLogica"
 import { slideItems } from "../components/edit/values/items"
 
 const base = { pagina: "edit", tipoEdicao: "show", showExiste: true, focusMode: false, editMode: "default" }
@@ -90,4 +90,16 @@ describe("itensDoMenuAdicionar", () => {
         itensDoMenuAdicionar(slideItems)
         expect(JSON.stringify(slideItems)).toBe(antes)
     })
+})
+
+describe("entradaAgrupada (desfazer agrupado, 8b passo 0)", () => {
+    const antes = { a: { items: [{ lines: [{ align: "" }] }] }, b: { items: [] } }
+    const depois = { a: { items: [{ lines: [{ align: "text-align:right;" }] }] }, b: { items: [] } }
+
+    it("monta UMA entrada UPDATE no formato do handleUpdate, com antes e depois", () => {
+        const e = entradaAgrupada("show1", antes, depois, 123)
+        expect(e).toEqual({ id: "UPDATE", location: { page: "edit", id: "show_key" }, oldData: { id: "show1" }, newData: { key: "slides", data: depois, previousData: antes }, time: 123 })
+    })
+    it("nada mudou: sem entrada", () => expect(entradaAgrupada("show1", antes, JSON.parse(JSON.stringify(antes)), 1)).toBeNull())
+    it("sem show: sem entrada", () => expect(entradaAgrupada("", antes, depois, 1)).toBeNull())
 })

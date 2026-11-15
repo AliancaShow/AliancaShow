@@ -14,6 +14,7 @@
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import Tabs from "../main/Tabs.svelte"
     import Center from "../system/Center.svelte"
+    import { comDesfazerAgrupado } from "../../utils/aliancaDesfazerAgrupado"
     import { getBoxStyle, getFilterStyle, getItemStyle, getSlideStyle, setBoxStyle, setFilterStyle, setItemStyle, setSlideStyle } from "./scripts/itemClipboard"
     import { DEFAULT_ITEM_STYLE } from "./scripts/itemHelpers"
     import { addStyleString } from "./scripts/textStyle"
@@ -146,9 +147,14 @@
 
     // PASTE
 
-    function pasteStyle(applyToAll = false, applyToFollowing = false) {
+    // Preparar (8b): trava de clique duplo enquanto cola, e o desfazer da colagem em grupo e UMA entrada so
+    $: organizado = $modoAlianca === "preparar"
+    let colando = false
+
+    async function pasteStyle(applyToAll = false, applyToFollowing = false) {
         let styles = $copyPasteEdit[type]
         if (!Array.isArray(styles)) return
+        if (colando) return
 
         // get selected slide(s)
         let slides: any[] = []
@@ -168,11 +174,20 @@
 
         slides = clone(slides)
 
-        setNewStyle()
-        function setNewStyle() {
-            if (active === "text") return setBoxStyle(styles, slides, itemType as ItemType)
+        const agrupar = organizado && isShow && (active === "text" || active === "slide") && !!$activeShow?.id
+        if (agrupar) {
+            colando = true
+            try {
+                await comDesfazerAgrupado($activeShow!.id, () => setNewStyle(true))
+            } finally {
+                colando = false
+            }
+        } else setNewStyle()
+
+        function setNewStyle(semHistorico = false) {
+            if (active === "text") return setBoxStyle(styles, slides, itemType as ItemType, semHistorico)
             if (active === "item") return setItemStyle(styles, slides)
-            if (active === "slide") return setSlideStyle(styles[0], slides)
+            if (active === "slide") return setSlideStyle(styles[0], slides, semHistorico)
             if (active === "filters") {
                 let indexes: number[] = []
                 if (applyToFollowing) indexes = ref.map((_, i) => i).filter((a) => a >= activeSlide)
@@ -450,7 +465,7 @@
         {#if item || active === "slide" || active === "filters"}
             <FloatingInputs>
                 {#if copiedStyleDifferent}
-                    <MaterialButton icon="paste" title="actions.paste" on:click={() => pasteStyle()}>
+                    <MaterialButton icon="paste" title="actions.paste" disabled={colando} on:click={() => pasteStyle()}>
                         <T id="actions.paste" />
                     </MaterialButton>
 
@@ -465,7 +480,7 @@
 
                             <div class="divider"></div>
                         {/if}
-                        <MaterialButton icon="paste" title="actions.to_all" on:click={() => pasteStyle(true)}>
+                        <MaterialButton icon="paste" title="actions.to_all" disabled={colando} on:click={() => pasteStyle(true)}>
                             <T id="actions.to_all" />
                         </MaterialButton>
                     {/if}
