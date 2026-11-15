@@ -6,6 +6,9 @@
     import LazyLoad from "./components/helpers/LazyLoad.svelte"
     import ProfileChangerMenu from "./components/main/ProfileChangerMenu.svelte"
     import Tipbar from "./components/main/Tipbar.svelte"
+    // FVB:INICIO
+    import AliancaAbasLaterais from "./components/main/AliancaAbasLaterais.svelte"
+    // FVB:FIM
     import AliancaFaixa from "./components/main/AliancaFaixa.svelte"
     import Top from "./components/main/Top.svelte"
     import SirvoAviso from "./components/main/SirvoAviso.svelte"
@@ -49,6 +52,11 @@
     <div class="row">
         <Resizeable id="leftPanel">
             <div class="left panel">
+                <!-- FVB:INICIO -->
+                {#if $modoAlianca === "preparar" && page === "show"}
+                    <AliancaAbasLaterais />
+                {/if}
+                <!-- FVB:FIM -->
                 {#if page === "show"}
                     <!-- Layout D: Projetos em cima, biblioteca (8 abas) na parte de baixo -->
                     <div class="projectsWrap">

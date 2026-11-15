@@ -2,7 +2,11 @@ import { derived, get } from "svelte/store"
 import type { DrawerTabIds } from "../../types/Tabs"
 import { activeDrawerTab, activeEdit, activePage, modoAlianca } from "../stores"
 import { drawerTabs } from "../values/tabs"
-import { abaAoEntrarNoEditor, abasEscondidasNoEditor } from "./aliancaGavetaLogica"
+import { abaAoEntrarNoEditor } from "./aliancaGavetaLogica"
+// FVB:INICIO
+import { abaLateral } from "./aliancaBibliotecaEstado"
+import { abasEscondidasNaBiblioteca } from "./aliancaBibliotecaLogica"
+// FVB:FIM
 
 // ----- AliançaShow · Preparar, fatia 6: no editor de um show a gaveta mostra só Mídia, Áudio e Bíblia -----
 //
@@ -11,7 +15,7 @@ import { abaAoEntrarNoEditor, abasEscondidasNoEditor } from "./aliancaGavetaLogi
 
 const TODAS = Object.keys(drawerTabs)
 
-export const abasEscondidas = derived([modoAlianca, activePage, activeEdit], ([$modo, $pagina, $edit]) => new Set(abasEscondidasNoEditor(TODAS, { preparar: $modo === "preparar", noEditor: $pagina === "edit", tipoEditado: ($edit as any)?.type })))
+export const abasEscondidas = derived([modoAlianca, activePage, activeEdit, abaLateral], ([$modo, $pagina, $edit, $aba]) => new Set(abasEscondidasNaBiblioteca(TODAS, { preparar: $modo === "preparar", naBiblioteca: $aba === "biblioteca" && $pagina === "show", noEditor: $pagina === "edit", tipoEditado: ($edit as any)?.type })))
 
 export const abaEscondidaNoEditor = (id: string): boolean => get(abasEscondidas).has(id)
 
