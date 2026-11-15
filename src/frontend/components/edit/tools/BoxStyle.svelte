@@ -2,6 +2,7 @@
     import { onDestroy, onMount } from "svelte"
     import type { Item, ItemType, Slide } from "../../../../types/Show"
     import { activeEdit, activePopup, activeShow, alertMessage, categories, styles as outputStyles, overlays, selected, shownTips, showsCache, special, templates, theme, themes, timers } from "../../../stores"
+    import { mapaDeGrupos } from "../../../utils/aliancaEditorLogica"
     import { getNormalizedKey, isFormattingKey } from "../../../utils/shortcuts"
     import { newToast } from "../../../utils/common"
     import { clone } from "../../helpers/array"
@@ -19,6 +20,8 @@
     export let id: ItemType
     export let allSlideItems: Item[] = []
     export let item: Item | null = null
+    // Preparar (8b): painel agrupado (a vista / Mais / Avancado)
+    export let agrupar = false
 
     // -----
 
@@ -671,6 +674,9 @@
     }
 
     $: boxSections = box?.sections || {}
+    $: grupos = agrupar ? mapaDeGrupos("box", id, boxSections) : null
+    // tipos sem mapa fino (timer, relogio, camera...): como no Culto, mas fonte/alinhamento/posicao sempre abertos
+    $: fixas = agrupar && !grupos ? ["default", "align", "position"] : []
     function updateValue2(e: any) {
         const input = e.detail
         input.value = input.values.value
@@ -754,5 +760,5 @@
 <svelte:window on:keyup={keyup} on:keydown={keydown} on:mouseup={getTextSelection} on:mousedown={mousedown} />
 
 {#if loaded}
-    <EditValues sections={boxSections} {item} {styles} {customValues} type="text" on:change={updateValue2} />
+    <EditValues sections={boxSections} {item} {styles} {customValues} {grupos} {fixas} type="text" on:change={updateValue2} />
 {/if}

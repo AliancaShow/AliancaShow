@@ -2,6 +2,8 @@
     import type { Item, ItemType, Line, Slide } from "../../../types/Show"
     import type { TabsObj } from "../../../types/Tabs"
     import { activeEdit, activeShow, copyPasteEdit, modoAlianca, overlays, selected, showsCache, storedEditMenuState, templates } from "../../stores"
+    import { alvoDoRodape } from "../../utils/aliancaEditorLogica"
+    import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -112,13 +114,23 @@
 
     // COPY
 
-    $: itemType = active === "text" ? item?.type || "text" : ""
-    $: type = `${active}${itemType}`
+    // Preparar (8b): o rodape age sobre o ALVO (texto, caixa ou slide), nao sobre a aba; no Culto `aba` e a aba de sempre
+    $: organizado = $modoAlianca === "preparar"
+    let tipoEdicao: "show" | "template" | "overlay" = "show"
+    $: tipoEdicao = $activeEdit.type === "overlay" ? "overlay" : $activeEdit.type === "template" ? "template" : "show"
+    $: escolhidos = $activeEdit.items.length
+    $: alvo = alvoDoRodape({ escolhidos, templateTextMode, templateItemMode, slideRemovido: !!tabs.slide.remove, tipo: tipoEdicao })
+    $: aba = organizado ? alvo : active
+
+    $: itemType = aba === "text" ? item?.type || "text" : ""
+    $: type = `${aba}${itemType}`
     function copyStyle() {
         const styles = getItemsStyle()
 
         copyPasteEdit.update((a) => {
             a[type] = styles
+            // Preparar: com camada escolhida copia tambem a caixa (posicao, fundo...), para o botao "Colar caixa"
+            if (temCaixa && aba !== "item") a["item"] = items.map((it) => getCurrentStyle(it, "item"))
             return a
         })
 
@@ -128,6 +140,7 @@
     function clearClipboard() {
         copyPasteEdit.update((a) => {
             delete a[type]
+            if (organizado) delete a["item"]
             return a
         })
     }
@@ -137,18 +150,17 @@
         return items.map((item) => getCurrentStyle(item))
     }
 
-    function getCurrentStyle(item: Item | null = null) {
-        if (active === "text" && item) return getBoxStyle(item)
-        if (active === "item" && item) return getItemStyle(item)
-        if (active === "slide") return getSlideStyle()
-        if (active === "filters") return getFilterStyle()
+    function getCurrentStyle(item: Item | null = null, alvoDe: string = aba) {
+        if (alvoDe === "text" && item) return getBoxStyle(item)
+        if (alvoDe === "item" && item) return getItemStyle(item)
+        if (alvoDe === "slide") return getSlideStyle()
+        if (alvoDe === "filters") return getFilterStyle()
         return null
     }
 
     // PASTE
 
     // Preparar (8b): trava de clique duplo enquanto cola, e o desfazer da colagem em grupo e UMA entrada so
-    $: organizado = $modoAlianca === "preparar"
     let colando = false
 
     async function pasteStyle(applyToAll = false, applyToFollowing = false) {
@@ -174,7 +186,7 @@
 
         slides = clone(slides)
 
-        const agrupar = organizado && isShow && (active === "text" || active === "slide") && !!$activeShow?.id
+        const agrupar = organizado && isShow && (aba === "text" || aba === "slide") && !!$activeShow?.id
         if (agrupar) {
             colando = true
             try {
@@ -185,10 +197,10 @@
         } else setNewStyle()
 
         function setNewStyle(semHistorico = false) {
-            if (active === "text") return setBoxStyle(styles, slides, itemType as ItemType, semHistorico)
-            if (active === "item") return setItemStyle(styles, slides)
-            if (active === "slide") return setSlideStyle(styles[0], slides, semHistorico)
-            if (active === "filters") {
+            if (aba === "text") return setBoxStyle(styles, slides, itemType as ItemType, semHistorico)
+            if (aba === "item") return setItemStyle(styles, slides)
+            if (aba === "slide") return setSlideStyle(styles[0], slides, semHistorico)
+            if (aba === "filters") {
                 let indexes: number[] = []
                 if (applyToFollowing) indexes = ref.map((_, i) => i).filter((a) => a >= activeSlide)
                 else if (applyToAll) indexes = ref.map((_, i) => i)
@@ -201,9 +213,25 @@
 
     // RESET
 
-    function reset() {
+    async function reset() {
+        // Preparar: reset de varios dados num slide = UMA entrada de desfazer
+        if (organizado && isShow && (aba === "text" || aba === "slide") && $activeShow?.id) {
+            if (colando) return
+            colando = true
+            try {
+                await comDesfazerAgrupado($activeShow.id, () => resetar(true))
+            } finally {
+                colando = false
+            }
+            return
+        }
+        resetar(false)
+    }
+
+    function resetar(semHistorico: boolean) {
+        const semEntrada = semHistorico ? { save: false } : {}
         if (!isShow) {
-            if (active === "item") {
+            if (aba === "item") {
                 history({
                     id: "UPDATE",
                     oldData: { id: $activeEdit.id },
@@ -213,7 +241,7 @@
                 return
             }
 
-            if (active === "slide") {
+            if (aba === "slide") {
                 if ($activeEdit.type !== "template") return
 
                 let id = $activeEdit?.id || ""
@@ -221,7 +249,7 @@
                 return
             }
 
-            if (active !== "text") return
+            if (aba !== "text") return
 
             if ($activeEdit.type === "overlay") overlays.update(updateItemValues)
             else if ($activeEdit.type === "template") templates.update(updateItemValues)
@@ -252,7 +280,7 @@
 
         storedEditMenuState.set({})
 
-        if (active === "item") {
+        if (aba === "item") {
             history({
                 id: "setStyle",
                 newData: { style: { key: "style", values: [DEFAULT_ITEM_STYLE] } },
@@ -261,7 +289,7 @@
             return
         }
 
-        if (active === "filters") {
+        if (aba === "filters") {
             let indexes = [activeSlide]
             if (typeof indexes[0] !== "number") return
 
@@ -271,9 +299,10 @@
             return
         }
 
-        if (active === "slide") {
+        if (aba === "slide") {
             history({
                 id: "slideStyle",
+                ...semEntrada,
                 oldData: { style: _show().slides([slideId]).get("settings")[0] },
                 newData: { style: {} },
                 location: { page: "edit", show: $activeShow!, slide: slideId }
@@ -281,7 +310,7 @@
             return
         }
 
-        if (active !== "text") return
+        if (aba !== "text") return
 
         let values: any = []
         items.forEach((item) => {
@@ -300,6 +329,7 @@
         if (values.length) {
             history({
                 id: "textStyle",
+                ...semEntrada,
                 newData: { style: { key: "text", values } },
                 location: {
                     page: "edit",
@@ -317,6 +347,7 @@
         deleteKeys.forEach((key) => {
             history({
                 id: "setItems",
+                ...semEntrada,
                 newData: { style: { key, values: [undefined] } },
                 location: { page: "edit", show: $activeShow!, slide: slideId, items: $activeEdit.items, id: key }
             })
@@ -384,6 +415,40 @@
     $: currentItemStyle = getItemsStyle($showsCache[$activeEdit?.id || $activeShow?.id || ""])
     $: copiedStyleDifferent = currentCopied && JSON.stringify(currentCopied) !== JSON.stringify(currentItemStyle)
 
+    // ----- Preparar (8b): painel organizado -----
+    // blocos: conteudo (texto/midia...), Caixa (posicao e aparencia) e a secao Slide (fechada, no fim)
+    $: temCaixa = organizado && escolhidos > 0 && !templateTextMode
+    $: mostrarConteudo = !!item && !templateItemMode
+    $: mostrarCaixa = !templateTextMode && allSlideItems.length > 0 && (escolhidos > 0 || templateItemMode)
+    $: secaoSlide = !tabs.slide.remove && tipoEdicao !== "overlay"
+    $: tipoConteudo = item?.type || "text"
+    $: tituloConteudo = escolhidos === 0 ? (tipoConteudo === "text" ? "Texto de todas as caixas" : `${translateText("items." + tipoConteudo)}: todos os itens`) : translateText("items." + tipoConteudo)
+    $: rotuloRodape = aba === "slide" ? "Estilo do slide" : aba === "item" ? "Estilo da caixa" : "Estilo do texto"
+
+    // a secao Slide abre sozinha quando nada esta escolhido; fora disso so se a pessoa abrir (volta a fechar ao trocar de slide/show)
+    let slideAbertoPeloUsuario = false
+    let filtrosAbertos = false
+    $: voltarASecaoFechada(activeSlide, $activeShow?.id, activeId)
+    function voltarASecaoFechada(..._: any[]) {
+        slideAbertoPeloUsuario = false
+        filtrosAbertos = false
+    }
+    $: slideAberto = escolhidos === 0 || slideAbertoPeloUsuario
+
+    // "Colar caixa": a caixa copiada (posicao, fundo...) so nas camadas escolhidas deste slide. Nao ha "caixa em todos": empilharia as caixas.
+    $: caixaCopiada = $copyPasteEdit["item"]
+    $: caixaAtual = temCaixa && aba !== "item" ? items.map((it) => getItemStyle(it)) : []
+    $: difereCaixa = isShow && temCaixa && aba !== "item" && !!caixaCopiada && JSON.stringify(caixaCopiada) !== JSON.stringify(caixaAtual)
+    async function colarCaixa() {
+        if (colando || !Array.isArray(caixaCopiada) || !ref[activeSlide]?.id) return
+        colando = true
+        try {
+            await setItemStyle(caixaCopiada, clone(_show().slides([ref[activeSlide].id]).get()))
+        } finally {
+            colando = false
+        }
+    }
+
     // function copyToCreateData() {
     //     const slide = $activeEdit?.type === "overlay" ? $overlays[activeId || ""] : $activeEdit?.type === "template" ? $templates[activeId || ""] : null
     //     if (!slide) return
@@ -423,14 +488,104 @@
 <svelte:window on:keydown={keydown} />
 
 <div class="main border editTools">
-    {#if slideActive && !isLocked}
+    {#if slideActive && !isLocked && organizado}
+        <div class="content">
+            <ItemsList {allSlideItems} recolhivel />
+
+            {#if mostrarConteudo}
+                <div class="bloco">
+                    <div class="blocoTitulo"><p>{tituloConteudo}</p></div>
+                    <BoxStyle id={tipoConteudo} agrupar bind:allSlideItems bind:item />
+                </div>
+            {:else if !templateItemMode}
+                <Center faded>
+                    <T id="empty.items" />
+                </Center>
+            {/if}
+
+            {#if mostrarCaixa}
+                <div class="bloco">
+                    <div class="blocoTitulo">
+                        <p>Caixa</p>
+                        {#if difereCaixa}
+                            <MaterialButton style="padding: 2px 8px;font-size: 0.8em;" title="Colar a caixa copiada (posição, fundo...) só nas camadas escolhidas" disabled={colando} on:click={colarCaixa}>Colar caixa</MaterialButton>
+                        {/if}
+                    </div>
+                    <ItemStyle agrupar bind:allSlideItems bind:item />
+                </div>
+            {/if}
+
+            {#if secaoSlide}
+                <div class="bloco">
+                    <div class="blocoTitulo">
+                        <MaterialButton style="width: 100%;padding: 8px 12px;justify-content: space-between;" disabled={escolhidos === 0} on:click={() => (slideAbertoPeloUsuario = !slideAbertoPeloUsuario)}>
+                            <p>{translateText("tools.slide")}</p>
+                            {#if escolhidos > 0}<Icon id="arrow_back_modern" class="seta {slideAberto ? 'aberta' : ''}" size={0.6} style="opacity: 0.5;" white />{/if}
+                        </MaterialButton>
+                    </div>
+                    {#if slideAberto}
+                        {#if $activeEdit.type === "template"}
+                            <TemplateStyle semCamadas bind:allSlideItems />
+                        {:else}
+                            <SlideStyle semCamadas bind:allSlideItems />
+                        {/if}
+
+                        {#if isShow}
+                            <div class="blocoTitulo sub">
+                                <MaterialButton style="width: 100%;padding: 6px 12px;justify-content: space-between;" on:click={() => (filtrosAbertos = !filtrosAbertos)}>
+                                    <p>Filtros do slide</p>
+                                    <Icon id="arrow_back_modern" class="seta {filtrosAbertos ? 'aberta' : ''}" size={0.6} style="opacity: 0.5;" white />
+                                </MaterialButton>
+                            </div>
+                            {#if filtrosAbertos}
+                                <SlideFilters />
+                            {/if}
+                        {/if}
+                    {/if}
+                </div>
+            {/if}
+        </div>
+
+        {#if item || aba === "slide"}
+            <FloatingInputs>
+                <span class="rotuloRodape">{rotuloRodape}</span>
+
+                <div class="divider"></div>
+
+                {#if copiedStyleDifferent}
+                    <MaterialButton icon="paste" title="actions.paste" disabled={colando} on:click={() => pasteStyle()}>
+                        <T id="actions.paste" />
+                    </MaterialButton>
+
+                    <div class="divider"></div>
+                {/if}
+                {#if currentCopied && !copiedStyleDifferent}
+                    {#if isShow}
+                        <MaterialButton icon="paste" title="actions.to_all" disabled={colando} on:click={() => pasteStyle(true)}>
+                            <T id="actions.to_all" />
+                        </MaterialButton>
+                    {/if}
+                {:else}
+                    <MaterialButton disabled={!currentItemStyle?.length} title="actions.copy" on:click={copyStyle}>
+                        <Icon id="copy" white={copiedStyleDifferent} />
+                        {#if !copiedStyleDifferent}<T id="actions.copy" />{/if}
+                    </MaterialButton>
+                {/if}
+
+                {#if currentCopied}
+                    <div class="divider"></div>
+                    <MaterialButton icon="clear" title="clear.general: formats.clipboard" on:click={clearClipboard}></MaterialButton>
+                {:else if aba !== "item"}
+                    <div class="divider"></div>
+                    <MaterialButton icon="reset" title="actions.reset" disabled={colando} on:click={reset}></MaterialButton>
+                {/if}
+            </FloatingInputs>
+        {/if}
+    {:else if slideActive && !isLocked}
         <Tabs {tabs} bind:active {overflowHidden} />
 
         {#if active === "text"}
             <div class="content">
-                {#if $modoAlianca === "preparar"}
-                    <ItemsList {allSlideItems} recolhivel />
-                {/if}
                 {#if item}
                     <BoxStyle id={item?.type || "text"} bind:allSlideItems bind:item />
                 {:else}
@@ -441,9 +596,6 @@
             </div>
         {:else if active === "item"}
             <div class="content">
-                {#if $modoAlianca === "preparar"}
-                    <ItemsList {allSlideItems} recolhivel />
-                {/if}
                 <ItemStyle bind:allSlideItems bind:item />
             </div>
         {:else if active === "filters"}
@@ -547,5 +699,50 @@
     .content :global(section div) {
         display: flex;
         justify-content: space-between;
+    }
+
+    /* Preparar (8b): painel organizado */
+    .bloco {
+        margin-top: 10px;
+        padding: 0 5px;
+    }
+    .blocoTitulo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--primary-darker);
+        border-bottom: 1px solid var(--primary-lighter);
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        overflow: hidden;
+        padding: 0 12px;
+    }
+    .blocoTitulo.sub {
+        margin-top: 6px;
+        padding: 0;
+    }
+    .blocoTitulo :global(button) {
+        padding-inline: 0;
+    }
+    .blocoTitulo p {
+        font-weight: 500;
+        font-size: 0.8rem;
+        opacity: 0.8;
+        padding: 8px 0;
+    }
+    .bloco :global(svg.seta) {
+        transition: 0.1s transform ease;
+        transform: rotate(180deg);
+    }
+    .bloco :global(svg.seta.aberta) {
+        transform: rotate(-90deg);
+    }
+    .rotuloRodape {
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        font-size: 0.75em;
+        opacity: 0.7;
+        white-space: nowrap;
     }
 </style>
