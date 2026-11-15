@@ -273,14 +273,14 @@
         background: rgb(255 255 255 / 0.12);
     }
     .s-qual {
-        background: #e0a030;
+        background: var(--aviso, #e0a030);
         color: #1c1400;
     }
     .s-nova {
         background: rgb(255 255 255 / 0.2);
     }
     .s-no_culto {
-        background: rgb(224 160 48 / 0.25);
+        background: rgb(var(--prep-rgb, 224 160 48) / 0.25);
     }
     .onde {
         display: flex;

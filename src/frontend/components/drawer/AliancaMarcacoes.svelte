@@ -129,7 +129,7 @@
 
     .n {
         font-weight: 700;
-        color: #fff;
+        color: var(--sobre-acento, #fff);
         background: var(--secondary);
     }
     .n:hover:not(:disabled) {
@@ -237,7 +237,7 @@
     }
     .selo.aviso {
         color: #1c1400;
-        background: #e0a030;
+        background: var(--aviso, #e0a030);
     }
     .x {
         flex: none;

@@ -251,3 +251,90 @@ p {
 .isOptimized {
     backdrop-filter: none !important;
 }
+
+/* FV:INICIO */
+/* AliancaShow, fatia FV-A: laranja no app todo (tema padrao) e fontes do Preparar.
+
+   Tudo aqui vive sob `body[data-tema="padrao"]` ou `body[data-fonte="prep"]`. Os atributos sao escritos por
+   utils/aliancaTema.ts, SO na janela principal e SO no tema de fabrica com o acento original. Sem atributo (tema
+   proprio, janela de saida, miniatura, exportacao) nenhuma regra daqui casa e nenhum token existe: os `var(--token, antigo)`
+   dos componentes valem o valor de hoje. Vermelho fica para "no telao agora" (--live) e "limpa o telao". */
+
+/* Inter (texto) e Space Grotesk (titulos): so no Preparar, embutidas, licenca OFL (Inter-OFL.txt, SpaceGrotesk-OFL.txt).
+   Sem Reserved Font Name nas duas. Nomes de familia PRIVADOS: um slide que peca "Inter" continua usando a Inter do
+   sistema, nunca o recorte embutido. Subset latin + setas; o resto cai na fonte de reserva do sistema. */
+@font-face {
+    font-family: "AliancaUI Texto";
+    src: url("./fonts/Inter-Variable.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+    /* a altura de linha "normal" passa a ser a do Segoe UI (1,33em): Inter e Space Grotesk teriam 1,21 e 1,28, e a interface
+       inteira ficaria mais baixa no Preparar (o topo encolhia 1px ao trocar de modo). Mesma altura, so muda a letra. */
+    ascent-override: 107.9%;
+    descent-override: 25.1%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: "AliancaUI Titulo";
+    src: url("./fonts/SpaceGrotesk-Variable.woff2") format("woff2-variations");
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+    ascent-override: 107.9%;
+    descent-override: 25.1%;
+    line-gap-override: 0%;
+}
+
+body[data-tema="padrao"] {
+    --secondary: #ff8a4c;
+    --secondary-opacity: rgb(255 138 76 / 0.5);
+    --focus-ring: rgb(255 138 76 / 0.45);
+
+    /* o que continua vermelho: "esta no telao agora" */
+    --live: #f21a27;
+    --live-opacity: rgb(242 26 39 / 0.5);
+    /* conteudo de slide (relogio, progresso) mostrado na interface: a previa tem de bater com a saida */
+    --conteudo-acento: #f21a27;
+
+    --sel-wash: rgb(255 138 76 / 0.16);
+    --sel-line: rgb(255 138 76 / 0.3);
+
+    --modo-culto: #f21a27;
+    --modo-culto-texto: #f8f8f0;
+    --modo-prep: #ff8a4c;
+    --modo-prep-texto: #1a0d05;
+    --modo-prep-brilho: rgb(255 138 76 / 0.6);
+    --modo-prep-brilho0: rgb(255 138 76 / 0);
+
+    --prep-rgb: 255 138 76;
+    --prep: #ff8a4c;
+    --aviso: #ffa94d;
+    --sobre-acento: #1a0d05;
+}
+/* App.svelte grava --secondary-text inline em <main>; so !important de folha vence o inline */
+body[data-tema="padrao"] main {
+    --secondary-text: #1a0d05 !important;
+}
+body[data-tema="padrao"]::before {
+    background: rgb(255 138 76 / 0.15);
+}
+/* botao de abrir a saida: o wash vermelho e um style inline de Top.svelte (so aparece com a saida fechada); sem editar o arquivo,
+   o seletor de atributo o acha e o !important o vence */
+body[data-tema="padrao"] #output_window_button[style*="242 26 39"] {
+    background: var(--sel-wash) !important;
+    box-shadow: inset 0 0 0 1px var(--sel-line) !important;
+}
+/* categoria da Biblia / playlist com slide no ar: o contorno e de "no ar" */
+body[data-tema="padrao"] button.tab.showOutline {
+    --outline-color: var(--live);
+}
+
+body[data-fonte="prep"] {
+    --font-family: "AliancaUI Texto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    font-family: var(--font-family);
+}
+body[data-fonte="prep"] :is(h1, h2, h3, h4, .marcaTexto, .header > p, .name-notes .name, .activeTitle, .activeTitle span) {
+    font-family: "AliancaUI Titulo", "AliancaUI Texto", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+/* FV:FIM */

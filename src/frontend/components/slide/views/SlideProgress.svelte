@@ -212,7 +212,7 @@
         align-items: center;
         justify-content: center;
 
-        --accent: var(--secondary);
+        --accent: var(--conteudo-acento, var(--secondary));
     }
 
     .progress.barBG {

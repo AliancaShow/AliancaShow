@@ -721,8 +721,8 @@
         outline-offset: 2px;
     }
     .agendas button.ativa {
-        background: rgb(242 26 39 / 0.16);
-        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+        background: var(--sel-wash, rgb(242 26 39 / 0.16));
+        box-shadow: inset 0 0 0 1px var(--sel-line, rgb(242 26 39 / 0.3));
         color: #ffffff;
     }
 

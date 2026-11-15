@@ -62,13 +62,13 @@
     }
     button.ativo {
         opacity: 1;
-        background: var(--secondary);
-        color: var(--secondary-text);
+        background: var(--modo-culto, var(--secondary));
+        color: var(--modo-culto-texto, var(--secondary-text));
         font-weight: 600;
     }
     button.preparar.ativo {
-        background: #e0a030;
-        color: #1a1200;
+        background: var(--modo-prep, #e0a030);
+        color: var(--modo-prep-texto, #1a1200);
     }
     .piscando {
         animation: avisoModo 0.5s ease-in-out 3;
@@ -76,10 +76,10 @@
     @keyframes avisoModo {
         0%,
         100% {
-            box-shadow: 0 0 0 0 rgb(224 160 48 / 0);
+            box-shadow: 0 0 0 0 var(--modo-prep-brilho0, rgb(224 160 48 / 0));
         }
         50% {
-            box-shadow: 0 0 0 4px rgb(224 160 48 / 0.6);
+            box-shadow: 0 0 0 4px var(--modo-prep-brilho, rgb(224 160 48 / 0.6));
         }
     }
 </style>

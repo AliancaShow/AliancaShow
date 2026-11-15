@@ -518,8 +518,8 @@
     /* Sem regua de 1px entre as linhas: a separacao e por fundo. A aba ativa
        usa wash de marca em vez de um risco vermelho embaixo. */
     .tabs :global(button.isActive) {
-        background: rgb(242 26 39 / 0.16) !important;
-        box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+        background: var(--sel-wash, rgb(242 26 39 / 0.16)) !important;
+        box-shadow: inset 0 0 0 1px var(--sel-line, rgb(242 26 39 / 0.3));
     }
 
     .scroll {

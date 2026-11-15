@@ -138,7 +138,7 @@
        o mesmo gesto das abas da Biblioteca. Sem contorno em volta. */
     .main.active {
         background: rgb(242 26 39 / 0.16);
-        box-shadow: inset 3px 0 0 0 var(--secondary);
+        box-shadow: inset 3px 0 0 0 var(--live, var(--secondary));
         z-index: 2;
         /* outline: 3px solid var(--secondary);
     outline-offset: -2px;

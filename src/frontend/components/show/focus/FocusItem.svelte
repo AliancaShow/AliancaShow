@@ -60,7 +60,7 @@
         padding: 2px;
     }
     .active {
-        outline: 2px solid var(--secondary);
+        outline: 2px solid var(--live, var(--secondary));
         outline-offset: -2px;
     }
 </style>
