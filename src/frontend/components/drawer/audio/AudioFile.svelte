@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
+    import { chaveDe } from "../../../utils/aliancaGavetaLogica"
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { AudioPlayer } from "../../../audio/audioPlayer"
     import { AudioPlaylist } from "../../../audio/audioPlaylist"
     import { addProjectItem } from "../../../converters/project"
@@ -17,6 +20,10 @@
     export let fileOver = false
 
     $: outline = !!$playingAudio[path] && (!$activePlaylist || $activePlaylist?.index === index)
+
+    // AliançaShow (Preparar F6): no Preparar o clique MARCA o áudio para o culto; nunca toca
+    $: marcadoDaGaveta = marcadoDeArquivo({ path, name })
+    $: estaMarcado = !!marcadoDaGaveta && $chavesMarcadas.has(chaveDe(marcadoDaGaveta))
 </script>
 
 <SelectElem id="audio" data={{ path, name, index }} {fileOver} borders={playlist ? "edges" : "all"} trigger={playlist ? "column" : null} draggable>
@@ -29,6 +36,12 @@
         title={path}
         bold={false}
         on:click={(e) => {
+            if (gavetaNaoToca()) {
+                if (e.ctrlKey || e.metaKey || e.shiftKey) return
+                const m = marcadoDeArquivo({ path, name })
+                if (m) cliqueDeMarcar(m)
+                return
+            }
             if ($outLocked || e.ctrlKey || e.metaKey || e.shiftKey) return
 
             if (playlist) AudioPlaylist.start(active || "", path, index, { pauseIfPlaying: true })
@@ -36,6 +49,11 @@
         }}
         on:dblclick={(e) => {
             if (e.ctrlKey || e.metaKey || e.shiftKey) return
+            if (gavetaNaoToca()) {
+                const m = marcadoDeArquivo({ path, name })
+                if (m) duploCliqueDeMarcar(m)
+                return
+            }
             addProjectItem({ id: path, name, type: "audio" })
         }}
     >
@@ -45,6 +63,7 @@
             {:then duration}
                 <Icon id={$playingAudio[path]?.paused === true ? "play" : $playingAudio[path]?.paused === false ? "pause" : $media[path]?.favourite === true && active !== "favourites" ? "star" : AudioPlayer.getAudioType(path, duration)} white={$playingAudio[path]?.paused === true || (!$playingAudio[path] && ($media[path]?.favourite !== true || active === "favourites"))} right />
             {/await}
+            {#if estaMarcado}<span class="marcadoGaveta" data-title="Marcado para o culto"><Icon id="check" size={0.9} white /></span>{/if}
             <p>{name.slice(0, name.lastIndexOf("."))}</p>
         </span>
         <span style="opacity: 0.8;">
@@ -62,5 +81,10 @@
         display: flex;
         align-items: center;
         gap: 5px;
+    }
+    .marcadoGaveta {
+        padding: 2px;
+        border-radius: 50%;
+        background: var(--secondary);
     }
 </style>

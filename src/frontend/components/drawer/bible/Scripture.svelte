@@ -6,8 +6,9 @@
     import { onMount } from "svelte"
     import { sanitizeVerseText } from "../../../../common/scripture/sanitizeVerseText"
     import { defaultBibleBookNames } from "../../../converters/bebliaBible"
-    import { activeEdit, activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected } from "../../../stores"
-    import { teclaIgnorada } from "../../../utils/aliancaModo"
+    import { activeEdit, activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected, modoAlianca } from "../../../stores"
+    import { marcarBiblia } from "../../../utils/aliancaGaveta"
+    import { gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
     import { wait } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { clone } from "../../helpers/array"
@@ -469,7 +470,8 @@
         if (!isOpen) setDrawerTabData("scripture", targetTabId)
 
         // navigate (once loaded)
-        openScripture.set({ book: item.book, chapter: item.chapter, verses: item.verse, play: true })
+        // Preparar F6: abrir uma referência do histórico não vai para o ar
+        openScripture.set({ book: item.book, chapter: item.chapter, verses: item.verse, play: !gavetaNaoToca() })
     }
 
     /// AUTOSCROLL ///
@@ -1038,7 +1040,7 @@
                             class:showAllText={$resized.rightPanelDrawer <= 5}
                             on:dblclick={() => {
                                 openBook(match.book, [match.chapter], [[match.verse.number]])
-                                playWhenLoaded = true
+                                playWhenLoaded = !gavetaNaoToca()
                             }}
                             data-title={formatBibleText(match.verse.text)}
                         >
@@ -1145,8 +1147,8 @@
                                     draggable="true"
                                     on:mousedown={(e) => openVerse(updateVersesSelection(e, content.id))}
                                     on:click={(e) => openVerse(updateVersesSelection(e, content.id, true))}
-                                    on:click={(e) => (isActiveInOutput && !e.ctrlKey && !e.metaKey ? playScripture() : false)}
-                                    on:dblclick={(e) => (isActiveInOutput && !e.ctrlKey && !e.metaKey ? false : playScripture())}
+                                    on:click={(e) => (!gavetaNaoToca() && isActiveInOutput && !e.ctrlKey && !e.metaKey ? playScripture() : false)}
+                                    on:dblclick={(e) => (gavetaNaoToca() || (isActiveInOutput && !e.ctrlKey && !e.metaKey) ? false : playScripture())}
                                     role="none"
                                 >
                                     <span class="v" style={endNumber && subverse && showSuffixInPicker ? "width: 60px;" : ""}
@@ -1242,10 +1244,10 @@
 {:else if $scriptureMode !== "grid" || $resized.rightPanelDrawer > 5}
     <FloatingInputs>
         {#if isActiveInOutput}
-            <MaterialButton disabled={activeReference.book?.toString() === "1" && !!activeReference.chapters?.find((a) => a.toString() === "1") && !!activeReference.verses[0]?.find((a) => a.toString() === "1")} title="{translateText('preview._previous_slide')} [Ctrl+Arrow Left]" on:click={() => _moveSelection(true)}>
+            <MaterialButton disabled={activeReference.book?.toString() === "1" && !!activeReference.chapters?.find((a) => a.toString() === "1") && !!activeReference.verses[0]?.find((a) => a.toString() === "1")} title="{translateText('preview._previous_slide')} [Ctrl+Arrow Left]" on:click={() => _moveSelection(true, gavetaNaoToca())}>
                 <Icon size={1.3} id="previous" />
             </MaterialButton>
-            <MaterialButton disabled={activeReference.book?.toString() === books?.length.toString() && activeReference.chapters?.includes(chapters ? chapters.length : 1) && activeReference.verses[0]?.includes(verses ? verses.length : 1)} title="{translateText('preview._next_slide')} [Ctrl+Arrow Right]" on:click={() => _moveSelection(false)}>
+            <MaterialButton disabled={activeReference.book?.toString() === books?.length.toString() && activeReference.chapters?.includes(chapters ? chapters.length : 1) && activeReference.verses[0]?.includes(verses ? verses.length : 1)} title="{translateText('preview._next_slide')} [Ctrl+Arrow Right]" on:click={() => _moveSelection(false, gavetaNaoToca())}>
                 <Icon size={1.3} id="next" />
             </MaterialButton>
         {/if}
@@ -1253,6 +1255,13 @@
         <MaterialButton disabled={$outLocked} title={isActiveInOutput ? "preview._update [Ctrl+R]" : "menu._title_display"} on:click={playScripture}>
             <Icon size={isActiveInOutput ? 1.1 : 1.3} id={isActiveInOutput ? "refresh" : "play"} white={!isActiveInOutput} />
         </MaterialButton>
+
+        {#if $modoAlianca === "preparar"}
+            <!-- Preparar F6: separa a seleção atual para levar ao culto (vira um show por referência no "Pôr no culto") -->
+            <MaterialButton disabled={!activeReference?.verses?.[0]?.length} title="Marcar para o culto" on:click={marcarBiblia}>
+                <Icon size={1.3} id="check" white />
+            </MaterialButton>
+        {/if}
 
         <div class="divider" />
 

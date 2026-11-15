@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onMount } from "svelte"
     import { Main } from "../../../../types/IPC/Main"
     import { requestMain } from "../../../IPC/main"
@@ -22,7 +23,7 @@
         bind:streams
         {screen}
         on:click={(e) => {
-            if ($outLocked || e.ctrlKey || e.metaKey) return
+            if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
             if (currentOutput?.out?.background?.id === screen.id) clearBackground()
             else setOutput("background", { id: screen.id, type: "screen" })
         }}

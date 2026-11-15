@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Resolution } from "../../../types/Settings"
-    import { mediaOptions, outputs, styles } from "../../stores"
+    import { mediaOptions, modoAlianca, outputs, styles } from "../../stores"
     import { triggerClickOnEnterSpace } from "../../utils/clickable"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
@@ -23,6 +23,13 @@
     export let white = true
     export let showPlayOnHover = false
     export let showApplyOnHover = false
+    // AliançaShow (Preparar F6): na gaveta do Preparar o card marca em vez de tocar (✓ no lugar do play)
+    export let marcavel = false
+    // no Preparar nenhum card da gaveta toca: o ▶ ao passar o mouse só aparece no Culto
+    // (quem toca fora da gaveta, como a pasta aberta no centro, passa tocaNoPreparar)
+    export let tocaNoPreparar = false
+    $: tocaAoClicar = showPlayOnHover && (tocaNoPreparar || $modoAlianca !== "preparar")
+    export let marcado = false
     export let checkered = false
     export let mode: "grid" | "list" | "lyrics" = "grid"
     export let resolution: Resolution = getResolution(null, { $outputs, $styles })
@@ -38,12 +45,16 @@
         {:else}
             <div class="hover overlay" />
         {/if}
-        <div data-title={showPlayOnHover ? translateText(active ? "clear.general" : "media.play") : ""} data-media={mediaData} class="card {$$props.class || ''}" class:checkered style="{$$props.style || ''};aspect-ratio: {resolution.width}/{resolution.height};" on:mouseenter on:mouseleave on:mousemove>
+        <div data-title={marcavel ? (marcado ? "Desmarcar" : "Marcar para o culto") : tocaAoClicar ? translateText(active ? "clear.general" : "media.play") : ""} data-media={mediaData} class="card {$$props.class || ''}" class:checkered style="{$$props.style || ''};aspect-ratio: {resolution.width}/{resolution.height};" on:mouseenter on:mouseleave on:mousemove>
             {#if !loaded}
                 <div class="loader">
                     <Loader />
                 </div>
-            {:else if showPlayOnHover}
+            {:else if marcavel}
+                <div class="overlayIcon">
+                    <Icon id="check" size={2} white />
+                </div>
+            {:else if tocaAoClicar}
                 <div class="overlayIcon">
                     <Icon id={active ? "clear" : "play"} size={2} white />
                 </div>
@@ -52,6 +63,7 @@
                     <Icon id="export" size={2} white />
                 </div>
             {/if}
+            {#if marcado}<span class="marcadoGaveta" data-title="Marcado para o culto"><Icon id="check" size={0.9} white /></span>{/if}
             <slot />
         </div>
         <Label {label} {count} {renameId} {title} {icon} {white} {color} {mode} />
@@ -155,6 +167,18 @@
         justify-content: center;
         /* aspect-ratio: 16/9; */
         background-color: var(--primary);
+    }
+
+    .marcadoGaveta {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        z-index: 3;
+        display: flex;
+        padding: 3px;
+        border-radius: 50%;
+        background: var(--secondary);
+        pointer-events: none;
     }
 
     .loader {

@@ -4,7 +4,9 @@
     import type { MediaStyle } from "../../../../types/Main"
     import type { ShowType } from "../../../../types/Show"
     import { addProjectItem } from "../../../converters/project"
-    import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
+    import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, modoAlianca, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
+    import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, gavetaNaoToca, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
+    import { chaveDe } from "../../../utils/aliancaGavetaLogica"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
     import { getMediaLayerType, getMediaStyle, getMediaType, loadThumbnail } from "../../helpers/media"
@@ -106,8 +108,19 @@
         // }, 200)
     }
 
+    // AliançaShow (Preparar F6): na gaveta do Preparar o clique MARCA o item para levar ao culto; nunca vai para o ar
+    $: marcadoDaGaveta = marcadoDeArquivo({ path, name, type, contentProvider })
+    $: marcavel = $modoAlianca === "preparar" && !!marcadoDaGaveta
+    $: estaMarcado = !!marcadoDaGaveta && $chavesMarcadas.has(chaveDe(marcadoDaGaveta))
+
     let wait = false
     function click(e: any) {
+        if (gavetaNaoToca()) {
+            if (e.ctrlKey || e.metaKey || e.shiftKey || iconClicked) return
+            const m = marcadoDeArquivo({ path, name, type, contentProvider })
+            if (m) cliqueDeMarcar(m)
+            return
+        }
         if (e.ctrlKey || e.metaKey || e.shiftKey || $outLocked || wait || iconClicked) return
 
         // don't hide again when double clicking
@@ -141,6 +154,12 @@
 
     function dblclick(e: any) {
         if (e.ctrlKey || e.metaKey || iconClicked) return
+
+        if (gavetaNaoToca()) {
+            const m = marcadoDeArquivo({ path, name, type, contentProvider })
+            if (m) duploCliqueDeMarcar(m)
+            return
+        }
 
         // add to project
         const data = { id: path, name, type: getMediaType(path.slice(path.lastIndexOf(".") + 1, path.length)) }
@@ -212,7 +231,9 @@
         title={contentProvider ? "" : path}
         icon={thumbnail ? icon : null}
         white={type === "image"}
-        showPlayOnHover
+        showPlayOnHover={!marcavel}
+        {marcavel}
+        marcado={estaMarcado}
         checkered={$mediaOptions.mode === "grid" && mediaStyle.fit !== "blur" && !failed}
         on:mousedown={mousedown}
         on:click={click}

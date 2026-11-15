@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onDestroy } from "svelte"
     import { BLACKMAGIC } from "../../../../types/Channels"
     import { outLocked, outputs } from "../../../stores"
@@ -33,7 +34,7 @@
         <BmdStream
             {screen}
             on:click={(e) => {
-                if ($outLocked || e.ctrlKey || e.metaKey) return
+                if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
                 if (currentOutput?.out?.background?.id === screen.id) clearBackground()
                 else setOutput("background", { id: screen.id, type: "blackmagic" })
             }}

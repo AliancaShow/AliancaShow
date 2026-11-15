@@ -1,6 +1,6 @@
 <script lang="ts">
     import { actions, actionTags, activeActionTagFilter, activePopup, labelsDisabled, popupData, runningActions, special, timelineRecordingAction } from "../../../stores"
-    import { teclaIgnorada } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import { getActionIcon, runAction } from "../../actions/actions"
@@ -89,7 +89,7 @@
                         <Button
                             title="{translateText('media.play')}: <b>{action.name}</b>"
                             on:click={(e) => {
-                                if (e.ctrlKey || e.metaKey) return
+                                if (gavetaNaoToca() || e.ctrlKey || e.metaKey) return
                                 if (action.shows?.length) {
                                     receivedMidi({ id: action.id, bypass: true })
                                     return

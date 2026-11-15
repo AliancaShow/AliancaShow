@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onDestroy } from "svelte"
     import { uid } from "uid"
     import { Main } from "../../../../types/IPC/Main"
@@ -63,7 +64,7 @@
         let playlists = sortObject(keysToID(playlistUpdater), "name")
         playlists = playlists.map((a) => {
             const count = a.songs?.length
-            return { id: a.id, label: a.name, icon: "playlist", count, onDoubleClick: () => AudioPlaylist.start(a.id), boxedIcon: true }
+            return { id: a.id, label: a.name, icon: "playlist", count, onDoubleClick: () => (gavetaNaoToca() ? undefined : AudioPlaylist.start(a.id)), boxedIcon: true }
         })
         if (!playlists.length) return []
 

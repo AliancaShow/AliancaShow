@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { uid } from "uid"
     import type { ContentProviderId } from "../../../../electron/contentProviders/base/types"
     import { Main } from "../../../../types/IPC/Main"
@@ -544,7 +545,7 @@
                             let e = detail.event
                             let cam = detail.cam
 
-                            if ($outLocked || e.ctrlKey || e.metaKey) return
+                            if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
                             if (currentOutput?.out?.background?.id === cam.id) clearBackground()
                             else setOutput("background", { name: cam.name, id: cam.id, cameraGroup: cam.group || cam.cameraGroup, type: "camera" })
                         }}

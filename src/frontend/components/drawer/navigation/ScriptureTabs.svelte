@@ -1,5 +1,6 @@
 <script lang="ts">
     import { activePopup, activeScripture, drawerTabsData, labelsDisabled, openScripture, scriptures } from "../../../stores"
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { getAccess } from "../../../utils/profile"
     import { keysToID } from "../../helpers/array"
     import Icon from "../../helpers/Icon.svelte"
@@ -34,7 +35,7 @@
     }
 
     function startScripture() {
-        openScripture.set({ play: true, book: Number($activeScripture.reference?.book || 1), chapter: $activeScripture.reference?.chapters[0], verses: $activeScripture.reference?.verses })
+        openScripture.set({ play: !gavetaNaoToca(), book: Number($activeScripture.reference?.book || 1), chapter: $activeScripture.reference?.chapters[0], verses: $activeScripture.reference?.verses })
     }
 
     function newScripture() {

@@ -115,6 +115,7 @@ import { getMenuTagId, openTagManager, toggleSelectionTags, toggleTagFilter } fr
 import { clearSlide } from "../output/clear"
 import { defaultThemes } from "../settings/tabs/defaultThemes"
 import { activeProject, modoAlianca as modoAliancaStore } from "./../../stores"
+import { juntarFotos } from "../../utils/aliancaGaveta"
 import { cortarAoMeio, juntarSelecao } from "../../utils/aliancaTesoura"
 import type { ContextMenuItem } from "./contextMenus"
 import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
@@ -741,6 +742,11 @@ const clickActions = {
     },
     createSlideshow: (obj: ObjData) => {
         const data = obj.sel?.data || []
+        // AliançaShow (Preparar F6): no Preparar o "Criar apresentação" é o "Juntar fotos": avanço manual, sem abrir o show
+        if (get(modoAliancaStore) === "preparar") {
+            juntarFotos(data.filter((a) => a && (a.path || a.id)))
+            return
+        }
         const slides = data.map((a) => ({ group: removeExtension(a.name || a.path || ""), color: null, settings: {}, notes: "", items: [] }))
 
         const layoutId = uid()

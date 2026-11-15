@@ -25,7 +25,9 @@ import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, acti
 import { audioExtensions, imageExtensions, videoExtensions } from "../values/extensions"
 import { drawerTabs } from "../values/tabs"
 import { activeShow } from "./../stores"
+import { abaEscondidaNoEditor } from "./aliancaAbasEditor"
 import { dividirAberto } from "./aliancaDividir"
+import { listaAberta } from "./aliancaGavetaEstado"
 import { teclaIgnorada } from "./aliancaModo"
 import { isOutputWindow, togglePanels, triggerFunction } from "./common"
 import { send } from "./request"
@@ -127,8 +129,10 @@ const keys = {
 
         // AliancaShow (Preparar): Esc fecha/volta e nunca limpa o telao. Decide AGORA (o Editbox limpa os itens num timeout)
         const fecharDividir = !popupId && !get(selected).id && !!get(dividirAberto)
-        const voltarDaGaveta = !popupId && !get(selected).id && !fecharDividir && get(drawer).height > 40
-        const voltarDoEditor = !popupId && !get(selected).id && !fecharDividir && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
+        // F6: a lista das marcações da gaveta fecha antes da gaveta (e não depende da altura dela); o Esc nunca limpa as marcações
+        const fecharLista = !popupId && !get(selected).id && !fecharDividir && get(listaAberta)
+        const voltarDaGaveta = !popupId && !get(selected).id && !fecharDividir && !fecharLista && get(drawer).height > 40
+        const voltarDoEditor = !popupId && !get(selected).id && !fecharDividir && !fecharLista && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
 
         // give time so output don't clear also
         setTimeout(() => {
@@ -136,6 +140,7 @@ const keys = {
             else if (get(selected).id) selected.set({ id: null, data: [] })
             else if (get(modoAlianca) === "preparar") {
                 if (fecharDividir) dividirAberto.set(null)
+                else if (fecharLista) listaAberta.set(false)
                 else if (voltarDaGaveta) drawer.set({ height: 40, stored: get(drawer).height })
                 else if (voltarDoEditor) activePage.set("show")
             }
@@ -194,7 +199,8 @@ export function keydown(e: KeyboardEvent) {
     }
 
     if (e.ctrlKey || e.metaKey) {
-        const drawerMenus = Object.keys(drawerTabs) as DrawerTabIds[]
+        // Preparar F6: no editor de um show as abas escondidas da gaveta ficam fora da contagem do Ctrl+1..8
+        const drawerMenus = (Object.keys(drawerTabs) as DrawerTabIds[]).filter((id) => !abaEscondidaNoEditor(id))
         if (document.activeElement === document.body && Object.keys(drawerMenus).includes((Number(e.key) - 1).toString())) {
             activeDrawerTab.set(drawerMenus[Number(e.key) - 1])
             // open drawer

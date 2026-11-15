@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onMount } from "svelte"
     import { obsData } from "../../../stores"
     import { connectToOBS } from "../../../utils/obsTalk"
@@ -202,11 +203,11 @@
     }
 
     function changeScene(name: string) {
-        if (obs) obs.call("SetCurrentProgramScene", { sceneName: name })
+        if (obs && !gavetaNaoToca()) obs.call("SetCurrentProgramScene", { sceneName: name })
     }
 
     function toggleSource(source: any) {
-        if (!obs) return
+        if (!obs || gavetaNaoToca()) return
         const nextState = !source.sceneItemEnabled
         obs.call("SetSceneItemEnabled", {
             sceneName: currentScene,
@@ -223,25 +224,25 @@
     }
 
     function changeTransition(name: string) {
-        if (obs) {
+        if (obs && !gavetaNaoToca()) {
             obs.call("SetCurrentSceneTransition", { transitionName: name })
             currentTransition = name
         }
     }
 
     function toggleMute(input: any) {
-        if (obs) {
+        if (obs && !gavetaNaoToca()) {
             obs.call("ToggleInputMute", { inputName: input.inputName })
             audioInputs = audioInputs.map((item: any) => (item.inputName === input.inputName ? { ...item, inputMuted: !item.inputMuted } : item))
         }
     }
 
     function toggleStream() {
-        if (obs) obs.call("ToggleStream")
+        if (obs && !gavetaNaoToca()) obs.call("ToggleStream")
     }
 
     function toggleRecording() {
-        if (obs) {
+        if (obs && !gavetaNaoToca()) {
             obs.call("ToggleRecord")
             setTimeout(() => {
                 obs.call("GetStreamStatus")
