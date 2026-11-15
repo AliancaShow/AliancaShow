@@ -138,9 +138,11 @@ function posicaoDeEntrada(vivos: ProjectShowRef[], onde: "depois" | "fim"): numb
     const aberto = get(activeShow)
     const ultimo = get(ultimoDoCulto)
     const id = get(activeProject)
+    // o último item em que se clicou na lista do culto (guardado à parte: clicar num show da gaveta abre sem posição);
+    // sem ele (ou se a lista mudou e ele não bate mais), o item aberto com posição
     let referencia: number | null = null
     if (ultimo && ultimo.projetoId === id && vivos[ultimo.index]?.id === ultimo.id) referencia = ultimo.index
-    else if (typeof aberto?.index === "number") referencia = aberto.index
+    else if (typeof aberto?.index === "number" && vivos[aberto.index]?.id === aberto.id) referencia = aberto.index
     return posicaoDeEntradaNoCulto(onde, vivos.length, referencia, posicaoNoBloco(vivos, null))
 }
 
@@ -209,7 +211,7 @@ export async function porNoCulto(onde: "depois" | "fim"): Promise<ResumoPorNoCul
     ultimoDoCulto.set({ projetoId, index: pos + novos.length - 1, id: novos[novos.length - 1].id })
 
     const pulados = lista.length - novos.length
-    newToast(pulados > 0 ? `${novos.length} entraram no culto · ${pulados} não entraram` : `${novos.length} ${novos.length === 1 ? "item entrou" : "itens entraram"} no culto`)
+    newToast(pulados > 0 ? `${novos.length} ${novos.length === 1 ? "entrou" : "entraram"} no culto · ${pulados} não entraram` : `${novos.length} ${novos.length === 1 ? "item entrou" : "itens entraram"} no culto`)
     return { entraram: novos.length, pulados }
 }
 

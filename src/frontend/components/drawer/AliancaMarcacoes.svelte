@@ -86,7 +86,7 @@
                     <div class="item" role="listitem" class:sumiu={sumidos.has(ch)}>
                         <span class="tipo">{rotuloDoTipo[m.tipo]}</span>
                         <span class="nome" title={nomeDe(m, $shows)}>{nomeDe(m, $shows)}</span>
-                        {#if sumidos.has(ch)}<span class="selo aviso">não existe mais</span>{:else if idsNoCulto.has(m.tipo === "scripture" ? "" : m.tipo === "show" ? m.chave : m.chave)}<span class="selo">já no culto</span>{/if}
+                        {#if sumidos.has(ch)}<span class="selo aviso">não existe mais</span>{:else if m.tipo !== "scripture" && idsNoCulto.has(m.chave)}<span class="selo">já no culto</span>{/if}
                         <button class="x" tabindex="-1" title="Desmarcar" aria-label="Desmarcar" on:click|stopPropagation={() => desmarcar(ch)}>×</button>
                     </div>
                 {/each}
