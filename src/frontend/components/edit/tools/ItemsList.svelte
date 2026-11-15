@@ -9,6 +9,7 @@
     import { rearrangeItems } from "../scripts/itemHelpers"
     import { getItemText } from "../scripts/textStyle"
     import { itemBoxes } from "../values/boxes"
+    import { camadasAbertasPorPadrao } from "../../../utils/aliancaEditorLogica"
 
     const getIdentifier = {
         text: (item: Item) => {
@@ -38,6 +39,16 @@
     }
 
     export let allSlideItems: Item[]
+
+    // Preparar (8a): a lista vai no topo do painel e abre recolhida quando ha 1 item so (clicar no titulo abre/fecha)
+    export let recolhivel = false
+    let aberta: boolean | null = null
+    let ultimaQtd = -1
+    $: if ((allSlideItems?.length || 0) !== ultimaQtd) {
+        ultimaQtd = allSlideItems?.length || 0
+        aberta = null // mudou a quantidade: volta ao padrao
+    }
+    $: mostrarLista = !recolhivel || (aberta ?? camadasAbertasPorPadrao(allSlideItems?.length || 0))
     $: invertedItemList = Array.isArray(allSlideItems) ? clone(allSlideItems).reverse() : []
 
     const getType = (item: Item) => (item?.type as ItemType) || "text"
@@ -45,60 +56,63 @@
 
 {#if invertedItemList.length}
     <div style="margin-top: 10px;">
-        <div class="title">
-            <span style="display: flex;gap: 8px;align-items: center;padding: 8px 12px;">
+        <div class="title" class:recolhivel>
+            <span class="titleRow" style="display: flex;gap: 8px;align-items: center;padding: 8px 12px;" role={recolhivel ? "button" : undefined} tabindex={recolhivel ? 0 : undefined} on:click={() => recolhivel && (aberta = !mostrarLista)} on:keydown={(e) => recolhivel && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), (aberta = !mostrarLista))}>
                 <Icon id="rearrange" white />
                 <p>{translateText("edit.arrange_items")}</p>
+                {#if recolhivel}<span style="margin-inline-start: auto;opacity: 0.6;font-size: 0.8em;">{invertedItemList.length} {mostrarLista ? "▾" : "▸"}</span>{/if}
             </span>
         </div>
 
-        <div
-            class="items {invertedItemList.length > 1 ? 'context #items_list_item' : ''}"
-            style="display: flex;flex-direction: column;"
-            on:mousedown={(e) => {
-                if (e.button !== 2) return
-                // select on right click for context menu
-                const index = Number((e.target?.closest(".item_button")?.id || "").slice(1))
-                activeEdit.set({ ...$activeEdit, items: [index] })
-            }}
-        >
-            {#each invertedItemList as currentItem, i}
-                {@const index = invertedItemList.length - i - 1}
-                {@const type = getType(currentItem)}
-                <!-- TODO: context menu (delete / move to top/bottom / etc.) -->
+        {#if mostrarLista}
+            <div
+                class="items {invertedItemList.length > 1 ? 'context #items_list_item' : ''}"
+                style="display: flex;flex-direction: column;"
+                on:mousedown={(e) => {
+                    if (e.button !== 2) return
+                    // select on right click for context menu
+                    const index = Number((e.target?.closest(".item_button")?.id || "").slice(1))
+                    activeEdit.set({ ...$activeEdit, items: [index] })
+                }}
+            >
+                {#each invertedItemList as currentItem, i}
+                    {@const index = invertedItemList.length - i - 1}
+                    {@const type = getType(currentItem)}
+                    <!-- TODO: context menu (delete / move to top/bottom / etc.) -->
 
-                <MaterialButton
-                    id="#{index}"
-                    variant="outlined"
-                    class="item_button"
-                    style="width: 100%;justify-content: space-between;padding: 2px 8px;"
-                    isActive={$activeEdit.items.includes(index)}
-                    tab
-                    on:click={(e) => {
-                        selected.set({ id: null, data: [] })
-                        activeEdit.update((ae) => {
-                            if (e.detail.ctrl) {
-                                if (ae.items.includes(index)) ae.items.splice(ae.items.indexOf(index), 1)
-                                else ae.items.push(index)
-                            } else if (!ae.items.includes(index)) ae.items = [index]
-                            else ae.items = []
-                            return ae
-                        })
-                    }}
-                >
-                    <span style="display: flex;align-items: center;max-width: 70%;">
-                        <p style="opacity: 0.7;margin-inline-end: 10px;">{i + 1}</p>
-                        <Icon id={type === "icon" ? currentItem.id || "" : itemBoxes[type]?.icon || "text"} custom={type === "icon"} size={0.8} />
-                        <p style="opacity: 0.9;margin-inline-start: 10px;">{translateText("items." + type)}</p>
-                        {#if getIdentifier[type]}<p style="margin-inline-start: 10px;max-width: 120px;opacity: 0.5;font-size: 0.8em;max-width: 40%;">{getIdentifier[type](currentItem)}</p>{/if}
-                    </span>
-                    <span>
-                        <MaterialButton disabled={i === allSlideItems.length - 1} icon="down" title="actions.backward" style="padding: 8px;" on:click={() => rearrangeItems("backward", index)} />
-                        <MaterialButton disabled={i === 0} icon="up" title="actions.forward" style="padding: 8px;" on:click={() => rearrangeItems("forward", index)} />
-                    </span>
-                </MaterialButton>
-            {/each}
-        </div>
+                    <MaterialButton
+                        id="#{index}"
+                        variant="outlined"
+                        class="item_button"
+                        style="width: 100%;justify-content: space-between;padding: 2px 8px;"
+                        isActive={$activeEdit.items.includes(index)}
+                        tab
+                        on:click={(e) => {
+                            selected.set({ id: null, data: [] })
+                            activeEdit.update((ae) => {
+                                if (e.detail.ctrl) {
+                                    if (ae.items.includes(index)) ae.items.splice(ae.items.indexOf(index), 1)
+                                    else ae.items.push(index)
+                                } else if (!ae.items.includes(index)) ae.items = [index]
+                                else ae.items = []
+                                return ae
+                            })
+                        }}
+                    >
+                        <span style="display: flex;align-items: center;max-width: 70%;">
+                            <p style="opacity: 0.7;margin-inline-end: 10px;">{i + 1}</p>
+                            <Icon id={type === "icon" ? currentItem.id || "" : itemBoxes[type]?.icon || "text"} custom={type === "icon"} size={0.8} />
+                            <p style="opacity: 0.9;margin-inline-start: 10px;">{translateText("items." + type)}</p>
+                            {#if getIdentifier[type]}<p style="margin-inline-start: 10px;max-width: 120px;opacity: 0.5;font-size: 0.8em;max-width: 40%;">{getIdentifier[type](currentItem)}</p>{/if}
+                        </span>
+                        <span>
+                            <MaterialButton disabled={i === allSlideItems.length - 1} icon="down" title="actions.backward" style="padding: 8px;" on:click={() => rearrangeItems("backward", index)} />
+                            <MaterialButton disabled={i === 0} icon="up" title="actions.forward" style="padding: 8px;" on:click={() => rearrangeItems("forward", index)} />
+                        </span>
+                    </MaterialButton>
+                {/each}
+            </div>
+        {/if}
     </div>
 {/if}
 
@@ -112,6 +126,9 @@
         border-top-left-radius: 10px;
         border-top-right-radius: 10px;
         overflow: hidden;
+    }
+    .title.recolhivel .titleRow {
+        cursor: pointer;
     }
     .title p {
         font-weight: 500;

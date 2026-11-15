@@ -1,5 +1,6 @@
-import { get, writable } from "svelte/store"
-import { activeEdit, activeStage, modoAlianca, outputs } from "../stores"
+import { derived, get, writable } from "svelte/store"
+import { activeEdit, activeStage, modoAlianca, outputs, slideNotesActive, special } from "../stores"
+import { notasLigadas, timelineLigada } from "./aliancaEditorLogica"
 
 // Modo Culto | Preparar (AliancaShow).
 // No Preparar nenhuma TECLA mexe no telao: limpar/avancar so no Culto.
@@ -17,6 +18,14 @@ export function tecladoPodeMexerNaSaida(): boolean {
 export function gavetaNaoToca(): boolean {
     return get(modoAlianca) === "preparar"
 }
+
+/**
+ * Preparar, fatia 8a: timeline e notas do slide ficam FORA do editor no Preparar. Sao valores derivados:
+ * a flag gravada em disco (`special.slideTimelineActive`, `slideNotesActive`) nunca e mexida, entao o Culto volta como estava.
+ * Sem isso, uma timeline deixada ligada gravaria keyframe no lugar do valor num editor que nem mostra a timeline.
+ */
+export const timelineAtiva = derived([special, modoAlianca], ([$special, $modo]) => timelineLigada($special?.slideTimelineActive, $modo))
+export const notasAtivas = derived([slideNotesActive, modoAlianca], ([$notas, $modo]) => notasLigadas($notas, $modo))
 
 /** Cada tecla ignorada incrementa; a faixa/seletor piscam quando muda. */
 export const avisoTecla = writable(0)

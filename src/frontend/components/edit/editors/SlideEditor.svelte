@@ -1,7 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import type { MediaStyle } from "../../../../types/Main"
-    import { activeEdit, activePopup, activeShow, alertMessage, editMode, focusMode, media, outputs, overlays, playerVideos, resized, showsCache, slideNotesActive, special, styles } from "../../../stores"
+    import { activeEdit, activePopup, activeShow, alertMessage, editMode, focusMode, media, modoAlianca, outputs, overlays, playerVideos, resized, showsCache, slideNotesActive, special, styles } from "../../../stores"
+    import { notasAtivas, timelineAtiva } from "../../../utils/aliancaModo"
+    import { notasVisiveis } from "../../../utils/aliancaEditorLogica"
     import { transposeText } from "../../../utils/chordTranspose"
     import { DEFAULT_WIDTH } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
@@ -259,7 +261,7 @@
             if (Slide?.items?.length === 1 && !$activeEdit.items.length) {
                 activeEdit.update((a) => ({ ...(a || {}), items: [0] }))
                 const elem = document.querySelector(".editItem")?.querySelector(".edit")
-                if (elem && !$special.slideTimelineActive) {
+                if (elem && !$timelineAtiva) {
                     elem.addEventListener("focus", () => setCaretAtEnd(elem))
                     ;(elem as HTMLElement).focus()
                 }
@@ -299,7 +301,7 @@
     let bottomHeight = 40
 
     $: notes = Slide?.notes?.replaceAll("\n", "&nbsp;")
-    $: notesVisible = !!notes // && $editMode !== "chords"
+    $: notesVisible = notasVisiveis(!!notes, $modoAlianca) // Preparar: sem faixa de notas
 
     $: widthOrHeight = getStyleResolution(resolution, width, height, "fit", { zoom })
 
@@ -396,7 +398,7 @@
         {/if}
     </div>
 
-    {#if $slideNotesActive}
+    {#if $notasAtivas}
         <Resizeable id="notes" side="bottom" defaultWidth={DEFAULT_WIDTH * 0.5} maxWidth={DEFAULT_WIDTH * 0.8} minWidth={47}>
             <div class="dark" style="display: contents;">
                 <Notes on:edit={edit} value={note} autofocus />
@@ -413,7 +415,7 @@
         </div>
     {/if}
 
-    {#if !$focusMode && !isLocked && !$slideNotesActive && !$special.slideTimelineActive}
+    {#if !$focusMode && !isLocked && !$notasAtivas && !$timelineAtiva}
         <FloatingInputs side="left" bottom={notesVisible ? bottomHeight : 10} onlyOne={$editMode !== "chords" && hasBackground}>
             {#if $editMode === "chords"}
                 <MaterialButton on:click={transposeUp} title="edit.transpose_up">
@@ -444,7 +446,7 @@
         </FloatingInputs>
     {/if}
 
-    {#if $special.slideTimelineActive}
+    {#if $timelineAtiva}
         <MaterialZoom hidden columns={zoom} min={0.2} max={4} defaultValue={1} addValue={0.1} on:change={updateZoom} on:origin={(e) => (zoomOrigin = e.detail)} />
 
         <Resizeable id="slide_timeline" side="bottom" maxWidth={DEFAULT_WIDTH} minWidth={40}>

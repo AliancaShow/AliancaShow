@@ -20,10 +20,14 @@
     import DateDisplay from "./components/system/Date.svelte"
     import Resizeable from "./components/system/Resizeable.svelte"
     import Timeline from "./components/timeline/Timeline.svelte"
-    import { activeEdit, activePage, activeProfile, activeProject, activeShow, activeStage, currentWindow, editMode, focusMode, loaded, os, projectView, resized, showChangeProfileMenu, showsCache, special } from "./stores"
+    import { activeEdit, activePage, activeProfile, activeProject, activeShow, activeStage, currentWindow, editMode, focusMode, loaded, modoAlianca, os, projectView, resized, showChangeProfileMenu, showsCache, special } from "./stores"
+    import { previaEscondida as calcPreviaEscondida } from "./utils/aliancaEditorLogica"
     import { DEFAULT_WIDTH } from "./utils/common"
 
     $: page = $activePage
+
+    // Preparar (8a): a previa do telao so some quando o EditTools esta mesmo na coluna (ver aliancaEditorLogica)
+    $: previaEscondida = calcPreviaEscondida({ modo: $modoAlianca, pagina: page, tipoEdicao: $activeEdit.type, showExiste: !!$showsCache[$activeShow?.id || ""], focusMode: $focusMode, editMode: $editMode })
     $: isWindows = !$currentWindow && $os.platform === "win32"
 
     let previousId = ""
@@ -99,7 +103,7 @@
 
         <Resizeable id="rightPanel" let:width side="right">
             <div class="right panel" class:row={width > DEFAULT_WIDTH * 1.8}>
-                <Preview />
+                <Preview escondida={previaEscondida} />
                 {#if page === "show"}
                     {#if $activeShow && ($activeShow.type === "show" || $activeShow.type === undefined) && !$focusMode}
                         <ShowTools />
