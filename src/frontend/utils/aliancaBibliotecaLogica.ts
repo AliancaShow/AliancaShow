@@ -59,6 +59,22 @@ export function edicaoDoShow(atual: { showId?: string; slide?: number | null } |
     return { type: "show", slide, items: [], showId }
 }
 
+// ---------------------------------------------------------------- volta ao Culto
+
+/**
+ * Na passagem Preparar -> Culto: se o show aberto NÃO é item do culto, devolve o índice do item para onde voltar (o
+ * último item do culto em que o operador esteve, senão o primeiro show do culto). `null` = não mexe em nada
+ * (show já está no culto, nada aberto, sem culto ou culto sem show). Assim o "->" sempre segue o roteiro.
+ */
+export function itemParaVoltar(e: { aberto: { id?: string; type?: string } | null | undefined; itens: { id: string; type?: string }[] | null | undefined; ultimo: { index: number; id: string } | null | undefined }): number | null {
+    const itens = e.itens || []
+    if (!e.aberto?.id || (e.aberto.type !== undefined && e.aberto.type !== "show")) return null
+    if (itens.some((i) => i && i.type === "show" && i.id === e.aberto!.id)) return null
+    if (e.ultimo && itens[e.ultimo.index]?.id === e.ultimo.id && itens[e.ultimo.index]?.type === "show") return e.ultimo.index
+    const primeiro = itens.findIndex((i) => i && i.type === "show")
+    return primeiro >= 0 ? primeiro : null
+}
+
 // ---------------------------------------------------------------- "+ Novo"
 
 export type ComandoNovo = "musica" | "varias" | "apresentacao" | "importar"

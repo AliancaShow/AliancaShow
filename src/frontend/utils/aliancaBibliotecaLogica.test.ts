@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { abasEscondidasNaBiblioteca, edicaoDoShow, idsNoCulto, inserirShowNoFim, itensDoMenuNovo, listarBiblioteca, motivoSemEditar, resumoDaBiblioteca, textoVazio, toqueRepetido } from "./aliancaBibliotecaLogica"
+import { abasEscondidasNaBiblioteca, edicaoDoShow, idsNoCulto, inserirShowNoFim, itemParaVoltar, itensDoMenuNovo, listarBiblioteca, motivoSemEditar, resumoDaBiblioteca, textoVazio, toqueRepetido } from "./aliancaBibliotecaLogica"
 import { ABAS_DO_EDITOR, abasEscondidasNoEditor } from "./aliancaGavetaLogica"
 
 const categorias = { song: { icon: "song" }, impulso: { icon: "song" }, presentation: { icon: "slide" }, scripture: { icon: "scripture", isArchive: true }, privada: { icon: "slide" } }
@@ -169,5 +169,26 @@ describe("textoVazio / motivoSemEditar", () => {
         expect(motivoSemEditar({ carregado: true, bloqueado: false, acesso: { x: "read" }, categoria: "x" })).toMatch(/ler/)
         expect(motivoSemEditar({ carregado: true, bloqueado: false, acesso: { y: "read" }, categoria: "x" })).toBeNull()
         expect(motivoSemEditar({ carregado: true, bloqueado: false, acesso: null, categoria: null })).toBeNull()
+    })
+})
+
+describe("itemParaVoltar", () => {
+    const itens = [
+        { id: "m", type: "image" },
+        { id: "a", type: "show" },
+        { id: "b", type: "show" }
+    ]
+    it("show que já é do culto: não mexe", () => expect(itemParaVoltar({ aberto: { id: "b", type: "show" }, itens, ultimo: null })).toBeNull())
+    it("nada aberto ou aberto que não é show: não mexe", () => {
+        expect(itemParaVoltar({ aberto: null, itens, ultimo: null })).toBeNull()
+        expect(itemParaVoltar({ aberto: { id: "x", type: "image" }, itens, ultimo: null })).toBeNull()
+    })
+    it("fora do roteiro: volta ao último item em que se estava", () => expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens, ultimo: { index: 2, id: "b" } })).toBe(2))
+    it("último que não bate mais: primeiro show do culto", () => expect(itemParaVoltar({ aberto: { id: "z" }, itens, ultimo: { index: 2, id: "q" } })).toBe(1))
+    it("sem último: primeiro show (pula mídia)", () => expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens, ultimo: null })).toBe(1))
+    it("culto vazio, sem show ou nulo: não mexe", () => {
+        expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens: [], ultimo: null })).toBeNull()
+        expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens: [{ id: "m", type: "image" }], ultimo: null })).toBeNull()
+        expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens: null, ultimo: null })).toBeNull()
     })
 })

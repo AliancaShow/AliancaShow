@@ -6,11 +6,13 @@
     // lista do culto some por CSS (`visibility: hidden`, que também a tira do foco, do ponteiro e do leitor de tela) e a
     // camada cobre exatamente a caixa dela. A gaveta continua a original, a mesma de sempre.
     import { onDestroy, onMount } from "svelte"
+    import { iniciarVoltaAoRoteiro } from "../../utils/aliancaBiblioteca"
     import { abaLateral, iniciarEstadoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
     import AliancaBiblioteca from "./AliancaBiblioteca.svelte"
     import AliancaNovo from "./AliancaNovo.svelte"
 
     iniciarEstadoDaBiblioteca()
+    iniciarVoltaAoRoteiro()
 
     let barra: HTMLElement
     let largura = 999

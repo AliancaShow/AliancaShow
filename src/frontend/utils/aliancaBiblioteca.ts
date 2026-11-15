@@ -1,10 +1,10 @@
 import { get } from "svelte/store"
 import { history } from "../components/helpers/history"
 import { openShow } from "../components/helpers/show"
-import { activeEdit, activePage, activePopup, activeProject, popupData, projects, shows } from "../stores"
+import { activeEdit, activePage, activePopup, activeProject, activeShow, modoAlianca, popupData, projects, shows } from "../stores"
 import { montarApresentacaoDeMidias } from "./aliancaApresentacao"
 import { abaLateral, tipoDaBiblioteca } from "./aliancaBibliotecaEstado"
-import { edicaoDoShow, inserirShowNoFim, toqueRepetido, type ComandoNovo } from "./aliancaBibliotecaLogica"
+import { edicaoDoShow, inserirShowNoFim, itemParaVoltar, toqueRepetido, type ComandoNovo } from "./aliancaBibliotecaLogica"
 import { fecharDividir } from "./aliancaDividir"
 import { motivoSemCulto } from "./aliancaGaveta"
 import { gravarNoDisco } from "./aliancaGravarShow"
@@ -53,6 +53,12 @@ export function criarApresentacaoEmBranco(): string | null {
     gravarNoDisco(id)
     if (get(abaLateral) === "biblioteca") tipoDaBiblioteca.set("apresentacoes")
     openShow(id)
+    // Ctrl+Z apaga o show: o centro não pode ficar apontando para ele (carregando para sempre)
+    const parar = shows.subscribe((todos) => {
+        if (todos[id]) return
+        queueMicrotask(() => parar())
+        if (get(activeShow)?.id === id) activeShow.set(null)
+    })
     newToast(`"${show.name}" criada na biblioteca; o + da linha põe no culto`)
     return id
 }
@@ -66,6 +72,33 @@ export function abrirEditorDoShow(showId: string) {
     fecharDividir()
     activeEdit.set(edicaoDoShow(get(activeEdit) as any, showId) as any)
     activePage.set("edit")
+}
+
+let voltaIniciada = false
+
+/**
+ * Preparar -> Culto: se o show aberto não é do culto, volta ao último item do culto em que se estava (ou ao primeiro).
+ * Só na janela principal (chamada pelo componente da barra), só nessa passagem; sem histórico, sem tocar a saída.
+ * Idempotente. Em Culto, abrir show de fora (busca) segue como sempre.
+ */
+export function iniciarVoltaAoRoteiro() {
+    if (voltaIniciada) return
+    voltaIniciada = true
+    let anterior = get(modoAlianca)
+    let ultimo: { index: number; id: string } | null = null
+    const lembrar = (a: any) => {
+        const itens = get(projects)[get(activeProject) || ""]?.shows || []
+        if (get(modoAlianca) === "preparar" && typeof a?.index === "number" && itens[a.index]?.id === a.id) ultimo = { index: a.index, id: a.id }
+    }
+    activeShow.subscribe(lembrar)
+    modoAlianca.subscribe((modo) => {
+        const veioDoPreparar = anterior === "preparar" && modo === "culto"
+        anterior = modo
+        if (!veioDoPreparar) return
+        const itens = get(projects)[get(activeProject) || ""]?.shows || []
+        const i = itemParaVoltar({ aberto: get(activeShow) as any, itens, ultimo })
+        if (i !== null) activeShow.set({ id: itens[i].id, type: "show", index: i } as any)
+    })
 }
 
 /** o acesso do perfil aos shows; o argumento só liga o template ao store do perfil (a chamada `getAccess` lê por `get`) */
