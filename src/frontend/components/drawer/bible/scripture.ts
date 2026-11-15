@@ -322,7 +322,7 @@ export async function playScripture() {
     const currentStyle = get(styles)[currentOutput?.style || ""] || {}
 
     const mediaStyle = getMediaStyle(get(media)[templateBackground], currentStyle)
-    setOutput("background", { path: templateBackground, loop: true, muted: true, ...mediaStyle })
+    setOutput("background", { path: templateBackground, loop: true, muted: true, semPasta: true, ...mediaStyle })
 
     ///
 

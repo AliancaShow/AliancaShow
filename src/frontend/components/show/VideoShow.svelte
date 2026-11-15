@@ -189,6 +189,8 @@
         let muted = shouldBeMuted
         if (videoType === "foreground" || (videoType !== "background" && !shouldLoop)) clearSlide()
         let bg: any = { type, startAt, muted, loop, ...mediaStyle, ignoreLayer: videoType === "foreground" }
+        // AliancaShow F7: so o "repetir" que o item do culto ESCOLHEU vence a pasta
+        if (typeof projectItem?.loop === "boolean") bg.loopDoItem = projectItem.loop
 
         if (type === "player") bg.id = mediaPath
         else {

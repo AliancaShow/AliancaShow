@@ -24,6 +24,10 @@ type VideoOptions = {
     muted?: boolean
     startAt?: number
     type?: "background" | "item"
+    /** AliancaShow F7: a mídia mora numa pasta (ou tem ajuste de fim próprio), então sem repetir ela PARA no último quadro em vez de sumir */
+    podeCongelar?: boolean
+    /** AliancaShow F7: o `loop` já foi resolvido pela regra da casa (setOutput), não reler `media[path].loop` no fim */
+    regraAlianca?: boolean
 }
 // online videos
 type VirtualAudioElement = {
@@ -44,6 +48,10 @@ export type VideoAudioData = {
     loop?: boolean
     fromTime?: number
     toTime?: number
+    podeCongelar?: boolean
+    regraAlianca?: boolean
+    /** parou no último quadro (o fundo continua na tela) */
+    congelado?: boolean
 }
 
 export type PlayingVideoState = {
@@ -98,7 +106,14 @@ export class VideoPlayer {
         }
 
         // check if already playing
-        const existingPlaying = this.getPlaying(id, linkedOutputIds || [])
+        let existingPlaying = this.getPlaying(id, linkedOutputIds || [])
+
+        // AliancaShow F7: parado no ultimo quadro (ou terminado) nao conta como "tocando": para e recomeça com a regra de agora
+        if (existingPlaying && (existingPlaying.congelado || (existingPlaying.audio instanceof HTMLAudioElement && existingPlaying.audio.ended))) {
+            await this.stop(id, linkedOutputIds?.[0], true)
+            existingPlaying = null
+        }
+
         if (existingPlaying) {
             const newOutputIds = (linkedOutputIds || []).filter((outId) => !existingPlaying.linkedOutputIds.includes(outId))
             if (newOutputIds.length) {
@@ -127,12 +142,12 @@ export class VideoPlayer {
 
         const globalOpts = this.getGlobalOptions(id)
         const softLoop = globalOpts.softLoop || 0
-        const loop = globalOpts.loop !== undefined ? globalOpts.loop : options.loop
+        const loop = options.regraAlianca ? options.loop : globalOpts.loop !== undefined ? globalOpts.loop : options.loop
         const fromTime = globalOpts.fromTime || 0
         const toTime = this.getEndTime(id, audio.duration)
 
         playingVideos.update((a) => {
-            a.push({ path: id, audio, linkedOutputIds: linkedOutputIds || [], type: options.type || "background", softLoop, loop, fromTime, toTime })
+            a.push({ path: id, audio, linkedOutputIds: linkedOutputIds || [], type: options.type || "background", softLoop, loop, fromTime, toTime, podeCongelar: !!options.podeCongelar, regraAlianca: !!options.regraAlianca })
             return a
         })
 
@@ -153,7 +168,7 @@ export class VideoPlayer {
         }
 
         const hasCustomBounds = fromTime > 0 || (toTime > 0 && toTime < audio.duration)
-        audio.loop = (options.loop ?? false) && !hasCustomBounds
+        audio.loop = (loop ?? false) && !hasCustomBounds
         audio.muted = options.muted ?? false
 
         this.updateVolume(id)
@@ -249,7 +264,7 @@ export class VideoPlayer {
         const audio = new Audio(encodeFilePath(audioPath))
         audio.addEventListener("ended", () => {
             const playing = this.getPlaying(originalId, outputIds || [])
-            if (playing?.loop || this.getGlobalOptions(originalId)?.loop) {
+            if (playing && this.querRepetir(playing, originalId)) {
                 const startTime = this.getStartTime(originalId)
                 audio.currentTime = startTime
                 if ("timeTick" in audio) (audio as any).timeTick.update(startTime)
@@ -281,13 +296,19 @@ export class VideoPlayer {
         })
     }
 
+    /** repete? Com a regra da casa vale só o `loop` resolvido na hora de tocar; sem ela, como sempre (o `loop` do ajuste da mídia é relido no fim) */
+    private static querRepetir(playing: VideoAudioData, path: string): boolean {
+        if (playing.regraAlianca) return !!playing.loop
+        return !!(playing.loop || this.getGlobalOptions(path)?.loop)
+    }
+
     private static isCheckingEnding = new Set<string>()
     static async checkIfEnding(path: string, outputIds?: string[], force = false) {
         if (this.isCheckingEnding.has(path)) return
         this.isCheckingEnding.add(path)
 
         const playing = this.getPlaying(path, outputIds || [])
-        if (!playing || (playing.audio.paused && !force)) return finish()
+        if (!playing || (playing.audio.paused && !force) || playing.congelado) return finish()
 
         const audio = this.getAudio(path, outputIds ? outputIds[0] : undefined)
         if (!audio) return finish()
@@ -296,8 +317,20 @@ export class VideoPlayer {
         const offset = ((get(transitionData)?.media?.duration ?? 800) / 1000) * 0.5
         if (audio.currentTime < endingTime - offset && !force) return finish()
 
+        // AliancaShow F7: fim sem repetir de video de pasta = PARA no ultimo quadro (o fundo nao some). So no fim de verdade (nao no `offset` antes)
+        if (playing.podeCongelar && !this.querRepetir(playing, path)) {
+            if (audio.currentTime < endingTime && !force) return finish()
+            if (audio instanceof HTMLAudioElement) audio.pause()
+            else audio.paused = true
+            this.marcarCongelado(playing)
+            this.initSyncClock()
+            const background = get(outputs)[outputIds?.[0] || ""]?.out?.background
+            if (!background?.folderPath) await checkNextAfterMedia(path, "media", outputIds)
+            return finish()
+        }
+
         // should loop
-        if (playing.loop || this.getGlobalOptions(path)?.loop) {
+        if (this.querRepetir(playing, path)) {
             if (audio.currentTime >= endingTime || force) {
                 const startTime = this.getStartTime(path)
                 audio.currentTime = startTime
@@ -544,6 +577,11 @@ export class VideoPlayer {
 
     static seekTo(path: string, outputId: string, time: number) {
         this.setAudioValue(path, outputId, "currentTime", time)
+    }
+
+    private static marcarCongelado(playing: VideoAudioData) {
+        playing.congelado = true
+        playingVideos.update((a) => a)
     }
 
     static toggleLoop(path: string, outputId: string) {

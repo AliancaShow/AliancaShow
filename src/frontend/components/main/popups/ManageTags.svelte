@@ -30,6 +30,8 @@
         if (!store[type]) return
 
         tags = keysToID(get(store[type]()))
+        // AliancaShow F7: as pastas de midia sao etiquetas, mas tem tela propria (gaveta de midia)
+        if (type === "media") tags = tags.filter((a) => !a.aliancaPasta)
         if (sort) tags = sortByName(tags)
 
         emptyTag = !!tags.find((a) => !a.name)

@@ -14,7 +14,7 @@
     import { clone } from "../helpers/array"
     import { getContrast, hexToRgb, splitRgb } from "../helpers/color"
     import Icon from "../helpers/Icon.svelte"
-    import { getMedia, getMediaCached, getMediaStyle, mediaSize } from "../helpers/media"
+    import { camadaDoSlide, getMedia, getMediaCached, getMediaStyle, mediaSize } from "../helpers/media"
     import { allOutputsHasStyleTemplate, getActiveOutputs, getFirstActiveOutput, getResolution, getSlideFilter, setTemplateStyle } from "../helpers/output"
     import { getGroupName, isSlideLocked } from "../helpers/show"
     import { _show } from "../helpers/shows"
@@ -67,7 +67,7 @@
 
             const mediaData = a.background && show.media[a.background]
             // WIP getMediaLayerType - use what is set in show only
-            if (mediaData && (mediaData?.loop === false || $media[mediaData?.path || ""]?.videoType === "foreground")) ghostBackground = null
+            if (mediaData && (mediaData?.loop === false || camadaDoSlide(mediaData?.path || "", $media[mediaData?.path || ""]) === "foreground")) ghostBackground = null
         })
     }
 

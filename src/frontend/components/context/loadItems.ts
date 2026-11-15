@@ -1,6 +1,8 @@
 import { get } from "svelte/store"
 import type { Media } from "../../../types/Show"
 import { actions, actionTags, activeActionTagFilter, activeEdit, activeMediaTagFilter, activePlayerTagFilter, activeTagFilter, activeTimerTagFilter, activeVariableTagFilter, contextData, drawerTabsData, globalTags, groups, media, mediaOptions, mediaTags, outputs, overlays, playerTags, playerVideos, selected, shows, sorted, timers, timerTags, variables, variableTags } from "../../stores"
+import { mediaTagsComuns, pastas as pastasDaGaveta } from "../../utils/aliancaPastasMidiaEstado"
+import { PASTA_RAIZ, abaDaPasta, pastaDaMidia } from "../../utils/aliancaPastasMidiaLogica"
 import { translateText } from "../../utils/language"
 import { isGroupHidden } from "../../utils/profile"
 import { drawerTabs } from "../../values/tabs"
@@ -40,10 +42,10 @@ const loadActions = {
     },
     media_tag_set: () => {
         const selectedTags = getSelectedTagIds<{ path?: string }>(get(selected), (item) => get(media)[item.path || ""]?.tags)
-        return createTagItems(mediaTags, selectedTags, true)
+        return createTagItems(mediaTagsComuns, selectedTags, true)
     },
     media_tag_filter: () => {
-        const sortedTags = createTagItems(mediaTags, get(activeMediaTagFilter))
+        const sortedTags = createTagItems(mediaTagsComuns, get(activeMediaTagFilter))
         setContextData("media_tags", sortedTags.length)
         return sortedTags
     },
@@ -93,6 +95,29 @@ const loadActions = {
     sort_shows: (items: ContextMenuItem[]) => sortItems(items, "shows"),
     sort_projects: (items: ContextMenuItem[]) => sortItems(items, "projects"),
     sort_media: (items: ContextMenuItem[]) => sortItems(items, "media"),
+    // AliancaShow F7: o menu "Mover para" / "Ao terminar" / "Camada" do card de midia (so Preparar)
+    alianca_mover: () => {
+        const caminho = get(selected).data[0]?.path || ""
+        const atual = pastaDaMidia(get(media)[caminho]?.tags, get(mediaTags))
+        return [{ label: "Mídias", icon: "media", id: PASTA_RAIZ, enabled: !atual, translate: false }, ...get(pastasDaGaveta).map((p) => ({ label: p.tag.name, icon: "folder", id: abaDaPasta(p.id), enabled: atual === p.id, translate: false }))]
+    },
+    alianca_fim: () => {
+        const m = get(media)[get(selected).data[0]?.path || ""]
+        const proprio = m?.aliancaFim || (typeof m?.loop === "boolean" ? (m.loop ? "repetir" : "parar") : "")
+        return [
+            { label: "Seguir a pasta", id: "seguir", enabled: !proprio, translate: false },
+            { label: "Repetir", id: "repetir", enabled: proprio === "repetir", translate: false },
+            { label: "Parar (último quadro)", id: "parar", enabled: proprio === "parar", translate: false }
+        ]
+    },
+    alianca_camada: () => {
+        const vt = get(media)[get(selected).data[0]?.path || ""]?.videoType || ""
+        return [
+            { label: "Seguir a pasta", id: "seguir", enabled: !vt, translate: false },
+            { label: "Fundo (sem som)", id: "fundo", enabled: vt === "background", translate: false },
+            { label: "Frente (com som, limpa os slides)", id: "frente", enabled: vt === "foreground", translate: false }
+        ]
+    },
     media_view: () => {
         const view = get(mediaOptions).view || "all"
         return [

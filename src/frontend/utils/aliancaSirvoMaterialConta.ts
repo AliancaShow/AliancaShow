@@ -81,7 +81,7 @@ export function itemDoMaterial(b: Baixado, bloco = "", evento?: string | null): 
  * `tracks`, `cropping` etc. são DO ARQUIVO e nunca atravessam. Só copia se `media[novo]` ainda não existe;
  * devolve o mapa (o mesmo, se nada a fazer).
  */
-export const CAMPOS_DE_MIDIA_QUE_ATRAVESSAM = ["fit", "fitOptions", "volume", "loop", "videoType", "audioType", "speed", "filter", "flipped", "flippedY"] as const
+export const CAMPOS_DE_MIDIA_QUE_ATRAVESSAM = ["fit", "fitOptions", "volume", "loop", "videoType", "audioType", "speed", "filter", "flipped", "flippedY", "aliancaFim"] as const
 export function copiarMidiaDaTroca<M extends { [caminho: string]: any }>(media: M, de: string, para: string): M {
     if (!media || de === para || media[para] || !media[de]) return media
     const copia: { [k: string]: any } = {}

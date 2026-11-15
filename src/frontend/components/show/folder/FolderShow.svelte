@@ -6,6 +6,7 @@
     import { AudioPlayer } from "../../../audio/audioPlayer"
     import { requestMain, sendMain } from "../../../IPC/main"
     import { activePopup, activeProject, focusMode, media, outLocked, outputs, playingAudio, popupData, projects, styles } from "../../../stores"
+    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { translateText } from "../../../utils/language"
     import { audioExtensions, imageExtensions, videoExtensions } from "../../../values/extensions"
     import Card from "../../drawer/Card.svelte"
@@ -47,7 +48,8 @@
     $: currentStyle = $styles[currentOutput?.style || ""] || {}
 
     function playMedia(file: TFile) {
-        if ($outLocked) return
+        // Preparar: nenhum clique mexe no telao (a pasta aberta no centro tambem)
+        if (gavetaNaoToca() || $outLocked) return
 
         if (file.type === "audio") {
             if (AudioPlayer.getPlaying(file.path)) clearAudio(file.path)
@@ -68,7 +70,7 @@
         let loop = videoType === "foreground" ? false : true
         let muted = videoType === "background" ? true : false
         if (videoType === "foreground") clearSlide()
-        setOutput("background", { path: file.path, type: file.type, loop, muted, startAt: 0, ...mediaStyle, ignoreLayer: videoType === "foreground" })
+        setOutput("background", { path: file.path, type: file.type, loop, muted, startAt: 0, semPasta: true, ...mediaStyle, ignoreLayer: videoType === "foreground" })
 
         startFolderTimer(path, file)
     }
@@ -81,7 +83,7 @@
     {#if folderFiles.length}
         {#each folderFiles as file}
             {@const outputted = file.type === "audio" ? [AudioPlayer.getPlaying(file.path), $playingAudio][0] : findMatchingOut(file.path, $outputs)}
-            <Card resolution={{ width: 16, height: 9 }} width={25} outlineColor={typeof outputted === "string" ? outputted : null} active={file.type === "audio" ? !!outputted : outputted !== null} label={file.name} title={file.path} icon={file.type === "audio" ? "music" : file.type} white={file.type !== "video"} showPlayOnHover tocaNoPreparar checkered={file.type !== "audio"} on:click={() => playMedia(file)}>
+            <Card resolution={{ width: 16, height: 9 }} width={25} outlineColor={typeof outputted === "string" ? outputted : null} active={file.type === "audio" ? !!outputted : outputted !== null} label={file.name} title={file.path} icon={file.type === "audio" ? "music" : file.type} white={file.type !== "video"} showPlayOnHover checkered={file.type !== "audio"} on:click={() => playMedia(file)}>
                 <!-- icons -->
                 <div class="icons">
                     {#if file.type === "image" && timer}

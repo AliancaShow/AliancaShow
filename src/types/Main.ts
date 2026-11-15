@@ -191,6 +191,7 @@ export interface MediaStyle {
     favourite?: boolean
     audio?: boolean
     loop?: boolean // audio
+    aliancaFim?: "repetir" | "parar" // AliancaShow: ajuste proprio de FIM do video (a camada propria continua sendo `videoType`)
     volume?: number // audio
     pitch?: number // audio
     tempo?: number // audio

@@ -1,13 +1,16 @@
 <script lang="ts">
     import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { get } from "svelte/store"
     import { uid } from "uid"
     import type { ContentProviderId } from "../../../../electron/contentProviders/base/types"
     import { Main } from "../../../../types/IPC/Main"
     import type { ClickEvent, FileFolder } from "../../../../types/Main"
     import { requestMain } from "../../../IPC/main"
     import { addProjectItem } from "../../../converters/project"
-    import { activeDrawerTab, activeEdit, activeFocus, activeMediaTagFilter, activePopup, activeShow, audioFolders, cloudSyncData, drawerTabsData, focusMode, labelsDisabled, media, mediaFolders, mediaOptions, openedMediaFolders, outLocked, outputs, popupData, providerConnections, selectAllMedia, selected, sorted, special, styles } from "../../../stores"
+    import { activeDrawerTab, activeEdit, activeFocus, activeMediaTagFilter, activePopup, activeShow, audioFolders, cloudSyncData, drawerTabsData, focusMode, labelsDisabled, media, mediaFolders, mediaOptions, mediaTags, modoAlianca, openedMediaFolders, outLocked, outputs, popupData, providerConnections, selectAllMedia, selected, sorted, special, styles } from "../../../stores"
     import { teclaIgnorada } from "../../../utils/aliancaModo"
+    import { membros, pastaParaConfigurar } from "../../../utils/aliancaPastasMidiaEstado"
+    import { PASTA_RAIZ, PASTA_SIRVO, ehAbaDePasta, idDaAba, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
     import Icon from "../../helpers/Icon.svelte"
     import T from "../../helpers/T.svelte"
     import { clone, keysToID, sortFilenames } from "../../helpers/array"
@@ -20,6 +23,7 @@
     import { clearBackground, clearSlide } from "../../output/clear"
     import Center from "../../system/Center.svelte"
     import VirtualList from "../VirtualList.svelte"
+    import AudioFile from "../audio/AudioFile.svelte"
     import BMDStreams from "../live/BMDStreams.svelte"
     import Cameras from "../live/Cameras.svelte"
     import NDIStreams from "../live/NDIStreams.svelte"
@@ -29,6 +33,8 @@
     import CLogo from "./CLogo.svelte"
     import Canva from "./Canva.svelte"
     import ContentLibraryBrowser from "./ContentLibraryBrowser.svelte"
+    import AliancaFiltros from "./AliancaFiltros.svelte"
+    import AliancaPastaCfg from "./AliancaPastaCfg.svelte"
     import Folder from "./Folder.svelte"
     import Media from "./MediaCard.svelte"
     import MediaGrid from "./MediaGrid.svelte"
@@ -53,6 +59,25 @@
 
     // type File = { path: string; favourite: boolean; name: string; extension: string; audio: boolean; folder?: boolean; stat?: any }
     // let files: File[] = []
+
+    // AliancaShow F7: as vistas "pasta:*" (a raiz "Midias", cada pasta-etiqueta e "Do Sirvo")
+    $: ehPastaView = ehAbaDePasta(active)
+    $: ehTodos = active === "all" || active === PASTA_RAIZ
+    $: pastaId = idDaAba(active)
+    $: tagDaPasta = pastaId ? $mediaTags[pastaId] : null
+    $: resumoDaPasta = tagDaPasta?.aliancaPasta ? (tagDaPasta.aliancaPasta.fim === "repetir" ? "repete" : "para no último quadro") + " · " + (tagDaPasta.aliancaPasta.camada === "frente" ? "frente" : "fundo") : ""
+    let audiosDaPasta: { path: string; name: string }[] = []
+    let cfgAberta = false
+    let cfgDe = ""
+    $: if ((pastaId || "") !== cfgDe) {
+        cfgDe = pastaId || ""
+        cfgAberta = false
+    }
+    $: if (pastaId && $pastaParaConfigurar === pastaId) {
+        cfgAberta = true
+        pastaParaConfigurar.set(null)
+    }
+    const listaFixa = () => ehTodos || active === "favourites" || ehPastaView
 
     let specialTabs = ["online", "inputs"]
     $: isProviderSection = contentProviders.some((p) => p.providerId === active)
@@ -80,7 +105,7 @@
         })
     }
 
-    $: folderName = active === "all" ? "category.all" : active === "favourites" ? "category.favourites" : rootPath === path ? (active !== null ? $mediaFolders[active]?.name || "" : "") : splitPath(path).name
+    $: folderName = active === "all" || ehPastaView ? "category.all" : active === "favourites" ? "category.favourites" : rootPath === path ? (active !== null ? $mediaFolders[active]?.name || "" : "") : splitPath(path).name
 
     function setSubSubTab(id: string) {
         if (!active) return
@@ -140,7 +165,10 @@
                 })
 
             openFolder("favourites")
-        } else if (active === "all") {
+        } else if (ehPastaView && active !== PASTA_RAIZ) {
+            prevActive = active
+            carregarPasta()
+        } else if (ehTodos) {
             if (active === prevActive) return
             prevActive = active
 
@@ -153,6 +181,63 @@
         } else {
             // screens && cameras
             prevActive = active
+        }
+    }
+
+    // a pasta-etiqueta: a lista sai do store `media` (independe de onde o arquivo mora); "Do Sirvo" le a pasta do material
+    let cargaPasta = 0
+    async function carregarPasta() {
+        const minha = ++cargaPasta
+        let caminhos: string[] = []
+
+        if (active === PASTA_SIRVO) {
+            const raizOnline = ((await requestMain(Main.ALIANCA_PASTA_ONLINE, undefined as any)) || "") as string
+            if (minha !== cargaPasta) return
+            if (raizOnline) {
+                const barra = raizOnline.includes("\\") ? "\\" : "/"
+                const data = await requestMain(Main.READ_FOLDER, { path: raizOnline + barra + "Sirvo", depth: 3 })
+                caminhos = Object.values(data || {})
+                    .filter((a: any) => !a.isFolder)
+                    .map((a: any) => a.path)
+            }
+        } else {
+            caminhos = (pastaId ? get(membros)[pastaId] : []) || []
+            // existe neste computador? (o store `media` nao e portatil)
+            const existe = await Promise.all(
+                caminhos.map(async (c) => {
+                    if (/^https?:/i.test(c)) return true
+                    try {
+                        return !!(await requestMain(Main.FILE_INFO, c))
+                    } catch {
+                        return true
+                    }
+                })
+            )
+            caminhos = caminhos.filter((_, i) => existe[i])
+        }
+        if (minha !== cargaPasta) return
+
+        const arquivos: FileFolder[] = []
+        const audios: { path: string; name: string }[] = []
+        for (const c of caminhos) {
+            const tipo = getMediaType(getExtension(c))
+            const nome = getFileName(c)
+            if (tipo === "audio") audios.push({ path: c, name: nome })
+            else if (tipo === "video" || tipo === "image") arquivos.push({ isFolder: false, path: c, name: nome, stats: {} as any })
+        }
+        audiosDaPasta = sortFilenames(audios as any) as any
+        allRelevantFiles = arquivos
+        openFolder("all")
+    }
+
+    // alguem entrou ou saiu de uma pasta (mover, desfazer, apagar): refaz so a lista, sem ler o disco de novo
+    $: assinaturaPastas = ehPastaView ? JSON.stringify($membros) : ""
+    let assinaturaAnterior = ""
+    $: if (assinaturaPastas !== assinaturaAnterior) {
+        assinaturaAnterior = assinaturaPastas
+        if (ehPastaView && prevActive === active) {
+            if (active === PASTA_RAIZ) filterFiles()
+            else if (active !== PASTA_SIRVO) carregarPasta()
         }
     }
 
@@ -228,7 +313,7 @@
             }
         }
 
-        openFolder(active === "all" ? "all" : (path as string))
+        openFolder(ehTodos ? "all" : (path as string))
     }
 
     function openFolder(path: string) {
@@ -276,7 +361,9 @@
 
     // filter files
     $: activeView = $mediaOptions.view || "all"
-    $: if (activeView || $activeMediaTagFilter || $sorted) filterFiles()
+    $: filtroDeTipos = ($drawerTabsData.media?.aliancaFiltro || []) as string[]
+    $: filtroChave = (filtroDeTipos || []).join(",")
+    $: if (activeView || $activeMediaTagFilter || $sorted || filtroChave !== undefined) filterFiles()
     $: if (searchValue !== undefined) filterSearch()
 
     let filteredFiles: FileFolder[] = []
@@ -284,11 +371,19 @@
         if (active === "online" || active === "inputs" || isProviderSection) return
 
         let localFilteredFiles: FileFolder[] = clone(filesList)
+        // lido do store na hora (a ordem das declaracoes reativas nao garante `filtroDeTipos` pronto na primeira carga)
+        const filtroDeTipos: string[] = get(drawerTabsData).media?.aliancaFiltro || []
 
         // filter by tag
         if ($activeMediaTagFilter.length) {
             localFilteredFiles = localFilteredFiles.filter((a) => $media[a.path]?.tags?.length && !$activeMediaTagFilter.find((tagId) => !$media[a.path].tags!.includes(tagId)))
         }
+
+        // AliancaShow F7: a raiz "Midias" nao mostra o que ja esta numa pasta
+        if (active === PASTA_RAIZ) localFilteredFiles = localFilteredFiles.filter((a) => !pastaDaMidia($media[a.path]?.tags, $mediaTags))
+
+        // AliancaShow F7: filtros Video/Audio/Foto (vazio = tudo)
+        if (filtroDeTipos.length) localFilteredFiles = localFilteredFiles.filter((a) => filtroDeTipos.includes(getMediaType(getExtension(a.name))))
 
         // filter by type
         if (activeView === "folder") {
@@ -308,7 +403,7 @@
         else if (sortType === "modified") localFilteredFiles = localFilteredFiles.sort((a, b) => (a.isFolder || b.isFolder ? 1 : b.stats.mtimeMs - a.stats.mtimeMs))
 
         // append folders
-        if (activeView === "all") {
+        if (activeView === "all" && !filtroDeTipos.length) {
             localFilteredFiles = [...sortFilenames(foldersList), ...localFilteredFiles]
         }
 
@@ -333,13 +428,13 @@
             return
         }
         if (searchValue.length < 2) {
-            if (active !== "all" && active !== "favourites") requestFiles(path, 0, true)
+            if (!listaFixa()) requestFiles(path, 0, true)
             else searchedFiles = clone(filteredFiles)
             searchFilterActive = false
             return
         }
 
-        if (active !== "all" && active !== "favourites" && currentDepth < 5) {
+        if (!listaFixa() && currentDepth < 5) {
             await requestFiles(path, 5)
         }
 
@@ -350,6 +445,8 @@
 
         searchFilterActive = false
     }
+
+    $: audiosVisiveis = ehPastaView && (!filtroDeTipos.length || filtroDeTipos.includes("audio")) ? audiosDaPasta.filter((a) => searchValue.length < 2 || filter(a.name).includes(filter(searchValue))) : []
 
     $: fileCount = mediaFilesOnly.length
     const shortcuts = {
@@ -456,7 +553,7 @@
 
     const slidesViews: any = { grid: "list", list: "grid" }
     // const nextActiveView = { all: "image", folder: "image", image: "video", video: "all" } // all: "folder"
-    $: if (notFolders.includes(active || "") && activeView === "folder") setView("image")
+    $: if ((notFolders.includes(active || "") || ehPastaView) && activeView === "folder") setView("image")
 
     $: currentOutput = getFirstActiveOutput($outputs)
 
@@ -523,6 +620,22 @@
             <p>Canva</p>
         </MaterialButton>
     </div>
+{/if}
+
+<!-- AliancaShow F7: a pasta aberta (nome, o que ela faz, ⚙ so no Preparar) -->
+{#if ehPastaView && active !== PASTA_RAIZ}
+    <div class="pastaTopo" data-pasta-topo>
+        <span class="pastaNome">{active === PASTA_SIRVO ? "Do Sirvo" : tagDaPasta?.name || "Pasta"}</span>
+        <span class="pastaResumo">{active === PASTA_SIRVO ? "só para ver" : resumoDaPasta}</span>
+        {#if $modoAlianca === "preparar" && pastaId && tagDaPasta}
+            <button type="button" class="pastaGear" class:ligado={cfgAberta} data-pasta-gear title="Comportamento da pasta" on:click={() => (cfgAberta = !cfgAberta)}>
+                <Icon id="settings" size={1.1} white />
+            </button>
+        {/if}
+    </div>
+    {#if cfgAberta && $modoAlianca === "preparar" && pastaId && tagDaPasta}
+        <AliancaPastaCfg {pastaId} />
+    {/if}
 {/if}
 
 <!-- MAIN -->
@@ -592,15 +705,31 @@
                     {/if}
                 {/key}
             </div>
-        {:else}
+        {:else if !audiosVisiveis.length}
             <div class={specialTabs.includes(active || "") ? "" : "context #media"} style="display: contents;">
                 <Center style="opacity: 0.2;">
-                    <Icon id="noImage" size={5} white />
+                    {#if ehPastaView && active !== PASTA_RAIZ}
+                        <p style="text-align: center;">Nenhuma mídia desta pasta neste computador</p>
+                    {:else}
+                        <Icon id="noImage" size={5} white />
+                    {/if}
                 </Center>
+            </div>
+        {/if}
+
+        {#if audiosVisiveis.length}
+            <div class="audiosDaPasta" data-audios-da-pasta>
+                {#each audiosVisiveis as a, i (a.path)}
+                    <AudioFile path={a.path} name={a.name} {active} index={i} />
+                {/each}
             </div>
         {/if}
     </div>
 </div>
+
+{#if !isProviderSection && active !== "online" && active !== "inputs"}
+    <AliancaFiltros />
+{/if}
 
 <!-- NAV -->
 
@@ -717,6 +846,40 @@
     .tabs :global(button.isActive) {
         background: rgb(242 26 39 / 0.16) !important;
         box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);
+    }
+
+    .pastaTopo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 12px;
+        background-color: var(--primary-darkest);
+        border-bottom: 1px solid var(--primary-lighter);
+    }
+    .pastaNome {
+        font-weight: 500;
+    }
+    .pastaResumo {
+        opacity: 0.6;
+        font-size: 0.85em;
+    }
+    .pastaGear {
+        margin-inline-start: auto;
+        padding: 4px 6px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        background: transparent;
+    }
+    .pastaGear.ligado {
+        background: var(--secondary-opacity);
+        border-color: var(--secondary);
+    }
+    .audiosDaPasta {
+        width: 100%;
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
 
     .grid {

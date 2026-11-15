@@ -8,10 +8,11 @@ import type { Resolution, Styles } from "../../../types/Settings"
 import type { Item, Layout, LayoutRef, Media, OutSlide, Show, Slide, SlideData, Template, TemplateSettings, Transition } from "../../../types/Show"
 import { AudioAnalyser } from "../../audio/audioAnalyser"
 import { requestMain, sendMain } from "../../IPC/main"
-import { actions, activeFocus, activeProject, activeRename, activeShow, activeTimers, allOutputs, categories, connections, currentOutputSettings, customMessageCredits, disabledServers, effects, focusMode, lockedOverlays, media, outputDisplay, outputs, outputSlideCache, outputState, overlays, overlayTimers, projects, scriptures, scriptureSettings, serverData, showsCache, special, stageShows, styles, templates, theme, themes, transitionData, usageLog } from "../../stores"
+import { actions, activeFocus, activeProject, activeRename, activeShow, activeTimers, allOutputs, categories, connections, currentOutputSettings, customMessageCredits, disabledServers, effects, focusMode, lockedOverlays, media, mediaTags, outputDisplay, outputs, outputSlideCache, outputState, overlays, overlayTimers, projects, scriptures, scriptureSettings, serverData, showsCache, special, stageShows, styles, templates, theme, themes, transitionData, usageLog } from "../../stores"
 import { isMainWindow, isOutputWindow, newToast } from "../../utils/common"
 import { indiceDaFoto, mesmoSlideDaFoto, podeTerFoto, tirarFoto } from "../../utils/aliancaFoto"
 import { destinoRecusaTecla } from "../../utils/aliancaModo"
+import { resolverFim } from "../../utils/aliancaPastasMidiaLogica"
 import { translateText } from "../../utils/language"
 import { confirmCustom } from "../../utils/popup"
 import { send } from "../../utils/request"
@@ -117,9 +118,19 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
     const querFoto = type === "slide" && podeTerFoto(data)
     if (type === "slide" && data) delete data.foto // nunca confia em foto vinda de fora (ex.: `{ ...out.slide, index }`)
 
+    // AliancaShow (Preparar F7): o FIM do video (repetir/parar) e resolvido AQUI, de forma sincrona, uma vez so, e vai na mesma escrita do outputs
+    let podeCongelar = false
+    let regraAlianca = false
+    if (type === "background" && data) {
+        const r = resolverFimDoFundo(data, allOutputIds)
+        data = r.data
+        podeCongelar = r.podeCongelar
+        regraAlianca = r.regraAlianca
+    }
+
     const inputData = clone(data)
 
-    checkAudio(type, data, allOutputIds, outs)
+    checkAudio(type, data, allOutputIds, outs, { podeCongelar, regraAlianca })
 
     outputs.update((a) => {
         if (type === "slide" && data?.id) {
@@ -218,7 +229,29 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
 }
 
 // setup video manager (and audio analyser)
-function checkAudio(type: string, data: any, allOutputIds: string[], outs: string[]) {
+/**
+ * O `loop` efetivo do fundo: ajuste proprio > `loopDoItem` (repetir do item do culto) > pasta > o que o chamador pediu (`loop`) > padrao de hoje.
+ * `semPasta`: portas que nao seguem a pasta. Se o mesmo video ja esta tocando, NAO recalcula (mudar a pasta so vale na proxima vez que tocar).
+ * Tira `loopDoItem`/`semPasta` do dado (nao vao para a saida).
+ */
+function resolverFimDoFundo(data: any, allOutputIds: string[]) {
+    const { loopDoItem, semPasta, ...resto } = data
+    const caminho: string = resto.path || resto.id || ""
+    const ehVideo = !!caminho && resto.type !== "player" && resto.type !== "camera" && getMediaType(getExtension(caminho)) === "video"
+    if (!ehVideo) return { data: resto, podeCongelar: false, regraAlianca: false }
+
+    const jaTocando = VideoPlayer.getPlaying(caminho, allOutputIds)
+    if (jaTocando && !jaTocando.congelado && !(jaTocando.audio instanceof HTMLAudioElement && jaTocando.audio.ended)) {
+        if (typeof jaTocando.loop === "boolean") resto.loop = jaTocando.loop
+        return { data: resto, podeCongelar: !!jaTocando.podeCongelar, regraAlianca: !!jaTocando.regraAlianca }
+    }
+
+    const r = resolverFim({ midia: get(media)[caminho], mediaTags: get(mediaTags), loopDoItem, loopPedido: typeof resto.loop === "boolean" ? resto.loop : undefined, semPasta: !!semPasta })
+    if (r.loop !== undefined) resto.loop = r.loop
+    return { data: resto, podeCongelar: r.podeCongelar, regraAlianca: r.origem !== "hoje" && r.origem !== "pedido" }
+}
+
+function checkAudio(type: string, data: any, allOutputIds: string[], outs: string[], fim: { podeCongelar?: boolean; regraAlianca?: boolean } = {}) {
     if (type === "background") {
         if (data) {
             const newPath = data.path || data.id || ""
@@ -232,7 +265,7 @@ function checkAudio(type: string, data: any, allOutputIds: string[], outs: strin
                 if (bgPath && bgPath !== newPath) VideoPlayer.stop(bgPath, outputId)
             })
 
-            VideoPlayer.start(newPath, { loop: data.loop, muted: data.muted, startAt: data.startAt || 0, isOnline: data.type === "player" }, allOutputIds)
+            VideoPlayer.start(newPath, { loop: data.loop, muted: data.muted, startAt: data.startAt || 0, isOnline: data.type === "player", podeCongelar: fim.podeCongelar, regraAlianca: fim.regraAlianca }, allOutputIds)
         } else {
             VideoPlayer.stopByOutputIds(allOutputIds)
         }

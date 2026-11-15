@@ -8,7 +8,8 @@ import type { FileFolder, MediaStyle, Subtitle } from "../../../types/Main"
 import type { Cropping, Styles } from "../../../types/Settings"
 import type { ShowType } from "../../../types/Show"
 import { requestMain, sendMain } from "../../IPC/main"
-import { audioFolders, cachePath, loadedMediaThumbnails, media, mediaFolders, special } from "../../stores"
+import { audioFolders, cachePath, loadedMediaThumbnails, media, mediaFolders, mediaTags, special } from "../../stores"
+import { camadaNaHora } from "../../utils/aliancaPastasMidiaLogica"
 import { addToMediaFolder } from "../../utils/cloudSync"
 import { isMainWindow, newToast, wait, waitUntilValueIsDefined } from "../../utils/common"
 import { audioExtensions, imageExtensions, mediaExtensions, presentationExtensions, videoExtensions } from "../../values/extensions"
@@ -404,6 +405,10 @@ export function getMediaLayerType(path: string, style: MediaStyle | null): "" | 
     if (!path) return ""
     if (style?.videoType) return style.videoType as "background" | "foreground"
 
+    // AliancaShow (Preparar F7): a pasta de midia decide a camada. Le do store (o `style` que vem de getMediaStyle nao carrega `tags`)
+    const daPasta = camadaNaHora(get(media)[path], get(mediaTags))
+    if (daPasta) return daPasta
+
     // get multiple matching folder paths if children are added
     let allMatchingFolderPaths: string[] = []
     const mediaFolderPaths = Object.values(get(mediaFolders)).map((a) => a.path || "")
@@ -423,6 +428,15 @@ export function getMediaLayerType(path: string, style: MediaStyle | null): "" | 
     if (!folderData) return ""
 
     return folderData.mediaType || ""
+}
+
+/**
+ * AliancaShow (Preparar F7): a camada de um fundo de SLIDE. So o que esta marcado (ajuste proprio ou pasta de midia), nunca a pasta do disco:
+ * a grade (Slide.svelte) e a saida (showActions.ts) usam esta mesma conta, senao a grade mostra um fundo que a saida corta.
+ */
+export function camadaDoSlide(path: string, style: { videoType?: string } | null | undefined): "" | "background" | "foreground" {
+    if (style?.videoType === "background" || style?.videoType === "foreground") return style.videoType
+    return camadaNaHora(get(media)[path], get(mediaTags)) || ""
 }
 
 export const mediaSize = {

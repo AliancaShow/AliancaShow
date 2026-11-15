@@ -545,7 +545,7 @@ export async function togglePlayingMedia(e: Event | null = null, back = false, a
         const located = await getMedia(item.id)
         if (!located) return
 
-        setOutput("background", { type, path: located.path, muted: shouldBeMuted, loop: shouldLoop, ...mediaStyle })
+        setOutput("background", { type, path: located.path, muted: shouldBeMuted, loop: shouldLoop, ...(typeof projectItem?.loop === "boolean" ? { loopDoItem: projectItem.loop } : {}), ...mediaStyle })
     } else if (type === "audio") {
         AudioPlayer.start(item.id, { name: (item as any).name || "" }, { pauseIfPlaying: true })
     } else if (type === "folder") {
@@ -576,7 +576,7 @@ export async function playFolder(path: string, back = false) {
     const outputStyle = get(styles)[currentOutput?.style || ""]
     const mediaStyle = getMediaStyle(get(media)[newMedia.path], outputStyle)
 
-    setOutput("background", { type: newMedia.type, path: newMedia.path, muted: false, loop: false, ...mediaStyle, folderPath: path })
+    setOutput("background", { type: newMedia.type, path: newMedia.path, muted: false, loop: false, semPasta: true, ...mediaStyle, folderPath: path })
 
     startFolderTimer(path, newMedia)
 }

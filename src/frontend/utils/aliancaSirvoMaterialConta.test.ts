@@ -443,7 +443,7 @@ describe("v5: versão nova do mesmo arquivo troca NO LUGAR", () => {
 
 describe("v5: a mídia do operador atravessa a troca só pela lista branca", () => {
     it("copia fit/volume/loop… e NUNCA fromTime/toTime/info/tracks/cropping", () => {
-        const media = { A: { fit: "cover", fitOptions: { x: 1 }, volume: 0.5, loop: true, videoType: "background", audioType: "music", speed: "2", filter: "blur", flipped: true, flippedY: false, fromTime: 5, toTime: 9, info: { codec: "x" }, creationTime: 1, tracks: [1], cropping: { top: 1 }, favourite: true } }
+        const media = { A: { fit: "cover", fitOptions: { x: 1 }, volume: 0.5, loop: true, videoType: "background", audioType: "music", speed: "2", filter: "blur", flipped: true, flippedY: false, aliancaFim: "parar", fromTime: 5, toTime: 9, info: { codec: "x" }, creationTime: 1, tracks: [1], cropping: { top: 1 }, favourite: true } }
         const r = copiarMidiaDaTroca(media as any, "A", "B")
         expect(Object.keys(r.B).sort()).toEqual([...CAMPOS_DE_MIDIA_QUE_ATRAVESSAM].sort())
         expect(r.B.fromTime).toBeUndefined()

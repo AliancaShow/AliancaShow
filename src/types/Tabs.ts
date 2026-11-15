@@ -56,6 +56,7 @@ export interface DrawerTabs {
         openedSubSubTab?: { [key: string]: string } // media "Online"/"Screens" sub tabs
         openedSubmenus?: string[] // submenu (action tags) opened/closed state (contains activeSubTab ids)
         activeSubmenu?: string // active submenu if any
+        aliancaFiltro?: ("video" | "audio" | "image")[] // AliancaShow F7: filtros Video/Audio/Foto da gaveta de midia (vazio = tudo)
     }
 }
 

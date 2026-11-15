@@ -116,6 +116,7 @@ import { clearSlide } from "../output/clear"
 import { defaultThemes } from "../settings/tabs/defaultThemes"
 import { activeProject, modoAlianca as modoAliancaStore } from "./../../stores"
 import { juntarFotos } from "../../utils/aliancaGaveta"
+import { ajusteProprio, alvosDoMenu, moverArrastados } from "../../utils/aliancaPastasMidia"
 import { cortarAoMeio, juntarSelecao } from "../../utils/aliancaTesoura"
 import type { ContextMenuItem } from "./contextMenus"
 import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
@@ -285,6 +286,21 @@ const clickActions = {
     sort_shows: (obj: ObjData) => sort(obj, "shows"),
     sort_projects: (obj: ObjData) => sort(obj, "projects"),
     sort_media: (obj: ObjData) => sort(obj, "media"),
+    // AliancaShow F7 (so Preparar): mover para pasta, e o ajuste proprio de fim/camada de video
+    alianca_mover: (obj: ObjData) => {
+        if (get(modoAliancaStore) !== "preparar" || !obj.sel) return
+        moverArrastados(obj.sel.data, obj.menu.id || "")
+    },
+    alianca_fim: (obj: ObjData) => {
+        if (get(modoAliancaStore) !== "preparar" || !obj.sel) return
+        const id = obj.menu.id
+        ajusteProprio(alvosDoMenu(obj.sel.data, "video"), { aliancaFim: id === "repetir" ? "repetir" : id === "parar" ? "parar" : null })
+    },
+    alianca_camada: (obj: ObjData) => {
+        if (get(modoAliancaStore) !== "preparar" || !obj.sel) return
+        const id = obj.menu.id
+        ajusteProprio(alvosDoMenu(obj.sel.data, "video"), { videoType: id === "fundo" ? "background" : id === "frente" ? "foreground" : null })
+    },
     media_view: (obj: ObjData) => {
         mediaOptions.update((a) => ({ ...a, view: obj.menu.id as any }))
     },
@@ -1647,7 +1663,7 @@ const clickActions = {
         const mediaStyle: MediaStyle = getMediaStyle(get(media)[path], currentStyle)
 
         const type = getMediaType(getExtension(path))
-        setOutput("background", { path, ...mediaStyle, type, loop: true, muted: true })
+        setOutput("background", { path, ...mediaStyle, type, loop: true, muted: true, semPasta: true })
     },
     play_no_filters: (obj: ObjData) => {
         if (get(outLocked)) return
@@ -1660,7 +1676,7 @@ const clickActions = {
         const muted = videoType === "foreground" ? false : true
 
         const type = getMediaType(getExtension(path))
-        setOutput("background", { path, type, loop, muted })
+        setOutput("background", { path, type, loop, muted, semPasta: true })
     },
     favourite: (obj: ObjData) => {
         if (!obj.sel) return
