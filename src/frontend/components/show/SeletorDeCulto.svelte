@@ -343,7 +343,7 @@
     }
 </script>
 
-<div class="seletor" bind:this={linhaElem} bind:clientWidth={larguraLinha}>
+<div class="seletor" class:estreito={layout.semSemana} bind:this={linhaElem} bind:clientWidth={larguraLinha}>
     <button type="button" class="bt agenda" class:aberto={aberto === "agenda"} style="flex: 0 1 {layout.agendaPct}%" bind:this={btnAgenda} aria-haspopup="listbox" aria-expanded={aberto === "agenda"} aria-label="Agenda: {nomeAgenda}" data-title="Agenda: {nomeAgenda}" tabindex="-1" on:mousedown|preventDefault on:click={() => abrir("agenda")}>
         <span class="txt">{nomeAgenda}</span>
         <svg class="seta" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -355,9 +355,9 @@
 </div>
 
 {#if fase !== "fechado"}
-    <div class="camada" role="presentation" bind:this={camadaElem} use:camada>
+    <div class="seletor-camada" role="presentation" bind:this={camadaElem} use:camada>
         {#if fase === "aberto"}
-            <div class="pop" role="presentation" bind:this={popElem} style="left: {pos.left}px; top: {pos.top}px; width: {pos.width}px; max-height: {pos.maxHeight}px">
+            <div class="seletor-pop" role="presentation" bind:this={popElem} style="left: {pos.left}px; top: {pos.top}px; width: {pos.width}px; max-height: {pos.maxHeight}px">
                 {#if aberto === "dia" && noAr}
                     <div class="aviso">Há conteúdo no ar. Trocar de culto não mexe no telão.</div>
                 {/if}
@@ -374,23 +374,25 @@
                         {/each}
                     {:else}
                         {#each grupos as g (g.chave)}
-                            <div class="cab" role="presentation">{g.titulo}</div>
-                            {#each g.opcoes as o (o.id)}
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <div class="op" role="option" tabindex="-1" aria-selected={$activeProject === o.id} data-opcao={o.id} data-title={dicaDaOpcao(o)} class:ativa={$activeProject === o.id} class:destaque={destaqueId === o.id} class:passado={o.passado} class:arquivado={o.arquivado} on:click={() => clicarOpcao(o.id)} on:mousemove={() => moverMouse(o.id)}>
-                                    <span class="rot">
-                                        <span class="data">{semContagem ? o.semSemana : o.curto}</span>
-                                        {#if o.evento}<span class="ev">· {o.evento}</span>{/if}
-                                        {#if o.hoje}<span class="selo">hoje</span>{/if}
-                                        {#if o.arquivado}<span class="selo arq">arquivado</span>{/if}
-                                    </span>
-                                    <span class="info" class:cheio={!o.vazio} aria-label={o.vazio ? "sem material" : `${o.itens} itens`}>
-                                        <i class="pip" class:cheio={!o.vazio}></i>
-                                        {#if !semContagem}<span class="n">{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>{/if}
-                                    </span>
-                                    {#if $activeProject === o.id}<svg class="ok" viewBox="0 0 10 10" width="11" height="11" aria-hidden="true"><path d="M1.8 5.3 4 7.5 8.3 2.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>{/if}
-                                </div>
-                            {/each}
+                            <div class="grupo" role="presentation">
+                                <div class="cab" role="presentation"><span>{g.titulo}</span></div>
+                                {#each g.opcoes as o (o.id)}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <div class="op" role="option" tabindex="-1" aria-selected={$activeProject === o.id} data-opcao={o.id} data-title={dicaDaOpcao(o)} class:ativa={$activeProject === o.id} class:destaque={destaqueId === o.id} class:passado={o.passado} class:arquivado={o.arquivado} on:click={() => clicarOpcao(o.id)} on:mousemove={() => moverMouse(o.id)}>
+                                        <span class="rot">
+                                            <span class="data">{semContagem ? o.semSemana : o.curto}</span>
+                                            {#if o.evento}<span class="ev">· {o.evento}</span>{/if}
+                                            {#if o.hoje}<span class="selo">hoje</span>{/if}
+                                            {#if o.arquivado}<span class="selo arq">arquivado</span>{/if}
+                                        </span>
+                                        <span class="info" class:cheio={!o.vazio} aria-label={o.vazio ? "sem material" : `${o.itens} itens`}>
+                                            <i class="pip" class:cheio={!o.vazio}></i>
+                                            {#if !semContagem}<span class="n">{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>{/if}
+                                        </span>
+                                        {#if $activeProject === o.id}<svg class="ok" viewBox="0 0 10 10" width="11" height="11" aria-hidden="true"><path d="M1.8 5.3 4 7.5 8.3 2.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>{/if}
+                                    </div>
+                                {/each}
+                            </div>
                         {/each}
                     {/if}
                 </div>
@@ -419,7 +421,7 @@
         border: none;
         border-radius: 8px;
         background: rgb(255 255 255 / 0.06);
-        color: #c2c3c9;
+        color: var(--text, #c2c3c9);
         font-family: inherit;
         font-size: 12.5px;
         font-weight: 500;
@@ -430,6 +432,11 @@
     .bt.dia {
         flex: 1 1 0;
     }
+    /* painel estreito: o botao aperta o respiro para o nome da agenda caber */
+    .seletor.estreito .bt {
+        gap: 4px;
+        padding: 0 7px;
+    }
     .bt:hover {
         background: rgb(255 255 255 / 0.1);
     }
@@ -438,6 +445,7 @@
         outline-offset: 2px;
     }
     .bt .txt {
+        opacity: 0.82;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -449,14 +457,17 @@
     .bt.aberto {
         background: var(--sel-wash, rgb(242 26 39 / 0.16));
         box-shadow: inset 0 0 0 1px var(--sel-line, rgb(242 26 39 / 0.3));
-        color: #ffffff;
+        color: var(--text, #ffffff);
+    }
+    .bt.aberto .txt {
+        opacity: 1;
     }
     .bt.aberto .seta {
         transform: rotate(180deg);
     }
     /* o culto aberto esta fora do filtro: o texto fica atenuado (a dica diz o porque) */
     .bt.fora .txt {
-        opacity: 0.65;
+        opacity: 0.6;
     }
     .bt.desabilitado {
         cursor: default;
@@ -472,7 +483,7 @@
     }
 
     /* a camada: cobre a janela inteira, nada passa por ela. No body, fora do .panel (backdrop-filter e overflow). */
-    .camada {
+    .seletor-camada {
         position: fixed;
         inset: 0;
         z-index: 5000;
@@ -481,7 +492,7 @@
         user-select: none;
         -webkit-user-select: none;
     }
-    .pop {
+    .seletor-pop {
         position: fixed;
         display: flex;
         flex-direction: column;
@@ -493,14 +504,14 @@
         box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
         font-family: inherit;
         font-size: 12.5px;
-        color: #c2c3c9;
+        color: var(--text, #c2c3c9);
     }
     .aviso {
         flex: none;
         padding: 7px 10px;
         font-size: 11.5px;
         line-height: 1.3;
-        color: #ffffff;
+        color: var(--text, #ffffff);
         background: var(--sel-wash, rgb(242 26 39 / 0.16));
         border-bottom: 1px solid var(--sel-line, rgb(242 26 39 / 0.3));
     }
@@ -520,8 +531,11 @@
         font-size: 11px;
         font-weight: 600;
         letter-spacing: 0.02em;
-        color: #9a9ba2;
+        color: var(--text, #c2c3c9);
         background: var(--primary-darker);
+    }
+    .cab span {
+        opacity: 0.72;
     }
     .op {
         display: flex;
@@ -534,11 +548,11 @@
         font-variant-numeric: tabular-nums;
     }
     .op.destaque {
-        background: rgb(255 255 255 / 0.08);
+        background: rgb(128 128 128 / 0.2);
     }
     .op.ativa {
         background: var(--sel-wash, rgb(242 26 39 / 0.16));
-        color: #ffffff;
+        color: var(--text, #ffffff);
     }
     .rot {
         display: flex;
@@ -555,15 +569,15 @@
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
-        color: #aeafb6;
+        opacity: 0.8;
     }
     .sub {
         margin-left: 8px;
         font-size: 11px;
-        color: #9a9ba2;
+        opacity: 0.68;
     }
     .op.passado .data {
-        color: #a3a4ab;
+        opacity: 0.78;
     }
     .op.arquivado {
         opacity: 0.7;
@@ -573,8 +587,8 @@
         padding: 1px 6px;
         border-radius: 999px;
         font-size: 10.5px;
-        color: #ffffff;
-        background: rgb(255 255 255 / 0.14);
+        color: var(--text, #ffffff);
+        box-shadow: inset 0 0 0 1px var(--sel-line, rgb(242 26 39 / 0.3));
     }
     .info {
         display: flex;
@@ -582,10 +596,10 @@
         align-items: center;
         gap: 6px;
         font-size: 11.5px;
-        color: #a3a4ab;
+        opacity: 0.78;
     }
     .info.cheio {
-        color: #c2c3c9;
+        opacity: 0.95;
     }
     .pip {
         flex: none;
@@ -593,7 +607,7 @@
         width: 7px;
         height: 7px;
         border-radius: 50%;
-        border: 1.5px solid #8b8c93;
+        border: 1.5px solid currentColor;
     }
     .pip.cheio {
         border-color: #4ade80;
@@ -601,6 +615,6 @@
     }
     .ok {
         flex: none;
-        color: #ffffff;
+        color: var(--text, #ffffff);
     }
 </style>

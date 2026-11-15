@@ -242,7 +242,7 @@ export const assinaturaDasOpcoes = (opcoes: { id: string }[]) => opcoes.map((o) 
 
 /** painel estreito: abaixo de 240px a agenda encolhe e o botao de dia perde o dia da semana */
 export function larguraDoLayout(largura: number): { semSemana: boolean; agendaPct: number } {
-    return largura < 240 ? { semSemana: true, agendaPct: 38 } : { semSemana: false, agendaPct: 42 }
+    return largura < 240 ? { semSemana: true, agendaPct: 48 } : { semSemana: false, agendaPct: 42 }
 }
 
 export const larguraDoPopover = (larguraDaLinha: number) => Math.min(Math.max(larguraDaLinha, 0), 360)

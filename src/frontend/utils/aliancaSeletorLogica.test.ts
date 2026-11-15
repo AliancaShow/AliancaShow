@@ -301,7 +301,7 @@ describe("camadaPodeSair", () => {
 
 describe("layout", () => {
     it("abaixo de 240 o dia perde a semana e a agenda encolhe", () => {
-        expect(larguraDoLayout(239)).toEqual({ semSemana: true, agendaPct: 38 })
+        expect(larguraDoLayout(239)).toEqual({ semSemana: true, agendaPct: 48 })
         expect(larguraDoLayout(240)).toEqual({ semSemana: false, agendaPct: 42 })
         expect(larguraDoLayout(194).semSemana).toBe(true)
     })
