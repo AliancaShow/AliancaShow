@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy } from "svelte"
     import { actions, activeEdit, activePage, activeStage, outputs, timers } from "../../../stores"
+    import { idDoInput, linhasFiltradas, secoesDoGrupo, type Grupo, type MapaGrupos } from "../../../utils/aliancaEditorLogica"
     import { timelineAtiva } from "../../../utils/aliancaModo"
     import { throttle } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
@@ -30,6 +31,10 @@
     export let item: any = {}
     export let isStage = false
     export let type: string = ""
+    // Preparar (8b): painel agrupado em a vista / Mais / Avancado. Sem `grupos` o painel e o do Culto.
+    export let grupos: MapaGrupos | null = null
+    // secoes que ficam sempre abertas (sem seta) mesmo sem mapa: tipos sem agrupamento fino
+    export let fixas: string[] = []
 
     function getValue(input: EditInput, _updater: any = null) {
         if (!item) return ""
@@ -201,7 +206,8 @@
         if (input.values) input.values.value = e.detail
     }
 
-    function hasChangedValues(id, _updater: any = null) {
+    // `ids`: so os inputs desta parte (secao partida); `abrir`: false nao empurra a secao para a lista de abertas
+    function hasChangedValues(id, _updater: any = null, ids: string[] | null = null, abrir = true) {
         if (!sections[id]) return
 
         let allInputsToCheck: EditInput[] = []
@@ -213,8 +219,8 @@
             allInputsToCheck.push(input)
         })
 
-        const hasChanged = !!allInputsToCheck.find((a, i) => !isDefaultValue(a, sections[id].defaultValues?.[i]))
-        if (hasChanged && !openedSections.includes(id)) openedSections.push(id)
+        const hasChanged = !!allInputsToCheck.find((a, i) => (!ids || ids.includes(idDoInput(a))) && !isDefaultValue(a, sections[id].defaultValues?.[i]))
+        if (hasChanged && abrir && !openedSections.includes(id)) openedSections.push(id)
         return hasChanged
     }
 
@@ -278,7 +284,36 @@
         openedSections = openedSections
     }
 
-    $: sectionValues = Object.entries(sections || {})
+    // lista unica que o {#each} desenha: sem `grupos` sao as secoes de hoje; com `grupos`, a vista + cabecalhos Mais/Avancado
+    type Entrada = { chave: string; id: string; section: EditBoxSection; linhas: EditInput[][]; ids: string[] | null; fixa: boolean; rotulo?: string; semReset: boolean; cabecalho?: Grupo }
+
+    let gruposAbertos: { [key: string]: boolean } = { mais: false, avancado: false }
+    function alternarGrupo(g: string) {
+        gruposAbertos[g] = !gruposAbertos[g]
+    }
+
+    function montarEntradas(secoes: { [key: string]: EditBoxSection }, mapa: MapaGrupos | null, travadas: string[], _abertos: any): Entrada[] {
+        if (!mapa) return Object.entries(secoes || {}).map(([id, section]) => ({ chave: id, id, section, linhas: section.inputs, ids: null, fixa: travadas.includes(id), semReset: false }))
+
+        const lista: Entrada[] = []
+        const doGrupo = (g: Grupo, fixa: boolean) => secoesDoGrupo(mapa, g, secoes).map((s) => ({ chave: g + ":" + s.id, id: s.id, section: secoes[s.id], linhas: linhasFiltradas(secoes[s.id].inputs, s.ids), ids: s.ids, fixa: fixa || s.id === "default", rotulo: s.rotulo, semReset: !!s.ids || (s.id === "default" && !!s.rotulo) }))
+        lista.push(...doGrupo("vista", true))
+        for (const g of ["mais", "avancado"] as Grupo[]) {
+            const secoesDoG = doGrupo(g, false)
+            if (!secoesDoG.length) continue
+            lista.push({ chave: "cab:" + g, id: g, section: { inputs: [] }, linhas: [], ids: null, fixa: false, semReset: true, cabecalho: g })
+            if (gruposAbertos[g]) lista.push(...secoesDoG)
+        }
+        return lista
+    }
+    $: entradas = montarEntradas(sections, grupos, fixas, gruposAbertos)
+
+    // "•" no cabecalho do grupo fechado quando algo dentro dele foi mudado (nao abre o grupo)
+    function grupoAlterado(g: Grupo, _updater: any = null) {
+        if (!grupos) return false
+        return secoesDoGrupo(grupos, g, sections).some((s) => !sections[s.id].noReset && !!hasChangedValues(s.id, null, s.ids, false))
+    }
+    $: marcas = grupos ? { mais: grupoAlterado("mais", { styles, item, customValues }), avancado: grupoAlterado("avancado", { styles, item, customValues }) } : { mais: false, avancado: false }
 
     ///
 
@@ -319,78 +354,98 @@
 </script>
 
 <div class="tools">
-    {#each sectionValues as [id, section]}
-        {@const hasChanged = section.noReset ? false : hasChangedValues(id, { styles, item })}
-        {@const expanded = id === "default" || section.alwaysOpen || openedSections.includes(id)}
-
-        <div class="section" style={expanded ? "margin-bottom: 3px;" : ""}>
-            {#if id !== "default"}
+    {#each entradas as entrada}
+        {#if entrada.cabecalho}
+            <div class="section grupo">
                 <div class="title">
-                    <MaterialButton style="width: 100%;{hasChanged ? 'padding: 4px 12px;' : 'padding: 8px 12px;'}" disabled={hasChanged || section.alwaysOpen} on:click={() => toggleSection(id)}>
+                    <MaterialButton style="width: 100%;padding: 8px 12px;" on:click={() => alternarGrupo(entrada.cabecalho || "")}>
                         <span style="display: flex;gap: 8px;align-items: center;">
-                            {#if id === "CSS"}
-                                <Icon id="code" white />
-                                <p>CSS</p>
-                            {:else}
-                                <Icon {id} style="color: {sectionColors[id]};" white />
-                                <p>{translateText(section.name || "edit." + id)}</p>
-                            {/if}
+                            <p>{entrada.cabecalho === "mais" ? "Mais" : "Avançado"}</p>
+                            {#if marcas[entrada.cabecalho] && !gruposAbertos[entrada.cabecalho]}<span class="marca" title="Tem valor alterado aqui dentro">•</span>{/if}
                         </span>
-
-                        {#if hasChanged}
-                            <MaterialButton title="actions.reset" style="pointer-events: all;padding: 4px;" on:click={() => resetSection(id)}>
-                                <Icon id="reset" size={0.8} white />
-                            </MaterialButton>
-                        {:else if !section.alwaysOpen}
-                            <!-- paste / edit -->
-                            <Icon id={section.expandAutoValue && !expanded ? "add" : "arrow_back_modern"} class="arrow {expanded ? 'open' : ''}" size={section.expandAutoValue && !expanded ? 0.9 : 0.6} style="opacity: 0.5;" white />
-                        {/if}
+                        <Icon id="arrow_back_modern" class="arrow {gruposAbertos[entrada.cabecalho] ? 'open' : ''}" size={0.6} style="opacity: 0.5;" white />
                     </MaterialButton>
                 </div>
-            {/if}
+            </div>
+        {:else}
+            {@const id = entrada.id}
+            {@const section = entrada.section}
+            {@const hasChanged = section.noReset || entrada.semReset ? false : hasChangedValues(id, { styles, item }, entrada.ids)}
+            {@const fixa = section.alwaysOpen || entrada.fixa || undefined}
+            {@const expanded = id === "default" || fixa || openedSections.includes(id)}
 
-            {#if expanded}
-                {#each section.inputs as inputRow}
-                    <InputRow>
-                        {#each inputRow as input}
-                            {#if !input.hidden}
-                                {@const value = getValue(input, { styles, item, customValues })}
-                                {@const values = getValues(input)}
-                                {@const hasTimelineAction = $timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show" && SlideTimeline.hasActionAtTime(input.key || "", type, $activeEdit?.items?.length ? $activeEdit.items : [0], timelineUpdater)}
-
-                                {#if input.type === "fontDropdown"}
-                                    <MaterialFontDropdown label={values.label} {value} style={values.style} fontStyleValue={input.styleValue} on:change={(e) => changed(e, input)} on:fontStyle={(e) => changed(e, { ...input, key: "font" })} enableFontStyles />
-                                {:else if input.type === "toggle"}
-                                    <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => toggle(input)}>
-                                        <Icon id={values.icon} size={1.2} white />
-                                        <div class="highlight" class:active={value.includes(input.value)}></div>
-                                    </MaterialButton>
-                                {:else if input.type === "radio"}
-                                    <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => radio(input)}>
-                                        <Icon id={values.icon} size={1.2} white />
-                                        <div class="highlight radio" class:active={value === input.value}></div>
-                                    </MaterialButton>
-                                {:else if input.type === "textarea"}
-                                    <MaterialTextarea label={values.label} {value} on:change={(e) => changed(e, input, id)} />
-                                {:else if input.type === "media"}
-                                    <MaterialFilePicker label={(value ? values.label : "") || "edit.choose_media"} {value} filter={{ name: "Media files", extensions: mediaExtensions }} on:change={(e) => changed(e, input, id)} autoTrigger={$activeEdit.type !== "template"} allowEmpty />
-                                {:else if input.type === "popup"}
-                                    <MaterialPopupButton {...values} {value} on:change={(e) => changed(e, input, id)} allowEmpty={values.allowEmpty !== false} />
-                                {:else if input.type === "tip"}
-                                    <p class="tip">
-                                        {#if values.label}{translateText(values.label)}{/if}
-                                        {@html input.values?.subtext || ""}
-                                        {#if input.values?.subtext.includes("<a href=")}<Icon id="launch" white />{/if}
-                                    </p>
+            <div class="section" style={expanded ? "margin-bottom: 3px;" : ""}>
+                {#if id !== "default" || entrada.rotulo}
+                    <div class="title">
+                        <MaterialButton style="width: 100%;{hasChanged ? 'padding: 4px 12px;' : 'padding: 8px 12px;'}" disabled={hasChanged || fixa} on:click={() => toggleSection(id)}>
+                            <span style="display: flex;gap: 8px;align-items: center;">
+                                {#if entrada.rotulo && id === "default"}
+                                    <Icon id={entrada.ids ? "filter" : "item"} white />
+                                    <p>{entrada.rotulo}</p>
+                                {:else if id === "CSS"}
+                                    <Icon id="code" white />
+                                    <p>CSS</p>
                                 {:else}
-                                    <Input input={{ type: input.type, ...values, value }} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
+                                    <Icon {id} style="color: {sectionColors[id]};" white />
+                                    <p>{entrada.rotulo || translateText(section.name || "edit." + id)}</p>
                                 {/if}
+                            </span>
+
+                            {#if hasChanged}
+                                <MaterialButton title="actions.reset" style="pointer-events: all;padding: 4px;" on:click={() => resetSection(id)}>
+                                    <Icon id="reset" size={0.8} white />
+                                </MaterialButton>
+                            {:else if !fixa}
+                                <!-- paste / edit -->
+                                <Icon id={section.expandAutoValue && !expanded ? "add" : "arrow_back_modern"} class="arrow {expanded ? 'open' : ''}" size={section.expandAutoValue && !expanded ? 0.9 : 0.6} style="opacity: 0.5;" white />
                             {/if}
-                        {/each}
-                    </InputRow>
-                {/each}
-            {/if}
-        </div>
+                        </MaterialButton>
+                    </div>
+                {/if}
+
+                {#if expanded}
+                    {#each entrada.linhas as inputRow}
+                        <InputRow>
+                            {#each inputRow as input}
+                                {#if !input.hidden}
+                                    {@const value = getValue(input, { styles, item, customValues })}
+                                    {@const values = getValues(input)}
+                                    {@const hasTimelineAction = $timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show" && SlideTimeline.hasActionAtTime(input.key || "", type, $activeEdit?.items?.length ? $activeEdit.items : [0], timelineUpdater)}
+
+                                    {#if input.type === "fontDropdown"}
+                                        <MaterialFontDropdown label={values.label} {value} style={values.style} fontStyleValue={input.styleValue} on:change={(e) => changed(e, input)} on:fontStyle={(e) => changed(e, { ...input, key: "font" })} enableFontStyles />
+                                    {:else if input.type === "toggle"}
+                                        <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => toggle(input)}>
+                                            <Icon id={values.icon} size={1.2} white />
+                                            <div class="highlight" class:active={value.includes(input.value)}></div>
+                                        </MaterialButton>
+                                    {:else if input.type === "radio"}
+                                        <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => radio(input)}>
+                                            <Icon id={values.icon} size={1.2} white />
+                                            <div class="highlight radio" class:active={value === input.value}></div>
+                                        </MaterialButton>
+                                    {:else if input.type === "textarea"}
+                                        <MaterialTextarea label={values.label} {value} on:change={(e) => changed(e, input, id)} />
+                                    {:else if input.type === "media"}
+                                        <MaterialFilePicker label={(value ? values.label : "") || "edit.choose_media"} {value} filter={{ name: "Media files", extensions: mediaExtensions }} on:change={(e) => changed(e, input, id)} autoTrigger={$activeEdit.type !== "template"} allowEmpty />
+                                    {:else if input.type === "popup"}
+                                        <MaterialPopupButton {...values} {value} on:change={(e) => changed(e, input, id)} allowEmpty={values.allowEmpty !== false} />
+                                    {:else if input.type === "tip"}
+                                        <p class="tip">
+                                            {#if values.label}{translateText(values.label)}{/if}
+                                            {@html input.values?.subtext || ""}
+                                            {#if input.values?.subtext.includes("<a href=")}<Icon id="launch" white />{/if}
+                                        </p>
+                                    {:else}
+                                        <Input input={{ type: input.type, ...values, value }} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
+                                    {/if}
+                                {/if}
+                            {/each}
+                        </InputRow>
+                    {/each}
+                {/if}
+            </div>
+        {/if}
     {/each}
 </div>
 
@@ -424,6 +479,12 @@
 
         /* when disabled */
         opacity: 1;
+    }
+
+    .marca {
+        color: var(--secondary);
+        font-size: 1.1rem;
+        line-height: 1;
     }
 
     .title :global(svg.arrow) {

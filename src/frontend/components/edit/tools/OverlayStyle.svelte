@@ -3,10 +3,14 @@
     import ItemsList from "./ItemsList.svelte"
 
     export let allSlideItems: Item[]
+    // Preparar (8b): as Camadas ja estao no topo do painel
+    export let semCamadas = false
 </script>
 
 <div class="tools">
-    <ItemsList bind:allSlideItems />
+    {#if !semCamadas}
+        <ItemsList bind:allSlideItems />
+    {/if}
 </div>
 
 <style>
