@@ -9,7 +9,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { existsSync } from "node:fs"
 import { difPng } from "./png.mjs"
-import { achatar, comparar, contexto, validarEsperado, validarRuido } from "./compararLogica.mjs"
+import { achatar, comparar, conferirCabecalhos, contexto, validarEsperado, validarRuido } from "./compararLogica.mjs"
 
 const AQUI = dirname(fileURLToPath(import.meta.url))
 const args = process.argv.slice(2)
@@ -50,10 +50,9 @@ if (flag("so-comuns")) {
     const idsA = new Set(A.passos.map((p) => p.id))
     B.passos = B.passos.filter((p) => idsA.has(p.id))
 }
-const incompativeis = []
-if (ca.versaoRoteiro !== cb.versaoRoteiro) incompativeis.push(`versaoRoteiro ${ca.versaoRoteiro} != ${cb.versaoRoteiro} (so vale com item efeitoMinimo/aposentar no esperado)`)
-if (JSON.stringify(ca.janela) !== JSON.stringify(cb.janela)) incompativeis.push(`janela ${JSON.stringify(ca.janela)} != ${JSON.stringify(cb.janela)}`)
-if (ca.perfilSha !== cb.perfilSha) incompativeis.push(`perfilSha ${ca.perfilSha} != ${cb.perfilSha}`)
+const arqEsperado = valor("esperado") || null
+const esperado = arqEsperado ? ler(arqEsperado) : []
+const incompativeis = conferirCabecalhos(ca, cb, esperado)
 if (incompativeis.length) {
     console.error("GRAVACOES NAO COMPARAVEIS:\n  - " + incompativeis.join("\n  - "))
     process.exit(2)
@@ -96,8 +95,6 @@ if (flag("pixel")) {
 }
 
 const ruido = flag("sem-ruido") ? { padroes: [] } : ler(valor("ruido") || join(AQUI, "ruido.json"))
-const arqEsperado = valor("esperado") || null
-const esperado = arqEsperado ? ler(arqEsperado) : []
 const errosEsq = validarEsperado(esperado)
 if (errosEsq.length) {
     console.error("ESPERADO INVALIDO:\n  - " + errosEsq.join("\n  - "))

@@ -180,3 +180,55 @@ export function contexto(G, d) {
     const i = Number.isFinite(idx) ? idx : 0
     return lista.slice(Math.max(0, i - 2), i + 3).map((e) => JSON.stringify(e).slice(0, 200))
 }
+
+/**
+ * 6.1: aplica os itens `efeitoMinimo` do esperado.json ao roteiro (numa COPIA; o roteiro original nunca e mutado).
+ * O `de` do item tem de ser igual, por JSON.stringify, ao que o roteiro declara hoje (`passo.efeito` ou `{ semEfeito }`): override cego reprova.
+ * Devolve { secoes, aplicados: [ids], erros }.
+ */
+export function aplicarEfeitoMinimo(secoes, itens) {
+    const copia = JSON.parse(JSON.stringify(secoes))
+    const erros = []
+    const aplicados = []
+    for (const it of (itens || []).filter((i) => i.tipo === "efeitoMinimo")) {
+        const nome = it.id || `${it.passo}`
+        const passo = copia.flatMap((s) => s.passos).find((p) => p.id === it.passo)
+        if (!passo) {
+            erros.push(`efeitoMinimo ${nome}: o passo ${it.passo} nao existe no roteiro`)
+            continue
+        }
+        const declarado = passo.efeito ?? { semEfeito: passo.semEfeito }
+        if (JSON.stringify(declarado) !== JSON.stringify(it.de)) {
+            erros.push(`efeitoMinimo ${nome}: override cego em ${it.passo}: o roteiro declara ${JSON.stringify(declarado)} e o item diz ${JSON.stringify(it.de)}`)
+            continue
+        }
+        if (it.para.semEfeito !== undefined) {
+            delete passo.efeito
+            passo.semEfeito = it.para.semEfeito
+        } else {
+            delete passo.semEfeito
+            passo.efeito = { fluxo: it.para.fluxo, n: it.para.n }
+        }
+        passo.efeitoAplicado = it.id || nome
+        aplicados.push(it.id || nome)
+    }
+    return { secoes: copia, aplicados, erros }
+}
+
+/** ids dos itens efeitoMinimo de um esperado (o que `rodar.mjs` tem de ter aplicado) */
+export const idsEfeitoMinimo = (esperado) => (esperado || []).filter((i) => i.tipo === "efeitoMinimo").map((i) => i.id || i.passo)
+
+/**
+ * Cabecalhos de duas gravacoes: o que as torna incomparaveis. `cb.esperadoAplicado` (o que rodar.mjs aplicou ao gravar B)
+ * tem de ser igual aos ids efeitoMinimo do esperado recebido agora (sem ordem), senao a comparacao seria cega.
+ */
+export function conferirCabecalhos(ca, cb, esperado) {
+    const incompativeis = []
+    if (ca.versaoRoteiro !== cb.versaoRoteiro) incompativeis.push(`versaoRoteiro ${ca.versaoRoteiro} != ${cb.versaoRoteiro} (so vale com item efeitoMinimo/aposentar no esperado)`)
+    if (JSON.stringify(ca.janela) !== JSON.stringify(cb.janela)) incompativeis.push(`janela ${JSON.stringify(ca.janela)} != ${JSON.stringify(cb.janela)}`)
+    if (ca.perfilSha !== cb.perfilSha) incompativeis.push(`perfilSha ${ca.perfilSha} != ${cb.perfilSha}`)
+    const aplicado = [...(cb.esperadoAplicado || [])].sort()
+    const pedido = [...idsEfeitoMinimo(esperado)].sort()
+    if (JSON.stringify(aplicado) !== JSON.stringify(pedido)) incompativeis.push(`esperadoAplicado ${JSON.stringify(aplicado)} != itens efeitoMinimo do esperado ${JSON.stringify(pedido)}: B foi gravada com outro esperado.json`)
+    return incompativeis
+}

@@ -1,6 +1,10 @@
 // Roda o roteiro de gestos contra o Show de dev (CDP, porta 9222) e grava `gravacao-<rotulo>.json`.
 //
-//   node scripts/prova-culto/rodar.mjs --rotulo base1 [--saida DIR] [--secoes A,B,E] [--pixel] [--mutar ID]
+//   node scripts/prova-culto/rodar.mjs --rotulo base1 [--saida DIR] [--secoes A,B,E] [--pixel] [--mutar ID] [--esperado ARQ]
+//
+// O esperado.json (ou o de --esperado) e lido antes do laco: os itens `efeitoMinimo` sao APLICADOS ao roteiro (aplicarEfeitoMinimo) e o
+// cabecalho grava `esperadoAplicado: [ids]`. Cada passo grava, no nivel do passo (fora de principal/saida, fora do achatar):
+// antesDoGesto { hash, foco, sinais, pagina }, depois { pagina } e efeitoMedido { fluxo, n }.
 //
 // Pre-requisitos: Vite em :3000 e o Electron de dev com --remote-debugging-port=9222 sobre o perfil de teste restaurado
 // (`restaurar.sh` + `reiniciar.sh`).
@@ -20,8 +24,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, tecla, RAIZ } from "./lib.mjs"
 import { FUNCOES_PREPARO, SECOES, VERSAO } from "./roteiro.mjs"
-import { normalizarPerfil } from "./compararLogica.mjs"
-if (process.env.FS_LAYOUT !== undefined) { console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente"); process.exit(2) }
+import { aplicarEfeitoMinimo, normalizarPerfil, validarEsperado } from "./compararLogica.mjs"
+if (process.env.FS_LAYOUT !== undefined) {
+    console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente")
+    process.exit(2)
+}
 
 const arg = (n, d = null) => {
     const i = process.argv.indexOf("--" + n)
@@ -32,6 +39,18 @@ const SAIDA = arg("saida", join(RAIZ, "scripts/prova-culto/gravacoes"))
 const SO = arg("secoes") ? String(arg("secoes")).split(",") : null
 const MUTAR = arg("mutar")
 const PIXEL = !!arg("pixel")
+const ARQ_ESPERADO = arg("esperado") && arg("esperado") !== true ? String(arg("esperado")) : join(RAIZ, "scripts/prova-culto/esperado.json")
+const ESPERADO = JSON.parse(readFileSync(ARQ_ESPERADO, "utf8"))
+const errosEsperado = validarEsperado(ESPERADO)
+const aplicacao = aplicarEfeitoMinimo(SECOES, ESPERADO)
+if (errosEsperado.length || aplicacao.erros.length) {
+    console.error("ESPERADO INVALIDO para esta gravacao:\n  - " + [...errosEsperado, ...aplicacao.erros].join("\n  - "))
+    process.exit(1)
+}
+const SECOES_RODAR = aplicacao.secoes
+const PASSO_ORIGINAL = Object.fromEntries(SECOES.flatMap((s) => s.passos).map((p) => [p.id, p]))
+// o mesmo calculo do efeito minimo (C1), usado tambem para gravar o que foi medido no fluxo declarado no roteiro ORIGINAL
+const medirEfeito = (fluxo, r, hashAntes) => (fluxo === "outputs" ? r.p.outputs.filter((x) => x.mudou).length : fluxo === "estado" ? r.p.estado.length : fluxo === "saida" ? (r.s.saida?.hash !== hashAntes ? 1 : 0) : fluxo === "ipc" ? Object.keys(r.p.canais).filter((k) => !ehPeriodico(k)).length : 0)
 const CSS = arg("css") // T7: CSS injetado na janela principal (prototipo descartavel, nunca vai ao app)
 const FUNDO = process.env.FS_FUNDO || join(RAIZ, "scripts/prova-culto/perfil/midia/f1.png").split(String.fromCharCode(92)).join("/")
 // raiz do perfil desta maquina: sai da gravacao como __PERFIL__ (o baseline vale em qualquer pasta, inclusive na maquina do Pedro)
@@ -118,7 +137,7 @@ if (CSS) {
 if (MUTAR === "saida-estilo") await saida.ev("document.body.style.filter='invert(1)'; return 1")
 if (MUTAR === "ipc-sem-canal") await principal.ev("window.__mutIpc=(id,canal)=>canal==='OUT_SLIDE_CACHE'; return 1")
 
-for (const secao of SECOES) {
+for (const secao of SECOES_RODAR) {
     if (SO && !SO.includes(secao.id)) continue
     // cada secao parte de um estado restaurado (divergencia numa nao contamina a seguinte)
     dbg("secao " + secao.id)
@@ -136,6 +155,9 @@ for (const secao of SECOES) {
             const f0 = await fim()
             hashAnterior = f0.s.saida?.hash ?? hashAnterior
         }
+        const telaoAntes = (await saida.avaliar("return await window.__provaLeitura()")).telao
+        const hashAntesDoGesto = telaoAntes?.hash ?? hashAnterior
+        const leituraAntes = await principal.avaliar("return window.__provaLeitura()")
         if (MUTAR === "sem-limpar-fundo" && passo.id === "B02-limpar-fundo") await principal.ev("window.__mutPular=()=>true; return 1")
         let coord = null
         if (passo.alvo) {
@@ -163,18 +185,21 @@ for (const secao of SECOES) {
         const e = passo.efeito
         if (!e && !passo.semEfeito) falhas.push("passo sem efeito declarado e sem semEfeito")
         if (e && e.n > 0) {
-            const medido = e.fluxo === "outputs" ? r.p.outputs.filter((x) => x.mudou).length : e.fluxo === "estado" ? r.p.estado.length : e.fluxo === "saida" ? (r.s.saida?.hash !== hashAnterior ? 1 : 0) : e.fluxo === "ipc" ? Object.keys(r.p.canais).filter((k) => !ehPeriodico(k)).length : 0
+            const medido = medirEfeito(e.fluxo, r, hashAnterior)
             if (medido < e.n) falhas.push(`efeito abaixo do minimo: ${e.fluxo} ${medido} < ${e.n}`)
         }
+        const original = PASSO_ORIGINAL[passo.id]?.efeito
+        const efeitoMedido = original?.fluxo ? { fluxo: original.fluxo, n: medirEfeito(original.fluxo, r, hashAnterior) } : null
+        const leituraDepois = await principal.avaliar("return window.__provaLeitura()")
         hashAnterior = r.s.saida?.hash ?? hashAnterior
         if (PIXEL) await fotoSaida(join(SAIDA, `${ROTULO}-${passo.id}.png`))
         falhas.forEach((f) => violacoes.push(`${passo.id}: ${f}`))
-        passos.push({ id: passo.id, secao: secao.id, semEfeito: passo.semEfeito ?? null, principal: r.p, saida: r.s })
+        passos.push({ id: passo.id, secao: secao.id, semEfeito: passo.semEfeito ?? null, ...(passo.efeitoAplicado ? { efeitoAplicado: passo.efeitoAplicado } : {}), antesDoGesto: { hash: hashAntesDoGesto, telao: telaoAntes ? { texto: telaoAntes.texto, elementos: telaoAntes.elementos } : null, foco: leituraAntes.foco, sinais: leituraAntes.sinais, pagina: leituraAntes.pagina }, depois: { pagina: leituraDepois.pagina }, efeitoMedido, principal: r.p, saida: r.s })
         console.log(`${falhas.length ? "FALHA" : "ok   "} ${passo.id}  outputs=${r.p.outputs.length} estado=${r.p.estado.length} canais=${Object.keys(r.p.canais).length}${falhas.length ? "  <- " + falhas.join("; ") : ""}`)
     }
 }
 
-const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, janela: dims, mutacao: MUTAR || null, secoes: SO || SECOES.map((s) => s.id) }, violacoes, passos }
+const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, janela: dims, mutacao: MUTAR || null, esperadoAplicado: aplicacao.aplicados, secoes: SO || SECOES_RODAR.map((s) => s.id) }, violacoes, passos }
 writeFileSync(join(SAIDA, `gravacao-${ROTULO}.json`), normalizarPerfil(JSON.stringify(gravacao, null, 1), RAIZ_PERFIL))
 console.log(`\ngravado ${join(SAIDA, `gravacao-${ROTULO}.json`)}  passos=${passos.length}  violacoes=${violacoes.length}`)
 principal.fechar()

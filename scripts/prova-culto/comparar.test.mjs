@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process"
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { achatar, comparar, normalizarPerfil, validarEsperado, validarRuido } from "./compararLogica.mjs"
+import { achatar, aplicarEfeitoMinimo, comparar, conferirCabecalhos, normalizarPerfil, validarEsperado, validarRuido } from "./compararLogica.mjs"
 
 const clone = (x) => JSON.parse(JSON.stringify(x))
 const out = (index) => ({ op: "update", por: "setOutput@output", mudou: true, v: { default: { slide: { id: "s", index, layout: "default" } } } })
@@ -129,7 +129,7 @@ test("normalizarPerfil: a raiz do perfil some da gravacao nos dois formatos de b
         b: "C:\\Users\\x\\bancada\\perfil\\midia\\v1.mp4",
         c: "c:/users/x/bancada/perfil",
         d: "C:/Users/x/bancada/perfil-bak/midia/f1.png",
-        e: "C:/Users/x/bancada/perfil\\store\\media-cache\\i1.png",
+        e: "C:/Users/x/bancada/perfil\\store\\media-cache\\i1.png"
     }
     const n = JSON.parse(normalizarPerfil(JSON.stringify(g), raiz))
     assert.equal(n.a, "__PERFIL__/midia/f1.png")
@@ -168,4 +168,70 @@ test("Q5: gravacao com leiaute diferente de novo sai com 2", () => {
     const r = comparar_mjs(BASELINE, arq)
     assert.equal(r.status, 2)
     assert.match(r.stderr, /nao existe mais/)
+})
+
+// 6.1: rodar.mjs aplica efeitoMinimo e grava o que o juiz precisa
+const ROTEIRO = () => [
+    {
+        id: "A",
+        passos: [
+            { id: "P1", gesto: { tecla: "1" }, semEfeito: "ja esta na pagina" },
+            { id: "P2", gesto: { tecla: "2" }, efeito: { fluxo: "estado", n: 1 } }
+        ]
+    }
+]
+const itemEfeito = (extra = {}) => ({ tipo: "efeitoMinimo", id: "em1", fatia: "1b", passo: "P2", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, porque: "x", decisaoDeProduto: "d", ...extra })
+test("efeitoMinimo: aplica o para na copia e anota o id; o roteiro original nao e mutado", () => {
+    const orig = ROTEIRO()
+    const r = aplicarEfeitoMinimo(orig, [itemEfeito()])
+    assert.deepEqual(r.erros, [])
+    assert.deepEqual(r.aplicados, ["em1"])
+    const p2 = r.secoes[0].passos[1]
+    assert.equal(p2.efeito, undefined)
+    assert.equal(p2.semEfeito, "teclas 1-6 removidas")
+    assert.equal(p2.efeitoAplicado, "em1")
+    assert.deepEqual(orig, ROTEIRO(), "o original ficou intacto")
+    // o inverso: semEfeito vira efeito
+    const inv = aplicarEfeitoMinimo(orig, [itemEfeito({ id: "em2", passo: "P1", de: { semEfeito: "ja esta na pagina" }, para: { fluxo: "estado", n: 1 } })])
+    assert.deepEqual(inv.erros, [])
+    assert.deepEqual(inv.secoes[0].passos[0].efeito, { fluxo: "estado", n: 1 })
+    assert.equal(inv.secoes[0].passos[0].semEfeito, undefined)
+})
+test("MUTACAO efeitoMinimo com de diferente do roteiro (override cego) reprova", () => {
+    const r = aplicarEfeitoMinimo(ROTEIRO(), [itemEfeito({ de: { fluxo: "estado", n: 2 } })])
+    assert.equal(r.erros.length, 1)
+    assert.match(r.erros[0], /override cego/)
+    assert.deepEqual(r.aplicados, [])
+})
+test("MUTACAO efeitoMinimo em passo que nao existe reprova", () => {
+    const r = aplicarEfeitoMinimo(ROTEIRO(), [itemEfeito({ passo: "P9" })])
+    assert.equal(r.erros.length, 1)
+    assert.match(r.erros[0], /nao existe/)
+})
+test("achatar: antesDoGesto, depois e efeitoMedido (nivel do passo) nao entram no mapa", () => {
+    const sem = base()
+    const com = base()
+    com.passos[0].antesDoGesto = { hash: "aa", foco: "BODY", sinais: { modo: "culto" }, pagina: "show" }
+    com.passos[0].depois = { pagina: "show" }
+    com.passos[0].efeitoMedido = { fluxo: "estado", n: 1 }
+    assert.deepEqual([...achatar(sem)], [...achatar(com)])
+})
+test("conferirCabecalhos: esperadoAplicado tem de ser igual aos ids efeitoMinimo do esperado", () => {
+    const ca = { versaoRoteiro: 2, janela: { w: 1 }, perfilSha: "p" }
+    const ok = { ...ca, esperadoAplicado: ["em1"] }
+    assert.deepEqual(conferirCabecalhos(ca, ok, [itemEfeito()]), [])
+    assert.deepEqual(conferirCabecalhos(ca, { ...ca }, []), [], "gravacao antiga sem o campo e esperado sem efeitoMinimo: igual")
+    assert.ok(conferirCabecalhos(ca, { ...ca, esperadoAplicado: [] }, [itemEfeito()]).some((m) => /esperadoAplicado/.test(m)))
+    assert.ok(conferirCabecalhos(ca, ok, []).some((m) => /esperadoAplicado/.test(m)))
+    assert.ok(conferirCabecalhos(ca, { ...ca, janela: { w: 2 } }, []).length > 0)
+})
+test("comparar.mjs: B gravada com outro esperado sai com 2 (esperadoAplicado)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ea-"))
+    const g = JSON.parse(readFileSync(BASELINE, "utf8"))
+    g.cabecalho.esperadoAplicado = ["fantasma"]
+    const arq = join(dir, "b.json")
+    writeFileSync(arq, JSON.stringify(g))
+    const r = comparar_mjs(BASELINE, arq)
+    assert.equal(r.status, 2)
+    assert.match(r.stderr, /esperadoAplicado/)
 })

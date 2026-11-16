@@ -124,6 +124,14 @@ if (!window.__provaCulto) {
         }
         return s
     }
+    // o que o juiz de passo morto (compararLogica.passoMorto) precisa saber ANTES do gesto e a pagina DEPOIS (so a principal tem sinais)
+    window.__provaLeitura = async () => ({
+        foco: descr(document.activeElement),
+        sinais: rec.janela === "principal" ? window.__provaSinais() : null,
+        pagina: rec.janela === "principal" ? get(S.activePage) : null,
+        // so a saida: o telao como o __provaFim o descreveria (hash, texto, elementos), para o juiz de passo morto
+        telao: rec.janela === "saida" ? { hash: await window.__provaHash(), texto: document.body.innerText.replace(/\s+/g, " ").trim().slice(0, 400), elementos: document.body.querySelectorAll("*").length } : null
+    })
     window.__provaParado = (ms) => Date.now() - rec.ultimo >= ms
 }
 return "gravador pronto: " + window.__provaCulto.janela
