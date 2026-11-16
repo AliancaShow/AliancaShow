@@ -16,6 +16,7 @@ export const ATRIBUTOS_DOM = ["data-title", "title", "aria-label"]
 export const normalizarAtributo = (s) =>
     String(s || "")
         .replace(/svelte-[a-z0-9]+/g, "")
+        .replace(/(?<![\w-])s-[\w-]{12}(?![\w-])/g, "s-X")
         .replace(/(zoom|picker|id)_[0-9a-f]{6,}/g, "$1_X")
         .replace(/var\(--(?:live-opacity|live|sel-wash|sel-line|conteudo-acento|modo-[a-z-]+|prep-rgb|prep|aviso|sobre-acento),\s*([^()]*(?:\([^()]*\)[^()]*)*)\)/g, "$1")
         .replace(/\s+/g, " ")

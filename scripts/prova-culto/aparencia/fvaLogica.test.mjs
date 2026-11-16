@@ -143,10 +143,10 @@ test("normalizarAtributo: classe de escopo do Svelte e ids gerados somem, var() 
 })
 
 // a VARREDURA de verdade, num DOM de brinquedo (Node, sem navegador): o no de texto vazio nao muda o sig; .noAr e pulado
-function varrer(filhos, pulado = false) {
+function varrer(filhos, pulado = false, atributos = []) {
     const e = {
         tagName: "DIV",
-        attributes: [],
+        attributes: atributos,
         childNodes: filhos,
         closest: () => (pulado ? {} : null),
         getBoundingClientRect: () => ({ x: 0, y: 0, width: 5, height: 5 }),
@@ -178,3 +178,12 @@ test("VARREDURA: elemento dentro de .noAr/.clockArea e pulado (skip) e nao grava
     assert.ok(e.sig.endsWith(" #"), e.sig)
 })
 test("VARREDURA: a lista de pulados inclui .noAr", () => assert.ok(VARREDURA.includes(".clockArea, .clock, #clock, .noAr")))
+test("a classe de escopo do Svelte em dev (s-<12>, hash do caminho da pasta) nao muda o sig: referencia e HEAD em pastas diferentes", async () => {
+    const attr = (v) => [{ name: "class", value: v }]
+    const a = await varrer([], false, attr("s-YoLzgdrogFqN window"))
+    const b = await varrer([], false, attr("window s-MS1vn1L8HiNS")) // outra pasta: outro hash, e a ordem dos tokens nao pode depender dele
+    assert.equal(a.sig, b.sig)
+    assert.equal(a.tag, b.tag)
+    assert.equal(normalizarAtributo("s-YoLzgdrogFqN window"), "s-X window")
+    assert.notEqual(a.sig, (await varrer([], false, attr("s-YoLzgdrogFqN outra"))).sig, "so o hash some, nao a classe de verdade")
+})
