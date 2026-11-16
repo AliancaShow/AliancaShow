@@ -3,8 +3,7 @@
 //   node scripts/prova-culto/rodar.mjs --rotulo base1 [--saida DIR] [--secoes A,B,E] [--pixel] [--mutar ID]
 //
 // Pre-requisitos: Vite em :3000 e o Electron de dev com --remote-debugging-port=9222 sobre o perfil de teste restaurado
-// (`restaurar.sh` + `reiniciar.sh`). `--layout classico` NAO e flag desta ferramenta: liga-se editando `special.aliancaLayoutCulto`
-// em settings.json do perfil com o app FECHADO e reiniciando (o salvamento ao sair regrava a memoria). O rotulo do layout vai no cabecalho.
+// (`restaurar.sh` + `reiniciar.sh`).
 //
 // Regras que impedem "passar calado" (revisao C1): alvo inexistente, coberto por outro elemento ou efeito abaixo do minimo REPROVAM
 // a execucao (exit 1), mesmo gravando o arquivo. Mutacoes em runtime (so por CDP, nada no codigo): --mutar
@@ -22,6 +21,7 @@ import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, tecla, RAIZ } from "./lib.mjs"
 import { FUNCOES_PREPARO, SECOES, VERSAO } from "./roteiro.mjs"
 import { normalizarPerfil } from "./compararLogica.mjs"
+if (process.env.FS_LAYOUT !== undefined) { console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente"); process.exit(2) }
 
 const arg = (n, d = null) => {
     const i = process.argv.indexOf("--" + n)
@@ -174,7 +174,7 @@ for (const secao of SECOES) {
     }
 }
 
-const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, layout: process.env.FS_LAYOUT || "novo", janela: dims, mutacao: MUTAR || null, secoes: SO || SECOES.map((s) => s.id) }, violacoes, passos }
+const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, janela: dims, mutacao: MUTAR || null, secoes: SO || SECOES.map((s) => s.id) }, violacoes, passos }
 writeFileSync(join(SAIDA, `gravacao-${ROTULO}.json`), normalizarPerfil(JSON.stringify(gravacao, null, 1), RAIZ_PERFIL))
 console.log(`\ngravado ${join(SAIDA, `gravacao-${ROTULO}.json`)}  passos=${passos.length}  violacoes=${violacoes.length}`)
 principal.fechar()

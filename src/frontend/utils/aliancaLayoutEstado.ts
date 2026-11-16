@@ -4,19 +4,18 @@
 import { derived, get } from "svelte/store"
 import { activePage, currentWindow, drawerTabsData, modoAlianca } from "../stores"
 import { sanearAbaMidia } from "./aliancaDrawerTabsLogica"
-import { layoutNovo } from "./aliancaLayoutCulto"
 import { pastas } from "./aliancaPastasMidiaEstado"
 
-/** o lado do modo da hora; no leiaute classico (chave) e sempre o Culto, que e o comportamento de hoje */
+/** o lado do modo da hora */
 export const chaveDoModo = (): "culto" | "preparar" => {
     try {
-        return layoutNovo() && get(modoAlianca) === "preparar" ? "preparar" : "culto"
+        return get(modoAlianca) === "preparar" ? "preparar" : "culto"
     } catch {
         return "culto"
     }
 }
 
-/** um valor por modo (um so no classico) para o que antes era variavel de modulo compartilhada */
+/** um valor por modo para o que antes era variavel de modulo compartilhada */
 export function valorPorModo<T>(inicial: T) {
     const v: { culto: T; preparar: T } = { culto: inicial, preparar: inicial }
     return {
@@ -35,7 +34,7 @@ export const fecharTudoManual = valorPorModo(false)
 let iniciado = false
 
 /**
- * Atributos `data-modo`, `data-pagina`, `data-layout` no body (ganchos de CSS das proximas fatias) e o saneamento da pasta de midia
+ * Atributos `data-modo` e `data-pagina` no body (ganchos de CSS das proximas fatias) e o saneamento da pasta de midia
  * do Culto ao voltar do Preparar (o Preparar pode ter apagado a pasta que o Culto tinha aberta). So a janela principal.
  */
 export function iniciarLayoutAlianca() {
@@ -47,8 +46,7 @@ export function iniciarLayoutAlianca() {
             const body = document.body
             body.setAttribute("data-modo", String(modo))
             body.setAttribute("data-pagina", String(pagina))
-            body.setAttribute("data-layout", layoutNovo() ? "novo" : "classico")
-            if (modo === "culto" && layoutNovo()) {
+            if (modo === "culto") {
                 const atual = get(drawerTabsData.culto)
                 const novo = sanearAbaMidia(
                     atual,

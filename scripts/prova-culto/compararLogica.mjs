@@ -1,7 +1,6 @@
 // Logica pura do comparador da prova do Culto (sem CDP, sem disco): achatar, mascara, esperado, comparacao.
 // Testada em comparar.test.mjs (inclui as mutacoes que TEM de reprovar).
 
-export const TETO_CLASSICO_POR_FATIA = 10
 export const TETO_RUIDO = 80
 
 /** caminhos de `outputs` que NUNCA podem ser mascarados (revisao C3) */
@@ -80,22 +79,19 @@ const TIPOS = ["divergencia", "dom", "efeitoMinimo", "aposentar"]
 const CURINGA = /\*|\?|^$/
 
 /**
- * Valida o esquema de esperado.json / esperado-classico.json. `classico` = regras do arquivo do classico (teto por fatia).
+ * Valida o esquema de esperado.json.
  * Item sem decisaoDeProduto, curinga, tipo desconhecido, item de efeitoMinimo sem de/para, aposentar sem alvo reprovam.
  */
-export function validarEsperado(itens, { classico = false } = {}) {
+export function validarEsperado(itens) {
     const erros = []
     if (!Array.isArray(itens)) return ["esperado: nao e uma lista"]
-    const porFatia = {}
     const ids = new Set()
     itens.forEach((it, i) => {
         const n = `esperado[${i}]`
         if (!TIPOS.includes(it.tipo)) return void erros.push(`${n}: tipo "${it.tipo}" invalido`)
         if (!it.fatia) erros.push(`${n}: sem fatia`)
         if (!it.porque || !String(it.porque).trim()) erros.push(`${n}: sem porque`)
-        if (classico && (!it.decisaoDeProduto || !String(it.decisaoDeProduto).trim())) erros.push(`${n}: classico exige decisaoDeProduto`)
         if (it.id) ids.add(it.id)
-        porFatia[it.fatia] = (porFatia[it.fatia] || 0) + 1
         if (it.tipo === "divergencia") {
             for (const c of ["passo", "fluxo", "caminho"]) if (!it[c] || CURINGA.test(String(it[c]))) erros.push(`${n}: ${c} ausente ou com curinga`)
             if (!("de" in it) || !("para" in it)) erros.push(`${n}: sem de/para`)
@@ -117,7 +113,6 @@ export function validarEsperado(itens, { classico = false } = {}) {
         }
         if (it.tipo === "aposentar" && !it.alvo) erros.push(`${n}: aposentar sem alvo`)
     })
-    for (const [f, q] of Object.entries(porFatia)) if (classico && q > TETO_CLASSICO_POR_FATIA) erros.push(`esperado: fatia ${f} tem ${q} itens, teto ${TETO_CLASSICO_POR_FATIA}`)
     itens.forEach((it, i) => {
         if (it.tipo === "aposentar" && !ids.has(it.alvo)) erros.push(`esperado[${i}]: aposentar "${it.alvo}" nao aponta para um item declarado (id)`)
     })

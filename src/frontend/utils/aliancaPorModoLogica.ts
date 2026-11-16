@@ -14,8 +14,7 @@
 //   - `drawerOpenedInEdit`: memoria, par de `drawer.autoclosed`; segue unico porque so e lido junto com o `drawer` do instante.
 //
 // Garantias (revisao C9/C11): uma assinatura de `modoAlianca` POR STORE, ligada no 1o assinante e solta no ultimo; token de geracao (entrega
-// atrasada do Svelte 3 e ignorada); a escolha do lado vai em try/catch e cai no Culto; com `ativo() === false` (chave "classico") tudo cai
-// no Culto e o Preparar nunca e semeado.
+// atrasada do Svelte 3 e ignorada); a escolha do lado vai em try/catch, cai no Culto e chama falhaAlta.
 import { get, writable } from "svelte/store"
 import type { Readable, Writable } from "svelte/store"
 
@@ -26,8 +25,6 @@ export type OpcoesPorModo<T> = {
     culto: Writable<T>
     /** a store do modo, entregue por funcao (referencia tardia: stores.ts declara `modoAlianca` depois) */
     modo: () => Readable<Modo>
-    /** false = leiaute classico: tudo no Culto */
-    ativo: () => boolean
     /** copia PROFUNDA, para a semente do Preparar */
     copiar: (v: T) => T
     /** depois de cada escrita: o valor que o OUTRO lado passa a ter (campos compartilhados). Sem isto os lados sao totalmente independentes */
@@ -61,7 +58,7 @@ export function criarPorModo<T>(o: OpcoesPorModo<T>): PorModo<T> {
 
     const escolher = (): Modo => {
         try {
-            return o.ativo() && get(o.modo()) === "preparar" ? "preparar" : "culto"
+            return get(o.modo()) === "preparar" ? "preparar" : "culto"
         } catch (erro) {
             avisar(erro)
             return "culto"

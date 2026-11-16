@@ -1,5 +1,5 @@
-// Guardas estaticas da fachada por modo (fatia 0b): o disco e SEMPRE o Culto, ninguem mais usa `.culto`, a logica nao importa stores,
-// nada assina store no nivel do modulo, e a chave so e lida onde deve.
+// Guardas estaticas da fachada por modo (fatia 0b): o disco e SEMPRE o Culto, ninguem mais usa `.culto`, a logica nao importa stores
+// e nada assina store no nivel do modulo.
 import { readFileSync, readdirSync, statSync } from "fs"
 import { join } from "path"
 import { describe, expect, it } from "vitest"
@@ -44,9 +44,9 @@ describe("fachada por modo: quem pode usar `.culto`", () => {
 })
 
 describe("fachada por modo: logica pura e sem assinatura no nivel do modulo", () => {
-    const logica = ["src/frontend/utils/aliancaPorModoLogica.ts", "src/frontend/utils/aliancaLayoutCulto.ts", "src/frontend/utils/aliancaDrawerTabsLogica.ts"]
-    it("a logica nao importa stores.ts nem a chave (sem ciclo)", () => {
-        for (const rel of logica) expect(ler(rel), rel).not.toMatch(/from\s+["'][^"']*\/stores["']|from\s+["']\.\/aliancaLayoutCulto["']/)
+    const logica = ["src/frontend/utils/aliancaPorModoLogica.ts", "src/frontend/utils/aliancaDrawerTabsLogica.ts"]
+    it("a logica nao importa stores.ts (sem ciclo)", () => {
+        for (const rel of logica) expect(ler(rel), rel).not.toMatch(/from\s+["'][^"']*\/stores["']/)
     })
     it("nenhum `.subscribe(` fora de funcao nesses arquivos nem em aliancaLayoutEstado.ts", () => {
         for (const rel of [...logica, "src/frontend/utils/aliancaLayoutEstado.ts"]) {
@@ -58,14 +58,7 @@ describe("fachada por modo: logica pura e sem assinatura no nivel do modulo", ()
     })
 })
 
-describe("chave aliancaLayoutCulto", () => {
-    it("so aliancaLayoutCulto.ts e General.svelte tocam special.aliancaLayoutCulto", () => {
-        const quem = TODOS.filter((r) => /special[^\n]*aliancaLayoutCulto|aliancaLayoutCulto[^\n]*special/.test(ler(r)) || /especial\(\)\??\.aliancaLayoutCulto|\.aliancaLayoutCulto/.test(ler(r)))
-        expect(quem.sort()).toEqual(["src/frontend/components/settings/tabs/General.svelte", "src/frontend/utils/aliancaLayoutCulto.ts"].sort())
-    })
-    it("General.svelte avisa que so vale ao reabrir o programa", () => {
-        expect(ler("src/frontend/components/settings/tabs/General.svelte")).toContain("Vale ao reabrir o programa")
-    })
+describe("estado por modo", () => {
     it("estado por modo: aliancaAbasEditor e Ctrl+T nao tem variavel de modulo compartilhada", () => {
         expect(ler("src/frontend/utils/aliancaAbasEditor.ts")).not.toMatch(/^let anterior/m)
         expect(ler("src/frontend/utils/common.ts")).not.toMatch(/let panelsManuallyClosed/)

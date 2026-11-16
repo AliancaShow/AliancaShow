@@ -60,7 +60,7 @@ describe("montagem unica (D2): Projects, LibraryTabs, Preview e Drawer sobem em 
         }
         return achados
     }
-    const proibido = (p: string[]) => p.some((b) => /modoAlianca|layoutNovo|aliancaLayout|\$special/.test(b) || (b.startsWith("key ") && !/\$activeProfile/.test(b)))
+    const proibido = (p: string[]) => p.some((b) => /modoAlianca|\$special|chaveDoModo/.test(b) || (b.startsWith("key ") && !/\$activeProfile/.test(b)))
     it("<Projects aparece uma vez por ramo de pagina (show e scripture), <LibraryTabs, <Preview e o LazyLoad do Drawer uma vez", () => {
         expect(pilhaEm(/<Projects\b/).length).toBe(2)
         expect(pilhaEm(/<LibraryTabs\b/).length).toBe(1)
@@ -97,12 +97,8 @@ describe("arquivos da prova (scripts/prova-culto)", () => {
     it("ruido.json e valido (teto, nada proibido)", () => {
         expect(validarRuido(JSON.parse(readFileSync(p("ruido.json"), "utf8")))).toEqual([])
     })
-    it("esperado.json e esperado-classico.json obedecem ao esquema; o do classico exige decisaoDeProduto", () => {
-        expect(validarEsperado(JSON.parse(readFileSync(p("esperado.json"), "utf8")), { classico: false })).toEqual([])
-        expect(validarEsperado(JSON.parse(readFileSync(p("esperado-classico.json"), "utf8")), { classico: true })).toEqual([])
-    })
-    it("fatia 0: o classico nao declara nenhuma excecao", () => {
-        expect(JSON.parse(readFileSync(p("esperado-classico.json"), "utf8"))).toEqual([])
+    it("esperado.json obedece ao esquema", () => {
+        expect(validarEsperado(JSON.parse(readFileSync(p("esperado.json"), "utf8")))).toEqual([])
     })
     it("o baseline esta travado por SHA no lock (mudar o baseline aparece no diff do lock)", () => {
         const lock = JSON.parse(readFileSync(p("baseline.lock.json"), "utf8"))
@@ -123,11 +119,5 @@ describe("arquivos da prova (scripts/prova-culto)", () => {
         const pastas = [["perfil/store", ".json"], ["perfil/data/Shows", ".show"], ["baseline", ".json"]]
         for (const [pasta, ext] of pastas)
             for (const f of readdirSync(p(pasta)).filter((n) => n.endsWith(ext))) expect(readFileSync(p(`${pasta}/${f}`), "utf8"), `${pasta}/${f}`).not.toMatch(/[A-Za-z]:(\\\\|[\\/])+Users/)
-    })
-})
-
-describe("guarda do classico (mecanica na fatia 0: nenhum bloco real)", () => {
-    it("o lock existe e esta vazio (os blocos reais nascem nas fatias de Culto)", () => {
-        expect(JSON.parse(readFileSync(join(RAIZ, "scripts/classico.lock.json"), "utf8"))).toEqual({})
     })
 })

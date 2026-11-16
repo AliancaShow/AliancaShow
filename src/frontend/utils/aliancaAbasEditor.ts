@@ -21,7 +21,7 @@ export const abasEscondidas = derived([modoAlianca, activePage, activeEdit, abaL
 export const abaEscondidaNoEditor = (id: string): boolean => get(abasEscondidas).has(id)
 
 let iniciado = false
-// a aba de antes de entrar no editor e POR MODO (no leiaute classico, um so, como sempre foi)
+// a aba de antes de entrar no editor e POR MODO
 const anterior = valorPorModo<DrawerTabIds | null>(null)
 
 export function iniciarAbasDoEditor() {

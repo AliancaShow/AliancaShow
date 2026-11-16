@@ -8,11 +8,10 @@ type D = { height: number; stored: number | null; fundo?: { a: { b: number } } }
 const inicial = (): D => ({ height: 300, stored: null, fundo: { a: { b: 1 } } })
 const copiar = <T>(v: T): T => JSON.parse(JSON.stringify(v))
 
-function montar(ativo = true) {
+function montar() {
     const modo = writable<Modo>("culto")
     const culto = writable<D>(inicial())
-    let ligado = ativo
-    const f = criarPorModo<D>({ culto, modo: () => modo, ativo: () => ligado, copiar })
+    const f = criarPorModo<D>({ culto, modo: () => modo, copiar })
     // conta assinantes de `modo` (vazamento): o writable nao expoe, entao embrulha o subscribe
     let n = 0
     const sub0 = modo.subscribe.bind(modo)
@@ -24,7 +23,7 @@ function montar(ativo = true) {
             un()
         }
     }
-    return { f, modo, culto, assinantesDoModo: () => n, ligar: (v: boolean) => (ligado = v) }
+    return { f, modo, culto, assinantesDoModo: () => n }
 }
 const coletar = <T>(s: { subscribe: (r: (v: T) => void) => () => void }) => {
     const vistos: T[] = []
@@ -126,22 +125,7 @@ describe("criarPorModo: lados independentes", () => {
     })
 })
 
-describe("criarPorModo: classico (ativo() === false)", () => {
-    it("o Preparar le e escreve no Culto, nunca semeia, e emite como um writable em Culto E em Preparar", () => {
-        const { f, modo, culto } = montar(false)
-        const controle = writable<D>(inicial())
-        const a = coletar(f)
-        const b = coletar(controle)
-        for (const m of ["culto", "preparar", "culto"] as Modo[]) {
-            modo.set(m)
-            f.update((v) => ({ ...v, height: v.height + 1 }))
-            controle.update((v) => ({ ...v, height: v.height + 1 }))
-        }
-        expect(a.vistos).toEqual(b.vistos)
-        expect(get(culto).height).toBe(303)
-        a.un()
-        b.un()
-    })
+describe("criarPorModo: excecao na escolha do lado", () => {
     it("excecao na escolha do lado cai no Culto e avisa uma vez", () => {
         const erro = vi.spyOn(console, "error").mockImplementation(() => {})
         const culto = writable<D>(inicial())
@@ -150,7 +134,6 @@ describe("criarPorModo: classico (ativo() === false)", () => {
             modo: () => {
                 throw new Error("boom")
             },
-            ativo: () => true,
             copiar
         })
         f.set({ height: 9, stored: null })
@@ -209,7 +192,7 @@ describe("criarPorModo com comuns (drawerTabsData)", () => {
     function montarAbas() {
         const modo = writable<Modo>("culto")
         const culto = writable<any>(abas("pasta:a", ["video"]))
-        const f = criarPorModo<any>({ culto, modo: () => modo, ativo: () => true, copiar, comuns: comunsDrawerTabs })
+        const f = criarPorModo<any>({ culto, modo: () => modo, copiar, comuns: comunsDrawerTabs })
         return { f, modo, culto }
     }
     it("pasta e filtro da F7 sao por modo; as demais correcoes sao compartilhadas", () => {

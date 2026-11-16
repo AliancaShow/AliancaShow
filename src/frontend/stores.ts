@@ -3,9 +3,8 @@
 
 import type { Bible } from "json-bible/lib/Bible"
 import type { ICommonTagsResult } from "music-metadata"
-import { type Writable, get, writable } from "svelte/store"
+import { type Writable, writable } from "svelte/store"
 import { comunsDrawerTabs } from "./utils/aliancaDrawerTabsLogica"
-import { configurarLayoutCulto, layoutNovo } from "./utils/aliancaLayoutCulto"
 import { criarPorModo } from "./utils/aliancaPorModoLogica"
 import type { ContentProviderId } from "../electron/contentProviders/base/types"
 import type { TimecodeMode } from "../electron/timecode/timecode"
@@ -63,7 +62,7 @@ export const activeStage: Writable<ActiveStage> = writable({ id: null, items: []
 export const activeTimers: Writable<any[]> = writable([])
 export const activeRename: Writable<any> = writable(null)
 // AliancaShow: leiaute POR MODO (fatia 0b): drawer, resized, activeDrawerTab e drawerTabsData tem um valor do Culto (o do disco, `.culto`) e um do Preparar
-export const activeDrawerTab = criarPorModo<DrawerTabIds>({ culto: writable<DrawerTabIds>("shows"), modo: () => modoAlianca, ativo: () => layoutNovo(), copiar: (v) => v })
+export const activeDrawerTab = criarPorModo<DrawerTabIds>({ culto: writable<DrawerTabIds>("shows"), modo: () => modoAlianca, copiar: (v) => v })
 export const drawerOpenedInEdit: Writable<boolean> = writable(false)
 export const activeStyle: Writable<string> = writable("")
 export const selectedProfile: Writable<string | null> = writable(null)
@@ -321,9 +320,9 @@ export const scriptureSettings: Writable<any> = writable({
 }) // {default}
 
 // DRAWER
-export const drawerTabsData = criarPorModo<DrawerTabs>({ culto: writable<DrawerTabs>({}), modo: () => modoAlianca, ativo: () => layoutNovo(), copiar: copiaProfunda, comuns: (escrito, outro) => comunsDrawerTabs(escrito as any, outro as any) as DrawerTabs }) // {default}
+export const drawerTabsData = criarPorModo<DrawerTabs>({ culto: writable<DrawerTabs>({}), modo: () => modoAlianca, copiar: copiaProfunda, comuns: (escrito, outro) => comunsDrawerTabs(escrito as any, outro as any) as DrawerTabs }) // {default}
 export const mediaOptions: Writable<MediaOptions> = writable({ columns: 5, mode: "grid" }) // {default}
-export const drawer = criarPorModo<{ height: number; stored: null | number; autoclosed?: boolean }>({ culto: writable({ height: 300, stored: null }), modo: () => modoAlianca, ativo: () => layoutNovo(), copiar: copiaProfunda }) // {default}
+export const drawer = criarPorModo<{ height: number; stored: null | number; autoclosed?: boolean }>({ culto: writable({ height: 300, stored: null }), modo: () => modoAlianca, copiar: copiaProfunda }) // {default}
 
 // TAGS
 export const globalTags: Writable<{ [key: string]: Tag }> = writable({}) // {}
@@ -334,7 +333,7 @@ export const variableTags: Writable<{ [key: string]: Tag }> = writable({}) // {}
 export const timerTags: Writable<{ [key: string]: Tag }> = writable({}) // {}
 
 // OTHER
-export const resized = criarPorModo<NumberObject>({ culto: writable({ leftPanel: 290, rightPanel: 290, leftPanelDrawer: 290, rightPanelDrawer: 290 }), modo: () => modoAlianca, ativo: () => layoutNovo(), copiar: copiaProfunda }) // {default}
+export const resized = criarPorModo<NumberObject>({ culto: writable({ leftPanel: 290, rightPanel: 290, leftPanelDrawer: 290, rightPanelDrawer: 290 }), modo: () => modoAlianca, copiar: copiaProfunda }) // {default}
 export const sorted: Writable<any> = writable({}) // {}
 export const dataPath: Writable<string> = writable("") // "" // DEPRECATED - only for setting
 export const lockedOverlays: Writable<string[]> = writable([]) // []
@@ -366,8 +365,6 @@ export const outputs: Writable<Outputs> = writable({}) // {default}
 export const outLocked: Writable<boolean> = writable(false) // false
 // AliancaShow: "culto" = comportamento de sempre; "preparar" = nenhuma tecla mexe no telao. Nao persiste: o app sempre abre no Culto.
 export const modoAlianca: Writable<"culto" | "preparar"> = writable("culto")
-// a chave do leiaute do Culto (arquivo de utils) nao importa este arquivo: as fontes dela entram por funcao
-configurarLayoutCulto({ especial: () => get(special), carregado: () => get(loaded) })
 
 // PROFILES
 export const profiles: Writable<Profiles> = writable({}) // {}

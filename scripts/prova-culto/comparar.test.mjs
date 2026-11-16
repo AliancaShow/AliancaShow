@@ -2,7 +2,11 @@
 // Cada mutacao parte de uma gravacao sintetica que passa e tem de reprovar (ou o esquema/mascara tem de ser recusado).
 import test from "node:test"
 import assert from "node:assert/strict"
-import { TETO_CLASSICO_POR_FATIA, achatar, comparar, normalizarPerfil, validarEsperado, validarRuido } from "./compararLogica.mjs"
+import { spawnSync } from "node:child_process"
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { achatar, comparar, normalizarPerfil, validarEsperado, validarRuido } from "./compararLogica.mjs"
 
 const clone = (x) => JSON.parse(JSON.stringify(x))
 const out = (index) => ({ op: "update", por: "setOutput@output", mudou: true, v: { default: { slide: { id: "s", index, layout: "default" } } } })
@@ -89,10 +93,10 @@ test("divergencia declarada passa; fora da lista reprova; declarada que nao ocor
 })
 test("aposentar: item aposentado deixa de ser fantasma, mas so se apontar um item existente", () => {
     const itens = [item({ decisaoDeProduto: "d" }), { tipo: "aposentar", fatia: "1a", alvo: "e1", porque: "modo foco removido", decisaoDeProduto: "doc X" }]
-    assert.equal(validarEsperado(itens, { classico: true }).length, 0)
+    assert.equal(validarEsperado(itens).length, 0)
     assert.equal(comparar(base(), base(), { ruido, esperado: itens }).fantasmas.length, 0)
     const orfao = [{ tipo: "aposentar", fatia: "1a", alvo: "nao-existe", porque: "x", decisaoDeProduto: "d" }]
-    assert.ok(validarEsperado(orfao, { classico: true }).length > 0)
+    assert.ok(validarEsperado(orfao).length > 0)
 })
 test("aposentar item que AINDA ocorre: a divergencia volta a reprovar", () => {
     const b = base()
@@ -100,13 +104,9 @@ test("aposentar item que AINDA ocorre: a divergencia volta a reprovar", () => {
     const itens = [item(), { tipo: "aposentar", fatia: "1a", alvo: "e1", porque: "x", decisaoDeProduto: "d" }]
     assert.equal(comparar(base(), b, { ruido, esperado: itens }).naoDeclaradas.length, 1)
 })
-test("esquema do classico: decisaoDeProduto obrigatoria, sem curinga, teto por fatia", () => {
-    assert.ok(validarEsperado([item()], { classico: true }).some((e) => /decisaoDeProduto/.test(e)))
-    assert.equal(validarEsperado([item({ decisaoDeProduto: "d" })], { classico: true }).length, 0)
-    assert.ok(validarEsperado([item({ decisaoDeProduto: "d", caminho: "drawer/*" })], { classico: true }).length > 0)
-    assert.ok(validarEsperado([item({ decisaoDeProduto: "d", passo: "" })], { classico: true }).length > 0)
-    const muitos = Array.from({ length: TETO_CLASSICO_POR_FATIA + 1 }, (_, i) => item({ id: "e" + i, decisaoDeProduto: "d", caminho: "drawer/x" + i }))
-    assert.ok(validarEsperado(muitos, { classico: true }).some((e) => /teto/.test(e)))
+test("esquema: sem curinga", () => {
+    assert.ok(validarEsperado([item({ decisaoDeProduto: "d", caminho: "drawer/*" })]).length > 0)
+    assert.ok(validarEsperado([item({ decisaoDeProduto: "d", passo: "" })]).length > 0)
     assert.ok(validarEsperado([{ tipo: "curinga", fatia: "x", porque: "y" }], {}).length > 0)
 })
 test("tipos efeitoMinimo e dom exigem de/para e motivo", () => {
@@ -142,4 +142,30 @@ test("normalizarPerfil: a raiz do perfil some da gravacao nos dois formatos de b
     // sem raiz, ou raiz rasa demais, nao mexe em nada
     assert.equal(normalizarPerfil("C:/a", ""), "C:/a")
     assert.equal(normalizarPerfil("C:/a", "C:/"), "C:/a")
+})
+
+// Q5 (fatia R): a ferramenta nao conhece mais o leiaute antigo. Roda o comparar.mjs de verdade, em processo filho.
+const BASELINE = "scripts/prova-culto/baseline/slice0-base.json"
+const comparar_mjs = (...args) => spawnSync(process.execPath, ["scripts/prova-culto/comparar.mjs", ...args], { encoding: "utf8" })
+test("Q5: flag desconhecida sai com 2", () => {
+    const r = comparar_mjs(BASELINE, BASELINE, "--classico")
+    assert.equal(r.status, 2)
+    assert.match(r.stderr, /flag desconhecida: --classico/)
+    assert.equal(comparar_mjs(BASELINE, BASELINE, "--qualquer-outra").status, 2)
+})
+test("Q5: --esperado continua aceito", () => {
+    const r = comparar_mjs(BASELINE, BASELINE, "--esperado", "scripts/prova-culto/esperado.json")
+    // o baseline contra ele mesmo deixa os itens declarados sem ocorrer (status 1), mas a flag e aceita: nunca 2
+    assert.equal(r.status, 1, r.stderr)
+    assert.match(r.stdout, /comparadas \d+ chaves/)
+})
+test("Q5: gravacao com leiaute diferente de novo sai com 2", () => {
+    const dir = mkdtempSync(join(tmpdir(), "q5-"))
+    const g = JSON.parse(readFileSync(BASELINE, "utf8"))
+    g.cabecalho.layout = "classico"
+    const arq = join(dir, "antiga.json")
+    writeFileSync(arq, JSON.stringify(g))
+    const r = comparar_mjs(BASELINE, arq)
+    assert.equal(r.status, 2)
+    assert.match(r.stderr, /nao existe mais/)
 })
