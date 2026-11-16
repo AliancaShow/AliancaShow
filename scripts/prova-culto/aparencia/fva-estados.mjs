@@ -5,11 +5,18 @@
 // FS_REPO = pasta servida (para gravar o SHA do commit no cabecalho); padrao: este repositorio.
 import { execFileSync } from "node:child_process"
 import { writeFileSync } from "node:fs"
-import { abrir, abrirShow, esperar, clicarSel, clicarEm, mover, caixa, guardar, botaoTexto, ID, VARREDURA } from "./fva-lib.mjs"
+import { abrir, abrirShow, esperar, clicarSel, clicarEm, mover as moverMouse, caixa, guardar, botaoTexto, ID, VARREDURA } from "./fva-lib.mjs"
 import { ESTADOS_APARENCIA } from "./fvaLogica.mjs"
 const [, , dir, pref = ""] = process.argv
 const N = Object.fromEntries(ESTADOS_APARENCIA.map((e) => [e.slice(0, 2), e]))
 const j = await abrir()
+// o hover do Chromium so e recalculado com movimento do mouse: cada estado gravado repete o ultimo movimento (mesma posicao) antes da espera
+// de estabilidade, senao um :hover (barra de menus em 5,5, overlay do slide) aparece ou some conforme o timing do render (A/A medida)
+let ultimoMouse = { x: 5, y: 5 }
+const mover = async (jj, x, y) => {
+    ultimoMouse = { x, y }
+    await moverMouse(jj, x, y)
+}
 let gravar = false
 const TETO_ESTAVEL_MS = 8000
 const assinatura = async () => {
@@ -31,6 +38,7 @@ async function estavel(nome) {
 }
 const g = async (n) => {
     if (gravar) {
+        await moverMouse(j, ultimoMouse.x, ultimoMouse.y)
         await esperar(400)
         await estavel(n)
         await guardar(j, dir, pref + n)
