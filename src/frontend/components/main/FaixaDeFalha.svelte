@@ -25,7 +25,8 @@
         z-index: 100000;
         pointer-events: none;
         user-select: none;
-        background: var(--red);
+        /* vermelho SOLIDO: --red do tema tem 25% de opacidade e, por cima da tela, vira um rosado que se ignora. Branco sobre #c62828 = 5,6:1 */
+        background: #c62828;
         color: #fff;
         font-size: 13px;
         font-weight: 600;
