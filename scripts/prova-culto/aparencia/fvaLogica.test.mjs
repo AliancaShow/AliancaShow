@@ -197,3 +197,8 @@ test("com a tolerancia real: 1 pixel acima reprova, igual a tolerancia passa, em
     assert.deepEqual(compararAparencia(lado(), lado(), [], { px: { "09-config": tol } }).reprovas, [])
     assert.deepEqual(tipos(compararAparencia(lado(), lado(), [], { px: { "09-config": tol + 1 } })), ["09-config:px"])
 })
+test("TOLERANCIA_PX trava os numeros medidos (mudar exige repetir a A/A e reescrever este teste)", () => {
+    assert.equal(TOLERANCIA_PX["09-config"], 23)
+    assert.equal(TOLERANCIA_PX["10-culto-editor"], 23)
+    for (const e of ESTADOS_CULTO.filter((x) => x !== "09-config" && x !== "10-culto-editor")) assert.equal(TOLERANCIA_PX[e], 20, e)
+})
