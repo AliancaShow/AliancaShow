@@ -1,0 +1,54 @@
+{
+	"brackets": {
+		"isDefault": true,
+		"name": "Brackets",
+		"color": "#515151",
+		"category": "scripture",
+		"settings": {
+			"mode": "text"
+		},
+		"items": [
+			{
+				"style": "top:88px;left:50px;height:904px;width:1820px;",
+				"align": "",
+				"lines": [
+					{
+						"align": "",
+						"text": [
+							{
+								"value": "[Brackets]",
+								"style": "font-style: italic;color: rgb(255 255 255 / 0.6);"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"parentheses": {
+		"isDefault": true,
+		"name": "Parentheses",
+		"color": "#515151",
+		"category": "scripture",
+		"settings": {
+			"mode": "text"
+		},
+		"items": [
+			{
+				"style": "top:88px;left:50px;height:904px;width:1820px;",
+				"align": "",
+				"lines": [
+					{
+						"align": "",
+						"text": [
+							{
+								"value": "(Parentheses)",
+								"style": "font-weight: normal;color: rgb(255 255 255 / 0.8);"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

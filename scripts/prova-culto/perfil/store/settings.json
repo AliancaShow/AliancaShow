@@ -1,0 +1,172 @@
+{
+	"initialized": true,
+	"activeProject": null,
+	"alertUpdates": true,
+	"audioFolders": {
+		"f7": {
+			"name": "F7",
+			"path": "__PERFIL__/midia",
+			"icon": "folder"
+		}
+	},
+	"autoOutput": false,
+	"maxConnections": 10,
+	"ports": {
+		"remote": 5510,
+		"stage": 5511
+	},
+	"disabledServers": {
+		"remote": true,
+		"stage": true
+	},
+	"serverData": {},
+	"autosave": "15min",
+	"timeFormat": "24",
+	"showsPath": null,
+	"dataPath": "__PERFIL__/data",
+	"lockedOverlays": [],
+	"drawer": {
+		"height": 40,
+		"stored": 420,
+		"autoclosed": true
+	},
+	"drawerTabsData": {
+		"shows": {
+			"activeSubTab": "all",
+			"enabled": true
+		},
+		"media": {
+			"activeSubTab": "pasta:raiz",
+			"enabled": true,
+			"aliancaFiltro": []
+		},
+		"audio": {
+			"activeSubTab": "inputs",
+			"openedSubSubTab": {
+				"microphones": "audio_streams",
+				"inputs": "audio_streams"
+			}
+		},
+		"overlays": {
+			"activeSubTab": "effects",
+			"enabled": true
+		},
+		"functions": {
+			"activeSubTab": "actions",
+			"enabled": true
+		},
+		"scripture": {
+			"activeSubTab": "nvi",
+			"enabled": true
+		}
+	},
+	"groupNumbers": true,
+	"fullColors": false,
+	"formatNewShow": false,
+	"labelsDisabled": false,
+	"language": "pt_BR",
+	"mediaFolders": {
+		"f7": {
+			"name": "F7",
+			"path": "__PERFIL__/midia",
+			"icon": "folder"
+		}
+	},
+	"mediaOptions": {
+		"columns": 5,
+		"mode": "grid",
+		"view": "all"
+	},
+	"openedFolders": [],
+	"outLocked": false,
+	"outputs": {
+		"default": {
+			"enabled": true,
+			"active": true,
+			"name": "Primary",
+			"color": "#F21A27",
+			"bounds": {
+				"x": 0,
+				"y": 0,
+				"width": 1920,
+				"height": 1080
+			},
+			"screen": null,
+			"style": "default",
+			"show": {},
+			"out": {}
+		}
+	},
+	"sorted": {},
+	"remotePassword": "",
+	"resized": {
+		"leftPanel": 290,
+		"rightPanel": 290,
+		"leftPanelDrawer": 290,
+		"rightPanelDrawer": 290
+	},
+	"slidesOptions": {
+		"columns": 4,
+		"mode": "grid"
+	},
+	"splitLines": 0,
+	"theme": "default",
+	"transitionData": {
+		"text": {
+			"type": "fade",
+			"duration": 500,
+			"easing": "sine"
+		},
+		"media": {
+			"type": "fade",
+			"duration": 800,
+			"easing": "sine"
+		}
+	},
+	"audioChannelsData": {},
+	"cloudSyncData": {},
+	"driveData": {
+		"mainFolderId": null,
+		"disabled": false,
+		"initializeMethod": null,
+		"disableUpload": false
+	},
+	"calendarAddShow": "",
+	"metronome": {
+		"tempo": 120,
+		"beats": 4,
+		"accentVolume": 2,
+		"secondaryVolume": 1.75
+	},
+	"audioEffects": {},
+	"eqPresets": {},
+	"effectsLibrary": [
+		{
+			"path": "__PERFIL__/midia/audio1.wav",
+			"name": "audio1.wav"
+		}
+	],
+	"special": {
+		"capitalize_words": "Jesus, Lord",
+		"autoBackupPrevious": 1794662578348,
+		"customUserDataLocation": true,
+		"cameraBad": [],
+		"aliancaSirvoMontados": {
+			"ev1": "090fa9015be"
+		},
+		"slideTimelineActive": false
+	},
+	"timeline": {},
+	"timecode": {},
+	"contentProviderData": {
+		"planningcenter": {
+			"localAlways": false
+		},
+		"churchApps": {
+			"syncCategories": [
+				"song"
+			]
+		}
+	},
+	"obsData": {}
+}
