@@ -61,6 +61,9 @@ if (process.env.TEMA) {
     await esperar(800)
 }
 async function sequencia() {
+    // sem transicoes nem animacoes CSS: um :hover/fade em andamento no quadro do print variava entre rodadas do MESMO codigo (A/A medida:
+    // backgroundColor 0.004 x 0.05 na barra de menus). O estado final e o que se compara; o movimento no caminho nao.
+    await j.ev(`if(!document.getElementById("__sem_transicao")){const s=document.createElement("style");s.id="__sem_transicao";s.textContent="*,*::before,*::after{transition:none!important;animation:none!important}";document.head.appendChild(s)} return 1`)
     await j.ev(`S.activePopup.set(null); S.focusMode.set(false); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.activePage.set("show"); S.modoAlianca.set("culto"); return 1`)
     await esperar(500)
     await abrirShow(j, ID, 0, "culto", true)
