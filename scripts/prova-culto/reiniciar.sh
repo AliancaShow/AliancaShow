@@ -1,7 +1,7 @@
 #!/bin/bash
 # Abre o Electron de dev (Vite ja de pe em :3000) sobre o perfil restaurado, com CDP em 127.0.0.1:9222.
 AQUI="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$AQUI/../.." && pwd)"
+REPO="${FS_REPO:-$(cd "$AQUI/../.." && pwd)}"   # FS_REPO: abre o Electron de OUTRA pasta (a referencia do portao de aparencia)
 PERFIL="${FS_PERFIL_DIR:-$REPO/../prova-perfil}"
 PERFIL="$(cygpath -m "$PERFIL" 2>/dev/null || (cd "$PERFIL" && pwd))"
 cd "$REPO"

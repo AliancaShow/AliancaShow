@@ -11,13 +11,14 @@ export const VARREDURA = String.raw`
 const norm=(s)=>String(s||"").replace(/svelte-[a-z0-9]+/g,"").replace(/(zoom|picker|id)_[0-9a-f]{6,}/g,"$1_X").replace(/var\(--(?:live-opacity|live|sel-wash|sel-line|conteudo-acento|modo-[a-z-]+|prep-rgb|prep|aviso|sobre-acento),\s*([^()]*(?:\([^()]*\)[^()]*)*)\)/g,"$1").replace(/\s+/g," ").trim()
 const PROPS=["color","backgroundColor","borderTopColor","borderRightColor","borderBottomColor","borderLeftColor","outlineColor","boxShadow","fill","stroke","caretColor","backgroundImage","textDecorationColor","columnRuleColor"]
 const out=[]
-const skip=(e)=>!!e.closest(".clockArea, .clock, #clock")
+const skip=(e)=>!!e.closest(".clockArea, .clock, #clock, .noAr")
 for(const e of document.querySelectorAll("body *")){
   const cs=getComputedStyle(e); const r=e.getBoundingClientRect()
   const attrs=[...e.attributes].map(a=>a.name+"="+(a.name==="class"?norm(a.value).split(" ").filter(Boolean).sort().join(" "):norm(a.value))).sort().join(" ")
-  const own=skip(e)?"":[...e.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent.trim()).join("|")
+  const own=skip(e)?"":[...e.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent.trim()).filter(Boolean).join("|")
   const c={}; for(const p of PROPS) c[p]=cs[p]
-  out.push({sig:e.tagName+" "+attrs+" #"+own, rect:[r.x,r.y,r.width,r.height].map(v=>Math.round(v*100)/100), cor:c, ff:cs.fontFamily, tag:e.tagName.toLowerCase()+"."+norm(e.getAttribute("class")||"").split(" ").join(".")})
+  const est={fontSize:cs.fontSize,fontWeight:cs.fontWeight,opacity:cs.opacity,visibility:cs.visibility,display:cs.display,pointerEvents:cs.pointerEvents,zIndex:cs.zIndex}
+  out.push({sig:e.tagName+" "+attrs+" #"+own, rect:[r.x,r.y,r.width,r.height].map(v=>Math.round(v*100)/100), cor:c, ff:cs.fontFamily, est, skip:skip(e), tag:e.tagName.toLowerCase()+"."+norm(e.getAttribute("class")||"").split(" ").join(".")})
 }
 return JSON.stringify({vars:{sec:getComputedStyle(document.body).getPropertyValue("--secondary"),st:getComputedStyle(document.querySelector("main")||document.body).getPropertyValue("--secondary-text")}, ds:{...document.body.dataset}, els:out})`
 
