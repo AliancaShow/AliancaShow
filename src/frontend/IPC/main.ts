@@ -69,6 +69,8 @@ export function sendMain<ID extends Main>(id: ID, value?: MainSendValue<ID>, lis
     if (!Object.values(Main).includes(id)) throw new Error(`Invalid channel: ${id}`)
     if (!window.api) return
 
+    // gancho so de DEV para a prova do Culto (scripts/prova-culto): o bloco inteiro sai do build de producao
+    if (import.meta.env.DEV) (globalThis as any).__gravarIPC?.(MAIN, id, value)
     window.api.send(MAIN, { channel: id, data: value }, listenerId)
 }
 
