@@ -1,6 +1,8 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
-    import { activeDrawerTab, activeEdit, activePage, activePopup, activeProject, activeShow, activeTriggerFunction, dictionary, drawer, drawerOpenedInEdit, drawerTabsData, focusMode, forceClock, labelsDisabled, mediaOptions, os, previousShow, projects, quickTextCache, scriptureSettings, selected, showsCache } from "../../stores"
+    import { get } from "svelte/store"
+    import { activeDrawerTab, activeEdit, activePage, activePopup, activeProject, activeShow, activeTriggerFunction, dictionary, drawer, drawerOpenedInEdit, drawerTabsData, focusMode, forceClock, labelsDisabled, mediaOptions, modoAlianca, os, previousShow, projects, quickTextCache, scriptureSettings, selected, showsCache } from "../../stores"
+    import { agendarReaberturaDaGaveta } from "../../utils/aliancaGavetaAutoabrir"
     import { teclaIgnorada } from "../../utils/aliancaModo"
     import { DEFAULT_DRAWER_HEIGHT, DEFAULT_WIDTH, MENU_BAR_HEIGHT } from "../../utils/common"
     import { startResizing, stopResizing } from "../../utils/cursor"
@@ -43,8 +45,9 @@
         }
     }
 
-    // open drawer if autoclosed
-    $: if ($activePage === "show" && $drawer.autoclosed) setTimeout(() => drawer.set({ height: $drawer.stored ?? DEFAULT_DRAWER_HEIGHT, stored: null }), 100)
+    // open drawer if autoclosed. O LADO (Culto/Preparar) e decidido AGORA, ao agendar: se o modo mudar nos 100 ms (o chip "leva ao Culto"),
+    // a escrita atrasada continua no lado de origem em vez de gravar a gaveta dele no outro (utils/aliancaGavetaAutoabrir.ts).
+    $: if ($activePage === "show" && $drawer.autoclosed) agendarReaberturaDaGaveta(drawer.doModo(get(modoAlianca)), DEFAULT_DRAWER_HEIGHT)
 
     let animFrame: number | null = null
     function mousemove(e: any) {
@@ -53,13 +56,14 @@
         if ($selected?.id || $selected?.data?.length) selected.set({ id: null, data: [] })
 
         if (animFrame) return
+        const lado = drawer.doModo(get(modoAlianca)) // o lado da hora do gesto, nao o do quadro seguinte
         animFrame = requestAnimationFrame(() => {
             animFrame = null
             if (!mouse) return
 
             const newHeight = getHeight(window.innerHeight - e.clientY - mouse.offsetY)
-            if (newHeight !== $drawer.height) {
-                drawer.set({ height: newHeight, stored: null })
+            if (newHeight !== get(lado).height) {
+                lado.set({ height: newHeight, stored: null })
 
                 const isClosed = newHeight <= minHeight
                 if (isClosed) drawerOpenedInEdit.set(false)
@@ -234,7 +238,6 @@
         searchActive = false
         setTimeout(() => (searchActive = true))
     }
-
 </script>
 
 <svelte:window on:mouseup={mouseup} on:mousemove={mousemove} on:keydown={keydown} />
