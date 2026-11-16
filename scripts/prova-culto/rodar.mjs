@@ -25,10 +25,7 @@ import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, tecla, RAIZ } from "./lib.mjs"
 import { FUNCOES_PREPARO, SECOES, VERSAO } from "./roteiro.mjs"
 import { aplicarEfeitoMinimo, normalizarPerfil, validarEsperado } from "./compararLogica.mjs"
-if (process.env.FS_LAYOUT !== undefined) {
-    console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente")
-    process.exit(2)
-}
+if (process.env.FS_LAYOUT !== undefined) { console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente"); process.exit(2) }
 
 const arg = (n, d = null) => {
     const i = process.argv.indexOf("--" + n)

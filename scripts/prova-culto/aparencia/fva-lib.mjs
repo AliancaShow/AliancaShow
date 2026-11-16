@@ -7,7 +7,7 @@ export { abrir, esperar, clicarSel, clicarEm, mover, caixa, abrirShow }
 export const ID = "impulso_aos_teus_pes"
 
 // varredura: uma linha por elemento de body *
-export const VARREDURA = `
+export const VARREDURA = String.raw`
 const norm=(s)=>String(s||"").replace(/svelte-[a-z0-9]+/g,"").replace(/(zoom|picker|id)_[0-9a-f]{6,}/g,"$1_X").replace(/var\(--(?:live-opacity|live|sel-wash|sel-line|conteudo-acento|modo-[a-z-]+|prep-rgb|prep|aviso|sobre-acento),\s*([^()]*(?:\([^()]*\)[^()]*)*)\)/g,"$1").replace(/\s+/g," ").trim()
 const PROPS=["color","backgroundColor","borderTopColor","borderRightColor","borderBottomColor","borderLeftColor","outlineColor","boxShadow","fill","stroke","caretColor","backgroundImage","textDecorationColor","columnRuleColor"]
 const out=[]

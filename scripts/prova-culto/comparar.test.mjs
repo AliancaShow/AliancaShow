@@ -111,9 +111,9 @@ test("esquema: sem curinga", () => {
 })
 test("tipos efeitoMinimo e dom exigem de/para e motivo", () => {
     assert.ok(validarEsperado([{ tipo: "efeitoMinimo", fatia: "1b", passo: "A10", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "" }, porque: "x" }]).length > 0)
-    assert.equal(validarEsperado([{ tipo: "efeitoMinimo", fatia: "1b", passo: "A10", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, porque: "x" }]).length, 0)
-    assert.ok(validarEsperado([{ tipo: "dom", fatia: "1b", estado: "01", seletor: "*", atributo: "title", de: "a", para: "b", porque: "x" }]).length > 0)
-    assert.equal(validarEsperado([{ tipo: "dom", fatia: "1b", estado: "01", seletor: "button.tab", atributo: "title", de: "Edicao [2]", para: "Edicao", porque: "x" }]).length, 0)
+    assert.equal(validarEsperado([{ tipo: "efeitoMinimo", fatia: "1b", passo: "A10", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, porque: "x", decisaoDeProduto: "d" }]).length, 0)
+    assert.ok(validarEsperado([{ tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "*", atributo: "data-title", de: "a", para: "b", porque: "x", decisaoDeProduto: "d" }]).length > 0)
+    assert.equal(validarEsperado([{ tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "BUTTON", atributo: "data-title", de: "Edicao [2]", para: "Edicao", porque: "x", decisaoDeProduto: "d" }]).length, 0)
 })
 test("achatar: ausente num lado e divergencia", () => {
     const b = base()
@@ -332,4 +332,41 @@ test("comparar.mjs imprime e reprova passo morto violado", () => {
     const r = comparar_mjs(join(dir, "a.json"), join(dir, "b.json"), "--esperado", join(dir, "e.json"))
     assert.equal(r.status, 1, r.stdout + r.stderr)
     assert.match(r.stderr, /PASSO MORTO VIOLADO: passo A11-digito-2 regra 2/)
+})
+
+// 6.3: teto, fatias e decisao
+const div = (i, fatia = "0b") => ({ tipo: "divergencia", id: "d" + i, fatia, passo: "A01", fluxo: "principal.sinais", caminho: "c/" + i, de: 1, para: 2, porque: "x" })
+test("teto da 0b: 20 itens reprova, 19 passa", () => {
+    assert.ok(validarEsperado(Array.from({ length: 20 }, (_, i) => div(i))).some((e) => /teto 19/.test(e)))
+    assert.deepEqual(validarEsperado(Array.from({ length: 19 }, (_, i) => div(i))), [])
+})
+test("teto padrao: 11 itens numa fatia sem excecao reprova, 10 passa", () => {
+    assert.ok(validarEsperado(Array.from({ length: 11 }, (_, i) => div(i, "1a"))).some((e) => /teto 10/.test(e)))
+    assert.deepEqual(validarEsperado(Array.from({ length: 10 }, (_, i) => div(i, "1a"))), [])
+})
+test("fatia fora da lista reprova (1b-dom, 2a, vazia)", () => {
+    for (const fatia of ["1b-dom", "2a", "0a"])
+        assert.ok(
+            validarEsperado([div(1, fatia)]).some((e) => /fatia/.test(e)),
+            fatia
+        )
+    assert.ok(validarEsperado([div(1, "0c")]).length === 0)
+})
+test("dom e efeitoMinimo sem decisaoDeProduto reprovam", () => {
+    const dom = { tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "BUTTON", atributo: "data-title", de: "a", para: "b", porque: "x" }
+    assert.ok(validarEsperado([dom]).some((e) => /decisaoDeProduto/.test(e)))
+    assert.deepEqual(validarEsperado([{ ...dom, decisaoDeProduto: "d" }]), [])
+    const em = { tipo: "efeitoMinimo", fatia: "1b", passo: "A11-digito-2", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "m" }, porque: "x" }
+    assert.ok(validarEsperado([em]).some((e) => /decisaoDeProduto/.test(e)))
+})
+test("esquema dom: estados explicitos do Culto, tag em maiuscula, atributo da lista, de/para normalizados", () => {
+    const dom = { tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "BUTTON", atributo: "data-title", de: "a", para: "b", porque: "x", decisaoDeProduto: "d" }
+    assert.deepEqual(validarEsperado([dom]), [])
+    assert.ok(validarEsperado([{ ...dom, estados: ["*"] }]).length > 0, "curinga")
+    assert.ok(validarEsperado([{ ...dom, estados: [] }]).length > 0, "vazio")
+    assert.ok(validarEsperado([{ ...dom, estados: ["11-preparar"] }]).length > 0, "estado do Preparar")
+    assert.ok(validarEsperado([{ ...dom, estado: "01-culto-parado", estados: undefined }]).length > 0, "estado no singular")
+    assert.ok(validarEsperado([{ ...dom, seletor: "button.tab" }]).length > 0, "seletor com classe")
+    assert.ok(validarEsperado([{ ...dom, atributo: "class" }]).length > 0, "atributo fora da lista")
+    assert.ok(validarEsperado([{ ...dom, de: "  a  " }]).length > 0, "de nao normalizado")
 })

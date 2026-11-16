@@ -1,7 +1,18 @@
 // Logica pura do comparador da prova do Culto (sem CDP, sem disco): achatar, mascara, esperado, comparacao.
 // Testada em comparar.test.mjs (inclui as mutacoes que TEM de reprovar).
 
+import { ATRIBUTOS_DOM, ESTADOS_CULTO, normalizarAtributo } from "./aparencia/fvaLogica.mjs"
+
 export const TETO_RUIDO = 80
+
+/** fatias que podem declarar excecoes no esperado.json (outra fatia reprova no esquema) */
+export const FATIAS_VALIDAS = ["0b", "0c", "1a", "1b"]
+/** teto de itens `divergencia` por fatia (os itens de decisao, efeitoMinimo e dom, tem a propria trava: decisaoDeProduto + fantasma) */
+export const TETO_PADRAO = 10
+export const TETO_POR_FATIA = {
+    // 0b: E1, E2, E3 (19 itens de `principal.sinais`, relatorio-layout-f0.md)
+    "0b": 19
+}
 
 /** caminhos de `outputs` que NUNCA podem ser mascarados (revisao C3) */
 const PROIBIDOS_AMOSTRA = ["x/principal/outputs/0/v/default/slide/id", "x/principal/outputs/0/v/default/slide/index", "x/principal/outputs/0/v/default/slide/layout", "x/principal/outputs/0/v/default/background/id", "x/principal/outputs/0/v/default/background/path", "x/principal/outputs/0/v/default/overlays", "x/principal/outputs/0/v/default/overlays/0", "x/principal/outputs/0/v/default/transition/duration", "x/principal/outputs/0/v/default/transition"]
@@ -124,6 +135,8 @@ export function validarEsperado(itens) {
         const n = `esperado[${i}]`
         if (!TIPOS.includes(it.tipo)) return void erros.push(`${n}: tipo "${it.tipo}" invalido`)
         if (!it.fatia) erros.push(`${n}: sem fatia`)
+        else if (!FATIAS_VALIDAS.includes(it.fatia)) erros.push(`${n}: fatia "${it.fatia}" fora de ${JSON.stringify(FATIAS_VALIDAS)}`)
+        if ((it.tipo === "efeitoMinimo" || it.tipo === "dom") && (!it.decisaoDeProduto || !String(it.decisaoDeProduto).trim())) erros.push(`${n}: ${it.tipo} sem decisaoDeProduto`)
         if (!it.porque || !String(it.porque).trim()) erros.push(`${n}: sem porque`)
         if (it.id) ids.add(it.id)
         if (it.tipo === "divergencia") {
@@ -137,8 +150,13 @@ export function validarEsperado(itens) {
                 erros.push(`${n}: caminho curto demais`)
         }
         if (it.tipo === "dom") {
-            for (const c of ["estado", "seletor", "atributo"]) if (!it[c] || CURINGA.test(String(it[c]))) erros.push(`${n}: ${c} ausente ou com curinga`)
+            for (const c of ["seletor", "atributo"]) if (!it[c] || CURINGA.test(String(it[c]))) erros.push(`${n}: ${c} ausente ou com curinga`)
+            if (!Array.isArray(it.estados) || !it.estados.length) erros.push(`${n}: estados deve ser uma lista explicita e nao vazia`)
+            else for (const e of it.estados) if (!ESTADOS_CULTO.includes(e)) erros.push(`${n}: estado "${e}" nao e um dos estados do Culto`)
+            if (it.seletor && !/^[A-Z][A-Z0-9]*$/.test(String(it.seletor))) erros.push(`${n}: seletor deve ser o nome da tag em maiusculas`)
+            if (it.atributo && !ATRIBUTOS_DOM.includes(it.atributo)) erros.push(`${n}: atributo "${it.atributo}" fora de ${JSON.stringify(ATRIBUTOS_DOM)}`)
             if (!("de" in it) || !("para" in it)) erros.push(`${n}: sem de/para`)
+            else for (const c of ["de", "para"]) if (typeof it[c] !== "string" || normalizarAtributo(it[c]) !== it[c]) erros.push(`${n}: ${c} tem de ser texto ja normalizado como a varredura normaliza`)
         }
         if (it.tipo === "efeitoMinimo") {
             if (!it.passo || !it.de || !it.para) erros.push(`${n}: efeitoMinimo exige passo, de e para`)
@@ -151,6 +169,12 @@ export function validarEsperado(itens) {
         }
         if (it.tipo === "aposentar" && !it.alvo) erros.push(`${n}: aposentar sem alvo`)
     })
+    const porFatia = {}
+    for (const it of itens) if (it.tipo === "divergencia" && it.fatia) porFatia[it.fatia] = (porFatia[it.fatia] || 0) + 1
+    for (const [fatia, n] of Object.entries(porFatia)) {
+        const teto = TETO_POR_FATIA[fatia] ?? TETO_PADRAO
+        if (n > teto) erros.push(`esperado: fatia ${fatia} tem ${n} divergencias, acima do teto ${teto}`)
+    }
     itens.forEach((it, i) => {
         if (it.tipo === "aposentar" && !ids.has(it.alvo)) erros.push(`esperado[${i}]: aposentar "${it.alvo}" nao aponta para um item declarado (id)`)
     })
