@@ -6,10 +6,10 @@
 // efeito: { fluxo: "outputs" | "estado" | "saida" | "ipc", n } -- outputs: n escritas que MUDARAM o valor; estado: n mudancas de
 // activePage/activeShow/...; saida: o telao mudou (hash do html); ipc: n canais nao periodicos tocados.
 
-export const VERSAO = 1
+export const VERSAO = 2
 export const ID_SHOW = "impulso_aos_teus_pes"
 
-const ABRE_SHOW = `S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default");
+const ABRE_SHOW = `S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
 S.outputs.update(a=>{a.default.out={};return a});
 const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(ID_SHOW)}]);
 S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); S.activePage.set("show");

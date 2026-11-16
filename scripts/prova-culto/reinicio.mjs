@@ -62,7 +62,7 @@ if (fase === "preparar") {
     await clicar(`[...document.querySelectorAll("button.tab")].find(b=>b.innerText.trim()==="Mídia")`)
     passos.depoisAba = await j.ev(`return {aba:get(S.activeDrawerTab), culto:get(S.activeDrawerTab.culto||S.activeDrawerTab)}`)
     // coluna esquerda: arrasta o divisor com o mouse (mouse real)
-    const d = await j.ev(`const e=document.querySelector("#leftPanel + .resizer, .resizer"); if(!e) return null; const r=e.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}`)
+    const d = await j.ev(`const e=document.querySelector("#leftPanel"); if(!e) return null; const r=e.getBoundingClientRect(); return {x:r.right-2,y:r.y+r.height/2}`)
     if (d) {
         await j.enviar("Input.dispatchMouseEvent", { type: "mouseMoved", x: d.x, y: d.y })
         await j.enviar("Input.dispatchMouseEvent", { type: "mousePressed", x: d.x, y: d.y, button: "left", clickCount: 1 })

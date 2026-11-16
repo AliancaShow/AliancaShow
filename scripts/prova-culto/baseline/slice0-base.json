@@ -1,9 +1,9 @@
 {
  "cabecalho": {
-  "versaoRoteiro": 1,
-  "rotulo": "base2",
-  "commit": "6d96af4",
-  "perfilSha": "a23fd4f745065e6f",
+  "versaoRoteiro": 2,
+  "rotulo": "b4",
+  "commit": "dc81585",
+  "perfilSha": "e094becb4679d4ac",
   "layout": "novo",
   "janela": {
    "w": 1365,
@@ -132,8 +132,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789148710,
-        "used": 1794789148710
+        "modified": 1794792865785,
+        "used": 1794792865785
        },
        "quickAccess": {},
        "meta": {},
@@ -1079,7 +1079,6 @@
      }
     ],
     "canais": {
-     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:SHOWS": {
       "impulso_aos_teus_pes": {
        "name": "Aos Teus Pés",
@@ -1090,8 +1089,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789150261,
-        "used": 1794789150261
+        "modified": 1794792867717,
+        "used": 1794792867717
        },
        "quickAccess": {},
        "meta": {},
@@ -1599,7 +1598,8 @@
       }
      },
      "OUTPUT:OUT_SLIDE_CACHE": {},
-     "STAGE:OUT_SLIDE_CACHE": {}
+     "STAGE:OUT_SLIDE_CACHE": {},
+     "MAIN:SPOTIFY_GET_STATE": null
     },
     "estado": [
      {
@@ -1908,8 +1908,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789151078,
-        "used": 1794789151078
+        "modified": 1794792868550,
+        "used": 1794792868550
        },
        "quickAccess": {},
        "meta": {},
@@ -2535,8 +2535,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789153127,
-        "used": 1794789153127
+        "modified": 1794792870584,
+        "used": 1794792870584
        },
        "quickAccess": {},
        "meta": {},
@@ -3039,9 +3039,9 @@
        }
       }
      },
-     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:OUT_SLIDE_CACHE": {},
-     "STAGE:OUT_SLIDE_CACHE": {}
+     "STAGE:OUT_SLIDE_CACHE": {},
+     "MAIN:SPOTIFY_GET_STATE": null
     },
     "estado": [
      {
@@ -3254,8 +3254,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789155176,
-        "used": 1794789155176
+        "modified": 1794792872234,
+        "used": 1794792872234
        },
        "quickAccess": {},
        "meta": {},
@@ -3843,6 +3843,7 @@
      }
     ],
     "canais": {
+     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:SHOWS": {
       "impulso_aos_teus_pes": {
        "name": "Aos Teus Pés",
@@ -3853,8 +3854,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789157210,
-        "used": 1794789157210
+        "modified": 1794792874250,
+        "used": 1794792874250
        },
        "quickAccess": {},
        "meta": {},
@@ -4301,7 +4302,6 @@
        }
       }
      },
-     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:OUT_SLIDE_CACHE": {},
      "STAGE:OUT_SLIDE_CACHE": {}
     },
@@ -4489,8 +4489,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789159243,
-        "used": 1794789159243
+        "modified": 1794792876284,
+        "used": 1794792876283
        },
        "quickAccess": {},
        "meta": {},
@@ -5091,8 +5091,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789161276,
-        "used": 1794789161276
+        "modified": 1794792878700,
+        "used": 1794792878700
        },
        "quickAccess": {},
        "meta": {},
@@ -5727,8 +5727,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789163326,
-        "used": 1794789163326
+        "modified": 1794792880733,
+        "used": 1794792880733
        },
        "quickAccess": {},
        "meta": {},
@@ -6253,7 +6253,9 @@
    "semEfeito": "ja esta na pagina Mostrar: o digito 1 nao troca nada (a fatia 1b declara a diferenca)",
    "principal": {
     "outputs": [],
-    "canais": {},
+    "canais": {
+     "MAIN:SPOTIFY_GET_STATE": null
+    },
     "estado": [],
     "foco": "BODY",
     "sinais": {
@@ -6568,7 +6570,6 @@
    "principal": {
     "outputs": [],
     "canais": {
-     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:PROJECTS": {
       "f3": {
        "name": "F3 teste",
@@ -6613,64 +6614,13 @@
        ],
        "modified": 1794704205232
       },
-      "f6": {
-       "name": "F6 teste",
-       "created": 1794704513201,
-       "parent": "/",
-       "shows": [
-        {
-         "id": "impulso_aos_teus_pes",
-         "type": "show",
-         "index": 0
-        },
-        {
-         "id": "impulso_cordeiro_santo",
-         "type": "show",
-         "index": 1
-        },
-        {
-         "id": "C:\\Users\\andre.zagato\\AppData\\Local\\Temp\\claude\\a6bb97b8981c65a0\\4435abb5-a8f4-4afe-83a6-c47263efd335\\scratchpad\\fotos-f6\\foto1.png",
-         "name": "foto1",
-         "type": "image",
-         "index": 2
-        },
-        {
-         "id": "C:\\Users\\andre.zagato\\AppData\\Local\\Temp\\claude\\a6bb97b8981c65a0\\4435abb5-a8f4-4afe-83a6-c47263efd335\\scratchpad\\fotos-f6\\foto2.png",
-         "name": "foto2",
-         "type": "image",
-         "index": 3
-        },
-        {
-         "id": "C:\\Users\\andre.zagato\\AppData\\Local\\Temp\\claude\\a6bb97b8981c65a0\\4435abb5-a8f4-4afe-83a6-c47263efd335\\scratchpad\\fotos-f6\\foto3.png",
-         "name": "foto3",
-         "type": "image",
-         "index": 4
-        },
-        {
-         "id": "impulso_cristo_vive",
-         "type": "show",
-         "index": 5
-        },
-        {
-         "id": "impulso_dissolver",
-         "type": "show",
-         "index": 6
-        },
-        {
-         "id": "impulso_fome_e_sede",
-         "type": "show",
-         "index": 7
-        }
-       ],
-       "modified": 1794704531221
-      },
       "f7": {
        "name": "F7 teste",
        "created": 1794712575845,
        "parent": "/",
        "shows": [
         {
-         "id": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia",
+         "id": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia",
          "type": "folder",
          "name": "midia",
          "index": 0
@@ -6749,6 +6699,10 @@
         "montadoEm": 1794704808516
        }
       }
+     },
+     "MAIN:BIBLE": {
+      "name": "NVI",
+      "id": "nvi"
      }
     },
     "estado": [
@@ -6964,6 +6918,7 @@
      }
     ],
     "canais": {
+     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:METRONOME_TIMER": {
       "beat": 0,
       "timeToNext": 0
@@ -7023,8 +6978,7 @@
       }
      },
      "OUTPUT:OUT_SLIDE_CACHE": {},
-     "STAGE:OUT_SLIDE_CACHE": {},
-     "MAIN:SPOTIFY_GET_STATE": null
+     "STAGE:OUT_SLIDE_CACHE": {}
     },
     "estado": [],
     "foco": "BODY",
@@ -7154,8 +7108,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789180493,
-        "used": 1794789180493
+        "modified": 1794792898483,
+        "used": 1794792898483
        },
        "quickAccess": {},
        "meta": {},
@@ -8020,6 +7974,7 @@
      }
     ],
     "canais": {
+     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:OUTPUTS": {
       "default": {
        "enabled": true,
@@ -8145,8 +8100,7 @@
         }
        }
       }
-     },
-     "MAIN:SPOTIFY_GET_STATE": null
+     }
     },
     "estado": [],
     "foco": "BODY",
@@ -8275,7 +8229,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8346,7 +8300,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8430,7 +8384,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8512,7 +8466,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8622,7 +8576,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8638,7 +8592,7 @@
     "foco": "BODY",
     "saida": {
      "texto": "Eis-me aqui, eu sou aquele Que Tu chamas pelo nome Eu irei",
-     "hash": "f9dadf9a6dca41e5ee318e4c78c848646e830884bf5112c0bde8dacbbb51c53d",
+     "hash": "96ce18ed7550fdcf24a010b95493ad9edc574157a1df6897aa32305adcdee6bd",
      "elementos": 21
     }
    }
@@ -8711,7 +8665,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8783,7 +8737,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8868,7 +8822,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -8950,7 +8904,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -9059,7 +9013,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -9075,7 +9029,7 @@
     "foco": "BODY",
     "saida": {
      "texto": "Eis-me aqui, eu sou aquele Que Tu chamas pelo nome Eu irei",
-     "hash": "f9dadf9a6dca41e5ee318e4c78c848646e830884bf5112c0bde8dacbbb51c53d",
+     "hash": "96ce18ed7550fdcf24a010b95493ad9edc574157a1df6897aa32305adcdee6bd",
      "elementos": 21
     }
    }
@@ -9137,7 +9091,7 @@
     "foco": "BODY",
     "saida": {
      "texto": "Eis-me aqui, eu sou aquele Que Tu chamas pelo nome Eu irei",
-     "hash": "363437959a3b2d94cad01414f7e6d44f81c7a4a3cbd842e38f98cdff72cae7cb",
+     "hash": "0d29a28cdc755fffa2a15d466d83fc06927028e6ded5310a00b10bbdad5aec5a",
      "elementos": 22
     }
    }
@@ -9537,7 +9491,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -9623,7 +9577,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -9707,7 +9661,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -9819,7 +9773,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -9837,7 +9791,7 @@
     "foco": "BODY",
     "saida": {
      "texto": "Eis-me aqui, eu sou aquele Que Tu chamas pelo nome Eu irei",
-     "hash": "363437959a3b2d94cad01414f7e6d44f81c7a4a3cbd842e38f98cdff72cae7cb",
+     "hash": "0d29a28cdc755fffa2a15d466d83fc06927028e6ded5310a00b10bbdad5aec5a",
      "elementos": 22
     }
    }
@@ -10267,7 +10221,7 @@
          }
         },
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -10287,7 +10241,7 @@
        "default": {
         "slide": null,
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -10319,7 +10273,7 @@
        "out": {
         "slide": null,
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -10349,7 +10303,7 @@
        "out": {
         "slide": null,
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -10521,7 +10475,7 @@
        "default": {
         "slide": null,
         "background": {
-         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia/f1.png",
+         "path": "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia/f1.png",
          "type": "image",
          "name": "f1.png"
         },
@@ -10539,7 +10493,7 @@
     "foco": "BODY",
     "saida": {
      "texto": "",
-     "hash": "88478797ca9f3350f40963a6210b5743149c2d448b291a8926ff9c4b8b3ca093",
+     "hash": "cc264b5e218e6bab80e6a628627bff93f77176a9a2f86a954a0c645f862661b2",
      "elementos": 12
     }
    }
@@ -11208,8 +11162,17 @@
      "MAIN:GET_CONTENT_PROVIDERS": null,
      "MAIN:READ_FOLDER": {
       "path": [
-       "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia"
+       "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia"
       ]
+     },
+     "MAIN:GET_THUMBNAIL": {
+      "input": "C:\\Users\\andre.zagato\\AppData\\Local\\Temp\\claude\\a6bb97b8981c65a0\\4435abb5-a8f4-4afe-83a6-c47263efd335\\scratchpad\\perfil\\midia\\v1.mp4",
+      "size": 250
+     },
+     "MAIN:SAVE_IMAGE": {
+      "id": "C:\\Users\\andre.zagato\\AppData\\Local\\Temp\\claude\\a6bb97b8981c65a0\\4435abb5-a8f4-4afe-83a6-c47263efd335\\scratchpad\\perfil\\midia\\v1.mp4-250",
+      "path": "C:\\Users\\andre.zagato\\AppData\\Local\\Temp\\claude\\a6bb97b8981c65a0\\4435abb5-a8f4-4afe-83a6-c47263efd335\\scratchpad\\perfil\\store\\media-cache\\i193801854-250.png",
+      "buffer": {}
      },
      "MAIN:SPOTIFY_GET_STATE": null
     },
@@ -11265,7 +11228,9 @@
    "semEfeito": "so troca a aba da gaveta (sinais)",
    "principal": {
     "outputs": [],
-    "canais": {},
+    "canais": {
+     "MAIN:SPOTIFY_GET_STATE": null
+    },
     "estado": [],
     "foco": "BODY",
     "sinais": {
@@ -11318,9 +11283,7 @@
    "semEfeito": "so troca a aba da gaveta (sinais)",
    "principal": {
     "outputs": [],
-    "canais": {
-     "MAIN:SPOTIFY_GET_STATE": null
-    },
+    "canais": {},
     "estado": [],
     "foco": "BODY",
     "sinais": {
@@ -11533,8 +11496,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789225593,
-        "used": 1794789225593
+        "modified": 1794792943550,
+        "used": 1794792943550
        },
        "quickAccess": {},
        "meta": {},
@@ -12419,7 +12382,7 @@
      "MAIN:GET_CONTENT_PROVIDERS": null,
      "MAIN:READ_FOLDER": {
       "path": [
-       "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/f7/midia"
+       "C:/Users/andre.zagato/AppData/Local/Temp/claude/a6bb97b8981c65a0/4435abb5-a8f4-4afe-83a6-c47263efd335/scratchpad/perfil/midia"
       ]
      },
      "MAIN:SPOTIFY_GET_STATE": null
@@ -12736,7 +12699,6 @@
      }
     ],
     "canais": {
-     "MAIN:SPOTIFY_GET_STATE": null,
      "OUTPUT:SHOWS": {
       "impulso_aos_teus_pes": {
        "name": "Aos Teus Pés",
@@ -12747,8 +12709,8 @@
        },
        "timestamps": {
         "created": 1788307200000,
-        "modified": 1794789238991,
-        "used": 1794789238991
+        "modified": 1794792956632,
+        "used": 1794792956632
        },
        "quickAccess": {},
        "meta": {},
@@ -13254,7 +13216,8 @@
       }
      },
      "OUTPUT:OUT_SLIDE_CACHE": {},
-     "STAGE:OUT_SLIDE_CACHE": {}
+     "STAGE:OUT_SLIDE_CACHE": {},
+     "MAIN:SPOTIFY_GET_STATE": null
     },
     "estado": [
      {
