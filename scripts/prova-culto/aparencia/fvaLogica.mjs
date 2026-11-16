@@ -23,10 +23,24 @@ export const normalizarAtributo = (s) =>
         .trim()
 
 /**
- * Tolerancia de pixel por estado (px = pixels que diferem, fora da mascara). Ausente = 0.
- * Medida na 0c (commit "tolerancia de pixel medida"): ceil(pior px do estado nos seis pares A/A x 1,25) + 20.
+ * Tolerancia de pixel por estado do Culto (px = pixels que diferem, fora da mascara). Ausente = 0 (os 2 estados do Preparar nao tem portao).
+ * Medida na 0c (16/nov), A/A de 4 rodadas por lado (ref-1 x ref-2/3/4 e head-1 x head-2/3/4): ceil(pior px x 1,25) + 20.
+ * As seis medidas de px por estado: 09-config e 10-culto-editor [2, 0, 2, 0, 0, 0] (pior 2, tolerancia 23); os outros nove estados do Culto
+ * [0, 0, 0, 0, 0, 0] (pior 0, tolerancia 20). rect, cor, sig, estilo e contagem deram zero nos seis pares.
  */
-export const TOLERANCIA_PX = {}
+export const TOLERANCIA_PX = {
+    "01-culto-parado": 20,
+    "02-culto-no-ar": 20,
+    "03-hover-slide": 20,
+    "04-menu-contexto": 20,
+    "05-gaveta-midia": 20,
+    "06-gaveta-audio": 20,
+    "07-gaveta-biblia": 20,
+    "08-gaveta-shows": 20,
+    "09-config": 23,
+    "10-culto-editor": 23,
+    "13-culto-depois-da-volta": 20
+}
 
 /** retangulos [x, y, w, h] dos elementos que a varredura pula (relogio, NO AR): lidos da propria varredura do estado, nao de uma faixa fixa */
 export function mascaraDePixel(varredura) {

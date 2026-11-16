@@ -187,3 +187,13 @@ test("a classe de escopo do Svelte em dev (s-<12>, hash do caminho da pasta) nao
     assert.equal(normalizarAtributo("s-YoLzgdrogFqN window"), "s-X window")
     assert.notEqual(a.sig, (await varrer([], false, attr("s-YoLzgdrogFqN outra"))).sig, "so o hash some, nao a classe de verdade")
 })
+
+test("TOLERANCIA_PX: so estados do Culto, todos presentes, inteiros >= 20 (ceil(pior x 1,25) + 20)", () => {
+    assert.deepEqual(Object.keys(TOLERANCIA_PX).sort(), [...ESTADOS_CULTO].sort())
+    for (const v of Object.values(TOLERANCIA_PX)) assert.ok(Number.isInteger(v) && v >= 20, String(v))
+})
+test("com a tolerancia real: 1 pixel acima reprova, igual a tolerancia passa, em estado do Culto", () => {
+    const tol = TOLERANCIA_PX["09-config"]
+    assert.deepEqual(compararAparencia(lado(), lado(), [], { px: { "09-config": tol } }).reprovas, [])
+    assert.deepEqual(tipos(compararAparencia(lado(), lado(), [], { px: { "09-config": tol + 1 } })), ["09-config:px"])
+})
