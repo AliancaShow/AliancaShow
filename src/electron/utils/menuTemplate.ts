@@ -53,7 +53,6 @@ export function template(strings: Dictionary): any {
         label: strings.titlebar?.view || "View",
         submenu: [
             ...(isProd ? [] : [{ role: "reload" }, { role: "toggleDevTools" }, { type: "separator" }]),
-            { label: strings.actions?.focus_mode || "Toggle Focus mode", click: () => mc("focus_mode") }, // , accelerator: "CmdOrCtrl+Shift+F"
             ...(isMac ? [] : [{ label: strings.actions?.fullscreen || "Toggle Fullscreen", role: "togglefullscreen" }])
             // { label: lang.actions?.resetZoom || "Reset Zoom", role: "resetZoom" },
             // { label: lang.actions?.zoomIn || "Zoom In", role: "zoomIn" },

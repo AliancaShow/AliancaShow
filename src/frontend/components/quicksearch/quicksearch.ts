@@ -595,7 +595,6 @@ const menubarItems = [
     { id: "shortcuts", name: "popup.shortcuts", icon: "shortcut", aliases: ["-Keyboard"] },
     { id: "about", name: "popup.about", icon: "info", aliases: ["-Report", "-Bug", "-Issue", "-Contact", "-Email", "-Translate", "-Donate"] },
 
-    { id: "focus_mode", name: "actions.focus_mode", icon: "focus_mode" },
     { id: "fullscreen", name: "actions.fullscreen", icon: "fullscreen" }
 ]
 

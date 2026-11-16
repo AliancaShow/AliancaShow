@@ -18,7 +18,6 @@ import {
     activeAudioEffects,
     activeDrawerTab,
     activeEdit,
-    activeFocus,
     activeMediaTagFilter,
     activePage,
     activePlayerTagFilter,
@@ -34,7 +33,6 @@ import {
     activeVariableTagFilter,
     audioFolders,
     categories,
-    cloudSyncData,
     colorbars,
     currentOutputSettings,
     drawer,
@@ -70,7 +68,6 @@ import {
     scriptures,
     selected,
     settingsTab,
-    showRecentlyUsedProjects,
     shows,
     showsCache,
     slidesOptions,
@@ -152,31 +149,9 @@ const clickActions = {
     },
     quit: () => initializeClosing(),
     // view
+    // o modo foco saiu (1a): o que sobra e so desligar um foco que ja estivesse ligado
     focus_mode: () => {
-        const project = get(projects)[get(activeProject) || ""]
-        if (!project?.shows?.length) {
-            newToast("empty.project_select")
-            return
-        }
-
-        previousShow.set(null)
-        activeShow.set(null)
-        showRecentlyUsedProjects.set(false)
-
-        // close drawer
-        const minDrawerHeight = 40
-        const drawerIsOpened = get(drawer).height > minDrawerHeight
-        if (drawerIsOpened) drawer.set({ height: minDrawerHeight, stored: get(drawer).height })
-
-        const firstItem = project.shows[0]
-        if (firstItem) activeFocus.set({ id: firstItem.id, index: 0, type: firstItem.type })
-
-        activePage.set("show")
-        focusMode.set(!get(focusMode))
-
-        if (!get(focusMode) && get(cloudSyncData).enabled) {
-            showsCache.set({})
-        }
+        if (get(focusMode)) focusMode.set(false)
     },
     fullscreen: () => sendMain(Main.FULLSCREEN),
     // edit

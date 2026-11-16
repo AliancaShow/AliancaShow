@@ -39,7 +39,6 @@
 
         shift: "SEPARATOR",
 
-        "actions.focus_mode": `${ctrl} + shift + f`,
         "show.change_view": `${ctrl} + shift + v`,
 
         alt: "SEPARATOR",

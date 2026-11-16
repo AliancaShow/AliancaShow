@@ -78,7 +78,6 @@ const shiftCtrlKeys = {
         editMode.set("text_edit")
         activePage.set("edit")
     },
-    f: () => menuClick("focus_mode"),
     n: () => activePopup.set("show"),
     v: () => changeSlidesView(),
     z: () => (redo(), atualizarCaixasDaLista())
