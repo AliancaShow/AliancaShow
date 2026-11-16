@@ -69,6 +69,8 @@ async function sequencia() {
     // menu de contexto (botao direito real)
     await j.enviar("Input.dispatchMouseEvent", { type: "mousePressed", x: s3.x, y: s3.y, button: "right", clickCount: 1 })
     await j.enviar("Input.dispatchMouseEvent", { type: "mouseReleased", x: s3.x, y: s3.y, button: "right", clickCount: 1 })
+    // o mouse volta ao slide: sem isto o hover do slide (overlay) as vezes nao esta registrado no quadro do print (A/A: head-1 x head-2, opacity 0 x 1)
+    await mover(j, s3.x, s3.y)
     await g(N["04"])
     await escape()
     await j.ev(`S.activePage.set("show"); return 1`)
