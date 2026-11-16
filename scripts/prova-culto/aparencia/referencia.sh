@@ -17,7 +17,6 @@ REF_ARG="${1:-}"
 SAIDA_ARG="${2:-}"
 RODADAS="${3:-1}"
 if [ -z "$REF_ARG" ] || [ -z "$SAIDA_ARG" ]; then echo "uso: referencia.sh <pasta-da-referencia> <pasta-de-saida> [rodadas]" >&2; exit 2; fi
-if [ "${FS_LAYOUT+definida}" = "definida" ]; then echo "o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente" >&2; exit 2; fi
 if curl -s -m 2 -o /dev/null http://127.0.0.1:3000; then echo "a porta 3000 esta ocupada: pare a Vite antes" >&2; exit 2; fi
 if [ ! -d "$REF_ARG/node_modules" ] || [ ! -f "$REF_ARG/build/electron/index.js" ]; then
   echo "a pasta da referencia nao esta preparada (falta node_modules ou build/electron/index.js): git worktree add <pasta> <sha> && (cd <pasta> && npm ci && npm run build:electron:dev)" >&2; exit 2
