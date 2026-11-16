@@ -1,1 +1,211 @@
-[]
+[
+    {
+        "tipo": "divergencia",
+        "id": "e1",
+        "fatia": "0b",
+        "passo": "E06-abre-gaveta",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/abaAtiva",
+        "de": "media",
+        "para": "shows",
+        "porque": "E3: a aba da gaveta escolhida no Preparar (Ctrl+2 no passo E06) deixa de mudar a aba do Culto"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e2",
+        "fatia": "0b",
+        "passo": "E07-esc-no-preparar-com-gaveta",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/drawer/height",
+        "de": 40,
+        "para": 300,
+        "porque": "E1: Esc no Preparar com a gaveta aberta recolhe so a gaveta do Preparar; a do Culto fica em 300"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e3",
+        "fatia": "0b",
+        "passo": "E07-esc-no-preparar-com-gaveta",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/drawer/stored",
+        "de": 300,
+        "para": null,
+        "porque": "E1: Esc no Preparar com a gaveta aberta recolhe so a gaveta do Preparar; a do Culto fica em 300"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e4",
+        "fatia": "0b",
+        "passo": "E07-esc-no-preparar-com-gaveta",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/abaAtiva",
+        "de": "media",
+        "para": "shows",
+        "porque": "E3: a aba da gaveta escolhida no Preparar (Ctrl+2 no passo E06) deixa de mudar a aba do Culto"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e5",
+        "fatia": "0b",
+        "passo": "E08-ctrl-t-no-preparar",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/drawer/height",
+        "de": 40,
+        "para": 300,
+        "porque": "E1/E2: a gaveta do Culto nao herda o que se fez no Preparar (Esc no E07 e Ctrl+T no E08)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e6",
+        "fatia": "0b",
+        "passo": "E08-ctrl-t-no-preparar",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/drawer/stored",
+        "de": 40,
+        "para": null,
+        "porque": "E1/E2: a gaveta do Culto nao herda o que se fez no Preparar (Esc no E07 e Ctrl+T no E08)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e7",
+        "fatia": "0b",
+        "passo": "E08-ctrl-t-no-preparar",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/resized/leftPanel",
+        "de": 4,
+        "para": 290,
+        "porque": "E2: Ctrl+T no Preparar fecha as colunas do PREPARAR; o Culto mantem as colunas (290/290)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e8",
+        "fatia": "0b",
+        "passo": "E08-ctrl-t-no-preparar",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/resized/rightPanel",
+        "de": 4,
+        "para": 290,
+        "porque": "E2: Ctrl+T no Preparar fecha as colunas do PREPARAR; o Culto mantem as colunas (290/290)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e9",
+        "fatia": "0b",
+        "passo": "E08-ctrl-t-no-preparar",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/abaAtiva",
+        "de": "media",
+        "para": "shows",
+        "porque": "E3: a aba da gaveta escolhida no Preparar (Ctrl+2 no passo E06) deixa de mudar a aba do Culto"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e10",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "drawer/height",
+        "de": 40,
+        "para": 300,
+        "porque": "E1/E2: a gaveta do Culto nao herda o que se fez no Preparar (Esc no E07 e Ctrl+T no E08)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e11",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "drawer/stored",
+        "de": 40,
+        "para": null,
+        "porque": "E1/E2: a gaveta do Culto nao herda o que se fez no Preparar (Esc no E07 e Ctrl+T no E08)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e12",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "resized/leftPanel",
+        "de": 4,
+        "para": 290,
+        "porque": "E2: Ctrl+T no Preparar fecha as colunas do PREPARAR; o Culto mantem as colunas (290/290)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e13",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "resized/rightPanel",
+        "de": 4,
+        "para": 290,
+        "porque": "E2: Ctrl+T no Preparar fecha as colunas do PREPARAR; o Culto mantem as colunas (290/290)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e14",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "abaAtiva",
+        "de": "media",
+        "para": "shows",
+        "porque": "E3: a aba da gaveta escolhida no Preparar (Ctrl+2 no passo E06) deixa de mudar a aba do Culto"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e15",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/drawer/height",
+        "de": 40,
+        "para": 300,
+        "porque": "E1/E2: a gaveta do Culto nao herda o que se fez no Preparar (Esc no E07 e Ctrl+T no E08)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e16",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/drawer/stored",
+        "de": 40,
+        "para": null,
+        "porque": "E1/E2: a gaveta do Culto nao herda o que se fez no Preparar (Esc no E07 e Ctrl+T no E08)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e17",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/resized/leftPanel",
+        "de": 4,
+        "para": 290,
+        "porque": "E2: Ctrl+T no Preparar fecha as colunas do PREPARAR; o Culto mantem as colunas (290/290)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e18",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/resized/rightPanel",
+        "de": 4,
+        "para": 290,
+        "porque": "E2: Ctrl+T no Preparar fecha as colunas do PREPARAR; o Culto mantem as colunas (290/290)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "e19",
+        "fatia": "0b",
+        "passo": "E09-volta-culto",
+        "fluxo": "principal.sinais",
+        "caminho": "culto/abaAtiva",
+        "de": "media",
+        "para": "shows",
+        "porque": "E3: a aba da gaveta escolhida no Preparar (Ctrl+2 no passo E06) deixa de mudar a aba do Culto"
+    }
+]

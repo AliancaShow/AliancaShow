@@ -1,0 +1,30 @@
+/* Prototipo DESCARTAVEL (fatia 0b, T7): o "painel largo" da fatia 8 so com CSS, sobre o DOM de hoje.
+   Escopado no Culto e na pagina Mostrar (body[data-modo][data-pagina], escritos por iniciarLayoutAlianca) e em `.column > .row`
+   (o espiao antigo pegava tambem `.right.panel.row`). A gaveta sai da coluna do centro e ocupa a linha de baixo, de ponta a ponta. */
+body[data-modo="culto"][data-pagina="show"] .column > .row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: 12px;
+}
+body[data-modo="culto"][data-pagina="show"] .column > .row > #leftPanel {
+    grid-column: 1;
+    grid-row: 1;
+}
+body[data-modo="culto"][data-pagina="show"] .column > .row > #rightPanel {
+    grid-column: 3;
+    grid-row: 1;
+}
+body[data-modo="culto"][data-pagina="show"] .column > .row > .center {
+    display: contents;
+}
+body[data-modo="culto"][data-pagina="show"] .column > .row > .center > .pageContent {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+    overflow: auto;
+}
+body[data-modo="culto"][data-pagina="show"] .column > .row > .center > section.drawer {
+    grid-column: 1 / -1;
+    grid-row: 2;
+}

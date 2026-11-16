@@ -13,6 +13,7 @@
 //   ipc-sem-canal       o gancho de IPC ignora o canal OUT_SLIDE_CACHE (nenhum passo do roteiro emite TRANSITION; este e emitido em 18)
 //   saida-estilo        so a janela de saida muda de aparencia (escritas iguais, pixel diferente)
 //   cobrir:<passo>      um elemento transparente cobre o alvo do passo (tem de reprovar pela regra C1)
+//   --css ARQUIVO       injeta o CSS na janela principal antes do roteiro (T7, prototipo descartavel)
 //   troca-pagina        o digito 2 do passo A11 e engolido (activePage nao muda: o efeito de `estado` reprova e o baseline diverge)
 import { createHash } from "node:crypto"
 import { execFileSync } from "node:child_process"
@@ -31,6 +32,7 @@ const SAIDA = arg("saida", join(RAIZ, "scripts/prova-culto/gravacoes"))
 const SO = arg("secoes") ? String(arg("secoes")).split(",") : null
 const MUTAR = arg("mutar")
 const PIXEL = !!arg("pixel")
+const CSS = arg("css") // T7: CSS injetado na janela principal (prototipo descartavel, nunca vai ao app)
 const FUNDO = process.env.FS_FUNDO || join(RAIZ, "scripts/prova-culto/perfil/midia/f1.png").split(String.fromCharCode(92)).join("/")
 // raiz do perfil desta maquina: sai da gravacao como __PERFIL__ (o baseline vale em qualquer pasta, inclusive na maquina do Pedro)
 const RAIZ_PERFIL = process.env.FS_PERFIL_RAIZ || FUNDO.split("/").slice(0, -2).join("/")
@@ -108,6 +110,11 @@ try {
     commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: RAIZ, encoding: "utf8" }).trim()
 } catch {}
 
+if (CSS) {
+    const texto = readFileSync(String(CSS), "utf8")
+    await principal.ev(`const s=document.createElement("style"); s.id="__css_prova"; s.textContent=${JSON.stringify(texto)}; document.head.appendChild(s); await esp(500); return 1`)
+    dbg("css injetado")
+}
 if (MUTAR === "saida-estilo") await saida.ev("document.body.style.filter='invert(1)'; return 1")
 if (MUTAR === "ipc-sem-canal") await principal.ev("window.__mutIpc=(id,canal)=>canal==='OUT_SLIDE_CACHE'; return 1")
 
