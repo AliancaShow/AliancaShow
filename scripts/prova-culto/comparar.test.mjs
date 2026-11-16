@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process"
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { achatar, comparar, normalizarPerfil, validarEsperado, validarRuido } from "./compararLogica.mjs"
+import { achatar, aplicarEfeitoMinimo, comparar, CANAIS_DE_REPOUSO, conferirCabecalhos, normalizarPerfil, passoMorto, validarEsperado, validarRuido } from "./compararLogica.mjs"
 
 const clone = (x) => JSON.parse(JSON.stringify(x))
 const out = (index) => ({ op: "update", por: "setOutput@output", mudou: true, v: { default: { slide: { id: "s", index, layout: "default" } } } })
@@ -111,9 +111,9 @@ test("esquema: sem curinga", () => {
 })
 test("tipos efeitoMinimo e dom exigem de/para e motivo", () => {
     assert.ok(validarEsperado([{ tipo: "efeitoMinimo", fatia: "1b", passo: "A10", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "" }, porque: "x" }]).length > 0)
-    assert.equal(validarEsperado([{ tipo: "efeitoMinimo", fatia: "1b", passo: "A10", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, porque: "x" }]).length, 0)
-    assert.ok(validarEsperado([{ tipo: "dom", fatia: "1b", estado: "01", seletor: "*", atributo: "title", de: "a", para: "b", porque: "x" }]).length > 0)
-    assert.equal(validarEsperado([{ tipo: "dom", fatia: "1b", estado: "01", seletor: "button.tab", atributo: "title", de: "Edicao [2]", para: "Edicao", porque: "x" }]).length, 0)
+    assert.equal(validarEsperado([{ tipo: "efeitoMinimo", fatia: "1b", passo: "A10", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, porque: "x", decisaoDeProduto: "d" }]).length, 0)
+    assert.ok(validarEsperado([{ tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "*", atributo: "data-title", de: "a", para: "b", porque: "x", decisaoDeProduto: "d" }]).length > 0)
+    assert.equal(validarEsperado([{ tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "BUTTON", atributo: "data-title", de: "Edicao [2]", para: "Edicao", porque: "x", decisaoDeProduto: "d" }]).length, 0)
 })
 test("achatar: ausente num lado e divergencia", () => {
     const b = base()
@@ -129,7 +129,7 @@ test("normalizarPerfil: a raiz do perfil some da gravacao nos dois formatos de b
         b: "C:\\Users\\x\\bancada\\perfil\\midia\\v1.mp4",
         c: "c:/users/x/bancada/perfil",
         d: "C:/Users/x/bancada/perfil-bak/midia/f1.png",
-        e: "C:/Users/x/bancada/perfil\\store\\media-cache\\i1.png",
+        e: "C:/Users/x/bancada/perfil\\store\\media-cache\\i1.png"
     }
     const n = JSON.parse(normalizarPerfil(JSON.stringify(g), raiz))
     assert.equal(n.a, "__PERFIL__/midia/f1.png")
@@ -168,4 +168,205 @@ test("Q5: gravacao com leiaute diferente de novo sai com 2", () => {
     const r = comparar_mjs(BASELINE, arq)
     assert.equal(r.status, 2)
     assert.match(r.stderr, /nao existe mais/)
+})
+
+// 6.1: rodar.mjs aplica efeitoMinimo e grava o que o juiz precisa
+const ROTEIRO = () => [
+    {
+        id: "A",
+        passos: [
+            { id: "P1", gesto: { tecla: "1" }, semEfeito: "ja esta na pagina" },
+            { id: "P2", gesto: { tecla: "2" }, efeito: { fluxo: "estado", n: 1 } }
+        ]
+    }
+]
+const itemEfeito = (extra = {}) => ({ tipo: "efeitoMinimo", id: "em1", fatia: "1b", passo: "P2", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, porque: "x", decisaoDeProduto: "d", ...extra })
+test("efeitoMinimo: aplica o para na copia e anota o id; o roteiro original nao e mutado", () => {
+    const orig = ROTEIRO()
+    const r = aplicarEfeitoMinimo(orig, [itemEfeito()])
+    assert.deepEqual(r.erros, [])
+    assert.deepEqual(r.aplicados, ["em1"])
+    const p2 = r.secoes[0].passos[1]
+    assert.equal(p2.efeito, undefined)
+    assert.equal(p2.semEfeito, "teclas 1-6 removidas")
+    assert.equal(p2.efeitoAplicado, "em1")
+    assert.deepEqual(orig, ROTEIRO(), "o original ficou intacto")
+    // o inverso: semEfeito vira efeito
+    const inv = aplicarEfeitoMinimo(orig, [itemEfeito({ id: "em2", passo: "P1", de: { semEfeito: "ja esta na pagina" }, para: { fluxo: "estado", n: 1 } })])
+    assert.deepEqual(inv.erros, [])
+    assert.deepEqual(inv.secoes[0].passos[0].efeito, { fluxo: "estado", n: 1 })
+    assert.equal(inv.secoes[0].passos[0].semEfeito, undefined)
+})
+test("MUTACAO efeitoMinimo com de diferente do roteiro (override cego) reprova", () => {
+    const r = aplicarEfeitoMinimo(ROTEIRO(), [itemEfeito({ de: { fluxo: "estado", n: 2 } })])
+    assert.equal(r.erros.length, 1)
+    assert.match(r.erros[0], /override cego/)
+    assert.deepEqual(r.aplicados, [])
+})
+test("MUTACAO efeitoMinimo em passo que nao existe reprova", () => {
+    const r = aplicarEfeitoMinimo(ROTEIRO(), [itemEfeito({ passo: "P9" })])
+    assert.equal(r.erros.length, 1)
+    assert.match(r.erros[0], /nao existe/)
+})
+test("achatar: antesDoGesto, depois e efeitoMedido (nivel do passo) nao entram no mapa", () => {
+    const sem = base()
+    const com = base()
+    com.passos[0].antesDoGesto = { hash: "aa", foco: "BODY", sinais: { modo: "culto" }, pagina: "show" }
+    com.passos[0].depois = { pagina: "show" }
+    com.passos[0].efeitoMedido = { fluxo: "estado", n: 1 }
+    assert.deepEqual([...achatar(sem)], [...achatar(com)])
+})
+test("conferirCabecalhos: esperadoAplicado tem de ser igual aos ids efeitoMinimo do esperado", () => {
+    const ca = { versaoRoteiro: 2, janela: { w: 1 }, perfilSha: "p" }
+    const ok = { ...ca, esperadoAplicado: ["em1"] }
+    assert.deepEqual(conferirCabecalhos(ca, ok, [itemEfeito()]), [])
+    assert.deepEqual(conferirCabecalhos(ca, { ...ca }, []), [], "gravacao antiga sem o campo e esperado sem efeitoMinimo: igual")
+    assert.ok(conferirCabecalhos(ca, { ...ca, esperadoAplicado: [] }, [itemEfeito()]).some((m) => /esperadoAplicado/.test(m)))
+    assert.ok(conferirCabecalhos(ca, ok, []).some((m) => /esperadoAplicado/.test(m)))
+    assert.ok(conferirCabecalhos(ca, { ...ca, janela: { w: 2 } }, []).length > 0)
+})
+test("comparar.mjs: B gravada com outro esperado sai com 2 (esperadoAplicado)", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ea-"))
+    const g = JSON.parse(readFileSync(BASELINE, "utf8"))
+    g.cabecalho.esperadoAplicado = ["fantasma"]
+    const arq = join(dir, "b.json")
+    writeFileSync(arq, JSON.stringify(g))
+    const r = comparar_mjs(BASELINE, arq)
+    assert.equal(r.status, 2)
+    assert.match(r.stderr, /esperadoAplicado/)
+})
+
+// 6.2: juiz de passo morto
+const IDS_DIGITOS = ["A11-digito-2", "A12-digito-3", "A13-digito-4", "A14-digito-5", "A15-digito-6"]
+const itensMortos = () => IDS_DIGITOS.map((passo, i) => ({ tipo: "efeitoMinimo", id: "pm" + i, fatia: "1b", passo, de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, julgar: "passoMorto", porque: "x", decisaoDeProduto: "d" }))
+// A: a gravacao do baseline de hoje (digito troca de pagina); B: o A10 real copiado para A11-A15 (o digito nao faz nada)
+const baselineReal = () => JSON.parse(readFileSync("scripts/prova-culto/baseline/slice0-base.json", "utf8"))
+const parDeDigitos = () => {
+    const A = baselineReal()
+    const B = baselineReal()
+    const a10 = A.passos.find((p) => p.id === "A10-digito-1")
+    for (const id of IDS_DIGITOS) {
+        const i = B.passos.findIndex((p) => p.id === id)
+        const morto = clone(a10)
+        morto.id = id
+        // o baseline e anterior a 0c: antesDoGesto sai do proprio estado do passo morto (nada mudou, entao antes = depois)
+        morto.antesDoGesto = { hash: morto.saida.saida.hash, telao: { texto: morto.saida.saida.texto, elementos: morto.saida.saida.elementos }, foco: morto.principal.foco, sinais: morto.principal.sinais, pagina: "show" }
+        B.passos[i] = morto
+    }
+    return { A, B }
+}
+test("passo morto: o A10 real copiado para A11-A15 com os 5 itens passa, sem fantasma", () => {
+    const { A, B } = parDeDigitos()
+    const r = comparar(A, B, { ruido, esperado: itensMortos() })
+    assert.deepEqual(r.passoMorto, [])
+    assert.equal(r.fantasmas.length, 0)
+    assert.equal(r.naoDeclaradas.filter((d) => IDS_DIGITOS.includes(d.passo)).length, 0, "as chaves dos passos julgados saem da comparacao literal")
+})
+const morto1 = () => {
+    const { B } = parDeDigitos()
+    return clone(B.passos.find((p) => p.id === "A11-digito-2"))
+}
+const reprova = (mutar, regra) => {
+    const p = morto1()
+    mutar(p)
+    const v = passoMorto(p)
+    assert.ok(
+        v.some((x) => x.regra === regra),
+        "esperava a regra " + regra + ", veio " + JSON.stringify(v)
+    )
+}
+test("MUTACAO passo morto: evento activeShow em estado reprova", () => reprova((p) => p.principal.estado.push({ fluxo: "activeShow", v: { id: "x" } }), 2))
+test("MUTACAO passo morto: sinais.modo trocado reprova", () => reprova((p) => (p.principal.sinais.modo = "preparar"), 4))
+test("MUTACAO passo morto: foco trocado reprova", () => reprova((p) => (p.principal.foco = "BUTTON.x"), 4))
+test("MUTACAO passo morto: canal OUTPUT:OVERLAYS reprova", () => reprova((p) => (p.principal.canais["OUTPUT:OVERLAYS"] = {}), 3))
+test("MUTACAO passo morto: canal OUTPUT:COLORBARS reprova", () => reprova((p) => (p.principal.canais["OUTPUT:COLORBARS"] = {}), 3))
+test("MUTACAO passo morto: canal STAGE:SWITCH reprova", () => reprova((p) => (p.principal.canais["STAGE:SWITCH"] = {}), 3))
+test("passo morto: canal de repouso passa", () => {
+    const p = morto1()
+    for (const c of CANAIS_DE_REPOUSO) p.principal.canais[c] = {}
+    assert.deepEqual(passoMorto(p), [])
+})
+test("MUTACAO passo morto: principal.outputs nao vazio reprova", () => reprova((p) => p.principal.outputs.push(out(0)), 1))
+test("MUTACAO passo morto: saida.outputs nao vazio com hash igual reprova", () => reprova((p) => p.saida.outputs.push(out(0)), 5))
+test("MUTACAO passo morto: telao com hash diferente reprova; texto ou elementos diferentes tambem", () => {
+    reprova((p) => (p.saida.saida.hash = "zz"), 6)
+    reprova((p) => (p.saida.saida.texto = "outro"), 6)
+    reprova((p) => (p.saida.saida.elementos += 1), 6)
+})
+test("passo morto: gravacao sem antesDoGesto reprova", () => reprova((p) => delete p.antesDoGesto, 0))
+test("MUTACAO esquema: julgar sobre passo com de.fluxo outputs reprova; julgar desconhecido reprova", () => {
+    const it = itensMortos()[0]
+    assert.deepEqual(validarEsperado([it]), [])
+    assert.ok(validarEsperado([{ ...it, de: { fluxo: "outputs", n: 1 } }]).length > 0)
+    assert.ok(validarEsperado([{ ...it, para: { fluxo: "estado", n: 1 } }]).length > 0)
+    assert.ok(validarEsperado([{ ...it, julgar: "qualquer" }]).length > 0)
+})
+test("MUTACAO fantasma: item SEM julgar com o efeito ainda presente reprova", () => {
+    const { A, B } = parDeDigitos()
+    const sem = itensMortos().map(({ julgar, ...resto }) => resto)
+    // o efeito medido de B ainda atinge de.n (1): o item diz que o digito deixou de trocar a pagina, mas troca
+    for (const id of IDS_DIGITOS) B.passos.find((p) => p.id === id).efeitoMedido = { fluxo: "estado", n: 1 }
+    assert.equal(comparar(A, B, { ruido, esperado: sem }).fantasmas.length, 5)
+    for (const id of IDS_DIGITOS) B.passos.find((p) => p.id === id).efeitoMedido = { fluxo: "estado", n: 0 }
+    assert.equal(comparar(A, B, { ruido, esperado: sem }).fantasmas.length, 0)
+})
+test("MUTACAO fantasma: so um dos cinco passos perdeu a troca, os outros quatro sao fantasmas", () => {
+    const { A } = parDeDigitos()
+    const B = baselineReal() // o digito AINDA troca a pagina nos 5 passos
+    for (const p of B.passos) p.antesDoGesto = { hash: p.saida.saida?.hash, telao: { texto: p.saida.saida?.texto, elementos: p.saida.saida?.elementos }, foco: p.principal.foco, sinais: p.principal.sinais, pagina: "show" }
+    const um = parDeDigitos().B.passos.find((p) => p.id === "A11-digito-2")
+    B.passos[B.passos.findIndex((p) => p.id === "A11-digito-2")] = um
+    const r = comparar(A, B, { ruido, esperado: itensMortos() })
+    assert.equal(r.fantasmas.length, 4)
+    assert.deepEqual(r.fantasmas.map((x) => x.passo).sort(), IDS_DIGITOS.slice(1))
+    // e cada um dos quatro tambem viola o juiz (o digito ainda faz coisa)
+    assert.ok(r.passoMorto.some((v) => v.passo === "A12-digito-3"))
+})
+test("comparar.mjs imprime e reprova passo morto violado", () => {
+    const { A, B } = parDeDigitos()
+    B.passos.find((p) => p.id === "A11-digito-2").principal.estado.push({ fluxo: "activePage", v: "edit" })
+    const dir = mkdtempSync(join(tmpdir(), "pm-"))
+    writeFileSync(join(dir, "a.json"), JSON.stringify(A))
+    writeFileSync(join(dir, "b.json"), JSON.stringify({ ...B, cabecalho: { ...B.cabecalho, esperadoAplicado: itensMortos().map((i) => i.id) } }))
+    writeFileSync(join(dir, "e.json"), JSON.stringify(itensMortos()))
+    const r = comparar_mjs(join(dir, "a.json"), join(dir, "b.json"), "--esperado", join(dir, "e.json"))
+    assert.equal(r.status, 1, r.stdout + r.stderr)
+    assert.match(r.stderr, /PASSO MORTO VIOLADO: passo A11-digito-2 regra 2/)
+})
+
+// 6.3: teto, fatias e decisao
+const div = (i, fatia = "0b") => ({ tipo: "divergencia", id: "d" + i, fatia, passo: "A01", fluxo: "principal.sinais", caminho: "c/" + i, de: 1, para: 2, porque: "x" })
+test("teto da 0b: 20 itens reprova, 19 passa", () => {
+    assert.ok(validarEsperado(Array.from({ length: 20 }, (_, i) => div(i))).some((e) => /teto 19/.test(e)))
+    assert.deepEqual(validarEsperado(Array.from({ length: 19 }, (_, i) => div(i))), [])
+})
+test("teto padrao: 11 itens numa fatia sem excecao reprova, 10 passa", () => {
+    assert.ok(validarEsperado(Array.from({ length: 11 }, (_, i) => div(i, "1a"))).some((e) => /teto 10/.test(e)))
+    assert.deepEqual(validarEsperado(Array.from({ length: 10 }, (_, i) => div(i, "1a"))), [])
+})
+test("fatia fora da lista reprova (1b-dom, 2a, vazia)", () => {
+    for (const fatia of ["1b-dom", "2a", "0a"])
+        assert.ok(
+            validarEsperado([div(1, fatia)]).some((e) => /fatia/.test(e)),
+            fatia
+        )
+    assert.ok(validarEsperado([div(1, "0c")]).length === 0)
+})
+test("dom e efeitoMinimo sem decisaoDeProduto reprovam", () => {
+    const dom = { tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "BUTTON", atributo: "data-title", de: "a", para: "b", porque: "x" }
+    assert.ok(validarEsperado([dom]).some((e) => /decisaoDeProduto/.test(e)))
+    assert.deepEqual(validarEsperado([{ ...dom, decisaoDeProduto: "d" }]), [])
+    const em = { tipo: "efeitoMinimo", fatia: "1b", passo: "A11-digito-2", de: { fluxo: "estado", n: 1 }, para: { semEfeito: "m" }, porque: "x" }
+    assert.ok(validarEsperado([em]).some((e) => /decisaoDeProduto/.test(e)))
+})
+test("esquema dom: estados explicitos do Culto, tag em maiuscula, atributo da lista, de/para normalizados", () => {
+    const dom = { tipo: "dom", fatia: "1b", estados: ["01-culto-parado"], seletor: "BUTTON", atributo: "data-title", de: "a", para: "b", porque: "x", decisaoDeProduto: "d" }
+    assert.deepEqual(validarEsperado([dom]), [])
+    assert.ok(validarEsperado([{ ...dom, estados: ["*"] }]).length > 0, "curinga")
+    assert.ok(validarEsperado([{ ...dom, estados: [] }]).length > 0, "vazio")
+    assert.ok(validarEsperado([{ ...dom, estados: ["11-preparar"] }]).length > 0, "estado do Preparar")
+    assert.ok(validarEsperado([{ ...dom, estado: "01-culto-parado", estados: undefined }]).length > 0, "estado no singular")
+    assert.ok(validarEsperado([{ ...dom, seletor: "button.tab" }]).length > 0, "seletor com classe")
+    assert.ok(validarEsperado([{ ...dom, atributo: "class" }]).length > 0, "atributo fora da lista")
+    assert.ok(validarEsperado([{ ...dom, de: "  a  " }]).length > 0, "de nao normalizado")
 })
