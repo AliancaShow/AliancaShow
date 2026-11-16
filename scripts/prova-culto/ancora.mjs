@@ -18,9 +18,14 @@ const ENTRADA = "src/frontend/MainOutput.svelte"
 export const EXCECOES = {
     "src/frontend/stores.ts": "0b: fachada por modo de drawer/resized/activeDrawerTab/drawerTabsData; na saida `modoAlianca` nunca muda e a fachada se comporta como writable (vitest da fachada 'no processo de saida')",
     "src/frontend/utils/request.ts": "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)",
-    "src/frontend/IPC/main.ts": "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)"
+    "src/frontend/IPC/main.ts": "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)",
+    "src/frontend/utils/save.ts": "0b: o disco grava drawer/drawerTabsData/resized do lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao `.culto` e o mesmo store que ela ja via",
+    "src/frontend/utils/updateSettings.ts": "0b: carregar drawer/drawerTabsData/resized escreve no lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao e o mesmo `set` de antes",
+    "src/frontend/utils/common.ts": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes",
+    "src/frontend/utils/startup.ts": "0b: iniciarLayoutAlianca() roda em startupMain (a saida sai antes, por startupOutput) e ainda tem guarda de currentWindow",
+    "src/frontend/utils/aliancaAbasEditor.ts": "0b: a aba de antes do editor vira valorPorModo; iniciarAbasDoEditor so roda em startupMain (nunca na saida)"
 }
-export const SHA_EXCECOES = "9254b5d8662a84d6451d977d9c942ca8b80ee32482d4ad7127fb75ae8f5bf52e"
+export const SHA_EXCECOES = "baf71af012946e6fa5ba44729cbd38b113d3968bc4434fc41a58c214ee719a6b"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 
 const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] })
