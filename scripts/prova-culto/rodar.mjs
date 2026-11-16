@@ -1,6 +1,6 @@
 // Roda o roteiro de gestos contra o Show de dev (CDP, porta 9222) e grava `gravacao-<rotulo>.json`.
 //
-//   node scripts/prova-culto/rodar.mjs --rotulo base1 [--saida DIR] [--secoes A,B,E] [--pixel] [--mutar ID] [--esperado ARQ]
+//   node scripts/prova-culto/rodar.mjs --rotulo base1 [--saida DIR] [--secoes A,B,E] [--pixel] [--mutar ID] [--esperado ARQ] [--roteiro culto|preparar]
 //
 // O esperado.json (ou o de --esperado) e lido antes do laco: os itens `efeitoMinimo` sao APLICADOS ao roteiro (aplicarEfeitoMinimo) e o
 // cabecalho grava `esperadoAplicado: [ids]`. Cada passo grava, no nivel do passo (fora de principal/saida, fora do achatar):
@@ -18,12 +18,15 @@
 //   cobrir:<passo>      um elemento transparente cobre o alvo do passo (tem de reprovar pela regra C1)
 //   --css ARQUIVO       injeta o CSS na janela principal antes do roteiro (T7, prototipo descartavel)
 //   troca-pagina        o digito 2 do passo A11 e engolido (activePage nao muda: o efeito de `estado` reprova e o baseline diverge)
+//   escreve-no-preparar (so --roteiro preparar) um outputs.update depois do 1o passo de H: o invariantes.mjs tem de reprovar
+//   canal-no-preparar   (so --roteiro preparar) um send(OUTPUT, [COLORBARS]) depois do 1o passo de H: o invariantes.mjs tem de reprovar
 import { createHash } from "node:crypto"
 import { execFileSync } from "node:child_process"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, tecla, RAIZ } from "./lib.mjs"
-import { FUNCOES_PREPARO, SECOES, VERSAO } from "./roteiro.mjs"
+import { FUNCOES_PREPARO, SECOES as SECOES_CULTO, VERSAO as VERSAO_CULTO } from "./roteiro.mjs"
+import { SECOES_PREPARAR, VERSAO_PREPARAR } from "./roteiro-preparar.mjs"
 import { aplicarEfeitoMinimo, normalizarPerfil, validarEsperado } from "./compararLogica.mjs"
 if (process.env.FS_LAYOUT !== undefined) { console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente"); process.exit(2) }
 
@@ -36,10 +39,18 @@ const SAIDA = arg("saida", join(RAIZ, "scripts/prova-culto/gravacoes"))
 const SO = arg("secoes") ? String(arg("secoes")).split(",") : null
 const MUTAR = arg("mutar")
 const PIXEL = !!arg("pixel")
+// --roteiro preparar: a secao H (o Preparar nao vai ao ar), julgada por invariantes.mjs. Sem a flag: o roteiro A a F do Culto
+const ROTEIRO = arg("roteiro", "culto")
+if (ROTEIRO !== "culto" && ROTEIRO !== "preparar") {
+    console.error('--roteiro: "culto" ou "preparar"')
+    process.exit(2)
+}
+const SECOES = ROTEIRO === "preparar" ? SECOES_PREPARAR : SECOES_CULTO
+const VERSAO = ROTEIRO === "preparar" ? VERSAO_PREPARAR : VERSAO_CULTO
 const ARQ_ESPERADO = arg("esperado") && arg("esperado") !== true ? String(arg("esperado")) : join(RAIZ, "scripts/prova-culto/esperado.json")
 const ESPERADO = JSON.parse(readFileSync(ARQ_ESPERADO, "utf8"))
 const errosEsperado = validarEsperado(ESPERADO)
-const aplicacao = aplicarEfeitoMinimo(SECOES, ESPERADO)
+const aplicacao = aplicarEfeitoMinimo(SECOES, ROTEIRO === "preparar" ? [] : ESPERADO)
 if (errosEsperado.length || aplicacao.erros.length) {
     console.error("ESPERADO INVALIDO para esta gravacao:\n  - " + [...errosEsperado, ...aplicacao.erros].join("\n  - "))
     process.exit(1)
@@ -191,12 +202,17 @@ for (const secao of SECOES_RODAR) {
         hashAnterior = r.s.saida?.hash ?? hashAnterior
         if (PIXEL) await fotoSaida(join(SAIDA, `${ROTULO}-${passo.id}.png`))
         falhas.forEach((f) => violacoes.push(`${passo.id}: ${f}`))
-        passos.push({ id: passo.id, secao: secao.id, semEfeito: passo.semEfeito ?? null, ...(passo.efeitoAplicado ? { efeitoAplicado: passo.efeitoAplicado } : {}), antesDoGesto: { hash: hashAntesDoGesto, telao: telaoAntes ? { texto: telaoAntes.texto, elementos: telaoAntes.elementos } : null, foco: leituraAntes.foco, sinais: leituraAntes.sinais, pagina: leituraAntes.pagina }, depois: { pagina: leituraDepois.pagina }, efeitoMedido, principal: r.p, saida: r.s })
+        if (ROTEIRO === "preparar" && passo.id === "H01-vai-preparar") {
+            // mutacoes da secao H (tem de dar vermelho no invariantes.mjs): o efeito aparece no passo SEGUINTE
+            if (MUTAR === "escreve-no-preparar") await principal.ev("S.outputs.update(a => { a.default.out.slide = null; return a }); return 1")
+            if (MUTAR === "canal-no-preparar") await principal.ev('const R = await import(U("utils/request")); R.send("OUTPUT", ["COLORBARS"], get(S.colorbars)); return 1')
+        }
+        passos.push({ id: passo.id, secao: secao.id, ...(passo.paginaFinal !== undefined ? { paginaFinal: passo.paginaFinal } : {}), semEfeito: passo.semEfeito ?? null, ...(passo.efeitoAplicado ? { efeitoAplicado: passo.efeitoAplicado } : {}), antesDoGesto: { hash: hashAntesDoGesto, telao: telaoAntes ? { texto: telaoAntes.texto, elementos: telaoAntes.elementos } : null, foco: leituraAntes.foco, sinais: leituraAntes.sinais, pagina: leituraAntes.pagina }, depois: { pagina: leituraDepois.pagina }, efeitoMedido, principal: r.p, saida: r.s })
         console.log(`${falhas.length ? "FALHA" : "ok   "} ${passo.id}  outputs=${r.p.outputs.length} estado=${r.p.estado.length} canais=${Object.keys(r.p.canais).length}${falhas.length ? "  <- " + falhas.join("; ") : ""}`)
     }
 }
 
-const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, janela: dims, mutacao: MUTAR || null, esperadoAplicado: aplicacao.aplicados, secoes: SO || SECOES_RODAR.map((s) => s.id) }, violacoes, passos }
+const gravacao = { cabecalho: { ...(ROTEIRO === "preparar" ? { roteiro: "preparar" } : {}), versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, janela: dims, mutacao: MUTAR || null, esperadoAplicado: aplicacao.aplicados, secoes: SO || SECOES_RODAR.map((s) => s.id) }, violacoes, passos }
 writeFileSync(join(SAIDA, `gravacao-${ROTULO}.json`), normalizarPerfil(JSON.stringify(gravacao, null, 1), RAIZ_PERFIL))
 console.log(`\ngravado ${join(SAIDA, `gravacao-${ROTULO}.json`)}  passos=${passos.length}  violacoes=${violacoes.length}`)
 principal.fechar()

@@ -9,7 +9,7 @@
 export const VERSAO = 2
 export const ID_SHOW = "impulso_aos_teus_pes"
 
-const ABRE_SHOW = `S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
+export const ABRE_SHOW = `S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
 S.outputs.update(a=>{a.default.out={};return a});
 const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(ID_SHOW)}]);
 S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); S.activePage.set("show");
@@ -17,7 +17,7 @@ S.drawer.set({height:300,stored:null}); S.resized.update(a=>({...a,leftPanel:290
 document.activeElement?.blur?.(); await esp(900)`
 
 const SLIDE = (i) => `document.querySelectorAll("#showArea .slide")[${i}]`
-const BOTAO_MODO = (nome) => `[...document.querySelectorAll("button")].find(b=>b.innerText.trim()===${JSON.stringify(nome)} && b.closest("header, .top, nav, div"))`
+export const BOTAO_MODO = (nome) => `[...document.querySelectorAll("button")].find(b=>b.innerText.trim()===${JSON.stringify(nome)} && b.closest("header, .top, nav, div"))`
 // os botoes da `.clear` mudam de posicao conforme o estado (o de restaurar so aparece depois de limpar): acha-se pelo marcador do titulo
 const LIMPA = (m) => `[...document.querySelector(".clear").querySelectorAll("button")].find(b=>((b.getAttribute("data-title")||"")+" "+b.innerText).includes(${JSON.stringify(m)}))`
 
