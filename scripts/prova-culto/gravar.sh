@@ -2,7 +2,7 @@
 # Uma gravacao da prova do Culto numa SESSAO NOVA: restaura o perfil, reabre o Electron de dev e roda o roteiro.
 # Cada gravacao parte de um app recem-aberto (o estado de uma sessao anterior vaza para a seguinte: Preparar semeado, editor, gaveta).
 #   FS_PERFIL_DIR=<pasta> bash scripts/prova-culto/gravar.sh <rotulo> [--secoes A,B] [--pixel] [--mutar ID] [--saida DIR]
-# Pre-requisito: Vite em :3000 (`npm run build:frontend:dev`). O rotulo do leiaute vai no cabecalho (FS_LAYOUT=classico|novo).
+# Pre-requisito: Vite em :3000 (`npm run build:frontend:dev`).
 AQUI="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$AQUI/../.." && pwd)"
 export FS_PERFIL_DIR="${FS_PERFIL_DIR:-$REPO/../prova-perfil}"

@@ -10,6 +10,7 @@
     import AliancaAbasLaterais from "./components/main/AliancaAbasLaterais.svelte"
     // FVB:FIM
     import AliancaFaixa from "./components/main/AliancaFaixa.svelte"
+    import FaixaDeFalha from "./components/main/FaixaDeFalha.svelte"
     import Top from "./components/main/Top.svelte"
     import SirvoAviso from "./components/main/SirvoAviso.svelte"
     import SirvoChat from "./components/main/SirvoChat.svelte"
@@ -174,6 +175,7 @@
     {/if}
 
     <Tipbar />
+    <FaixaDeFalha />
 </div>
 
 <style>

@@ -3,8 +3,7 @@
 //   node scripts/prova-culto/rodar.mjs --rotulo base1 [--saida DIR] [--secoes A,B,E] [--pixel] [--mutar ID]
 //
 // Pre-requisitos: Vite em :3000 e o Electron de dev com --remote-debugging-port=9222 sobre o perfil de teste restaurado
-// (`restaurar.sh` + `reiniciar.sh`). `--layout classico` NAO e flag desta ferramenta: liga-se editando `special.aliancaLayoutCulto`
-// em settings.json do perfil com o app FECHADO e reiniciando (o salvamento ao sair regrava a memoria). O rotulo do layout vai no cabecalho.
+// (`restaurar.sh` + `reiniciar.sh`).
 //
 // Regras que impedem "passar calado" (revisao C1): alvo inexistente, coberto por outro elemento ou efeito abaixo do minimo REPROVAM
 // a execucao (exit 1), mesmo gravando o arquivo. Mutacoes em runtime (so por CDP, nada no codigo): --mutar
@@ -13,6 +12,7 @@
 //   ipc-sem-canal       o gancho de IPC ignora o canal OUT_SLIDE_CACHE (nenhum passo do roteiro emite TRANSITION; este e emitido em 18)
 //   saida-estilo        so a janela de saida muda de aparencia (escritas iguais, pixel diferente)
 //   cobrir:<passo>      um elemento transparente cobre o alvo do passo (tem de reprovar pela regra C1)
+//   --css ARQUIVO       injeta o CSS na janela principal antes do roteiro (T7, prototipo descartavel)
 //   troca-pagina        o digito 2 do passo A11 e engolido (activePage nao muda: o efeito de `estado` reprova e o baseline diverge)
 import { createHash } from "node:crypto"
 import { execFileSync } from "node:child_process"
@@ -21,6 +21,7 @@ import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, tecla, RAIZ } from "./lib.mjs"
 import { FUNCOES_PREPARO, SECOES, VERSAO } from "./roteiro.mjs"
 import { normalizarPerfil } from "./compararLogica.mjs"
+if (process.env.FS_LAYOUT !== undefined) { console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente"); process.exit(2) }
 
 const arg = (n, d = null) => {
     const i = process.argv.indexOf("--" + n)
@@ -31,6 +32,7 @@ const SAIDA = arg("saida", join(RAIZ, "scripts/prova-culto/gravacoes"))
 const SO = arg("secoes") ? String(arg("secoes")).split(",") : null
 const MUTAR = arg("mutar")
 const PIXEL = !!arg("pixel")
+const CSS = arg("css") // T7: CSS injetado na janela principal (prototipo descartavel, nunca vai ao app)
 const FUNDO = process.env.FS_FUNDO || join(RAIZ, "scripts/prova-culto/perfil/midia/f1.png").split(String.fromCharCode(92)).join("/")
 // raiz do perfil desta maquina: sai da gravacao como __PERFIL__ (o baseline vale em qualquer pasta, inclusive na maquina do Pedro)
 const RAIZ_PERFIL = process.env.FS_PERFIL_RAIZ || FUNDO.split("/").slice(0, -2).join("/")
@@ -108,6 +110,11 @@ try {
     commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: RAIZ, encoding: "utf8" }).trim()
 } catch {}
 
+if (CSS) {
+    const texto = readFileSync(String(CSS), "utf8")
+    await principal.ev(`const s=document.createElement("style"); s.id="__css_prova"; s.textContent=${JSON.stringify(texto)}; document.head.appendChild(s); await esp(500); return 1`)
+    dbg("css injetado")
+}
 if (MUTAR === "saida-estilo") await saida.ev("document.body.style.filter='invert(1)'; return 1")
 if (MUTAR === "ipc-sem-canal") await principal.ev("window.__mutIpc=(id,canal)=>canal==='OUT_SLIDE_CACHE'; return 1")
 
@@ -167,7 +174,7 @@ for (const secao of SECOES) {
     }
 }
 
-const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, layout: process.env.FS_LAYOUT || "novo", janela: dims, mutacao: MUTAR || null, secoes: SO || SECOES.map((s) => s.id) }, violacoes, passos }
+const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, janela: dims, mutacao: MUTAR || null, secoes: SO || SECOES.map((s) => s.id) }, violacoes, passos }
 writeFileSync(join(SAIDA, `gravacao-${ROTULO}.json`), normalizarPerfil(JSON.stringify(gravacao, null, 1), RAIZ_PERFIL))
 console.log(`\ngravado ${join(SAIDA, `gravacao-${ROTULO}.json`)}  passos=${passos.length}  violacoes=${violacoes.length}`)
 principal.fechar()

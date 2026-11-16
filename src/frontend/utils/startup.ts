@@ -23,6 +23,8 @@ import { iniciarMontagemSirvo } from "./aliancaSirvoMontar"
 import { iniciarPonteiros } from "./aliancaPonteiros"
 import { iniciarAbasDoEditor } from "./aliancaAbasEditor"
 import { iniciarTemaAlianca } from "./aliancaTema"
+import { iniciarLayoutAlianca } from "./aliancaLayoutEstado"
+import { configurarRegistroDeFalha } from "./aliancaFalha"
 
 let initialized = false
 let startupProfile = ""
@@ -63,6 +65,9 @@ export async function startup() {
 async function startupMain() {
     // FV-A: laranja e fontes do Preparar (só a janela principal passa por aqui). Antes do primeiro desenho, para não piscar vermelho
     iniciarTemaAlianca()
+    // 0b: atributos data-modo/pagina/layout no body e saneamento da pasta de midia do Culto (so a janela principal)
+    iniciarLayoutAlianca()
+    configurarRegistroDeFalha(({ origem, mensagem, pilha }) => sendMain(Main.LOG_ERROR, { time: new Date(), os: get(os).platform || "Unknown", version: get(version), type: "aliancaFalha", source: origem, message: mensagem, stack: pilha }))
     setLanguage("", true)
     setupMainReceivers()
     getMainData()

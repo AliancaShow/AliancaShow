@@ -1,8 +1,7 @@
 // Compara duas gravacoes da prova do Culto e imprime a PRIMEIRA divergencia (passo, fluxo, 5 eventos em volta). Sai com 1 se houver.
 //
-//   node scripts/prova-culto/comparar.mjs <A.json> <B.json> [--esperado esperado.json | --classico] [--ruido ruido.json] [--sem-ruido] [--aprender C.json ...]
+//   node scripts/prova-culto/comparar.mjs <A.json> <B.json> [--esperado esperado.json] [--ruido ruido.json] [--sem-ruido] [--aprender C.json ...]
 //
-// --classico   usa SO esperado-classico.json (nunca esperado.json): a prova de que a chave devolve o Culto de antes.
 // --aprender   lista os caminhos que variam entre A, B e as demais (A/A/A) como padroes candidatos para ruido.json (revisao manual).
 // Cabecalhos incompativeis (roteiro, janela, escala, perfil) reprovam com mensagem clara: gravacoes de maquinas diferentes nao se comparam.
 import { readFileSync } from "node:fs"
@@ -19,8 +18,16 @@ const valor = (n) => (args.includes("--" + n) ? args[args.indexOf("--" + n) + 1]
 const arquivos = args.filter((a, i) => !a.startsWith("--") && !(i > 0 && args[i - 1].startsWith("--") && ["esperado", "ruido"].includes(args[i - 1].slice(2))))
 const ler = (f) => JSON.parse(readFileSync(f, "utf8"))
 
+const FLAGS_CONHECIDAS = ["esperado", "ruido", "sem-ruido", "aprender", "so-comuns", "pixel", "tolerancia-px"]
+for (const a of args) {
+    if (a.startsWith("--") && !FLAGS_CONHECIDAS.includes(a.slice(2))) {
+        console.error(`flag desconhecida: ${a}`)
+        process.exit(2)
+    }
+}
+
 if (arquivos.length < 2) {
-    console.error("uso: comparar.mjs <A.json> <B.json> [--esperado f | --classico] [--ruido f]")
+    console.error("uso: comparar.mjs <A.json> <B.json> [--esperado f] [--ruido f]")
     process.exit(2)
 }
 const [fa, fb, ...resto] = arquivos
@@ -30,6 +37,12 @@ const B = ler(fb)
 // cabecalhos
 const ca = A.cabecalho
 const cb = B.cabecalho
+for (const c of [ca, cb]) {
+    if (c.layout !== undefined && c.layout !== "novo") {
+        console.error("gravacao do leiaute classico: nao existe mais")
+        process.exit(2)
+    }
+}
 // --so-comuns: compara so os passos que existem nas duas (gravacao parcial, ex.: --secoes A) contra o baseline inteiro
 if (flag("so-comuns")) {
     const ids = new Set(B.passos.map((p) => p.id))
@@ -83,9 +96,9 @@ if (flag("pixel")) {
 }
 
 const ruido = flag("sem-ruido") ? { padroes: [] } : ler(valor("ruido") || join(AQUI, "ruido.json"))
-const arqEsperado = flag("classico") ? join(AQUI, "esperado-classico.json") : valor("esperado") || null
+const arqEsperado = valor("esperado") || null
 const esperado = arqEsperado ? ler(arqEsperado) : []
-const errosEsq = validarEsperado(esperado, { classico: flag("classico") })
+const errosEsq = validarEsperado(esperado)
 if (errosEsq.length) {
     console.error("ESPERADO INVALIDO:\n  - " + errosEsq.join("\n  - "))
     process.exit(2)

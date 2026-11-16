@@ -49,18 +49,24 @@ if (fase === "preparar") {
         await clicarEm(j, l.x, l.y)
         await esperar(500)
     }
-    await clicar(`[...document.querySelectorAll("button")].find(b=>b.innerText.trim()==="Preparar")`)
+    await clicar(`[...document.querySelectorAll(".modo button")].find(b=>b.innerText.trim()==="Preparar")`)
     await esperar(800)
     const passos = {}
+    // aba da gaveta (Ctrl+2, tecla real) e filtro da F7 (clique real) com a gaveta ABERTA; so depois Esc, Ctrl+T e o arrasto da coluna
+    await tecla(j, "2", { ctrl: true })
+    await esperar(600)
+    passos.depoisAba = await j.ev(`return {aba:get(S.activeDrawerTab), culto:get(S.activeDrawerTab.culto||S.activeDrawerTab)}`)
+    // filtro da F7 (so existe com a aba Midia aberta): clique real no chip de filtro, se achar
+    const chip = await localizar(j, `[...document.querySelectorAll("button")].find(b=>["Vídeo","Video","Foto"].includes(b.innerText.trim()) && b.closest(".drawer, #leftPanelDrawer, section"))`).catch(() => ({ ok: false }))
+    if (chip.ok) await clicarEm(j, chip.x, chip.y)
+    await esperar(500)
+    passos.depoisFiltro = { clicou: !!chip.ok, ...(await j.ev(`return {midia:get(S.drawerTabsData).media, culto:(get(S.drawerTabsData.culto||S.drawerTabsData)).media}`)) }
     await tecla(j, "Escape")
     await esperar(600)
     passos.depoisEsc = await j.ev(`return {drawer:get(S.drawer), culto:get(S.drawer.culto||S.drawer)}`)
     await tecla(j, "t", { ctrl: true })
     await esperar(600)
     passos.depoisCtrlT = await j.ev(`return {resized:get(S.resized), culto:get(S.resized.culto||S.resized)}`)
-    // aba da gaveta por clique real no texto exato
-    await clicar(`[...document.querySelectorAll("button.tab")].find(b=>b.innerText.trim()==="Mídia")`)
-    passos.depoisAba = await j.ev(`return {aba:get(S.activeDrawerTab), culto:get(S.activeDrawerTab.culto||S.activeDrawerTab)}`)
     // coluna esquerda: arrasta o divisor com o mouse (mouse real)
     const d = await j.ev(`const e=document.querySelector("#leftPanel"); if(!e) return null; const r=e.getBoundingClientRect(); return {x:r.right-2,y:r.y+r.height/2}`)
     if (d) {
@@ -71,11 +77,6 @@ if (fase === "preparar") {
         await esperar(500)
     }
     passos.depoisArrasto = { arrastou: !!d, ...(await j.ev(`return {resized:get(S.resized), culto:get(S.resized.culto||S.resized)}`)) }
-    // filtro da F7 (so existe com a aba Midia aberta): clique real no chip de filtro, se achar
-    const chip = await localizar(j, `[...document.querySelectorAll("button")].find(b=>["Vídeo","Video","Foto"].includes(b.innerText.trim()) && b.closest(".drawer, #leftPanelDrawer, section"))`).catch(() => ({ ok: false }))
-    if (chip.ok) await clicarEm(j, chip.x, chip.y)
-    await esperar(500)
-    passos.depoisFiltro = { clicou: !!chip.ok, ...(await j.ev(`return {midia:get(S.drawerTabsData).media, culto:(get(S.drawerTabsData.culto||S.drawerTabsData)).media}`)) }
     await salvar(j)
     e.preparar = passos
     e.H1 = settings()
