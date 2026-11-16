@@ -111,7 +111,8 @@ describe("arquivos da prova (scripts/prova-culto)", () => {
             const { createHash } = require("crypto")
             expect(
                 createHash("sha256")
-                    .update(readFileSync(p(`baseline/${arquivo}`)))
+                    // CRLF -> LF: o checkout no Windows (autocrlf) troca o fim de linha e nao pode quebrar o SHA
+                    .update(readFileSync(p(`baseline/${arquivo}`), "utf8").replace(/\r\n/g, "\n"))
                     .digest("hex"),
                 arquivo
             ).toBe(sha)
