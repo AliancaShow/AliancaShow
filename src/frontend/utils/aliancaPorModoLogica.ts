@@ -17,6 +17,7 @@
 // atrasada do Svelte 3 e ignorada); a escolha do lado vai em try/catch, cai no Culto e chama falhaAlta.
 import { get, writable } from "svelte/store"
 import type { Readable, Writable } from "svelte/store"
+import { falhaAlta } from "./aliancaFalha"
 
 export type Modo = "culto" | "preparar"
 
@@ -39,13 +40,6 @@ export type PorModo<T> = Writable<T> & {
     _zerar: () => void
 }
 
-let avisou = false
-const avisar = (erro: unknown) => {
-    if (avisou) return
-    avisou = true
-    console.error("Layout por modo: falha ao escolher o lado, usando o Culto", erro)
-}
-
 export function criarPorModo<T>(o: OpcoesPorModo<T>): PorModo<T> {
     let preparar: Writable<T> | null = null
     type Assinante = { run: (v: T) => void }
@@ -60,7 +54,7 @@ export function criarPorModo<T>(o: OpcoesPorModo<T>): PorModo<T> {
         try {
             return get(o.modo()) === "preparar" ? "preparar" : "culto"
         } catch (erro) {
-            avisar(erro)
+            falhaAlta("leiaute-por-modo", erro)
             return "culto"
         }
     }
@@ -143,7 +137,6 @@ export function criarPorModo<T>(o: OpcoesPorModo<T>): PorModo<T> {
             assinantes = []
             preparar = null
             lado = "culto"
-            avisou = false
         }
     }
     return fachada

@@ -22,10 +22,10 @@ export const EXCECOES = {
     "src/frontend/utils/save.ts": "0b: o disco grava drawer/drawerTabsData/resized do lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao `.culto` e o mesmo store que ela ja via",
     "src/frontend/utils/updateSettings.ts": "0b: carregar drawer/drawerTabsData/resized escreve no lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao e o mesmo `set` de antes",
     "src/frontend/utils/common.ts": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes",
-    "src/frontend/utils/startup.ts": "0b: iniciarLayoutAlianca() roda em startupMain (a saida sai antes, por startupOutput) e ainda tem guarda de currentWindow",
-    "src/frontend/utils/aliancaAbasEditor.ts": "0b: a aba de antes do editor vira valorPorModo; iniciarAbasDoEditor so roda em startupMain (nunca na saida)"
+    "src/frontend/utils/startup.ts": "0b/R2: iniciarLayoutAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca ainda tem guarda de currentWindow",
+    "src/frontend/utils/aliancaAbasEditor.ts": "0b/R2: a aba de antes do editor vira valorPorModo e o catch chama falhaAlta; iniciarAbasDoEditor so roda em startupMain (nunca na saida)"
 }
-export const SHA_EXCECOES = "baf71af012946e6fa5ba44729cbd38b113d3968bc4434fc41a58c214ee719a6b"
+export const SHA_EXCECOES = "0458b4e15b404c1361e94742235d69ef9cd734c7a282f022a6b43160a2a5a391"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 
 const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024, stdio: ["ignore", "pipe", "pipe"] })

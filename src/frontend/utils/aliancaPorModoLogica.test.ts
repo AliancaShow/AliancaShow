@@ -1,6 +1,7 @@
 import { get, writable } from "svelte/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { comunsDrawerTabs } from "./aliancaDrawerTabsLogica"
+import { _zerarFalhas, falhas } from "./aliancaFalha"
 import { criarPorModo } from "./aliancaPorModoLogica"
 import type { Modo } from "./aliancaPorModoLogica"
 
@@ -125,8 +126,9 @@ describe("criarPorModo: lados independentes", () => {
     })
 })
 
-describe("criarPorModo: excecao na escolha do lado", () => {
-    it("excecao na escolha do lado cai no Culto e avisa uma vez", () => {
+describe("criarPorModo: falha", () => {
+    it("excecao na escolha do lado cai no Culto e vira falha alta, a cada vez (nao so a primeira)", () => {
+        _zerarFalhas()
         const erro = vi.spyOn(console, "error").mockImplementation(() => {})
         const culto = writable<D>(inicial())
         const f = criarPorModo<D>({
@@ -138,9 +140,12 @@ describe("criarPorModo: excecao na escolha do lado", () => {
         })
         f.set({ height: 9, stored: null })
         f.set({ height: 10, stored: null })
-        expect(get(culto).height).toBe(10)
-        expect(erro).toHaveBeenCalledTimes(1)
+        expect(get(culto).height).toBe(10) // o Culto recebeu as duas escritas
+        expect(get(falhas)).toHaveLength(1)
+        expect(get(falhas)[0]).toMatchObject({ origem: "leiaute-por-modo", vezes: 2 })
+        expect(erro).toHaveBeenCalledTimes(2)
         erro.mockRestore()
+        _zerarFalhas()
     })
 })
 

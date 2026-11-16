@@ -3,6 +3,7 @@ import type { DrawerTabIds } from "../../types/Tabs"
 import { activeDrawerTab, activeEdit, activePage, modoAlianca } from "../stores"
 import { drawerTabs } from "../values/tabs"
 import { abaAoEntrarNoEditor } from "./aliancaGavetaLogica"
+import { falhaAlta } from "./aliancaFalha"
 import { valorPorModo } from "./aliancaLayoutEstado"
 // FVB:INICIO
 import { abaLateral } from "./aliancaBibliotecaEstado"
@@ -42,7 +43,7 @@ export function iniciarAbasDoEditor() {
                 activeDrawerTab.set(volta)
             }
         } catch (erro) {
-            console.error("Preparar: falha ao trocar a aba da gaveta no editor", erro)
+            falhaAlta("abas-do-editor", erro)
         }
     })
 }

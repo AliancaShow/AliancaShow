@@ -3,6 +3,7 @@
 // na janela principal (mesmo cuidado de aliancaTema.ts).
 import { derived, get } from "svelte/store"
 import { activePage, currentWindow, drawerTabsData, modoAlianca } from "../stores"
+import { falhaAlta } from "./aliancaFalha"
 import { sanearAbaMidia } from "./aliancaDrawerTabsLogica"
 import { pastas } from "./aliancaPastasMidiaEstado"
 
@@ -10,7 +11,8 @@ import { pastas } from "./aliancaPastasMidiaEstado"
 export const chaveDoModo = (): "culto" | "preparar" => {
     try {
         return get(modoAlianca) === "preparar" ? "preparar" : "culto"
-    } catch {
+    } catch (erro) {
+        falhaAlta("chave-do-modo", erro)
         return "culto"
     }
 }
@@ -55,7 +57,7 @@ export function iniciarLayoutAlianca() {
                 if (novo !== atual) drawerTabsData.culto.set(novo)
             }
         } catch (erro) {
-            console.error("Layout: falha ao aplicar os atributos do body", erro)
+            falhaAlta("atributos-do-body", erro)
         }
     })
 }

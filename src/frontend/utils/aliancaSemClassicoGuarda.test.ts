@@ -25,7 +25,7 @@ const NAO_PODEM_EXISTIR = ["scripts/classico-guarda.mjs", "scripts/classico.lock
 /** as unicas linhas que podem ter a palavra: a recusa (Q4, Q5) e os testes dela */
 export const PERMITIDAS: { arquivo: string; linha: string }[] = [
     // o nome do proprio teste na linha do npm script
-    { arquivo: "package.json", linha: '"test:layout": "node --test scripts/prova-culto/comparar.test.mjs scripts/prova-culto/ancora.test.mjs && node scripts/prova-culto/ancora.mjs && vitest run --config config/testing/vitest.config.ts src/frontend/utils/aliancaProvaCultoGuarda.test.ts src/frontend/utils/aliancaSemClassicoGuarda.test.ts",' },
+    { arquivo: "package.json", linha: '"test:layout": "node --test scripts/prova-culto/comparar.test.mjs scripts/prova-culto/ancora.test.mjs && node scripts/prova-culto/ancora.mjs && vitest run --config config/testing/vitest.config.ts src/frontend/utils/aliancaProvaCultoGuarda.test.ts src/frontend/utils/aliancaSemClassicoGuarda.test.ts src/frontend/utils/aliancaFalhaGuarda.test.ts",' },
     { arquivo: "scripts/prova-culto/rodar.mjs", linha: 'if (process.env.FS_LAYOUT !== undefined) { console.error("o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente"); process.exit(2) }' },
     { arquivo: "scripts/prova-culto/restaurar.sh", linha: 'if [ "${FS_LAYOUT+definida}" = "definida" ]; then echo "o leiaute classico nao existe mais: tire FS_LAYOUT do ambiente" >&2; exit 2; fi' },
     { arquivo: "scripts/prova-culto/comparar.mjs", linha: 'console.error("gravacao do leiaute classico: nao existe mais")' },

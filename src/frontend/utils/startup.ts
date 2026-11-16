@@ -24,6 +24,7 @@ import { iniciarPonteiros } from "./aliancaPonteiros"
 import { iniciarAbasDoEditor } from "./aliancaAbasEditor"
 import { iniciarTemaAlianca } from "./aliancaTema"
 import { iniciarLayoutAlianca } from "./aliancaLayoutEstado"
+import { configurarRegistroDeFalha } from "./aliancaFalha"
 
 let initialized = false
 let startupProfile = ""
@@ -66,6 +67,7 @@ async function startupMain() {
     iniciarTemaAlianca()
     // 0b: atributos data-modo/pagina/layout no body e saneamento da pasta de midia do Culto (so a janela principal)
     iniciarLayoutAlianca()
+    configurarRegistroDeFalha(({ origem, mensagem, pilha }) => sendMain(Main.LOG_ERROR, { time: new Date(), os: get(os).platform || "Unknown", version: get(version), type: "aliancaFalha", source: origem, message: mensagem, stack: pilha }))
     setLanguage("", true)
     setupMainReceivers()
     getMainData()
