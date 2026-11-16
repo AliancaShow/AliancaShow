@@ -1,6 +1,8 @@
 import type { ValidChannels } from "../../types/Channels"
 
 export function send(ID: ValidChannels, channels: string[], data: any = null) {
+    // gancho so de DEV para a prova do Culto (scripts/prova-culto): o bloco inteiro sai do build de producao
+    if (import.meta.env.DEV) channels.forEach((channel) => (globalThis as any).__gravarIPC?.(ID, channel, data))
     channels.forEach((channel: string) => window.api.send(ID, { channel, data }))
 }
 

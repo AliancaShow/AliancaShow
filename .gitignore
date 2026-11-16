@@ -30,3 +30,6 @@ bundled-bibles/*.fsb
 
 # musicas embutidas: conteudo, fora do historico
 bundled-shows/*.show
+
+# saida da prova do Culto (gravacoes e prints)
+scripts/prova-culto/gravacoes/
