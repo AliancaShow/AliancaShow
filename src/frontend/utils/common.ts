@@ -10,6 +10,7 @@ import { activePopup, activeTriggerFunction, autosave, currentWindow, disabledSe
 import { convertAutosave } from "../values/autosave"
 import { send } from "./request"
 import { save } from "./save"
+import { fecharTudoManual } from "./aliancaLayoutEstado"
 
 export const DEFAULT_WIDTH = 290 // --navigation-width (global.css) | resized (stores.ts & defaults.ts)
 export const DEFAULT_DRAWER_HEIGHT = 300
@@ -189,7 +190,6 @@ export function startDevMode() {
 // toggle drawer & left/right panels
 const minDrawerHeight = 40
 const minPanelWidth = 4
-let panelsManuallyClosed = false
 export function togglePanels() {
     const drawerIsOpened = get(drawer).height > minDrawerHeight
     const leftPanelIsOpened = get(resized).leftPanel > minPanelWidth
@@ -199,13 +199,13 @@ export function togglePanels() {
     if (drawerIsOpened || leftPanelIsOpened || rightPanelIsOpened) {
         drawer.set({ height: minDrawerHeight, stored: get(drawer).height })
         resized.set({ ...get(resized), leftPanel: minPanelWidth, rightPanel: minPanelWidth })
-        panelsManuallyClosed = !leftPanelIsOpened && !rightPanelIsOpened
+        fecharTudoManual.gravar(!leftPanelIsOpened && !rightPanelIsOpened)
         return
     }
 
     // open all
     if (!drawerIsOpened) drawer.set({ height: get(drawer).stored || DEFAULT_DRAWER_HEIGHT, stored: null })
-    if (!panelsManuallyClosed) resized.set({ ...get(resized), leftPanel: leftPanelIsOpened ? get(resized).leftPanel : DEFAULT_WIDTH, rightPanel: rightPanelIsOpened ? get(resized).rightPanel : DEFAULT_WIDTH })
+    if (!fecharTudoManual.ler()) resized.set({ ...get(resized), leftPanel: leftPanelIsOpened ? get(resized).leftPanel : DEFAULT_WIDTH, rightPanel: rightPanelIsOpened ? get(resized).rightPanel : DEFAULT_WIDTH })
 }
 
 // trigger functions in .svelte files (used to trigger big and old functions still in .svelte files)

@@ -168,8 +168,9 @@ export function save(closeWhenFinished = false, customTriggers: SaveActions = {}
         showsPath: get(showsPath), // DEPRECATED
         dataPath: get(dataPath), // DEPRECATED
         lockedOverlays: get(lockedOverlays),
-        drawer: get(drawer),
-        drawerTabsData: get(drawerTabsData),
+        // o disco guarda SEMPRE o Culto (`.culto`): o que se faz no Preparar nao vai para ca
+        drawer: get(drawer.culto),
+        drawerTabsData: get(drawerTabsData.culto),
         groupNumbers: get(groupNumbers),
         fullColors: get(fullColors),
         formatNewShow: get(formatNewShow),
@@ -182,7 +183,7 @@ export function save(closeWhenFinished = false, customTriggers: SaveActions = {}
         outputs: sanitizedOutputs,
         sorted: get(sorted),
         remotePassword: get(remotePassword),
-        resized: get(resized),
+        resized: get(resized.culto),
         slidesOptions: get(slidesOptions),
         splitLines: get(splitLines),
         // templates: get(templates),

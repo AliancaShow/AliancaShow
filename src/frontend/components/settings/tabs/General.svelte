@@ -1,5 +1,6 @@
 <script lang="ts">
     import { dictionary, fullColors, groups, labelsDisabled, language, special, timeFormat } from "../../../stores"
+    import { layoutAtivo } from "../../../utils/aliancaLayoutCulto"
     import { getLanguageList, setLanguage, translateText } from "../../../utils/language"
     import { isGroupHidden } from "../../../utils/profile"
     import { sortByName } from "../../helpers/array"
@@ -54,6 +55,18 @@
 <!-- shortcuts: -->
 <MaterialToggleSwitch label="settings.next_item_on_last_slide" checked={$special.nextItemOnLastSlide !== false} defaultValue={true} on:change={(e) => updateSpecial(e.detail, "nextItemOnLastSlide", true)} />
 <MaterialToggleSwitch label="settings.slide_number_keys" checked={$special.numberKeys} defaultValue={false} on:change={(e) => updateSpecial(e.detail, "numberKeys")} />
+<!-- AliancaShow: chave de emergencia do leiaute do Culto. Vale ao reabrir o programa (nada remonta no meio de um culto). -->
+<MaterialDropdown
+    label="Leiaute do Culto"
+    value={$special.aliancaLayoutCulto === "classico" ? "classico" : "novo"}
+    options={[
+        { value: "novo", label: "Novo" },
+        { value: "classico", label: "Clássico (como antes)" }
+    ]}
+    on:change={(e) => updateSpecial(e.detail, "aliancaLayoutCulto", true)}
+/>
+<p style="opacity: 0.6; font-size: 0.85em; padding: 0 0.8em 0.6em; white-space: normal;">Vale ao reabrir o programa. Ativo agora: {layoutAtivo() === "classico" ? "Clássico" : "Novo"}. Não volta as teclas 1–6 nem o modo foco.</p>
+
 <MaterialToggleSwitch label="settings.auto_shortcut_first_letter" checked={$special.autoLetterShortcut} defaultValue={false} on:change={(e) => updateSpecial(e.detail, "autoLetterShortcut")} />
 
 <!-- when disabled: no ./F2 to clear, F5 clears slide timer instead of next slide, no PageUp/PageDown/Home/End for slide navigation -->

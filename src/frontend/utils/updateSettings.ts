@@ -334,8 +334,9 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     remotePassword: (v: any) => remotePassword.set(v),
     audioFolders: (v: any) => audioFolders.set(v),
     categories: (v: any) => categories.set(ensureImpulsoCategory(v) as any),
-    drawer: (v: any) => drawer.set(v),
-    drawerTabsData: (v: any) => drawerTabsData.set(v),
+    // carregar do disco/nuvem e sempre no Culto, mesmo com o Preparar aberto
+    drawer: (v: any) => drawer.culto.set(v),
+    drawerTabsData: (v: any) => drawerTabsData.culto.set(v),
     drawSettings: (v: any) => drawSettings.set(v),
     groupNumbers: (v: any) => groupNumbers.set(v),
     fullColors: (v: any) => fullColors.set(v),
@@ -348,7 +349,7 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     outLocked: (v: any) => outLocked.set(v),
     overlayCategories: (v: any) => overlayCategories.set(v),
     playerVideos: (v: any) => playerVideos.set(v),
-    resized: (v: any) => resized.set(v),
+    resized: (v: any) => resized.culto.set(v),
     // AliancaShow: descarta as traducoes vindas da API do churchapps. Elas usam a
     // chave do projeto original, que nao podemos usar, e sao todas em ingles. Tirar
     // dos padroes nao bastava: quem ja abriu o app tem as 5 gravadas em
