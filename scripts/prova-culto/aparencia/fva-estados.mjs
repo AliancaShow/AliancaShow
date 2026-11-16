@@ -12,7 +12,10 @@ const N = Object.fromEntries(ESTADOS_APARENCIA.map((e) => [e.slice(0, 2), e]))
 const j = await abrir()
 // o hover do Chromium so e recalculado com movimento do mouse: cada estado gravado repete o ultimo movimento (mesma posicao) antes da espera
 // de estabilidade, senao um :hover (barra de menus em 5,5, overlay do slide) aparece ou some conforme o timing do render (A/A medida)
-let ultimoMouse = { x: 5, y: 5 }
+// onde o mouse repousa: o vao da barra de menus (regiao de arrastar, sem botao). Em (5,5) ele ficava SOBRE o botao "Arquivo", cujo :hover
+// aparecia ou nao conforme a rodada (A/A medida: backgroundColor 0.05 x 0 no mesmo codigo)
+const PARADO = { x: 683, y: 12 }
+let ultimoMouse = PARADO
 const mover = async (jj, x, y) => {
     ultimoMouse = { x, y }
     await moverMouse(jj, x, y)
@@ -69,7 +72,7 @@ async function sequencia() {
     await abrirShow(j, ID, 0, "culto", true)
     await j.ev(`S.activePage.set("show"); return 1`)
     await esperar(800)
-    await mover(j, 5, 5)
+    await mover(j, PARADO.x, PARADO.y)
     await g(N["01"])
     await noAr(1)
     await g(N["02"])
@@ -85,7 +88,7 @@ async function sequencia() {
     await g(N["04"])
     await escape()
     await j.ev(`S.activePage.set("show"); return 1`)
-    await mover(j, 5, 5)
+    await mover(j, PARADO.x, PARADO.y)
     // abas da gaveta (cliques reais no texto exato dentro do menu da biblioteca)
     for (const [t, n] of [
         ["Mídia", N["05"]],
@@ -94,7 +97,7 @@ async function sequencia() {
         ["Shows", N["08"]]
     ]) {
         await botaoTexto(j, "button.tab", t)
-        await mover(j, 5, 5)
+        await mover(j, PARADO.x, PARADO.y)
         await g(n)
     }
     // Configuracoes (engrenagem do cabecalho)
@@ -106,13 +109,13 @@ async function sequencia() {
     // pagina de edicao
     await abrirShow(j, ID, 1, "culto", false)
     await j.ev(`S.activePage.set("edit"); return 1`)
-    await mover(j, 5, 5)
+    await mover(j, PARADO.x, PARADO.y)
     await g(N["10"])
     await j.ev(`S.activePage.set("show"); return 1`)
     // Preparar
     await j.ev(`S.modoAlianca.set("preparar"); return 1`)
     await esperar(1200)
-    await mover(j, 5, 5)
+    await mover(j, PARADO.x, PARADO.y)
     await g(N["11"])
     await j.ev(`S.activePage.set("edit"); return 1`)
     await g(N["12"])
