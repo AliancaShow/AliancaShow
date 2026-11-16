@@ -1,0 +1,4 @@
+{
+    "comentario": "Revisado a mao a partir do A/A/A (3 execucoes no mesmo codigo; a 2a e a 3a sao IDENTICAS, a 1a so difere pelo autosave que disparou no repouso do F02). Proibido mascarar slide/background/overlays/transition de `outputs` (validado por compararLogica.validarRuido). Teto de padroes: 80. `**` = qualquer coisa, `*` = um segmento.",
+    "padroes": ["*/principal/canais/OUTPUT:SHOWS/*/timestamps/*", "*/principal/canais/MAIN:SPOTIFY_GET_STATE", "*/principal/canais/MAIN:CHECK_RAM_USAGE", "*/principal/canais/MAIN:BIBLE/*", "F02-repouso-6s/principal/canais/MAIN:SAVE**"]
+}
