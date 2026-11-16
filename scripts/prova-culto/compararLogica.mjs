@@ -75,6 +75,40 @@ export function validarRuido(ruido) {
     return erros
 }
 
+/**
+ * Canais que um passo MORTO ainda pode tocar: so os periodicos do app (sem relacao com o gesto).
+ * Qualquer outro canal num passo julgado e PARADA 1 do plano (caminho que pode ir ao telao): nao se acrescenta aqui por conta propria.
+ */
+export const CANAIS_DE_REPOUSO = [
+    "MAIN:SPOTIFY_GET_STATE", // periodico, ja tratado em ruido.json
+    "MAIN:CHECK_RAM_USAGE" // periodico, ja tratado em ruido.json
+]
+
+const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b)
+
+/**
+ * Juiz de "passo morto" (6.2): o gesto nao pode ter feito NADA. So olha a gravacao B (a nova).
+ * Devolve a lista de violacoes { regra, detalhe } (vazia = o passo esta morto de verdade).
+ */
+export function passoMorto(p) {
+    const v = []
+    const pr = p.principal || {}
+    const sa = p.saida || {}
+    const antes = p.antesDoGesto
+    if (!antes) return [{ regra: 0, detalhe: "gravacao sem antesDoGesto: regrave com o rodar.mjs da 0c" }]
+    if (pr.outputs?.length) v.push({ regra: 1, detalhe: `principal.outputs tem ${pr.outputs.length} evento(s)` })
+    if (pr.estado?.length) v.push({ regra: 2, detalhe: `principal.estado tem ${pr.estado.length} evento(s): ${JSON.stringify(pr.estado).slice(0, 160)}` })
+    for (const c of Object.keys(pr.canais || {})) if (!CANAIS_DE_REPOUSO.includes(c)) v.push({ regra: 3, detalhe: `canal fora de CANAIS_DE_REPOUSO: ${c}${/^(OUTPUT|STAGE):/.test(c) ? " (PARADA 1: caminho que pode ir ao telao)" : ""}` })
+    if (!igual(pr.foco, antes.foco)) v.push({ regra: 4, detalhe: `foco ${JSON.stringify(antes.foco)} -> ${JSON.stringify(pr.foco)}` })
+    if (!igual(pr.sinais, antes.sinais)) v.push({ regra: 4, detalhe: `sinais mudaram: ${JSON.stringify(antes.sinais).slice(0, 120)} -> ${JSON.stringify(pr.sinais).slice(0, 120)}` })
+    if (sa.outputs?.length) v.push({ regra: 5, detalhe: `saida.outputs tem ${sa.outputs.length} evento(s)` })
+    if (sa.estado?.length) v.push({ regra: 5, detalhe: `saida.estado tem ${sa.estado.length} evento(s)` })
+    const t = sa.saida || {}
+    if (t.hash !== antes.hash) v.push({ regra: 6, detalhe: `saida.hash ${antes.hash} -> ${t.hash}` })
+    if (antes.telao && (t.texto !== antes.telao.texto || t.elementos !== antes.telao.elementos)) v.push({ regra: 6, detalhe: `saida texto/elementos mudaram: ${JSON.stringify(antes.telao).slice(0, 100)} -> ${JSON.stringify({ texto: t.texto, elementos: t.elementos }).slice(0, 100)}` })
+    return v.map((x) => ({ passo: p.id, ...x }))
+}
+
 const TIPOS = ["divergencia", "dom", "efeitoMinimo", "aposentar"]
 const CURINGA = /\*|\?|^$/
 
@@ -110,6 +144,10 @@ export function validarEsperado(itens) {
             if (!it.passo || !it.de || !it.para) erros.push(`${n}: efeitoMinimo exige passo, de e para`)
             if (it.para && !it.para.semEfeito && !(it.para.n > 0)) erros.push(`${n}: para invalido`)
             if (it.para?.semEfeito !== undefined && !String(it.para.semEfeito).trim()) erros.push(`${n}: semEfeito sem motivo`)
+            if (it.julgar !== undefined) {
+                if (it.julgar !== "passoMorto") erros.push(`${n}: julgar "${it.julgar}" desconhecido`)
+                else if (it.de?.fluxo !== "estado" || it.para?.semEfeito === undefined) erros.push(`${n}: julgar passoMorto so vale com de.fluxo "estado" e para.semEfeito`)
+            }
         }
         if (it.tipo === "aposentar" && !it.alvo) erros.push(`${n}: aposentar sem alvo`)
     })
@@ -144,7 +182,9 @@ export function comparar(A, B, { ruido = { padroes: [] }, esperado = [] } = {}) 
     const b = achatar(B)
     const res = (ruido.padroes || []).map(regexDoPadrao)
     const mascarada = (k) => res.some((r) => r.test(k))
-    const chaves = [...new Set([...a.keys(), ...b.keys()])]
+    // passos julgados como "passo morto": saem da comparacao literal (nas duas gravacoes) e B passa por passoMorto()
+    const julgados = new Set((esperado || []).filter((i) => i.tipo === "efeitoMinimo" && i.julgar === "passoMorto").map((i) => i.passo))
+    const chaves = [...new Set([...a.keys(), ...b.keys()])].filter((k) => !julgados.has(k.split("/")[0]))
     const divergencias = []
     let mascarados = 0
     for (const k of chaves) {
@@ -166,7 +206,22 @@ export function comparar(A, B, { ruido = { padroes: [] }, esperado = [] } = {}) 
         else naoDeclaradas.push(d)
     }
     const fantasmas = vivos.filter((_, i) => !usados.has(i))
-    return { divergencias, naoDeclaradas, fantasmas, mascarados, erros }
+    const passoMortoViolacoes = []
+    const passoDe = (G, id) => G.passos.find((p) => p.id === id)
+    for (const it of (esperado || []).filter((i) => i.tipo === "efeitoMinimo")) {
+        const pa = passoDe(A, it.passo)
+        const pb = passoDe(B, it.passo)
+        if (!pb) continue
+        if (it.julgar === "passoMorto") {
+            passoMortoViolacoes.push(...passoMorto(pb))
+            // ocorreu: A tem evento em principal.estado nesse passo e B nao. Iguais = o item nao muda nada = fantasma
+            if (!(pa?.principal?.estado?.length > 0 && !(pb.principal?.estado?.length > 0))) fantasmas.push(it)
+        } else if (it.de?.n > 0 && pb.efeitoMedido && pb.efeitoMedido.n >= it.de.n) {
+            // sem julgar: o efeito que o item diz ter sumido ainda esta la
+            fantasmas.push(it)
+        }
+    }
+    return { divergencias, naoDeclaradas, fantasmas, mascarados, erros, passoMorto: passoMortoViolacoes }
 }
 
 /** os 5 eventos em volta da divergencia (so para outputs/estado), para a mensagem */

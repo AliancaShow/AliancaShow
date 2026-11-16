@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process"
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { achatar, aplicarEfeitoMinimo, comparar, conferirCabecalhos, normalizarPerfil, validarEsperado, validarRuido } from "./compararLogica.mjs"
+import { achatar, aplicarEfeitoMinimo, comparar, CANAIS_DE_REPOUSO, conferirCabecalhos, normalizarPerfil, passoMorto, validarEsperado, validarRuido } from "./compararLogica.mjs"
 
 const clone = (x) => JSON.parse(JSON.stringify(x))
 const out = (index) => ({ op: "update", por: "setOutput@output", mudou: true, v: { default: { slide: { id: "s", index, layout: "default" } } } })
@@ -234,4 +234,102 @@ test("comparar.mjs: B gravada com outro esperado sai com 2 (esperadoAplicado)", 
     const r = comparar_mjs(BASELINE, arq)
     assert.equal(r.status, 2)
     assert.match(r.stderr, /esperadoAplicado/)
+})
+
+// 6.2: juiz de passo morto
+const IDS_DIGITOS = ["A11-digito-2", "A12-digito-3", "A13-digito-4", "A14-digito-5", "A15-digito-6"]
+const itensMortos = () => IDS_DIGITOS.map((passo, i) => ({ tipo: "efeitoMinimo", id: "pm" + i, fatia: "1b", passo, de: { fluxo: "estado", n: 1 }, para: { semEfeito: "teclas 1-6 removidas" }, julgar: "passoMorto", porque: "x", decisaoDeProduto: "d" }))
+// A: a gravacao do baseline de hoje (digito troca de pagina); B: o A10 real copiado para A11-A15 (o digito nao faz nada)
+const baselineReal = () => JSON.parse(readFileSync("scripts/prova-culto/baseline/slice0-base.json", "utf8"))
+const parDeDigitos = () => {
+    const A = baselineReal()
+    const B = baselineReal()
+    const a10 = A.passos.find((p) => p.id === "A10-digito-1")
+    for (const id of IDS_DIGITOS) {
+        const i = B.passos.findIndex((p) => p.id === id)
+        const morto = clone(a10)
+        morto.id = id
+        // o baseline e anterior a 0c: antesDoGesto sai do proprio estado do passo morto (nada mudou, entao antes = depois)
+        morto.antesDoGesto = { hash: morto.saida.saida.hash, telao: { texto: morto.saida.saida.texto, elementos: morto.saida.saida.elementos }, foco: morto.principal.foco, sinais: morto.principal.sinais, pagina: "show" }
+        B.passos[i] = morto
+    }
+    return { A, B }
+}
+test("passo morto: o A10 real copiado para A11-A15 com os 5 itens passa, sem fantasma", () => {
+    const { A, B } = parDeDigitos()
+    const r = comparar(A, B, { ruido, esperado: itensMortos() })
+    assert.deepEqual(r.passoMorto, [])
+    assert.equal(r.fantasmas.length, 0)
+    assert.equal(r.naoDeclaradas.filter((d) => IDS_DIGITOS.includes(d.passo)).length, 0, "as chaves dos passos julgados saem da comparacao literal")
+})
+const morto1 = () => {
+    const { B } = parDeDigitos()
+    return clone(B.passos.find((p) => p.id === "A11-digito-2"))
+}
+const reprova = (mutar, regra) => {
+    const p = morto1()
+    mutar(p)
+    const v = passoMorto(p)
+    assert.ok(
+        v.some((x) => x.regra === regra),
+        "esperava a regra " + regra + ", veio " + JSON.stringify(v)
+    )
+}
+test("MUTACAO passo morto: evento activeShow em estado reprova", () => reprova((p) => p.principal.estado.push({ fluxo: "activeShow", v: { id: "x" } }), 2))
+test("MUTACAO passo morto: sinais.modo trocado reprova", () => reprova((p) => (p.principal.sinais.modo = "preparar"), 4))
+test("MUTACAO passo morto: foco trocado reprova", () => reprova((p) => (p.principal.foco = "BUTTON.x"), 4))
+test("MUTACAO passo morto: canal OUTPUT:OVERLAYS reprova", () => reprova((p) => (p.principal.canais["OUTPUT:OVERLAYS"] = {}), 3))
+test("MUTACAO passo morto: canal OUTPUT:COLORBARS reprova", () => reprova((p) => (p.principal.canais["OUTPUT:COLORBARS"] = {}), 3))
+test("MUTACAO passo morto: canal STAGE:SWITCH reprova", () => reprova((p) => (p.principal.canais["STAGE:SWITCH"] = {}), 3))
+test("passo morto: canal de repouso passa", () => {
+    const p = morto1()
+    for (const c of CANAIS_DE_REPOUSO) p.principal.canais[c] = {}
+    assert.deepEqual(passoMorto(p), [])
+})
+test("MUTACAO passo morto: principal.outputs nao vazio reprova", () => reprova((p) => p.principal.outputs.push(out(0)), 1))
+test("MUTACAO passo morto: saida.outputs nao vazio com hash igual reprova", () => reprova((p) => p.saida.outputs.push(out(0)), 5))
+test("MUTACAO passo morto: telao com hash diferente reprova; texto ou elementos diferentes tambem", () => {
+    reprova((p) => (p.saida.saida.hash = "zz"), 6)
+    reprova((p) => (p.saida.saida.texto = "outro"), 6)
+    reprova((p) => (p.saida.saida.elementos += 1), 6)
+})
+test("passo morto: gravacao sem antesDoGesto reprova", () => reprova((p) => delete p.antesDoGesto, 0))
+test("MUTACAO esquema: julgar sobre passo com de.fluxo outputs reprova; julgar desconhecido reprova", () => {
+    const it = itensMortos()[0]
+    assert.deepEqual(validarEsperado([it]), [])
+    assert.ok(validarEsperado([{ ...it, de: { fluxo: "outputs", n: 1 } }]).length > 0)
+    assert.ok(validarEsperado([{ ...it, para: { fluxo: "estado", n: 1 } }]).length > 0)
+    assert.ok(validarEsperado([{ ...it, julgar: "qualquer" }]).length > 0)
+})
+test("MUTACAO fantasma: item SEM julgar com o efeito ainda presente reprova", () => {
+    const { A, B } = parDeDigitos()
+    const sem = itensMortos().map(({ julgar, ...resto }) => resto)
+    // o efeito medido de B ainda atinge de.n (1): o item diz que o digito deixou de trocar a pagina, mas troca
+    for (const id of IDS_DIGITOS) B.passos.find((p) => p.id === id).efeitoMedido = { fluxo: "estado", n: 1 }
+    assert.equal(comparar(A, B, { ruido, esperado: sem }).fantasmas.length, 5)
+    for (const id of IDS_DIGITOS) B.passos.find((p) => p.id === id).efeitoMedido = { fluxo: "estado", n: 0 }
+    assert.equal(comparar(A, B, { ruido, esperado: sem }).fantasmas.length, 0)
+})
+test("MUTACAO fantasma: so um dos cinco passos perdeu a troca, os outros quatro sao fantasmas", () => {
+    const { A } = parDeDigitos()
+    const B = baselineReal() // o digito AINDA troca a pagina nos 5 passos
+    for (const p of B.passos) p.antesDoGesto = { hash: p.saida.saida?.hash, telao: { texto: p.saida.saida?.texto, elementos: p.saida.saida?.elementos }, foco: p.principal.foco, sinais: p.principal.sinais, pagina: "show" }
+    const um = parDeDigitos().B.passos.find((p) => p.id === "A11-digito-2")
+    B.passos[B.passos.findIndex((p) => p.id === "A11-digito-2")] = um
+    const r = comparar(A, B, { ruido, esperado: itensMortos() })
+    assert.equal(r.fantasmas.length, 4)
+    assert.deepEqual(r.fantasmas.map((x) => x.passo).sort(), IDS_DIGITOS.slice(1))
+    // e cada um dos quatro tambem viola o juiz (o digito ainda faz coisa)
+    assert.ok(r.passoMorto.some((v) => v.passo === "A12-digito-3"))
+})
+test("comparar.mjs imprime e reprova passo morto violado", () => {
+    const { A, B } = parDeDigitos()
+    B.passos.find((p) => p.id === "A11-digito-2").principal.estado.push({ fluxo: "activePage", v: "edit" })
+    const dir = mkdtempSync(join(tmpdir(), "pm-"))
+    writeFileSync(join(dir, "a.json"), JSON.stringify(A))
+    writeFileSync(join(dir, "b.json"), JSON.stringify({ ...B, cabecalho: { ...B.cabecalho, esperadoAplicado: itensMortos().map((i) => i.id) } }))
+    writeFileSync(join(dir, "e.json"), JSON.stringify(itensMortos()))
+    const r = comparar_mjs(join(dir, "a.json"), join(dir, "b.json"), "--esperado", join(dir, "e.json"))
+    assert.equal(r.status, 1, r.stdout + r.stderr)
+    assert.match(r.stderr, /PASSO MORTO VIOLADO: passo A11-digito-2 regra 2/)
 })

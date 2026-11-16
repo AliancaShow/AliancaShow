@@ -118,7 +118,11 @@ if (r.naoDeclaradas.length) {
 }
 for (const f of r.fantasmas) {
     falhou = true
-    console.error(`ITEM DECLARADO QUE NAO OCORREU: ${f.id || ""} passo ${f.passo} ${f.fluxo} ${f.caminho}`)
+    console.error(`ITEM DECLARADO QUE NAO OCORREU: ${f.id || ""} passo ${f.passo} ${f.fluxo || f.tipo} ${f.caminho || f.julgar || ""}`)
+}
+for (const v of r.passoMorto) {
+    falhou = true
+    console.error(`PASSO MORTO VIOLADO: passo ${v.passo} regra ${v.regra}: ${v.detalhe}`)
 }
 if (!falhou) console.log("IGUAL (salvo o declarado)")
 process.exit(falhou ? 1 : 0)
