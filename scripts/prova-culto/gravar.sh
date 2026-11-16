@@ -9,5 +9,6 @@ export FS_PERFIL_DIR="${FS_PERFIL_DIR:-$REPO/../prova-perfil}"
 bash "$AQUI/restaurar.sh" > /dev/null && bash "$AQUI/reiniciar.sh" > /dev/null || exit 2
 PERFIL="$(cygpath -m "$FS_PERFIL_DIR" 2>/dev/null || (cd "$FS_PERFIL_DIR" && pwd))"
 export FS_FUNDO="$PERFIL/midia/f1.png"
+export FS_PERFIL_RAIZ="$PERFIL"   # o rodar troca esta raiz por __PERFIL__ antes de salvar a gravacao
 export FS_PERFIL_STORE="$AQUI/perfil/store"   # o sha do perfil sai do MODELO versionado (nao depende do caminho da maquina)
 cd "$REPO" && node "$AQUI/rodar.mjs" --rotulo "$@"

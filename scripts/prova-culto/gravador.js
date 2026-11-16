@@ -3,8 +3,22 @@
 // hash do html atual da saida (para esperar o telao parar: transicoes entre slides deixam as duas camadas no DOM)
 // animacoes/transicoes ainda correndo na saida (CSS, WAAPI e transicoes do Svelte): o telao so e lido com zero
 window.__provaAnimando = () => document.getAnimations().length
+// a raiz do perfil desta maquina vira __PERFIL__ no html do telao (o src da midia carrega o caminho, e o hash nao pode depender da pasta)
+// separador: "/", "\" ou a forma de URL (%2F, %5C); cada pedaco do caminho tambem na forma de URL (espaco vira %20)
+// a classe de escopo do Svelte em dev e "s-" + hash do caminho ABSOLUTO do componente (vite-plugin-svelte): muda com a pasta do repo
+window.__provaSemClasseDev = (s) => String(s).replace(/(?<![\w-])s-[\w-]{12}(?![\w-])/g, "s-X")
+window.__provaSemRaiz = (html) => {
+    html = window.__provaSemClasseDev(html)
+    const raiz = __RAIZ__
+    if (!raiz) return html
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const partes = String(raiz).replace(/\\/g, "/").replace(/\/+$/, "").split("/")
+    if (partes.filter(Boolean).length < 2) return html
+    const re = new RegExp(partes.map((p) => "(?:" + esc(p) + "|" + esc(encodeURIComponent(p)) + ")").join("(?:/|\\\\|%2F|%5C)") + "(?![\\w.%-])", "gi")
+    return html.replace(re, "__PERFIL__")
+}
 window.__provaHash = async () => {
-    const html = document.body.innerHTML.replace(/svelte-[a-z0-9]+/g, "").replace(/(zoom|picker|id)_[0-9a-f]{6,}/g, "$1_X")
+    const html = window.__provaSemRaiz(document.body.innerHTML.replace(/svelte-[a-z0-9]+/g, "").replace(/(zoom|picker|id)_[0-9a-f]{6,}/g, "$1_X"))
     const h = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(html))))
     return h.map((b) => b.toString(16).padStart(2, "0")).join("")
 }
@@ -92,14 +106,14 @@ if (!window.__provaCulto) {
             culto: { drawer: copia(get(base(S.drawer))), resized: copia(get(base(S.resized))), abaAtiva: get(base(S.activeDrawerTab)) }
         }
     }
-    const descr = (e) => (e ? e.tagName + (e.id ? "#" + e.id : "") + (e.className && typeof e.className === "string" ? "." + e.className.split(" ").filter(Boolean).slice(0, 2).join(".") : "") : null)
+    const descr = (e) => (e ? e.tagName + (e.id ? "#" + e.id : "") + (e.className && typeof e.className === "string" ? "." + window.__provaSemClasseDev(e.className).split(" ").filter(Boolean).slice(0, 2).join(".") : "") : null)
     // fecha o passo: devolve o que aconteceu e zera
     window.__provaFim = async () => {
         const s = { outputs: rec.out.splice(0), canais: { ...rec.ipc }, estado: rec.est.splice(0), foco: descr(document.activeElement) }
         rec.ipc = {}
         if (rec.janela === "saida") {
             // o que CHEGOU ao telao: o html normalizado (sem classes svelte nem ids gerados), em hash
-            const html = document.body.innerHTML.replace(/svelte-[a-z0-9]+/g, "").replace(/(zoom|picker|id)_[0-9a-f]{6,}/g, "$1_X")
+            const html = window.__provaSemRaiz(document.body.innerHTML.replace(/svelte-[a-z0-9]+/g, "").replace(/(zoom|picker|id)_[0-9a-f]{6,}/g, "$1_X"))
             const dados = new TextEncoder().encode(html)
             const h = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", dados)))
                 .map((b) => b.toString(16).padStart(2, "0"))

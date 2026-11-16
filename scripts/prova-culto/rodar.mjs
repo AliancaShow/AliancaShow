@@ -20,6 +20,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, tecla, RAIZ } from "./lib.mjs"
 import { FUNCOES_PREPARO, SECOES, VERSAO } from "./roteiro.mjs"
+import { normalizarPerfil } from "./compararLogica.mjs"
 
 const arg = (n, d = null) => {
     const i = process.argv.indexOf("--" + n)
@@ -30,7 +31,9 @@ const SAIDA = arg("saida", join(RAIZ, "scripts/prova-culto/gravacoes"))
 const SO = arg("secoes") ? String(arg("secoes")).split(",") : null
 const MUTAR = arg("mutar")
 const PIXEL = !!arg("pixel")
-const FUNDO = process.env.FS_FUNDO || join(RAIZ, "scripts/prova-culto/perfil/media/f1.png").split(String.fromCharCode(92)).join("/")
+const FUNDO = process.env.FS_FUNDO || join(RAIZ, "scripts/prova-culto/perfil/midia/f1.png").split(String.fromCharCode(92)).join("/")
+// raiz do perfil desta maquina: sai da gravacao como __PERFIL__ (o baseline vale em qualquer pasta, inclusive na maquina do Pedro)
+const RAIZ_PERFIL = process.env.FS_PERFIL_RAIZ || FUNDO.split("/").slice(0, -2).join("/")
 const PERIODICOS = ["ACTIVE_TIMERS", "PLAYING_VIDEO_STATE", "METRONOME_TIMER", "AUDIO_DATA", "SPOTIFY_GET_STATE"]
 const ehPeriodico = (k) => PERIODICOS.some((p) => k.endsWith(":" + p))
 
@@ -48,9 +51,9 @@ await saida.enviar("Emulation.setFocusEmulationEnabled", { enabled: true })
 await saida.enviar("Page.enable", {})
 await saida.enviar("Page.setWebLifecycleState", { state: "active" })
 dbg("emulacao ok")
-await principal.ev(gravadorTxt.replace("__JANELA__", '"principal"'))
+await principal.ev(gravadorTxt.replace("__JANELA__", '"principal"').replace("__RAIZ__", JSON.stringify(RAIZ_PERFIL)))
 dbg("gravador principal ok")
-await saida.ev(gravadorTxt.replace("__JANELA__", '"saida"'))
+await saida.ev(gravadorTxt.replace("__JANELA__", '"saida"').replace("__RAIZ__", JSON.stringify(RAIZ_PERFIL)))
 const PREPARO = FUNCOES_PREPARO.replace("S_FUNDO", JSON.stringify(FUNDO))
 
 // repouso: 250 ms sem nenhum evento nos dois fluxos (e no minimo 300 ms)
@@ -164,7 +167,7 @@ for (const secao of SECOES) {
 }
 
 const gravacao = { cabecalho: { versaoRoteiro: VERSAO, rotulo: ROTULO, commit, perfilSha, layout: process.env.FS_LAYOUT || "novo", janela: dims, mutacao: MUTAR || null, secoes: SO || SECOES.map((s) => s.id) }, violacoes, passos }
-writeFileSync(join(SAIDA, `gravacao-${ROTULO}.json`), JSON.stringify(gravacao, null, 1))
+writeFileSync(join(SAIDA, `gravacao-${ROTULO}.json`), normalizarPerfil(JSON.stringify(gravacao, null, 1), RAIZ_PERFIL))
 console.log(`\ngravado ${join(SAIDA, `gravacao-${ROTULO}.json`)}  passos=${passos.length}  violacoes=${violacoes.length}`)
 principal.fechar()
 saida.fechar()

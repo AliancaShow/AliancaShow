@@ -1,4 +1,12 @@
 {
-    "comentario": "Revisado a mao a partir do A/A/A (3 execucoes no mesmo codigo; a 2a e a 3a sao IDENTICAS, a 1a so difere pelo autosave que disparou no repouso do F02). Proibido mascarar slide/background/overlays/transition de `outputs` (validado por compararLogica.validarRuido). Teto de padroes: 80. `**` = qualquer coisa, `*` = um segmento. GET_THUMBNAIL: pedido de miniatura de midia so existe quando a miniatura ainda nao esta em cache (estado do perfil, nao do codigo).",
-    "padroes": ["*/principal/canais/OUTPUT:SHOWS/*/timestamps/*", "*/principal/canais/MAIN:SPOTIFY_GET_STATE", "*/principal/canais/MAIN:CHECK_RAM_USAGE", "*/principal/canais/MAIN:BIBLE/*", "F02-repouso-6s/principal/canais/MAIN:SAVE**", "*/principal/canais/MAIN:GET_THUMBNAIL/**"]
+    "comentario": "Revisado a mao a partir do A/A/A (3 execucoes no mesmo codigo; a 2a e a 3a sao IDENTICAS, a 1a so difere pelo autosave que disparou no repouso do F02). Proibido mascarar slide/background/overlays/transition de `outputs` (validado por compararLogica.validarRuido). Teto de padroes: 80. `**` = qualquer coisa, `*` = um segmento. GET_THUMBNAIL: pedido de miniatura de midia so existe quando a miniatura ainda nao esta em cache (estado do perfil, nao do codigo). SAVE_IMAGE: e a miniatura de midia (id `<midia>-250`) indo para store/media-cache; o nome do arquivo e um hash do caminho ABSOLUTO da midia (muda com a pasta do perfil) e o passo em que ela grava varia com o tempo de geracao (C01 ou C03). Mesmo fenomeno do GET_THUMBNAIL.",
+    "padroes": [
+        "*/principal/canais/OUTPUT:SHOWS/*/timestamps/*",
+        "*/principal/canais/MAIN:SPOTIFY_GET_STATE",
+        "*/principal/canais/MAIN:CHECK_RAM_USAGE",
+        "*/principal/canais/MAIN:BIBLE/*",
+        "F02-repouso-6s/principal/canais/MAIN:SAVE**",
+        "*/principal/canais/MAIN:GET_THUMBNAIL/**",
+        "*/principal/canais/MAIN:SAVE_IMAGE/**"
+    ]
 }

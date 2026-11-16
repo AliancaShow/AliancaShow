@@ -20,6 +20,22 @@ const regexDoPadrao = (p) =>
     )
 
 /** achata uma gravacao em { "<passo>/<janela>/<grupo>/<resto>": valor } */
+/**
+ * Troca a raiz do perfil da maquina por __PERFIL__ no TEXTO de uma gravacao, para o baseline nao depender de onde o repo mora.
+ * Casa a raiz com barra normal ou com barra invertida escapada de JSON (o app grava os dois), sem diferenciar maiuscula
+ * (letra do drive), e so quando ela termina num separador ou no fim da string (nao pega "perfil-bak").
+ */
+export function normalizarPerfil(txt, raiz) {
+    if (!raiz) return txt
+    const partes = String(raiz).replace(/\\/g, "/").replace(/\/+$/, "").split("/")
+    if (partes.filter(Boolean).length < 2) return txt
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    // separador: "/" ou a barra invertida como aparece no texto JSON ("\\" = dois caracteres)
+    const SEP = String.raw`(?:/|\\\\)`
+    const re = new RegExp(partes.map(esc).join(SEP) + String.raw`(?=/|\\\\|"|$)`, "gi")
+    return txt.replace(re, "__PERFIL__")
+}
+
 export function achatar(gravacao) {
     const m = new Map()
     const por = (chave, valor) => {

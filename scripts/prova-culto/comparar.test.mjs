@@ -2,7 +2,7 @@
 // Cada mutacao parte de uma gravacao sintetica que passa e tem de reprovar (ou o esquema/mascara tem de ser recusado).
 import test from "node:test"
 import assert from "node:assert/strict"
-import { TETO_CLASSICO_POR_FATIA, achatar, comparar, validarEsperado, validarRuido } from "./compararLogica.mjs"
+import { TETO_CLASSICO_POR_FATIA, achatar, comparar, normalizarPerfil, validarEsperado, validarRuido } from "./compararLogica.mjs"
 
 const clone = (x) => JSON.parse(JSON.stringify(x))
 const out = (index) => ({ op: "update", por: "setOutput@output", mudou: true, v: { default: { slide: { id: "s", index, layout: "default" } } } })
@@ -120,4 +120,26 @@ test("achatar: ausente num lado e divergencia", () => {
     b.passos[1].principal.outputs.pop()
     assert.ok(achatar(base()).size > achatar(b).size)
     assert.ok(comparar(base(), b, { ruido }).naoDeclaradas.length > 0)
+})
+
+test("normalizarPerfil: a raiz do perfil some da gravacao nos dois formatos de barra, e so ela", () => {
+    const raiz = "C:/Users/x/bancada/perfil"
+    const g = {
+        a: "C:/Users/x/bancada/perfil/midia/f1.png",
+        b: "C:\\Users\\x\\bancada\\perfil\\midia\\v1.mp4",
+        c: "c:/users/x/bancada/perfil",
+        d: "C:/Users/x/bancada/perfil-bak/midia/f1.png",
+        e: "C:/Users/x/bancada/perfil\\store\\media-cache\\i1.png",
+    }
+    const n = JSON.parse(normalizarPerfil(JSON.stringify(g), raiz))
+    assert.equal(n.a, "__PERFIL__/midia/f1.png")
+    assert.equal(n.b, "__PERFIL__\\midia\\v1.mp4")
+    assert.equal(n.c, "__PERFIL__")
+    assert.equal(n.d, g.d, "perfil-bak nao e o perfil")
+    assert.equal(n.e, "__PERFIL__\\store\\media-cache\\i1.png")
+    // a raiz pode chegar com barra invertida e barra no fim (FS_PERFIL_DIR cru do Windows)
+    assert.deepEqual(JSON.parse(normalizarPerfil(JSON.stringify(g), "C:\\Users\\x\\bancada\\perfil\\")), n)
+    // sem raiz, ou raiz rasa demais, nao mexe em nada
+    assert.equal(normalizarPerfil("C:/a", ""), "C:/a")
+    assert.equal(normalizarPerfil("C:/a", "C:/"), "C:/a")
 })

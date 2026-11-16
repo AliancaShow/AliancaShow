@@ -119,7 +119,10 @@ describe("arquivos da prova (scripts/prova-culto)", () => {
         }
     })
     it("nenhum caminho absoluto de maquina nos arquivos do perfil versionado", () => {
-        for (const f of readdirSync(p("perfil/store")).filter((n) => n.endsWith(".json"))) expect(readFileSync(p(`perfil/store/${f}`), "utf8"), f).not.toMatch(/C:[\\/]+Users/)
+        // o perfil (store e shows) e os baselines usam __PERFIL__; caminho de maquina quebra a prova em outra pasta ou na maquina do Pedro
+        const pastas = [["perfil/store", ".json"], ["perfil/data/Shows", ".show"], ["baseline", ".json"]]
+        for (const [pasta, ext] of pastas)
+            for (const f of readdirSync(p(pasta)).filter((n) => n.endsWith(ext))) expect(readFileSync(p(`${pasta}/${f}`), "utf8"), `${pasta}/${f}`).not.toMatch(/[A-Za-z]:(\\\\|[\\/])+Users/)
     })
 })
 
