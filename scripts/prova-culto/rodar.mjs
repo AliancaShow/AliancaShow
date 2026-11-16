@@ -98,8 +98,9 @@ const passos = []
 let hashAnterior = null
 
 const dims = await principal.ev("return {w:innerWidth,h:innerHeight,dpr:devicePixelRatio}")
+// CRLF -> LF: o checkout no Windows (autocrlf) troca o fim de linha do modelo e nao pode mudar o sha do perfil
 const perfilSha = createHash("sha256")
-    .update(process.env.FS_PERFIL_STORE ? ["projects.json", "shows.json"].map((f) => (existsSync(join(process.env.FS_PERFIL_STORE, f)) ? readFileSync(join(process.env.FS_PERFIL_STORE, f)) : "")).join("|") : "sem-perfil")
+    .update(process.env.FS_PERFIL_STORE ? ["projects.json", "shows.json"].map((f) => (existsSync(join(process.env.FS_PERFIL_STORE, f)) ? readFileSync(join(process.env.FS_PERFIL_STORE, f), "utf8").replace(/\r\n/g, "\n") : "")).join("|") : "sem-perfil")
     .digest("hex")
     .slice(0, 16)
 let commit = "?"
