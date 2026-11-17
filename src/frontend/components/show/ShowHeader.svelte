@@ -127,7 +127,7 @@
         <!-- FVB:INICIO -->
         {#if $modoAlianca === "preparar"}
             {@const motivoEditar = motivoSemEditar({ carregado: !!currentShow, bloqueado: !!currentShow?.locked, acesso: acessoAosShows($activeProfile), categoria: $shows[showId]?.category })}
-            <MaterialButton title={motivoEditar || "Editar os slides e os textos deste show (tecla 2)"} icon="edit" disabled={!!motivoEditar} style="height: 100%;padding: 0.3em 0.7em;" on:click={() => abrirEditorDoShow(showId)}>
+            <MaterialButton title={motivoEditar || "Editar os slides e os textos deste show"} icon="edit" disabled={!!motivoEditar} style="height: 100%;padding: 0.3em 0.7em;" on:click={() => abrirEditorDoShow(showId)}>
                 <span style="font-size: 0.85em;margin-left: 0.3em;">Editar</span>
             </MaterialButton>
         {/if}

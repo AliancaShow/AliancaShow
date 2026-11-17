@@ -151,7 +151,6 @@
     "utils/shortcuts.ts": [
         "\"show\"",
         "\"edit\"",
-        "\"show\"",
-        "menu"
+        "\"show\""
     ]
 }

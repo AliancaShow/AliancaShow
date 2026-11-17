@@ -22,9 +22,7 @@ export const DINAMICOS: Record<string, string[]> = {
     "components/quicksearch/quicksearch.ts": ["id as any"],
     "components/helpers/history.ts": ["obj.location!.page"],
     "components/main/Top.svelte": ["user.activePage as any"],
-    "utils/aliancaMoldura.ts": ["alvoSeguro()", "alvo"],
-    // so ate o commit 4 da 1b (as teclas 1 a 6 saem e este dinamico some com elas)
-    "utils/shortcuts.ts": ["menu"]
+    "utils/aliancaMoldura.ts": ["alvoSeguro()", "alvo"]
 }
 
 /**
@@ -109,6 +107,9 @@ describe("escritores de activePage (secao 9)", () => {
     it("o JSON esta em ordem de arquivo (diff estavel)", () => {
         const chaves = Object.keys(ESPERADO)
         expect(chaves).toEqual([...chaves].sort())
+    })
+    it("depois da 1b `shortcuts.ts` nao tem escritor dinamico", () => {
+        for (const a of ESPERADO["utils/shortcuts.ts"] || []) expect(LITERAIS).toContain(a)
     })
     it("os dinamicos nomeados existem de verdade (lista sem entrada morta)", () => {
         for (const [arq, args] of Object.entries(DINAMICOS)) for (const a of args) if (REAL[arq] !== undefined) expect(ESPERADO[arq] || [], arq).toContain(a)

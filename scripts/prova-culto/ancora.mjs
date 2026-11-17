@@ -45,8 +45,8 @@ export const EXCECOES = {
         sha: "ea1a81f20ec701d700626e83e2ff311ef7561cb98db800695472b321af423a32"
     },
     "src/frontend/utils/shortcuts.ts": {
-        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
-        sha: "38bca719c7b6553adc2805b49d3a9bc22c6a69a6bb539296cfbc5f671b71ffb1"
+        motivo: "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal",
+        sha: "b12e5374f7364d2107ad7afbb4f5068334689634a45d501dccb44fd2bc885868"
     },
     "src/frontend/components/context/contextMenus.ts": {
         motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
@@ -57,8 +57,8 @@ export const EXCECOES = {
         sha: "ee6e6cb0ad17132f171edb1890694b791e797c8a15f3e68ed850d8995ea3e6d8"
     },
     "src/frontend/components/main/popups/Shortcuts.svelte": {
-        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
-        sha: "74365f4827bd7905d8ad6078e53c6cc51a674610277846a1c8b94e2a9ed2515e"
+        motivo: "1a/1b: porta do modo foco e linha das teclas 1 a 6 removidas da lista de atalhos; popup so abre na janela principal",
+        sha: "25574a27a8b19b89900127436ea9745e0ce8658a47c403c9884003dfa2fdd26e"
     },
     "src/electron/utils/menuTemplate.ts": {
         motivo: "1a: item do modo foco removido do menu nativo; arquivo do processo principal, o fecho o alcanca so por imports '..' dentro de src/electron e nunca entra no bundle da saida; conferido: unico importador e src/electron/index.ts",
@@ -101,7 +101,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "6791ca62ad19394c27b4f0c4444f45d4e5b812b2826236efbde7be31997b8428"
+export const SHA_EXCECOES = "b4667bd4484315e3a3dcef5da4cfe4d97439cce08451e9f8d877a0222607f5fe"
 export const SHA_NOVOS = "8c6e6985619087b7c283dd479f007bca12634465374254f785c5dfbc2af23316"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")

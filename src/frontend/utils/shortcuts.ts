@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import { OUTPUT } from "../../types/Channels"
 import { Main } from "../../types/IPC/Main"
 import type { ShowType } from "../../types/Show"
-import type { DrawerTabIds, TopViews } from "../../types/Tabs"
+import type { DrawerTabIds } from "../../types/Tabs"
 import { clearAudio } from "../audio/audioFading"
 import { AudioPlayer } from "../audio/audioPlayer"
 import { menuClick } from "../components/context/menuClick"
@@ -28,12 +28,11 @@ import { activeShow } from "./../stores"
 import { abaEscondidaNoEditor } from "./aliancaAbasEditor"
 import { dividirAberto } from "./aliancaDividir"
 import { listaAberta } from "./aliancaGavetaEstado"
+import { voltarDaPagina } from "./aliancaMoldura"
 import { teclaIgnorada, timelineAtiva } from "./aliancaModo"
 import { isOutputWindow, togglePanels, triggerFunction } from "./common"
 import { send } from "./request"
 import { save } from "./save"
-
-const menus: TopViews[] = ["show", "edit", "stage", "draw", "settings", "scripture"]
 
 const ctrlKeys = {
     // com a vista Dividir aberta não há grade: Ctrl+A não seleciona slide escondido atrás dela
@@ -130,8 +129,10 @@ const keys = {
         const fecharDividir = !popupId && !get(selected).id && !!get(dividirAberto)
         // F6: a lista das marcações da gaveta fecha antes da gaveta (e não depende da altura dela); o Esc nunca limpa as marcações
         const fecharLista = !popupId && !get(selected).id && !fecharDividir && get(listaAberta)
-        const voltarDaGaveta = !popupId && !get(selected).id && !fecharDividir && !fecharLista && get(drawer).height > 40
+        // 1b: em stage/settings a gaveta nem aparece: o Esc volta da moldura (e a gaveta continua aberta ao chegar em show)
+        const voltarDaGaveta = !popupId && !get(selected).id && !fecharDividir && !fecharLista && get(drawer).height > 40 && ["show", "edit"].includes(get(activePage))
         const voltarDoEditor = !popupId && !get(selected).id && !fecharDividir && !fecharLista && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
+        const voltarDaMoldura = !popupId && !get(selected).id && !fecharDividir && !fecharLista && !voltarDaGaveta && !voltarDoEditor && ["stage", "settings"].includes(get(activePage))
 
         // give time so output don't clear also
         setTimeout(() => {
@@ -142,6 +143,7 @@ const keys = {
                 else if (fecharLista) listaAberta.set(false)
                 else if (voltarDaGaveta) drawer.set({ height: 40, stored: get(drawer).height })
                 else if (voltarDoEditor) activePage.set("show")
+                else if (voltarDaMoldura) voltarDaPagina()
             }
         }, 20)
     },
@@ -264,17 +266,6 @@ export function keydown(e: KeyboardEvent) {
     }
 
     if (document.activeElement?.classList.contains("edit") && e.key !== "Escape") return
-
-    // change tab with number keys
-    if (document.activeElement === document.body && !get(special).numberKeys && Object.keys(menus).includes((Number(e.key) - 1).toString())) {
-        const menu = menus[Number(e.key) - 1]
-        activePage.set(menu)
-
-        // open edit
-        if (menu === "edit" && !get(activeEdit)?.id) {
-            activeEdit.set({ slide: 0, items: [], showId: get(activeShow)?.id })
-        }
-    }
 
     if (keys[e.key]) {
         e.preventDefault()
