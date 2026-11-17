@@ -128,6 +128,16 @@ describe("crumb", () => {
         expect(textoDoCrumb({ ...base, tipo: "effect" })?.startsWith("Efeito · ")).toBe(true)
         expect(textoDoCrumb({ ...base, tipo: "audio" })?.startsWith("Áudio · ")).toBe(true)
     })
+    it("tipo sem slides (midia, audio, modelo, sobreposicao, efeito): sem a 3a parte, mesmo com slide e total", () => {
+        const sem = { nome: "foto.jpg", slide: 2, total: 9, ehMusica: false }
+        expect(textoDoCrumb({ ...sem, tipo: "media" })).toBe("Mídia · foto.jpg")
+        expect(textoDoCrumb({ ...sem, tipo: "camera" })).toBe("Mídia · foto.jpg")
+        expect(textoDoCrumb({ ...sem, tipo: "audio", slide: undefined, total: 0 })).toBe("Áudio · foto.jpg")
+        expect(textoDoCrumb({ ...sem, tipo: "template" })).toBe("Modelo · foto.jpg")
+        expect(textoDoCrumb({ ...sem, tipo: "overlay" })).toBe("Sobreposição · foto.jpg")
+        expect(textoDoCrumb({ ...sem, tipo: "effect" })).toBe("Efeito · foto.jpg")
+        for (const t of ["media", "camera", "audio", "template", "overlay", "effect"]) expect(textoDoCrumb({ ...sem, tipo: t }), t).not.toMatch(/slide/)
+    })
     it("sem slide ou sem layout: sem slides", () => {
         expect(textoDoCrumb({ ...base, tipo: "show", slide: undefined })).toBe("Música · Grande e o Senhor · sem slides")
         expect(textoDoCrumb({ ...base, tipo: "show", total: 0 })).toBe("Música · Grande e o Senhor · sem slides")

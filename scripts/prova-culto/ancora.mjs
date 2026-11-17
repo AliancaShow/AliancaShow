@@ -96,13 +96,13 @@ export const NOVOS_NO_FECHO = {
         sha: "9c78979ca52f5e30071504da7d14a91a43058776efbd46730cd89ef710b84e06"
     },
     "src/frontend/utils/aliancaMolduraLogica.ts": {
-        motivo: "1b: logica pura, sem import, sem store e sem efeito",
-        sha: "5bac9575f24942b26e777ec9ea22906e7defc7f5dc5025150fa9f76c47a288e7"
+        motivo: "1b: logica pura, sem import, sem store e sem efeito; ajuste de 16/nov: textoDoCrumb omite a 3a parte nos tipos sem slides (so string, nenhum import novo)",
+        sha: "f5df025c0d285c4f4cf01d7b79ac18bbfe7168dacd6138968e646c661dc65edd"
     }
 }
 
 export const SHA_EXCECOES = "b4667bd4484315e3a3dcef5da4cfe4d97439cce08451e9f8d877a0222607f5fe"
-export const SHA_NOVOS = "8c6e6985619087b7c283dd479f007bca12634465374254f785c5dfbc2af23316"
+export const SHA_NOVOS = "07bd32b07d2f883c2acdca8c981b7f8d2428bcb41f6e1b0cdd828d3da77d1be7"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */

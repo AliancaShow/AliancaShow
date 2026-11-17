@@ -81,10 +81,15 @@ export function tipoDoCrumb(tipo: string | undefined, ehMusica: boolean): string
     }
 }
 
-/** `<Tipo> · <nome> · slide N de M` (`slide` e indice de zero; sem slide ou sem layout: `sem slides`). `null` se o tipo e desconhecido. */
+/**
+ * `<Tipo> · <nome> · slide N de M` (`slide` e indice de zero). So Musica e Apresentacao (o show) tem slides: sem slide ou sem layout, `sem slides`.
+ * Midia, audio, modelo, sobreposicao e efeito nao tem a 3a parte (`Midia · foto.jpg`). `null` se o tipo e desconhecido.
+ */
 export function textoDoCrumb({ tipo, nome, slide, total, ehMusica }: { tipo: string | undefined; nome: string; slide: number | undefined; total: number; ehMusica: boolean }): string | null {
     const t = tipoDoCrumb(tipo, ehMusica)
     if (t === null) return null
+    const ehShow = (tipo || "show") === "show"
+    if (!ehShow) return `${t} · ${nome}`
     const temSlide = typeof slide === "number" && slide >= 0 && total > 0
     return `${t} · ${nome} · ${temSlide ? `slide ${slide + 1} de ${total}` : "sem slides"}`
 }
