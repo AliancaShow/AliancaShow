@@ -23,6 +23,8 @@ if (modo === "pilula" || modo === "sem-chip") {
     await esperar(700)
     const b = await j.ev(`const p=document.querySelector(".prepararBarra .pilula"); const c=[...document.querySelectorAll(".prepararBarra [data-chip]")].map(x=>x.dataset.chip); return {pilula:p?p.innerText.trim():null, chips:c}`)
     console.log("estado", JSON.stringify(b))
+    if (modo === "pilula") r.ok("com chip de roteiro e chat o tudo pronto nao esta no DOM", b.pilula === null && b.chips.length === 2, JSON.stringify(b))
+    else r.ok("sem chip o tudo pronto volta", b.pilula === "tudo pronto ✓" && b.chips.length === 0, JSON.stringify(b))
     await foto({ x: 0, y: 0, width: 1365, height: 120 })
 } else if (modo === "monitor") {
     await j.ev(`S.activePage.set("settings"); await esp(700); return 1`)
