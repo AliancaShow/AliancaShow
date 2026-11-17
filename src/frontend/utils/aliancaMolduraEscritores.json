@@ -53,9 +53,6 @@
     "components/inputs/TopButton.svelte": [
         "id"
     ],
-    "components/main/PrepararBarra.svelte": [
-        "\"show\""
-    ],
     "components/main/PrepararMenu.svelte": [
         "\"settings\"",
         "\"settings\""
@@ -115,7 +112,8 @@
         "\"show\""
     ],
     "components/settings/SettingsTabs.svelte": [
-        "\"show\""
+        "\"show\"",
+        "\"stage\""
     ],
     "components/settings/tabs/Connection.svelte": [
         "\"show\""
