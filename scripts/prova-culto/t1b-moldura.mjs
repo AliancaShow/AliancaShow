@@ -29,7 +29,7 @@ const MENU = `document.querySelector(".prepararBarra .menuBotao")`
 const ITEM = (n) => `document.querySelector('[role=menuitem][data-item="${n}"]')`
 // o 1o "Editar" da tela e o da barra de menus do app (y 0): o do show tem o titulo "Editar os slides..."
 const EDITAR = `[...document.querySelectorAll("button")].find(b=>b.innerText.trim()==="Editar" && (b.title||b.dataset.title||"").startsWith("Editar os slides"))`
-const PALCO = `[...document.querySelectorAll("button")].find(b=>b.innerText.includes("Palco · telas do monitor de retorno"))`
+const PALCO = `[...document.querySelectorAll("button")].find(b=>b.innerText.includes("Monitor de retorno"))`
 const foto = async (nome) => PRINTS && (await j.foto(`${PRINTS}/${nome}.png`))
 const nenhumaFalha = async () => (await j.ev(`const F=await import(U("utils/aliancaFalha")); return get(F.falhas).length`)) === 0
 
@@ -56,7 +56,7 @@ await foto("1b-configuracoes-voltar")
 r.ok("T-1b-1.4 Configuracoes tem o botao Palco (so no Preparar)", (await j.ev(`return !!(${PALCO})`)) === true, "sem botao")
 await clicar(PALCO, "botao Palco")
 b = await barra()
-r.ok("T-1b-1.5 stage pelo botao Palco: Voltar, titulo Palco", (await pagina()) === "stage" && b?.moldura === "pagina" && b.voltar === "← Voltar" && b.titulo === "Palco", JSON.stringify(b))
+r.ok("T-1b-1.5 stage pelo botao Palco: Voltar, titulo Monitor de retorno", (await pagina()) === "stage" && b?.moldura === "pagina" && b.voltar === "← Voltar" && b.titulo === "Monitor de retorno", JSON.stringify(b))
 await foto("1b-palco-em-configuracoes")
 await clicar(VOLTAR, "Voltar do Palco")
 r.ok("T-1b-1.6 Voltar do Palco volta a Configuracoes (paginaAnterior)", (await pagina()) === "settings", await pagina())
@@ -71,7 +71,7 @@ await esperar(400)
 await tecla(j, "Enter")
 await esperar(600)
 b = await barra()
-r.ok("T-1b-1.8 stage pela busca: moldura de pagina com titulo Palco", (await pagina()) === "stage" && b?.titulo === "Palco" && b.voltar === "← Voltar", JSON.stringify({ p: await pagina(), b }))
+r.ok("T-1b-1.8 stage pela busca: moldura de pagina com titulo Monitor de retorno", (await pagina()) === "stage" && b?.titulo === "Monitor de retorno" && b.voltar === "← Voltar", JSON.stringify({ p: await pagina(), b }))
 await clicar(VOLTAR, "Voltar do Palco (busca)")
 r.ok("T-1b-1.9 Voltar do Palco (vindo da busca) volta a show", (await pagina()) === "show", await pagina())
 

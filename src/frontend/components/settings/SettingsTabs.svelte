@@ -55,11 +55,11 @@
             <p style="margin: 5px;"><T id="settings.{tab}" /></p>
         </Button>
     {/each}
-    <!-- 1b, D7: no Preparar o Palco (telas do monitor de retorno) mora aqui; a moldura de `stage` volta para Configuracoes -->
+    <!-- 1b, D7: no Preparar o Monitor de retorno (as telas do palco) mora aqui; a moldura de `stage` volta para Configuracoes -->
     {#if $modoAlianca === "preparar"}
         <Button id="button" on:click={() => activePage.set("stage")} bold={false}>
             <Icon id="stage" right />
-            <p style="margin: 5px;">Palco · telas do monitor de retorno</p>
+            <p style="margin: 5px;">Monitor de retorno</p>
         </Button>
     {/if}
 </div>

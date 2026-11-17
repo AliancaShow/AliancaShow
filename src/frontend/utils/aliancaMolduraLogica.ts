@@ -16,7 +16,7 @@ export const ROTULO_VOLTAR = "← Voltar"
 export const ROTULO_VOLTAR_AO_CULTO = "← Voltar ao culto"
 export const ROTULO_VOLTAR_A_BIBLIOTECA = "← Voltar à biblioteca"
 
-const TITULOS: Record<string, string> = { stage: "Palco", settings: "Configurações" }
+const TITULOS: Record<string, string> = { stage: "Monitor de retorno", settings: "Configurações" }
 
 export function paginaPermitida(modo: string, pagina: unknown): boolean {
     if (modo !== "preparar") return true

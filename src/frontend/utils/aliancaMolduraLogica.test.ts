@@ -32,7 +32,7 @@ describe("molduraDaPagina: modo x pagina", () => {
     it("Preparar edit: editor, volta ao culto", () => expect(molduraDaPagina({ modo: "preparar", pagina: "edit" })).toEqual({ tipo: "editor", titulo: "", rotuloVoltar: "← Voltar ao culto" }))
     it("Preparar edit vindo da biblioteca: volta a biblioteca", () => expect(molduraDaPagina({ modo: "preparar", pagina: "edit", abaLateral: "biblioteca" })?.rotuloVoltar).toBe("← Voltar à biblioteca"))
     it("Preparar stage e settings: pagina com titulo", () => {
-        expect(molduraDaPagina({ modo: "preparar", pagina: "stage" })).toEqual({ tipo: "pagina", titulo: "Palco", rotuloVoltar: "← Voltar" })
+        expect(molduraDaPagina({ modo: "preparar", pagina: "stage" })).toEqual({ tipo: "pagina", titulo: "Monitor de retorno", rotuloVoltar: "← Voltar" })
         expect(molduraDaPagina({ modo: "preparar", pagina: "settings" })).toEqual({ tipo: "pagina", titulo: "Configurações", rotuloVoltar: "← Voltar" })
     })
     it("Preparar em qualquer outra pagina (e uma inventada): fora, sempre com Voltar", () => {

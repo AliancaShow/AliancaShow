@@ -2,7 +2,7 @@
     // 1a, D1: o centro e a direita da barra do topo no Preparar (a esquerda, com o seletor Culto | Preparar, e do Top e nao muda).
     // Pagina `show`: pilula, chips, "+ Novo", NO AR, relogio e o menu ⋯.
     // 1b, D7: nas outras paginas a barra vira MOLDURA (aliancaMolduraLogica.molduraDaPagina): editor (Voltar, crumb, Desfazer, Pronto),
-    // pagina (Voltar + titulo: Palco, Configuracoes) ou fora (so Voltar: dura ate o redirecionamento de D8). NO AR, chip de desenho,
+    // pagina (Voltar + titulo: Monitor de retorno, Configuracoes) ou fora (so Voltar: dura ate o redirecionamento de D8). NO AR, chip de desenho,
     // relogio e o menu ⋯ ficam em todas; "+ Novo" e a pilula so em `show`. Voltar e Pronto saem e NAO salvam.
     // Nada aqui escreve em `outputs`. O telao so liga/desliga pelo item do menu ⋯ (PrepararMenu), com pergunta e trava.
     import { activeEdit, activePage, activeShow, categories, effects, modoAlianca, outputDisplay, outputs, overlays, refreshEditSlide, shows, showsCache, templates, undoHistory } from "../../stores"
