@@ -23,7 +23,29 @@ const passo = (id, extra = {}) => ({
 const limpa = () => ({ cabecalho: { roteiro: "preparar", versaoRoteiro: 1 }, violacoes: [], passos: [passo("H01"), passo("H02"), passo("H03", { paginaFinal: "show" })] })
 const regras = (g, permitidos) => invariantes(g, permitidos).violacoes.map((v) => `${v.passo}:${v.regra}`)
 
-test("a lista de canais permitidos nasce VAZIA", () => assert.deepEqual(CANAIS_PERMITIDOS_NO_PREPARAR, []))
+test("a lista de canais permitidos so tem os dois espelhos de dados autorizados", () => assert.deepEqual(CANAIS_PERMITIDOS_NO_PREPARAR, ["OUTPUT:PROJECTS", "OUTPUT:SHOWS"]))
+test("MUTACAO canal permitido + escrita em outputs no mesmo passo reprova (regra 1)", () => {
+    const g = limpa()
+    g.passos[1].principal.canais["OUTPUT:PROJECTS"] = {}
+    g.passos[1].principal.canais["OUTPUT:SHOWS"] = {}
+    assert.deepEqual(regras(g), [])
+    g.passos[1].principal.outputs.push({ op: "update", mudou: true })
+    assert.deepEqual(regras(g), ["H02:1"])
+})
+test("MUTACAO canal permitido + hash do telao mudado no mesmo passo reprova (regra 3)", () => {
+    const g = limpa()
+    g.passos[1].principal.canais["OUTPUT:SHOWS"] = {}
+    g.passos[1].saida.saida.hash = "zz"
+    assert.deepEqual(regras(g), ["H02:3"])
+})
+test("MUTACAO canal OUTPUT novo fora da lista continua reprovando (regra 2)", () => {
+    for (const c of ["OUTPUT:SLIDE", "OUTPUT:COLORBARS", "STAGE:DATA"]) {
+        const g = limpa()
+        g.passos[1].principal.canais["OUTPUT:SHOWS"] = {}
+        g.passos[1].principal.canais[c] = {}
+        assert.deepEqual(regras(g), ["H02:2"], c)
+    }
+})
 test("gravacao limpa passa", () => {
     const r = invariantes(limpa())
     assert.deepEqual(r, { erros: [], violacoes: [] })
@@ -88,8 +110,11 @@ test("invariantes.mjs: sai com 0 na limpa, 1 na violada e 2 na invalida", () => 
     assert.equal(rodar(sem).status, 2)
     assert.equal(spawnSync(process.execPath, ["scripts/prova-culto/invariantes.mjs"], { encoding: "utf8" }).status, 2)
 })
-test("o roteiro H: 10 passos, todos semEfeito, nenhum liga/desliga a saida", () => {
+test("o roteiro H: 20 passos (0c + 1a); so H15 e H16 tem efeito e paginaFinal; nenhum liga/desliga a saida", () => {
     const ids = SECOES_PREPARAR[0].passos.map((p) => p.id)
-    assert.deepEqual(ids, ["H01-vai-preparar", "H02-espaco", "H03-seta-direita", "H04-f1", "H05-f2", "H06-f3", "H07-f5", "H08-ponto", "H09-esc", "H10-ctrl-o"])
-    for (const p of SECOES_PREPARAR[0].passos) assert.ok(p.semEfeito && !p.efeito, p.id)
+    assert.deepEqual(ids, ["H01-vai-preparar", "H02-espaco", "H03-seta-direita", "H04-f1", "H05-f2", "H06-f3", "H07-f5", "H08-ponto", "H09-esc", "H10-ctrl-o", "H11-pilula", "H12-novo-abre", "H13-novo-esc", "H14-menu-abre", "H15-config", "H16-voltar", "H17-menu-abre", "H18-saida-bloqueada", "H19-esc-fecha-menu", "H20-busca-negada"])
+    for (const p of SECOES_PREPARAR[0].passos) {
+        if (p.id === "H15-config" || p.id === "H16-voltar") assert.ok(p.efeito && p.paginaFinal, p.id)
+        else assert.ok(p.semEfeito && !p.efeito, p.id)
+    }
 })

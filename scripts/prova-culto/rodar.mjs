@@ -183,6 +183,13 @@ for (const secao of SECOES_RODAR) {
             if (MUTAR === "troca-pagina" && passo.id === "A11-digito-2") {
                 /* engole a tecla: o gesto nao chega ao app */
             } else await tecla(principal, g.tecla, g.mods || {})
+        } else if (g.sequencia) {
+            // varios gestos reais em ordem: tecla (Input.dispatchKeyEvent) ou texto (Input.insertText)
+            for (const s of g.sequencia) {
+                if (s.tecla) await tecla(principal, s.tecla, s.mods || {})
+                else if (typeof s.texto === "string") await principal.enviar("Input.insertText", { text: s.texto })
+                await esperar(s.espera ?? 350)
+            }
         } else if (g.espera) await esperar(g.espera)
         if (MUTAR === "extra-escrita" && passo.id === "A01-clique-slide-1") await principal.ev("S.outputs.update(a=>a); return 1")
         await quieto()
