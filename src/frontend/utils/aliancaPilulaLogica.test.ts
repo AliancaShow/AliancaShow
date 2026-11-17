@@ -1,9 +1,33 @@
 import { readFileSync } from "fs"
 import { join } from "path"
 import { describe, expect, it } from "vitest"
-import { ANTEPARO_MS, chipChat, chipDesenho, chipRoteiro, criarDecisorDeGesto, desenhoAtivo, deveEngolir, dicaDaPilula, naoChegou, pilulaClicavel, primeiroPendente, textoDaPilula } from "./aliancaPilulaLogica"
+import { ANTEPARO_MS, chipChat, chipDesenho, chipRoteiro, criarDecisorDeGesto, desenhoAtivo, deveEngolir, dicaDaPilula, naoChegou, pilulaClicavel, pilulaVisivel, primeiroPendente, textoDaPilula } from "./aliancaPilulaLogica"
 
 const mat = (o: Partial<{ habilitado: boolean | null; naFila: number; falhas: { nome: string }[] }> = {}) => ({ habilitado: true as boolean | null, naFila: 0, falhas: [] as { nome: string }[], ...o })
+
+describe("pilula visivel (tudo pronto some com chip pendente)", () => {
+    const roteiro = { id: "roteiro" }
+    const chat = { id: "chat" }
+    const desenho = { id: "desenho" }
+    it("tudo pronto sem chip: aparece", () => {
+        expect(pilulaVisivel(true, [])).toBe(true)
+        expect(pilulaVisivel(true, null)).toBe(true)
+        expect(pilulaVisivel(true, undefined)).toBe(true)
+    })
+    it("tudo pronto com Roteiro mudou ou Chat: some", () => {
+        expect(pilulaVisivel(true, [roteiro])).toBe(false)
+        expect(pilulaVisivel(true, [chat])).toBe(false)
+        expect(pilulaVisivel(true, [roteiro, chat])).toBe(false)
+        expect(pilulaVisivel(true, [desenho, chat])).toBe(false)
+    })
+    it("so o chip de desenho nao esconde o tudo pronto", () => {
+        expect(pilulaVisivel(true, [desenho])).toBe(true)
+    })
+    it("com pendencia (nao pronto) a pilula fica, com ou sem chip", () => {
+        expect(pilulaVisivel(false, [])).toBe(true)
+        expect(pilulaVisivel(false, [roteiro, chat])).toBe(true)
+    })
+})
 
 describe("texto da pilula", () => {
     it("tudo zero: tudo pronto, sem clique", () => {

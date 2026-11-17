@@ -35,6 +35,10 @@ describe("barra do Preparar: nada vai ao ar (1a)", () => {
         for (const u of usos) expect(u).toMatch(/\{\s*state:\s*(true|false)\s*\}/)
         for (const rel of [...BARRA, "src/frontend/utils/aliancaPilulaLogica.ts", "src/frontend/utils/aliancaSaidaMenuLogica.ts"]) expect(sem(ler(rel)), rel).not.toMatch(/toggleOutputs/)
     })
+    it("a pilula so e renderizada quando pilulaVisivel deixa (tudo pronto some com chip pendente)", () => {
+        const src = sem(ler("src/frontend/components/main/PrepararPilula.svelte"))
+        expect(src.replace(/\s+/g, " ")).toContain('{:else if pilulaVisivel($pilula.pronto, $chips)} <button class="pilula"')
+    })
     it("nenhum {@html}", () => {
         for (const rel of COMPONENTES) expect(sem(ler(rel)), rel).not.toContain("{@html")
     })

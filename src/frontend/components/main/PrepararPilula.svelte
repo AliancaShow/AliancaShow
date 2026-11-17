@@ -4,7 +4,8 @@
     import { onDestroy } from "svelte"
     import { modoAlianca } from "../../stores"
     import { avisoTecla } from "../../utils/aliancaModo"
-    import { abrirPrimeiroPendente, pilula } from "../../utils/aliancaPilula"
+    import { abrirPrimeiroPendente, chips, pilula } from "../../utils/aliancaPilula"
+    import { pilulaVisivel } from "../../utils/aliancaPilulaLogica"
 
     let aviso = false
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -34,7 +35,7 @@
 
 {#if aviso}
     <div class="aviso" role="status">Tecla ignorada: você está no Preparar. Vá pro Culto pra controlar o telão.</div>
-{:else}
+{:else if pilulaVisivel($pilula.pronto, $chips)}
     <button class="pilula" class:pronto={$pilula.pronto} class:semClique={!$pilula.clicavel} tabindex="-1" data-title={$pilula.dica} on:mousedown|preventDefault on:click={clicar}>{$pilula.texto}</button>
 {/if}
 
