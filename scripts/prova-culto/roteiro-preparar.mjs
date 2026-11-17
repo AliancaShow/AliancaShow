@@ -12,6 +12,12 @@ const PILULA = `document.querySelector(".prepararBarra .pilula")`
 const NOVO = `document.querySelector(".prepararBarra .alianca-novo .botao")`
 const MENU = `document.querySelector(".prepararBarra .menuBotao")`
 const VOLTAR = `document.querySelector(".prepararBarra .voltar")`
+// 1b: o botao Editar do cabecalho do show (o 1o "Editar" da tela e o da barra de menus do app); Pronto da moldura do editor
+const EDITAR = `[...document.querySelectorAll("button")].find(b=>b.innerText.trim()==="Editar" && (b.title||b.dataset.title||"").startsWith("Editar os slides"))`
+const PRONTO = `document.querySelector(".prepararBarra .prontoBotao")`
+const USUARIO_DA_NUVEM = `document.querySelector(".users .user")`
+// uma entrada de historico sem efeito proprio (cai no `default` de history.ts) que diz ter sido feita na pagina `draw`: o Ctrl+Z pula para la
+const ENTRADA_DE_DRAW = `S.undoHistory.set([{ id: "t1b-sem-efeito", oldData: {}, newData: {}, location: { page: "draw" } }])`
 const ITEM = (nome) => `document.querySelector('[role=menuitem][data-item="${nome}"]')`
 
 // preparo: fundo, slide e sobreposicao no ar (o Culto fica com conteudo no ar; o Preparar nao pode mexer nele)
@@ -44,7 +50,18 @@ export const SECOES_PREPARAR = [
             { id: "H18-saida-bloqueada", alvo: ITEM("saida"), gesto: { clique: true }, semEfeito: "o item do telao esta desabilitado (ha conteudo carregado): nada ao telao" },
             { id: "H19-esc-fecha-menu", gesto: { tecla: "Escape" }, semEfeito: "o Esc fecha o menu ⋯" },
             // Ctrl+G, o texto de um popup NEGADO no Preparar ("Gerenciar grupos") e Enter: toast e fecha; julgado pelas invariantes (zero outputs, zero canal)
-            { id: "H20-busca-negada", gesto: { sequencia: [{ tecla: "g", mods: { ctrl: true } }, { texto: "Gerenciar grupos" }, { tecla: "Enter" }] }, semEfeito: "a busca bloqueia o popup (aviso Use no Culto)" }
+            { id: "H20-busca-negada", gesto: { sequencia: [{ tecla: "g", mods: { ctrl: true } }, { texto: "Gerenciar grupos" }, { tecla: "Enter" }] }, semEfeito: "a busca bloqueia o popup (aviso Use no Culto)" },
+            // ---- 1b: as teclas 1 a 6 saem; a moldura volta com Esc; Desenhar e Biblia (desfazer e nuvem) nunca abrem; o editor sai por Pronto
+            { id: "H30-digitos", antes: "document.activeElement?.blur?.(); await esp(300)", gesto: { sequencia: ["1", "2", "3", "4", "5", "6"].map((t) => ({ tecla: t, espera: 250 })) }, semEfeito: "as teclas 1 a 6 nao trocam de pagina (decisao 12)", paginaFinal: "show" },
+            { id: "H31a-menu-abre", alvo: MENU, gesto: { clique: true }, semEfeito: "abre o menu ⋯" },
+            { id: "H31-config", alvo: ITEM("config"), gesto: { clique: true }, efeito: { fluxo: "estado", n: 1 }, paginaFinal: "settings" },
+            { id: "H32-esc-volta", gesto: { tecla: "Escape" }, efeito: { fluxo: "estado", n: 1 }, paginaFinal: "show" },
+            // o desfazer pula para draw: a guarda de pagina volta a show (o pedido e a volta: dois eventos de activePage)
+            { id: "H33-undo-para-draw", antes: `${ENTRADA_DE_DRAW}; await esp(300)`, gesto: { tecla: "z", mods: { ctrl: true } }, efeito: { fluxo: "estado", n: 2 }, paginaFinal: "show" },
+            // a bolinha de um usuario da nuvem que esta em scripture: o clique manda para la, e a guarda volta a show
+            { id: "H34-nuvem-scripture", antes: 'S.cloudUsers.set([{ displayName: "Teste", color: "#d33", lastUpdate: Date.now(), activePage: "scripture" }]); await esp(400)', alvo: USUARIO_DA_NUVEM, gesto: { clique: true }, efeito: { fluxo: "estado", n: 2 }, paginaFinal: "show" },
+            { id: "H35a-editar", antes: "S.cloudUsers.set([]); await esp(300)", alvo: EDITAR, gesto: { clique: true }, efeito: { fluxo: "estado", n: 1 }, paginaFinal: "edit" },
+            { id: "H35-editor-pronto", alvo: PRONTO, gesto: { clique: true }, efeito: { fluxo: "estado", n: 1 }, paginaFinal: "show" }
         ]
     }
 ]

@@ -11,7 +11,9 @@ export const FATIAS_VALIDAS = ["0b", "0c", "1a", "1b"]
 export const TETO_PADRAO = 10
 export const TETO_POR_FATIA = {
     // 0b: E1, E2, E3 (19 itens de `principal.sinais`, relatorio-layout-f0.md)
-    "0b": 19
+    "0b": 19,
+    // 1b: 5 efeitoMinimo (A11 a A15) + 6 dom (data-title dos TopButton sem [N])
+    "1b": 11
 }
 
 /** caminhos de `outputs` que NUNCA podem ser mascarados (revisao C3) */
