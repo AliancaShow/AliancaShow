@@ -9,15 +9,11 @@
     import { iniciarVoltaAoRoteiro } from "../../utils/aliancaBiblioteca"
     import { abaLateral, iniciarEstadoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
     import AliancaBiblioteca from "./AliancaBiblioteca.svelte"
-    import AliancaNovo from "./AliancaNovo.svelte"
 
     iniciarEstadoDaBiblioteca()
     iniciarVoltaAoRoteiro()
 
     let barra: HTMLElement
-    let largura = 999
-    // abaixo disso o "+ Novo" vira só "+" (natural: ~208 px; o painel mínimo tem ~194)
-    $: compacto = largura < 214
 
     let topo = 36
     let altura = 0
@@ -43,12 +39,11 @@
     onDestroy(() => observador?.disconnect())
 </script>
 
-<div class="abas" class:naBiblioteca={$abaLateral === "biblioteca"} bind:this={barra} bind:clientWidth={largura}>
+<div class="abas" class:naBiblioteca={$abaLateral === "biblioteca"} bind:this={barra}>
     <div class="seg" role="group" aria-label="Coluna esquerda">
         <button class:ativo={$abaLateral === "culto"} aria-pressed={$abaLateral === "culto"} tabindex="-1" on:mousedown|preventDefault on:click={() => abaLateral.set("culto")}>Culto</button>
         <button class:ativo={$abaLateral === "biblioteca"} aria-pressed={$abaLateral === "biblioteca"} tabindex="-1" on:mousedown|preventDefault on:click={() => abaLateral.set("biblioteca")}>Biblioteca</button>
     </div>
-    <AliancaNovo {compacto} />
 </div>
 
 {#if $abaLateral === "biblioteca"}

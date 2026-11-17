@@ -23,6 +23,7 @@ import {
     folders,
     groups,
     mediaFolders,
+    modoAlianca,
     openScripture,
     openToolsTab,
     outputs,
@@ -42,7 +43,8 @@ import {
     stageShows,
     styles
 } from "../../stores"
-import { triggerFunction } from "../../utils/common"
+import { permitidoNoPreparar, textoDoBloqueio } from "../../utils/aliancaQuickSearchLogica"
+import { newToast, triggerFunction } from "../../utils/common"
 import { translateText } from "../../utils/language"
 import { getAccess } from "../../utils/profile"
 import { formatSearch, showSearch } from "../../utils/search"
@@ -184,7 +186,7 @@ export async function quicksearch(searchValue: string, categoryFilter: null | Se
     }
 
     // --- ACTIONS ---
-    if (isVisible("actions")) {
+    if (isVisible("actions") && get(modoAlianca) !== "preparar") {
         const actionsList = trimValues(sort(keysToID(get(actions))), 2)
         addValues(actionsList, "action", "actions")
     }
@@ -518,6 +520,13 @@ const triggerActions = {
 export function selectQuicksearchValue(value: QuickSearchValue, control: boolean) {
     if (!value) return
 
+    // Preparar (1a, D10): lista branca de tipos e de ids; o que nao esta nela nao roda e avisa
+    if (get(modoAlianca) === "preparar" && !permitidoNoPreparar(value.type, value.id, value.data)) {
+        newToast(textoDoBloqueio(value.type, value.id))
+        quickSearchActive.set(false)
+        return
+    }
+
     if (!triggerActions[value.type]) {
         console.error("Unknown Quick search type:", value.type)
         return
@@ -595,7 +604,6 @@ const menubarItems = [
     { id: "shortcuts", name: "popup.shortcuts", icon: "shortcut", aliases: ["-Keyboard"] },
     { id: "about", name: "popup.about", icon: "info", aliases: ["-Report", "-Bug", "-Issue", "-Contact", "-Email", "-Translate", "-Donate"] },
 
-    { id: "focus_mode", name: "actions.focus_mode", icon: "focus_mode" },
     { id: "fullscreen", name: "actions.fullscreen", icon: "fullscreen" }
 ]
 

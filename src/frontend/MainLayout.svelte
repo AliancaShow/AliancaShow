@@ -9,7 +9,6 @@
     // FVB:INICIO
     import AliancaAbasLaterais from "./components/main/AliancaAbasLaterais.svelte"
     // FVB:FIM
-    import AliancaFaixa from "./components/main/AliancaFaixa.svelte"
     import FaixaDeFalha from "./components/main/FaixaDeFalha.svelte"
     import Top from "./components/main/Top.svelte"
     import SirvoAviso from "./components/main/SirvoAviso.svelte"
@@ -49,7 +48,6 @@
     {#if !$focusMode}
         <Top {isWindows} />
     {/if}
-    <AliancaFaixa />
     <div class="row">
         <Resizeable id="leftPanel">
             <div class="left panel">
@@ -150,7 +148,7 @@
 
                 <!-- Layout D: relogio fixo no rodape da coluna direita. Saiu do painel
                      Info do drawer, que gastava ~365px de largura so para mostrar a hora. -->
-                {#if !$focusMode}
+                {#if !$focusMode && $modoAlianca !== "preparar"}
                     <div class="clockArea">
                         <Clock />
                         <DateDisplay />

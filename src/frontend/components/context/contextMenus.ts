@@ -237,7 +237,7 @@ export const contextMenuLayouts: { [key: string]: string[] } = {
     // MENU
     file: ["save", "import_more", "export_more", "SEPARATOR", "quit"],
     edit: ["undo", "redo", "history", "SEPARATOR", "cut", "copy", "paste", "delete", "SEPARATOR", "selectAll"], // , "cut"
-    view: ["focus_mode", "fullscreen"], // , "resetZoom", "zoomIn", "zoomOut"
+    view: ["fullscreen"], // , "resetZoom", "zoomIn", "zoomOut"
     help: ["quick_search", "shortcuts", "docs", "quick_start_guide", "about"],
     // MAIN
     // default: ["save", "settings", "history", "SEPARATOR", "about", "quit"],

@@ -51,7 +51,7 @@ for (const alvo of alvos) {
     await j.enviar("Console.enable")
     await j.enviar("Runtime.enable")
     await new Promise((r) => setTimeout(r, 1500)) // o reenvio das mensagens ja emitidas chega logo depois do enable
-    const ehSaida = await j.avaliar('return !document.body.innerText.includes("Mostrar")')
+    const ehSaida = await j.avaliar('return !document.querySelector(".top.panel")')
     const nome = ehSaida ? "saida" : "principal"
     // o MESMO modulo que o app usa (a URL do recurso ja carregado): importar por outra URL criaria um store vazio e um falso verde
     const lido = await j.avaliar(`const e=performance.getEntriesByType("resource").map(r=>r.name).filter(x=>x.includes("/src/frontend/utils/aliancaFalha.ts")); if(!e.length) return {semModulo:true}; const m=await import(e[e.length-1]); let v; m.falhas.subscribe(x=>v=x)(); return {falhas:JSON.parse(JSON.stringify(v))}`)

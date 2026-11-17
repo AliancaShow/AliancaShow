@@ -41,6 +41,10 @@ async function estavel(nome) {
 }
 const g = async (n) => {
     if (gravar) {
+        // o MaterialButton so remove o seu `.ripple` no animationend, e a sequencia desliga as animacoes: um clique da sequencia anterior deixa o span (0x0)
+        // pendurado no botao. Quando o botao e REMONTADO (o Top do Culto remonta depois de uma visita ao Preparar) o span some, e a referencia, que nao
+        // remonta, o conserva: o mesmo quadro tem 1 elemento a mais so de um lado (achado da 1a). Resto de animacao nao e estado de tela: sai antes de gravar.
+        await j.ev(`document.querySelectorAll(".ripple").forEach((e) => e.remove()); return 1`)
         await moverMouse(j, ultimoMouse.x, ultimoMouse.y)
         await esperar(400)
         await estavel(n)

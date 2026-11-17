@@ -2,10 +2,14 @@
 // Nao compara com baseline: diz se a gravacao viola o que o Preparar NUNCA pode fazer.
 
 /**
- * Canais OUTPUT:* e STAGE:* que o Preparar PODE tocar. Nasce VAZIA e quem a preenche e o dono do projeto.
- * Se uma rodada limpa da secao H mostrar algum desses canais, e PARADA 1 do plano: devolva a lista vista com o passo de cada um.
+ * Canais OUTPUT:* e STAGE:* que o Preparar PODE tocar. Quem a preenche e o dono do projeto; nasceu VAZIA.
+ * Se uma rodada limpa da secao H mostrar um canal que nao esta aqui, e PARADA 1 do plano: devolva a lista vista com o passo de cada um.
+ * Um canal permitido NUNCA basta: as regras 1 (zero escrita em outputs) e 3 (hash do telao igual) valem POR PASSO, com ou sem canal na lista.
+ *
+ * OUTPUT:PROJECTS e OUTPUT:SHOWS (autorizados pelo dono, 1a): espelho de dados da janela de saida (listeners.ts showsCache/projects ->
+ * receivers.ts SHOWS/PROJECTS), disparado por troca de pagina, igual no Culto; nao escreve outputs nem muda o telao.
  */
-export const CANAIS_PERMITIDOS_NO_PREPARAR = []
+export const CANAIS_PERMITIDOS_NO_PREPARAR = ["OUTPUT:PROJECTS", "OUTPUT:SHOWS"]
 
 const ehCanalDeSaida = (c) => /^(OUTPUT|STAGE):/.test(c)
 

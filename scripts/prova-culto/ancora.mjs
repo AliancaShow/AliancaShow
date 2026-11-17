@@ -44,6 +44,26 @@ export const EXCECOES = {
         motivo: "0b/R2: iniciarLayoutAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca ainda tem guarda de currentWindow",
         sha: "5981ee8dcc73f0273a0332473a5b3aab08a2aa7836732c39e1bd67c97b006aee"
     },
+    "src/frontend/utils/shortcuts.ts": {
+        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
+        sha: "38bca719c7b6553adc2805b49d3a9bc22c6a69a6bb539296cfbc5f671b71ffb1"
+    },
+    "src/frontend/components/context/contextMenus.ts": {
+        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
+        sha: "d4955d71515b129536ba5f2c2343bc95a1e112231a7b2f0321d56f4f5b726d1f"
+    },
+    "src/frontend/components/context/menuClick.ts": {
+        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
+        sha: "ee6e6cb0ad17132f171edb1890694b791e797c8a15f3e68ed850d8995ea3e6d8"
+    },
+    "src/frontend/components/main/popups/Shortcuts.svelte": {
+        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
+        sha: "74365f4827bd7905d8ad6078e53c6cc51a674610277846a1c8b94e2a9ed2515e"
+    },
+    "src/electron/utils/menuTemplate.ts": {
+        motivo: "1a: item do modo foco removido do menu nativo; arquivo do processo principal, o fecho o alcanca so por imports '..' dentro de src/electron e nunca entra no bundle da saida; conferido: unico importador e src/electron/index.ts",
+        sha: "13c7f8b762d5cab36e54a916117577f86518d910709ae2eb38d547740d5c41fd"
+    },
     "src/frontend/utils/aliancaAbasEditor.ts": {
         motivo: "0b/R2: a aba de antes do editor vira valorPorModo e o catch chama falhaAlta; iniciarAbasDoEditor so roda em startupMain (nunca na saida)",
         sha: "0a03f8e05766304764ee54ac3d9122cafa6761a2710c4dc32619ba6d24a1c98b"
@@ -73,7 +93,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "ca64cf3d4cd831c7514ca7871169a6e32c411c9f316403e180082b659f6f1412"
+export const SHA_EXCECOES = "e306ad152cf2ec8e4859064711c0c0d036aea0b7bc771dfab68e3375a14985d1"
 export const SHA_NOVOS = "fee915b704591658e2cb17020091de48e285b3ff3bda1c059e6934ca327d6b56"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
