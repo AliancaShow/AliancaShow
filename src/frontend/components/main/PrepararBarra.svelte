@@ -6,6 +6,7 @@
     import { algoNoAr } from "../../utils/aliancaModo"
     import { chips, irAoCulto } from "../../utils/aliancaPilula"
     import Clock from "../system/Clock.svelte"
+    import AliancaNovo from "./AliancaNovo.svelte"
     import PrepararMenu from "./PrepararMenu.svelte"
     import PrepararPilula from "./PrepararPilula.svelte"
 
@@ -31,6 +32,7 @@
                 {#if chip.numero !== null}<span class="numero">{chip.numero}</span>{/if}
             </button>
         {/each}
+        <AliancaNovo />
     {:else}
         <button class="voltar" tabindex="-1" on:mousedown|preventDefault on:click={() => activePage.set("show")}>← Voltar</button>
     {/if}
