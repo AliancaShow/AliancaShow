@@ -207,5 +207,229 @@
         "de": "media",
         "para": "shows",
         "porque": "E3: a aba da gaveta escolhida no Preparar (Ctrl+2 no passo E06) deixa de mudar a aba do Culto"
+    },
+    {
+        "tipo": "efeitoMinimo",
+        "id": "t16-a11",
+        "fatia": "1b",
+        "passo": "A11-digito-2",
+        "de": {
+            "fluxo": "estado",
+            "n": 1
+        },
+        "para": {
+            "semEfeito": "decisão: teclas 1 a 6 não trocam página"
+        },
+        "julgar": "passoMorto",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "a tecla 2 deixa de trocar de página (o passo vira passo morto)"
+    },
+    {
+        "tipo": "efeitoMinimo",
+        "id": "t16-a12",
+        "fatia": "1b",
+        "passo": "A12-digito-3",
+        "de": {
+            "fluxo": "estado",
+            "n": 1
+        },
+        "para": {
+            "semEfeito": "decisão: teclas 1 a 6 não trocam página"
+        },
+        "julgar": "passoMorto",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "a tecla 3 deixa de trocar de página (o passo vira passo morto)"
+    },
+    {
+        "tipo": "efeitoMinimo",
+        "id": "t16-a13",
+        "fatia": "1b",
+        "passo": "A13-digito-4",
+        "de": {
+            "fluxo": "estado",
+            "n": 1
+        },
+        "para": {
+            "semEfeito": "decisão: teclas 1 a 6 não trocam página"
+        },
+        "julgar": "passoMorto",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "a tecla 4 deixa de trocar de página (o passo vira passo morto)"
+    },
+    {
+        "tipo": "efeitoMinimo",
+        "id": "t16-a14",
+        "fatia": "1b",
+        "passo": "A14-digito-5",
+        "de": {
+            "fluxo": "estado",
+            "n": 1
+        },
+        "para": {
+            "semEfeito": "decisão: teclas 1 a 6 não trocam página"
+        },
+        "julgar": "passoMorto",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "a tecla 5 deixa de trocar de página (o passo vira passo morto)"
+    },
+    {
+        "tipo": "efeitoMinimo",
+        "id": "t16-a15",
+        "fatia": "1b",
+        "passo": "A15-digito-6",
+        "de": {
+            "fluxo": "estado",
+            "n": 1
+        },
+        "para": {
+            "semEfeito": "decisão: teclas 1 a 6 não trocam página"
+        },
+        "julgar": "passoMorto",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "a tecla 6 deixa de trocar de página (o passo vira passo morto)"
+    },
+    {
+        "tipo": "dom",
+        "id": "t16-dom-show",
+        "fatia": "1b",
+        "estados": [
+            "01-culto-parado",
+            "02-culto-no-ar",
+            "03-hover-slide",
+            "04-menu-contexto",
+            "05-gaveta-midia",
+            "06-gaveta-audio",
+            "07-gaveta-biblia",
+            "08-gaveta-shows",
+            "09-config",
+            "10-culto-editor",
+            "13-culto-depois-da-volta"
+        ],
+        "seletor": "BUTTON",
+        "atributo": "data-title",
+        "de": "Mostrando [1]",
+        "para": "Mostrando",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "o título da aba do topo perde o [N] da tecla (as teclas 1 a 6 saíram): \"Mostrando [1]\" vira \"Mostrando\""
+    },
+    {
+        "tipo": "dom",
+        "id": "t16-dom-edit",
+        "fatia": "1b",
+        "estados": [
+            "01-culto-parado",
+            "02-culto-no-ar",
+            "03-hover-slide",
+            "04-menu-contexto",
+            "05-gaveta-midia",
+            "06-gaveta-audio",
+            "07-gaveta-biblia",
+            "08-gaveta-shows",
+            "09-config",
+            "10-culto-editor",
+            "13-culto-depois-da-volta"
+        ],
+        "seletor": "BUTTON",
+        "atributo": "data-title",
+        "de": "Editando [2]",
+        "para": "Editando",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "o título da aba do topo perde o [N] da tecla (as teclas 1 a 6 saíram): \"Editando [2]\" vira \"Editando\""
+    },
+    {
+        "tipo": "dom",
+        "id": "t16-dom-stage",
+        "fatia": "1b",
+        "estados": [
+            "01-culto-parado",
+            "02-culto-no-ar",
+            "03-hover-slide",
+            "04-menu-contexto",
+            "05-gaveta-midia",
+            "06-gaveta-audio",
+            "07-gaveta-biblia",
+            "08-gaveta-shows",
+            "09-config",
+            "10-culto-editor",
+            "13-culto-depois-da-volta"
+        ],
+        "seletor": "BUTTON",
+        "atributo": "data-title",
+        "de": "Visão do palco [3]",
+        "para": "Visão do palco",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "o título da aba do topo perde o [N] da tecla (as teclas 1 a 6 saíram): \"Visão do palco [3]\" vira \"Visão do palco\""
+    },
+    {
+        "tipo": "dom",
+        "id": "t16-dom-draw",
+        "fatia": "1b",
+        "estados": [
+            "01-culto-parado",
+            "02-culto-no-ar",
+            "03-hover-slide",
+            "04-menu-contexto",
+            "05-gaveta-midia",
+            "06-gaveta-audio",
+            "07-gaveta-biblia",
+            "08-gaveta-shows",
+            "09-config",
+            "10-culto-editor",
+            "13-culto-depois-da-volta"
+        ],
+        "seletor": "BUTTON",
+        "atributo": "data-title",
+        "de": "Desenhando [4]",
+        "para": "Desenhando",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "o título da aba do topo perde o [N] da tecla (as teclas 1 a 6 saíram): \"Desenhando [4]\" vira \"Desenhando\""
+    },
+    {
+        "tipo": "dom",
+        "id": "t16-dom-settings",
+        "fatia": "1b",
+        "estados": [
+            "01-culto-parado",
+            "02-culto-no-ar",
+            "03-hover-slide",
+            "04-menu-contexto",
+            "05-gaveta-midia",
+            "06-gaveta-audio",
+            "07-gaveta-biblia",
+            "08-gaveta-shows",
+            "09-config",
+            "10-culto-editor",
+            "13-culto-depois-da-volta"
+        ],
+        "seletor": "BUTTON",
+        "atributo": "data-title",
+        "de": "Configurações [5]",
+        "para": "Configurações",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "o título da aba do topo perde o [N] da tecla (as teclas 1 a 6 saíram): \"Configurações [5]\" vira \"Configurações\""
+    },
+    {
+        "tipo": "dom",
+        "id": "t16-dom-scripture",
+        "fatia": "1b",
+        "estados": [
+            "01-culto-parado",
+            "02-culto-no-ar",
+            "03-hover-slide",
+            "04-menu-contexto",
+            "05-gaveta-midia",
+            "06-gaveta-audio",
+            "07-gaveta-biblia",
+            "08-gaveta-shows",
+            "09-config",
+            "10-culto-editor",
+            "13-culto-depois-da-volta"
+        ],
+        "seletor": "BUTTON",
+        "atributo": "data-title",
+        "de": "Bíblia [6]",
+        "para": "Bíblia",
+        "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
+        "porque": "o título da aba do topo perde o [N] da tecla (as teclas 1 a 6 saíram): \"Bíblia [6]\" vira \"Bíblia\""
     }
 ]

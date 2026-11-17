@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { SettingsTabs } from "../../../types/Tabs"
-    import { activePage, activeProfile, focusMode, profiles, settingsTab } from "../../stores"
+    import { activePage, activeProfile, focusMode, modoAlianca, profiles, settingsTab } from "../../stores"
     import { clone } from "../helpers/array"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -55,6 +55,13 @@
             <p style="margin: 5px;"><T id="settings.{tab}" /></p>
         </Button>
     {/each}
+    <!-- 1b, D7: no Preparar o Monitor de retorno (as telas do palco) mora aqui; a moldura de `stage` volta para Configuracoes -->
+    {#if $modoAlianca === "preparar"}
+        <Button id="button" on:click={() => activePage.set("stage")} bold={false}>
+            <Icon id="stage" right />
+            <p style="margin: 5px;">Monitor de retorno</p>
+        </Button>
+    {/if}
 </div>
 
 <style>

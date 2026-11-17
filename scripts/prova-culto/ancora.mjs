@@ -41,12 +41,12 @@ export const EXCECOES = {
         sha: "8a1ee669826a69871d531a8afb1c3165bae135c6a150e629559acb5aed23c51c"
     },
     "src/frontend/utils/startup.ts": {
-        motivo: "0b/R2: iniciarLayoutAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca ainda tem guarda de currentWindow",
-        sha: "5981ee8dcc73f0273a0332473a5b3aab08a2aa7836732c39e1bd67c97b006aee"
+        motivo: "1b: iniciarLayoutAlianca(), iniciarMolduraAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca e iniciarMolduraAlianca ainda tem guarda de currentWindow",
+        sha: "ea1a81f20ec701d700626e83e2ff311ef7561cb98db800695472b321af423a32"
     },
     "src/frontend/utils/shortcuts.ts": {
-        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
-        sha: "38bca719c7b6553adc2805b49d3a9bc22c6a69a6bb539296cfbc5f671b71ffb1"
+        motivo: "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal",
+        sha: "b12e5374f7364d2107ad7afbb4f5068334689634a45d501dccb44fd2bc885868"
     },
     "src/frontend/components/context/contextMenus.ts": {
         motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
@@ -57,8 +57,8 @@ export const EXCECOES = {
         sha: "ee6e6cb0ad17132f171edb1890694b791e797c8a15f3e68ed850d8995ea3e6d8"
     },
     "src/frontend/components/main/popups/Shortcuts.svelte": {
-        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
-        sha: "74365f4827bd7905d8ad6078e53c6cc51a674610277846a1c8b94e2a9ed2515e"
+        motivo: "1a/1b: porta do modo foco e linha das teclas 1 a 6 removidas da lista de atalhos; popup so abre na janela principal",
+        sha: "25574a27a8b19b89900127436ea9745e0ce8658a47c403c9884003dfa2fdd26e"
     },
     "src/electron/utils/menuTemplate.ts": {
         motivo: "1a: item do modo foco removido do menu nativo; arquivo do processo principal, o fecho o alcanca so por imports '..' dentro de src/electron e nunca entra no bundle da saida; conferido: unico importador e src/electron/index.ts",
@@ -90,11 +90,19 @@ export const NOVOS_NO_FECHO = {
     "src/frontend/utils/aliancaFalha.ts": {
         motivo: "R2: so cria um writable e escreve nele; nada monta FaixaDeFalha na janela de saida; na saida a falha vira so console.error; o registro em disco so e configurado em startupMain",
         sha: "6ce913d9d26b33afa713bb663fab43ff7ec4f07e2fdee27473a7978492a6d929"
+    },
+    "src/frontend/utils/aliancaMoldura.ts": {
+        motivo: "1b: so assina dentro de iniciarMolduraAlianca, que sai cedo fora da janela principal (currentWindow); nada escreve em outputs",
+        sha: "9c78979ca52f5e30071504da7d14a91a43058776efbd46730cd89ef710b84e06"
+    },
+    "src/frontend/utils/aliancaMolduraLogica.ts": {
+        motivo: "1b: logica pura, sem import, sem store e sem efeito; ajustes de 16/nov: textoDoCrumb omite a 3a parte nos tipos sem slides e o titulo de stage vira Monitor de retorno (so string, nenhum import novo)",
+        sha: "c6cde03378ca9d824f0db6f869dcf61d2c7d68ef7fb92e96de10341150ea2558"
     }
 }
 
-export const SHA_EXCECOES = "e306ad152cf2ec8e4859064711c0c0d036aea0b7bc771dfab68e3375a14985d1"
-export const SHA_NOVOS = "fee915b704591658e2cb17020091de48e285b3ff3bda1c059e6934ca327d6b56"
+export const SHA_EXCECOES = "b4667bd4484315e3a3dcef5da4cfe4d97439cce08451e9f8d877a0222607f5fe"
+export const SHA_NOVOS = "c8647db85e4041700f0f2bc92e5b4542cd1b765d06b44722ea23ed6393ae5dba"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */

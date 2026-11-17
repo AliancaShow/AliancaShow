@@ -9,6 +9,7 @@
     import { onMount } from "svelte"
     import type { Bible } from "../../../types/Bible"
     import { activeScripture, drawerTabsData, outLocked, scriptures, scripturesCache } from "../../stores"
+    import { gavetaNaoToca } from "../../utils/aliancaModo"
     import { createScriptureShow, formatBibleText, loadJsonBible, playScripture } from "../drawer/bible/scripture"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -145,6 +146,7 @@
     // ----- acoes -----
 
     function sendToOutput() {
+        if (gavetaNaoToca()) return
         if (!selection.length || $outLocked) return
         playScripture()
     }

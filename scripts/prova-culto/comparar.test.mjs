@@ -154,7 +154,11 @@ test("Q5: flag desconhecida sai com 2", () => {
     assert.equal(comparar_mjs(BASELINE, BASELINE, "--qualquer-outra").status, 2)
 })
 test("Q5: --esperado continua aceito", () => {
-    const r = comparar_mjs(BASELINE, BASELINE, "--esperado", "scripts/prova-culto/esperado.json")
+    // so os itens `divergencia` do esperado.json real (os `efeitoMinimo` da 1b exigem uma gravacao feita com eles aplicados: a baseline nao tem)
+    const dir = mkdtempSync(join(tmpdir(), "q5e-"))
+    const arq = join(dir, "esperado-divergencias.json")
+    writeFileSync(arq, JSON.stringify(JSON.parse(readFileSync("scripts/prova-culto/esperado.json", "utf8")).filter((i) => i.tipo === "divergencia")))
+    const r = comparar_mjs(BASELINE, BASELINE, "--esperado", arq)
     // o baseline contra ele mesmo deixa os itens declarados sem ocorrer (status 1), mas a flag e aceita: nunca 2
     assert.equal(r.status, 1, r.stderr)
     assert.match(r.stdout, /comparadas \d+ chaves/)
@@ -344,6 +348,20 @@ test("teto padrao: 11 itens numa fatia sem excecao reprova, 10 passa", () => {
     assert.ok(validarEsperado(Array.from({ length: 11 }, (_, i) => div(i, "1a"))).some((e) => /teto 10/.test(e)))
     assert.deepEqual(validarEsperado(Array.from({ length: 10 }, (_, i) => div(i, "1a"))), [])
 })
+test("teto da 1b conta TODOS os itens da fatia (nao so divergencia): 11 passa, o 12o de qualquer tipo reprova, aposentar nao conta", () => {
+    const real = JSON.parse(readFileSync("scripts/prova-culto/esperado.json", "utf8"))
+    const da1b = real.filter((i) => i.fatia === "1b")
+    assert.equal(da1b.length, 11, "o esperado real tem 11 itens da 1b (5 efeitoMinimo + 6 dom)")
+    assert.deepEqual(validarEsperado(real), [])
+    const dom = da1b.find((i) => i.tipo === "dom")
+    const em = da1b.find((i) => i.tipo === "efeitoMinimo")
+    for (const extra of [{ ...div(99, "1b") }, { ...dom, id: "x-dom" }, { ...em, id: "x-em" }])
+        assert.ok(validarEsperado([...real, extra]).some((e) => /fatia 1b tem 12 itens declarados, acima do teto 11/.test(e)), extra.tipo)
+    // aposentar nao conta
+    assert.ok(!validarEsperado([...real, { tipo: "aposentar", fatia: "1b", alvo: real[0].id, porque: "x" }]).some((e) => /teto/.test(e)))
+    // a 0b segue em 19 (19 divergencias do real)
+    assert.equal(real.filter((i) => i.fatia === "0b").length, 19)
+})
 test("fatia fora da lista reprova (1b-dom, 2a, vazia)", () => {
     for (const fatia of ["1b-dom", "2a", "0a"])
         assert.ok(
@@ -369,4 +387,18 @@ test("esquema dom: estados explicitos do Culto, tag em maiuscula, atributo da li
     assert.ok(validarEsperado([{ ...dom, seletor: "button.tab" }]).length > 0, "seletor com classe")
     assert.ok(validarEsperado([{ ...dom, atributo: "class" }]).length > 0, "atributo fora da lista")
     assert.ok(validarEsperado([{ ...dom, de: "  a  " }]).length > 0, "de nao normalizado")
+})
+
+test("1b: o esperado.json real tem 19 divergencias da 0b + 5 efeitoMinimo (A11 a A15, passo morto) + 6 dom (data-title sem [N]), todos da 1b com decisaoDeProduto", () => {
+    const itens = JSON.parse(readFileSync("scripts/prova-culto/esperado.json", "utf8"))
+    assert.deepEqual(validarEsperado(itens), [])
+    const da = (f) => itens.filter((i) => i.fatia === f)
+    assert.equal(da("0b").length, 19)
+    assert.equal(da("1b").length, 11)
+    const efeitos = da("1b").filter((i) => i.tipo === "efeitoMinimo")
+    assert.deepEqual(efeitos.map((i) => i.passo), ["A11-digito-2", "A12-digito-3", "A13-digito-4", "A14-digito-5", "A15-digito-6"])
+    for (const i of efeitos) assert.equal(i.julgar, "passoMorto")
+    const doms = da("1b").filter((i) => i.tipo === "dom")
+    assert.deepEqual(doms.map((i) => i.para), ["Mostrando", "Editando", "Visão do palco", "Desenhando", "Configurações", "Bíblia"])
+    for (const i of da("1b")) assert.match(i.decisaoDeProduto, /decisão 12/)
 })

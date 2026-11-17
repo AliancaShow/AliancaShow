@@ -110,11 +110,11 @@ test("invariantes.mjs: sai com 0 na limpa, 1 na violada e 2 na invalida", () => 
     assert.equal(rodar(sem).status, 2)
     assert.equal(spawnSync(process.execPath, ["scripts/prova-culto/invariantes.mjs"], { encoding: "utf8" }).status, 2)
 })
-test("o roteiro H: 20 passos (0c + 1a); so H15 e H16 tem efeito e paginaFinal; nenhum liga/desliga a saida", () => {
+test("o roteiro H: 28 passos (0c + 1a + 1b); so os que trocam de pagina tem efeito; nenhum liga/desliga a saida", () => {
     const ids = SECOES_PREPARAR[0].passos.map((p) => p.id)
-    assert.deepEqual(ids, ["H01-vai-preparar", "H02-espaco", "H03-seta-direita", "H04-f1", "H05-f2", "H06-f3", "H07-f5", "H08-ponto", "H09-esc", "H10-ctrl-o", "H11-pilula", "H12-novo-abre", "H13-novo-esc", "H14-menu-abre", "H15-config", "H16-voltar", "H17-menu-abre", "H18-saida-bloqueada", "H19-esc-fecha-menu", "H20-busca-negada"])
+    assert.deepEqual(ids, ["H01-vai-preparar", "H02-espaco", "H03-seta-direita", "H04-f1", "H05-f2", "H06-f3", "H07-f5", "H08-ponto", "H09-esc", "H10-ctrl-o", "H11-pilula", "H12-novo-abre", "H13-novo-esc", "H14-menu-abre", "H15-config", "H16-voltar", "H17-menu-abre", "H18-saida-bloqueada", "H19-esc-fecha-menu", "H20-busca-negada", "H30-digitos", "H31a-menu-abre", "H31-config", "H32-esc-volta", "H33-undo-para-draw", "H34-nuvem-scripture", "H35a-editar", "H35-editor-pronto"])
     for (const p of SECOES_PREPARAR[0].passos) {
-        if (p.id === "H15-config" || p.id === "H16-voltar") assert.ok(p.efeito && p.paginaFinal, p.id)
+        if (["H15-config", "H16-voltar", "H31-config", "H32-esc-volta", "H33-undo-para-draw", "H34-nuvem-scripture", "H35a-editar", "H35-editor-pronto"].includes(p.id)) assert.ok(p.efeito && p.paginaFinal, p.id)
         else assert.ok(p.semEfeito && !p.efeito, p.id)
     }
 })

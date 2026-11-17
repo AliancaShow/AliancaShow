@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { DrawTools } from "../../../types/Draw"
     import { drawTool } from "../../stores"
+    import { gavetaNaoToca } from "../../utils/aliancaModo"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
     import Button from "../inputs/Button.svelte"
@@ -8,6 +9,7 @@
     const tools: DrawTools[] = ["focus", "pointer", "particles", "zoom", "fill", "paint"]
 
     function keydown(e: KeyboardEvent) {
+        if (gavetaNaoToca()) return
         if (e.target?.closest?.(".edit") || e.ctrlKey || e.metaKey) return
 
         let nextTab = -1
@@ -28,7 +30,15 @@
 
 <div class="main">
     {#each tools as tool}
-        <Button id="button" on:click={() => drawTool.set(tool)} active={$drawTool === tool} bold={false}>
+        <Button
+            id="button"
+            on:click={() => {
+                if (gavetaNaoToca()) return
+                drawTool.set(tool)
+            }}
+            active={$drawTool === tool}
+            bold={false}
+        >
             <Icon id={tool} right white={$drawTool === tool} />
             <p style="margin: 5px;"><T id="draw.{tool}" /></p>
         </Button>

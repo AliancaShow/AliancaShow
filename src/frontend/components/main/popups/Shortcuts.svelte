@@ -69,7 +69,6 @@
         num: "SEPARATOR",
 
         // arrow keys, space, tabs, enter, ...
-        "actions.change_tab": "num",
         "actions.change_drawer_tab": `${ctrl} + num`,
         "actions.change_slide": "← / →",
         "actions.change_project_item": "↑ / ↓",

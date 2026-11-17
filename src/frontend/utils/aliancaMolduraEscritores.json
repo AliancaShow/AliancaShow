@@ -1,0 +1,156 @@
+{
+    "IPC/responsesMain.ts": [
+        "\"show\""
+    ],
+    "components/actions/apiHelper.ts": [
+        "\"show\""
+    ],
+    "components/context/menuClick.ts": [
+        "\"settings\"",
+        "\"edit\"",
+        "\"edit\"",
+        "\"edit\"",
+        "\"edit\"",
+        "\"edit\"",
+        "\"edit\"",
+        "\"edit\"",
+        "\"settings\"",
+        "\"stage\"",
+        "\"settings\"",
+        "\"show\"",
+        "\"show\""
+    ],
+    "components/drawer/audio/AudioMeter.svelte": [
+        "\"show\""
+    ],
+    "components/drawer/info/ScriptureInfo.svelte": [
+        "\"settings\"",
+        "\"edit\""
+    ],
+    "components/edit/Navigation.svelte": [
+        "\"show\""
+    ],
+    "components/edit/scripts/edit.ts": [
+        "\"show\""
+    ],
+    "components/edit/tools/SlideStyle.svelte": [
+        "\"edit\"",
+        "\"edit\""
+    ],
+    "components/guide/guideSteps.ts": [
+        "\"show\"",
+        "\"show\"",
+        "\"show\"",
+        "\"edit\"",
+        "\"show\""
+    ],
+    "components/helpers/history.ts": [
+        "obj.location!.page"
+    ],
+    "components/inputs/HiddenInput.svelte": [
+        "\"edit\""
+    ],
+    "components/inputs/TopButton.svelte": [
+        "id"
+    ],
+    "components/main/PrepararMenu.svelte": [
+        "\"settings\"",
+        "\"settings\""
+    ],
+    "components/main/SirvoIndicador.svelte": [
+        "\"settings\""
+    ],
+    "components/main/StatusIndicator.svelte": [
+        "\"settings\""
+    ],
+    "components/main/Top.svelte": [
+        "\"settings\"",
+        "user.activePage as any"
+    ],
+    "components/main/popups/CleaningUtility.svelte": [
+        "\"show\""
+    ],
+    "components/main/popups/MetadataDisplay.svelte": [
+        "\"edit\""
+    ],
+    "components/main/popups/OutputSelector.svelte": [
+        "\"settings\""
+    ],
+    "components/main/popups/ResetAll.svelte": [
+        "\"show\""
+    ],
+    "components/main/popups/SelectStageLayout.svelte": [
+        "\"stage\""
+    ],
+    "components/main/popups/SelectStyle.svelte": [
+        "\"settings\""
+    ],
+    "components/main/popups/TemplateInfo.svelte": [
+        "\"settings\"",
+        "\"edit\""
+    ],
+    "components/main/popups/TemplateStyleOverrides.svelte": [
+        "\"edit\""
+    ],
+    "components/output/preview/MultiOutputs.svelte": [
+        "\"settings\""
+    ],
+    "components/quicksearch/quicksearch.ts": [
+        "\"settings\"",
+        "\"settings\"",
+        "\"settings\"",
+        "\"stage\"",
+        "\"show\"",
+        "\"show\"",
+        "\"show\"",
+        "id as any",
+        "\"show\"",
+        "\"settings\"",
+        "\"settings\"",
+        "\"settings\"",
+        "\"show\"",
+        "\"show\""
+    ],
+    "components/settings/SettingsTabs.svelte": [
+        "\"show\"",
+        "\"stage\""
+    ],
+    "components/settings/tabs/Connection.svelte": [
+        "\"show\""
+    ],
+    "components/settings/tabs/Outputs.svelte": [
+        "\"stage\""
+    ],
+    "components/settings/tabs/Styles.svelte": [
+        "\"edit\"",
+        "\"edit\""
+    ],
+    "components/show/Slides.svelte": [
+        "\"edit\""
+    ],
+    "components/slide/Slide.svelte": [
+        "\"edit\""
+    ],
+    "components/stage/StageLayout.svelte": [
+        "\"settings\""
+    ],
+    "converters/project.ts": [
+        "\"show\""
+    ],
+    "utils/aliancaBiblioteca.ts": [
+        "\"edit\""
+    ],
+    "utils/aliancaMoldura.ts": [
+        "alvoSeguro()",
+        "alvo",
+        "\"show\""
+    ],
+    "utils/aliancaPilula.ts": [
+        "\"show\""
+    ],
+    "utils/shortcuts.ts": [
+        "\"show\"",
+        "\"edit\"",
+        "\"show\""
+    ]
+}

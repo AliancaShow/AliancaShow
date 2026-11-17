@@ -49,7 +49,7 @@ describe("fachada por modo: logica pura e sem assinatura no nivel do modulo", ()
         for (const rel of logica) expect(ler(rel), rel).not.toMatch(/from\s+["'][^"']*\/stores["']/)
     })
     it("nenhum `.subscribe(` fora de funcao nesses arquivos nem em aliancaLayoutEstado.ts e aliancaFalha.ts", () => {
-        for (const rel of [...logica, "src/frontend/utils/aliancaLayoutEstado.ts", "src/frontend/utils/aliancaFalha.ts"]) {
+        for (const rel of [...logica, "src/frontend/utils/aliancaLayoutEstado.ts", "src/frontend/utils/aliancaFalha.ts", "src/frontend/utils/aliancaMoldura.ts", "src/frontend/utils/aliancaMolduraLogica.ts"]) {
             const soltas = ler(rel)
                 .split("\n")
                 .filter((l) => /^\S.*\.subscribe\(/.test(l) && !l.startsWith("//"))

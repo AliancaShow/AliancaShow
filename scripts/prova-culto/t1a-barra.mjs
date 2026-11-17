@@ -103,6 +103,8 @@ await esperar(500)
     r.ok("T-1a-10.2 altura da barra 54 px e sem rolagem nova", e.altura === 54 && !e.rolagem, JSON.stringify(e))
 }
 await injetarChips(j)
+// 1b (16/nov): com chip de roteiro/chat o `tudo pronto` some; a medida da pilula precisa dela, entao ha 1 item que nao chegou (pilula com pendencia fica sempre)
+await j.ev(`const M=await import(U("utils/aliancaSirvoMaterial")); M.sirvoMaterialEstado.update(e=>({...e,habilitado:true,naFila:1,falhas:[]})); await esp(400); return 1`)
 const larguras = [1365, 1099, 899, 759]
 for (const w of larguras) {
     await j.enviar("Emulation.setDeviceMetricsOverride", { width: w, height: 760, deviceScaleFactor: 1, mobile: false })

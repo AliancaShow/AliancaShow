@@ -25,6 +25,15 @@ export function textoDaPilula(p: { conferir: number; semLetra: number; naoChegou
     return { texto: partes.join(" · "), pronto: false }
 }
 
+/**
+ * a pilula `tudo pronto ✓` SOME (nao e renderizada) enquanto houver chip pendente de roteiro ou de chat: o chip ja diz que ha algo para olhar
+ * e o `tudo pronto` ao lado dele mente por omissao. Pilula com pendencia (`N pra conferir...`) fica sempre. O chip de desenho nao conta.
+ */
+export function pilulaVisivel(pronto: boolean, chips: { id: string }[] | null | undefined): boolean {
+    if (!pronto) return true
+    return !(chips || []).some((c) => c.id === "roteiro" || c.id === "chat")
+}
+
 /** a pilula so e clicavel quando ha algo para abrir (conferir ou sem letra); so "nao chegou" nao abre item */
 export function pilulaClicavel(p: { conferir: number; semLetra: number }): boolean {
     return p.conferir > 0 || p.semLetra > 0

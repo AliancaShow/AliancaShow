@@ -17,6 +17,8 @@ export const ARQUIVOS_DA_PILHA = [
     "src/frontend/utils/aliancaDrawerTabsLogica.ts",
     "src/frontend/utils/aliancaAbasEditor.ts",
     "src/frontend/utils/aliancaFalha.ts",
+    "src/frontend/utils/aliancaMoldura.ts",
+    "src/frontend/utils/aliancaMolduraLogica.ts",
     "src/frontend/utils/aliancaQuickSearchLogica.ts",
     "src/frontend/utils/aliancaPilulaLogica.ts",
     "src/frontend/utils/aliancaSaidaMenuLogica.ts",
