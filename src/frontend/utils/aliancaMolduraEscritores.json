@@ -142,6 +142,11 @@
     "utils/aliancaBiblioteca.ts": [
         "\"edit\""
     ],
+    "utils/aliancaMoldura.ts": [
+        "alvoSeguro()",
+        "alvo",
+        "\"show\""
+    ],
     "utils/aliancaPilula.ts": [
         "\"show\""
     ],

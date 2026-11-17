@@ -41,8 +41,8 @@ export const EXCECOES = {
         sha: "8a1ee669826a69871d531a8afb1c3165bae135c6a150e629559acb5aed23c51c"
     },
     "src/frontend/utils/startup.ts": {
-        motivo: "0b/R2: iniciarLayoutAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca ainda tem guarda de currentWindow",
-        sha: "5981ee8dcc73f0273a0332473a5b3aab08a2aa7836732c39e1bd67c97b006aee"
+        motivo: "1b: iniciarLayoutAlianca(), iniciarMolduraAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca e iniciarMolduraAlianca ainda tem guarda de currentWindow",
+        sha: "ea1a81f20ec701d700626e83e2ff311ef7561cb98db800695472b321af423a32"
     },
     "src/frontend/utils/shortcuts.ts": {
         motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
@@ -90,11 +90,19 @@ export const NOVOS_NO_FECHO = {
     "src/frontend/utils/aliancaFalha.ts": {
         motivo: "R2: so cria um writable e escreve nele; nada monta FaixaDeFalha na janela de saida; na saida a falha vira so console.error; o registro em disco so e configurado em startupMain",
         sha: "6ce913d9d26b33afa713bb663fab43ff7ec4f07e2fdee27473a7978492a6d929"
+    },
+    "src/frontend/utils/aliancaMoldura.ts": {
+        motivo: "1b: so assina dentro de iniciarMolduraAlianca, que sai cedo fora da janela principal (currentWindow); nada escreve em outputs",
+        sha: "9c78979ca52f5e30071504da7d14a91a43058776efbd46730cd89ef710b84e06"
+    },
+    "src/frontend/utils/aliancaMolduraLogica.ts": {
+        motivo: "1b: logica pura, sem import, sem store e sem efeito",
+        sha: "5bac9575f24942b26e777ec9ea22906e7defc7f5dc5025150fa9f76c47a288e7"
     }
 }
 
-export const SHA_EXCECOES = "e306ad152cf2ec8e4859064711c0c0d036aea0b7bc771dfab68e3375a14985d1"
-export const SHA_NOVOS = "fee915b704591658e2cb17020091de48e285b3ff3bda1c059e6934ca327d6b56"
+export const SHA_EXCECOES = "6791ca62ad19394c27b4f0c4444f45d4e5b812b2826236efbde7be31997b8428"
+export const SHA_NOVOS = "8c6e6985619087b7c283dd479f007bca12634465374254f785c5dfbc2af23316"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
