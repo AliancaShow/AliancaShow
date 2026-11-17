@@ -7,7 +7,7 @@ export const TETO_RUIDO = 80
 
 /** fatias que podem declarar excecoes no esperado.json (outra fatia reprova no esquema) */
 export const FATIAS_VALIDAS = ["0b", "0c", "1a", "1b"]
-/** teto de itens `divergencia` por fatia (os itens de decisao, efeitoMinimo e dom, tem a propria trava: decisaoDeProduto + fantasma) */
+/** teto de itens declarados por fatia: conta TODOS os tipos (divergencia, efeitoMinimo, dom...), exceto `aposentar` */
 export const TETO_PADRAO = 10
 export const TETO_POR_FATIA = {
     // 0b: E1, E2, E3 (19 itens de `principal.sinais`, relatorio-layout-f0.md)
@@ -172,10 +172,10 @@ export function validarEsperado(itens) {
         if (it.tipo === "aposentar" && !it.alvo) erros.push(`${n}: aposentar sem alvo`)
     })
     const porFatia = {}
-    for (const it of itens) if (it.tipo === "divergencia" && it.fatia) porFatia[it.fatia] = (porFatia[it.fatia] || 0) + 1
+    for (const it of itens) if (it.tipo !== "aposentar" && it.fatia) porFatia[it.fatia] = (porFatia[it.fatia] || 0) + 1
     for (const [fatia, n] of Object.entries(porFatia)) {
         const teto = TETO_POR_FATIA[fatia] ?? TETO_PADRAO
-        if (n > teto) erros.push(`esperado: fatia ${fatia} tem ${n} divergencias, acima do teto ${teto}`)
+        if (n > teto) erros.push(`esperado: fatia ${fatia} tem ${n} itens declarados, acima do teto ${teto}`)
     }
     itens.forEach((it, i) => {
         if (it.tipo === "aposentar" && !ids.has(it.alvo)) erros.push(`esperado[${i}]: aposentar "${it.alvo}" nao aponta para um item declarado (id)`)

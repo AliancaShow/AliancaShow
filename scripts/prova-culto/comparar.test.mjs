@@ -348,6 +348,20 @@ test("teto padrao: 11 itens numa fatia sem excecao reprova, 10 passa", () => {
     assert.ok(validarEsperado(Array.from({ length: 11 }, (_, i) => div(i, "1a"))).some((e) => /teto 10/.test(e)))
     assert.deepEqual(validarEsperado(Array.from({ length: 10 }, (_, i) => div(i, "1a"))), [])
 })
+test("teto da 1b conta TODOS os itens da fatia (nao so divergencia): 11 passa, o 12o de qualquer tipo reprova, aposentar nao conta", () => {
+    const real = JSON.parse(readFileSync("scripts/prova-culto/esperado.json", "utf8"))
+    const da1b = real.filter((i) => i.fatia === "1b")
+    assert.equal(da1b.length, 11, "o esperado real tem 11 itens da 1b (5 efeitoMinimo + 6 dom)")
+    assert.deepEqual(validarEsperado(real), [])
+    const dom = da1b.find((i) => i.tipo === "dom")
+    const em = da1b.find((i) => i.tipo === "efeitoMinimo")
+    for (const extra of [{ ...div(99, "1b") }, { ...dom, id: "x-dom" }, { ...em, id: "x-em" }])
+        assert.ok(validarEsperado([...real, extra]).some((e) => /fatia 1b tem 12 itens declarados, acima do teto 11/.test(e)), extra.tipo)
+    // aposentar nao conta
+    assert.ok(!validarEsperado([...real, { tipo: "aposentar", fatia: "1b", alvo: real[0].id, porque: "x" }]).some((e) => /teto/.test(e)))
+    // a 0b segue em 19 (19 divergencias do real)
+    assert.equal(real.filter((i) => i.fatia === "0b").length, 19)
+})
 test("fatia fora da lista reprova (1b-dom, 2a, vazia)", () => {
     for (const fatia of ["1b-dom", "2a", "0a"])
         assert.ok(
