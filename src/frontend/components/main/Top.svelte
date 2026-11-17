@@ -1,6 +1,6 @@
 <script lang="ts">
     import { slide } from "svelte/transition"
-    import { activeEdit, activePage, activeProfile, activeProject, activeShow, cloudUsers, dictionary, drawSettings, drawTool, os, outputDisplay, outputs, paintCache, profiles, saved, settingsTab, shows } from "../../stores"
+    import { activeEdit, activePage, activeProfile, activeProject, activeShow, cloudUsers, dictionary, drawSettings, drawTool, modoAlianca, os, outputDisplay, outputs, paintCache, profiles, saved, settingsTab, shows } from "../../stores"
     import { onDestroy } from "svelte"
     import { getCloudUsers } from "../../utils/cloudSync"
     import { translateText } from "../../utils/language"
@@ -11,6 +11,8 @@
     import TopButton from "../inputs/TopButton.svelte"
     import { DEFAULT_DISPLAY_NAME } from "../../utils/SocketHelper"
     import AliancaModo from "./AliancaModo.svelte"
+    import AnteparoDeModo from "./AnteparoDeModo.svelte"
+    import PrepararBarra from "./PrepararBarra.svelte"
     import SirvoIndicador from "./SirvoIndicador.svelte"
 
     export let isWindows = false
@@ -155,63 +157,68 @@
             <h1 style="color: var(--text);font-size: 1.7em;">AliançaShow</h1>
         </div> -->
     </span>
-    <span>
-        <TopButton id="show" />
-        <TopButton id="edit" disabled={editDisabled} />
-        <TopButton id="stage" />
-        <!-- AliancaShow: modo Biblia em tela cheia, ao lado de Palco -->
-        <TopButton id="scripture" />
-    </span>
-    <span style="width: var(--navigation-width);justify-content: flex-end;">
-        {#if $outputDisplay}
-            <div class="noAr" data-title={translateText("menu._title_display_stop [Ctrl+O]", $dictionary)}>
-                <span class="noArPonto" />
-                NO AR · {tempoNoAr}
-            </div>
-        {/if}
-        <TopButton id="draw" red={$drawTool === "fill" || ($drawTool === "zoom" && $drawSettings.zoom?.size !== 100) || !!($drawTool === "paint" && $paintCache?.length)} hideLabel />
-        {#if !settingsDisabled}
-            <TopButton id="settings" hideLabel />
-        {/if}
-
-        <!-- <MaterialButton id="output_window_button" class="context #output display {$outputDisplay ? 'on' : 'off'}" title="menu.{$outputDisplay ? (confirm ? 'again_confirm' : '_title_display_stop') : '_title_display'} [Ctrl+O]" style={$outputDisplay || disableClick ? "" : "border-bottom: 2px solid var(--secondary);"} on:click={toggleOutput} disabled={(!$outputDisplay && !physicalOutputWindows.length) || disableClick} red={$outputDisplay}>
+    {#if $modoAlianca === "preparar"}
+        <PrepararBarra {tempoNoAr} {settingsDisabled} semTelaFisica={!$outputDisplay && !physicalOutputWindows.length} />
+    {:else}
+        <span>
+            <TopButton id="show" />
+            <TopButton id="edit" disabled={editDisabled} />
+            <TopButton id="stage" />
+            <!-- AliancaShow: modo Biblia em tela cheia, ao lado de Palco -->
+            <TopButton id="scripture" />
+        </span>
+        <span style="width: var(--navigation-width);justify-content: flex-end;">
             {#if $outputDisplay}
-                {#if confirm}
-                    <Icon id="close" size={1.6} white />
-                {:else}
-                    <Icon id="cancelDisplay" size={1.6} white />
-                {/if}
-            {:else}
-                <Icon id="outputs" size={1.6} white />
-            {/if}
-
-            {#if $outputDisplay && confirm}
-                <div class="click_again" transition:slide>
-                    <T id="menu.again_confirm" />
+                <div class="noAr" data-title={translateText("menu._title_display_stop [Ctrl+O]", $dictionary)}>
+                    <span class="noArPonto" />
+                    NO AR · {tempoNoAr}
                 </div>
             {/if}
-        </MaterialButton> -->
-        <Button id="output_window_button" title={translateText(`menu.${$outputDisplay ? (confirm ? "again_confirm" : "_title_display_stop") : "_title_display"} [Ctrl+O]`, $dictionary)} style={$outputDisplay || disableClick ? "" : "background: rgb(242 26 39 / 0.16);box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);border-radius: 8px;"} on:click={toggleOutput} class="context #output display {$outputDisplay ? 'on' : 'off'}" red={$outputDisplay} disabled={noPhysicalOutputWindows}>
-            {#if $outputDisplay}
-                {#if confirm}
-                    <Icon id="close" size={1.6} white />
-                {:else}
-                    <Icon id="cancelDisplay" size={1.6} white />
-                {/if}
-            {:else}
-                <Icon id="outputs" size={1.6} white />
+            <TopButton id="draw" red={$drawTool === "fill" || ($drawTool === "zoom" && $drawSettings.zoom?.size !== 100) || !!($drawTool === "paint" && $paintCache?.length)} hideLabel />
+            {#if !settingsDisabled}
+                <TopButton id="settings" hideLabel />
             {/if}
 
-            {#if $outputDisplay && confirm}
-                <div class="click_again" transition:slide>
-                    <T id="menu.again_confirm" />
-                </div>
+            <!-- <MaterialButton id="output_window_button" class="context #output display {$outputDisplay ? 'on' : 'off'}" title="menu.{$outputDisplay ? (confirm ? 'again_confirm' : '_title_display_stop') : '_title_display'} [Ctrl+O]" style={$outputDisplay || disableClick ? "" : "border-bottom: 2px solid var(--secondary);"} on:click={toggleOutput} disabled={(!$outputDisplay && !physicalOutputWindows.length) || disableClick} red={$outputDisplay}>
+                {#if $outputDisplay}
+                    {#if confirm}
+                        <Icon id="close" size={1.6} white />
+                    {:else}
+                        <Icon id="cancelDisplay" size={1.6} white />
+                    {/if}
+                {:else}
+                    <Icon id="outputs" size={1.6} white />
+                {/if}
+
+                {#if $outputDisplay && confirm}
+                    <div class="click_again" transition:slide>
+                        <T id="menu.again_confirm" />
+                    </div>
+                {/if}
+            </MaterialButton> -->
+            <Button id="output_window_button" title={translateText(`menu.${$outputDisplay ? (confirm ? "again_confirm" : "_title_display_stop") : "_title_display"} [Ctrl+O]`, $dictionary)} style={$outputDisplay || disableClick ? "" : "background: rgb(242 26 39 / 0.16);box-shadow: inset 0 0 0 1px rgb(242 26 39 / 0.3);border-radius: 8px;"} on:click={toggleOutput} class="context #output display {$outputDisplay ? 'on' : 'off'}" red={$outputDisplay} disabled={noPhysicalOutputWindows}>
+                {#if $outputDisplay}
+                    {#if confirm}
+                        <Icon id="close" size={1.6} white />
+                    {:else}
+                        <Icon id="cancelDisplay" size={1.6} white />
+                    {/if}
+                {:else}
+                    <Icon id="outputs" size={1.6} white />
+                {/if}
+
+                {#if $outputDisplay && confirm}
+                    <div class="click_again" transition:slide>
+                        <T id="menu.again_confirm" />
+                    </div>
+                {/if}
+            </Button>
+            {#if !$outputDisplay && !physicalOutputWindows.length}
+                <div data-title={translateText("No 'physical' outputs available!")} style="position: absolute;top: 0;inset-inline-end: 0;height: 100%;width: 60px;" role="none" on:click={openOutputSettings} />
             {/if}
-        </Button>
-        {#if !$outputDisplay && !physicalOutputWindows.length}
-            <div data-title={translateText("No 'physical' outputs available!")} style="position: absolute;top: 0;inset-inline-end: 0;height: 100%;width: 60px;" role="none" on:click={openOutputSettings} />
-        {/if}
-    </span>
+        </span>
+    {/if}
+    <AnteparoDeModo />
 </div>
 
 <style>

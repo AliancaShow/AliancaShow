@@ -22,7 +22,7 @@ async function achar(qual) {
     const alvos = (await (await fetch(`http://127.0.0.1:${PORTA}/json/list`)).json()).filter((t) => t.type === "page" && t.url.startsWith("http://localhost:3000"))
     for (const t of alvos) {
         const j = await conectar(t.webSocketDebuggerUrl)
-        const ehSaida = await j.avaliar('return !document.body.innerText.includes("Mostrar")').catch(() => false)
+        const ehSaida = await j.avaliar('return !document.querySelector(".top.panel")').catch(() => false)
         if ((qual === "saida") === !!ehSaida) return j
         j.fechar()
     }

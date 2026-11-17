@@ -53,18 +53,19 @@ export function primeiroPendente(total: number, ehConferir: (i: number) => boole
 // ---------------------------------------------------------------- os chips
 
 export type AvisosDoSirvo = { linhas: unknown[]; anteriores: boolean }
-export type Chip = { id: "roteiro" | "chat" | "desenho"; texto: string; titulo: string }
+/** `texto` e o que aparece inteiro; `numero` e o que sobra no aperto (abaixo de 1100 px o chip vira icone + numero) */
+export type Chip = { id: "roteiro" | "chat" | "desenho"; texto: string; titulo: string; numero: number | null }
 
 export function chipRoteiro(a: AvisosDoSirvo | null | undefined): Chip | null {
     const n = a?.linhas?.length || 0
     if (!(n > 0 || a?.anteriores)) return null
-    return { id: "roteiro", texto: n > 0 ? `Roteiro mudou · ${n}` : "Roteiro mudou", titulo: "O roteiro do Sirvo mudou. Vai ao Culto, onde o aviso espera." }
+    return { id: "roteiro", texto: n > 0 ? `Roteiro mudou · ${n}` : "Roteiro mudou", titulo: "O roteiro do Sirvo mudou. Vai ao Culto, onde o aviso espera.", numero: n > 0 ? n : null }
 }
 
 export type ChatDoSirvo = { naoLidas: number; cultoId: string | null; ligado: boolean; congelado: boolean }
 export function chipChat(c: ChatDoSirvo | null | undefined, cultoSeguido: string | null | undefined): Chip | null {
     if (!c || !(c.naoLidas > 0) || !cultoSeguido || c.cultoId !== cultoSeguido || !(c.ligado || c.congelado)) return null
-    return { id: "chat", texto: `Chat · ${c.naoLidas} ${c.naoLidas === 1 ? "nova" : "novas"}`, titulo: "Mensagens novas do chat do culto. Vai ao Culto, onde ele abre." }
+    return { id: "chat", texto: `Chat · ${c.naoLidas} ${c.naoLidas === 1 ? "nova" : "novas"}`, titulo: "Mensagens novas do chat do culto. Vai ao Culto, onde ele abre.", numero: c.naoLidas }
 }
 
 /** desenho no telao: preencher, zoom diferente de 100 ou pintura (a mesma conta da bolinha vermelha do Desenhar no Culto) */
@@ -73,7 +74,7 @@ export function desenhoAtivo(drawTool: string | null | undefined, drawSettings: 
 }
 
 export function chipDesenho(ativo: boolean): Chip | null {
-    return ativo ? { id: "desenho", texto: "Desenho ativo", titulo: "Há um desenho ativo no telão. Vai ao Culto para limpar." } : null
+    return ativo ? { id: "desenho", texto: "Desenho ativo", titulo: "Há um desenho ativo no telão. Vai ao Culto para limpar.", numero: null } : null
 }
 
 // ---------------------------------------------------------------- o anteparo

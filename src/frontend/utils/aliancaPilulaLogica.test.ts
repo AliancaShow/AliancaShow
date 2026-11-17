@@ -40,14 +40,38 @@ describe("texto da pilula", () => {
 
 describe("primeiroPendente", () => {
     it("conferir vem antes de sem letra, e o indice e o certo", () => {
-        expect(primeiroPendente(5, (i) => i === 3, (i) => i === 1)).toBe(3)
+        expect(
+            primeiroPendente(
+                5,
+                (i) => i === 3,
+                (i) => i === 1
+            )
+        ).toBe(3)
     })
     it("sem conferir: o 1o sem letra", () => {
-        expect(primeiroPendente(5, () => false, (i) => i === 2 || i === 4)).toBe(2)
+        expect(
+            primeiroPendente(
+                5,
+                () => false,
+                (i) => i === 2 || i === 4
+            )
+        ).toBe(2)
     })
     it("sem pendencia: null", () => {
-        expect(primeiroPendente(5, () => false, () => false)).toBeNull()
-        expect(primeiroPendente(0, () => true, () => true)).toBeNull()
+        expect(
+            primeiroPendente(
+                5,
+                () => false,
+                () => false
+            )
+        ).toBeNull()
+        expect(
+            primeiroPendente(
+                0,
+                () => true,
+                () => true
+            )
+        ).toBeNull()
     })
 })
 

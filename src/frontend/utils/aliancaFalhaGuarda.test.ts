@@ -11,7 +11,21 @@ import { describe, expect, it } from "vitest"
 const RAIZ = join(__dirname, "..", "..", "..")
 const ler = (rel: string) => readFileSync(join(RAIZ, rel), "utf8").replace(/\r\n/g, "\n")
 
-export const ARQUIVOS_DA_PILHA = ["src/frontend/utils/aliancaPorModoLogica.ts", "src/frontend/utils/aliancaLayoutEstado.ts", "src/frontend/utils/aliancaDrawerTabsLogica.ts", "src/frontend/utils/aliancaAbasEditor.ts", "src/frontend/utils/aliancaFalha.ts", "src/frontend/utils/aliancaQuickSearchLogica.ts", "src/frontend/utils/aliancaPilulaLogica.ts", "src/frontend/utils/aliancaSaidaMenuLogica.ts"]
+export const ARQUIVOS_DA_PILHA = [
+    "src/frontend/utils/aliancaPorModoLogica.ts",
+    "src/frontend/utils/aliancaLayoutEstado.ts",
+    "src/frontend/utils/aliancaDrawerTabsLogica.ts",
+    "src/frontend/utils/aliancaAbasEditor.ts",
+    "src/frontend/utils/aliancaFalha.ts",
+    "src/frontend/utils/aliancaQuickSearchLogica.ts",
+    "src/frontend/utils/aliancaPilulaLogica.ts",
+    "src/frontend/utils/aliancaSaidaMenuLogica.ts",
+    "src/frontend/utils/aliancaPilula.ts",
+    "src/frontend/components/main/AnteparoDeModo.svelte",
+    "src/frontend/components/main/PrepararBarra.svelte",
+    "src/frontend/components/main/PrepararPilula.svelte",
+    "src/frontend/components/main/PrepararMenu.svelte"
+]
 
 /** os `catch` de aliancaFalha.ts que nao podem chamar falhaAlta (seria ela mesma), marcados na linha do `catch` ou na 1a linha do corpo (o prettier empurra o comentario para la) */
 const MARCADOR = "// catch interno de falhaAlta: nao pode lancar"
