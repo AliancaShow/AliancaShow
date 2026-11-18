@@ -253,6 +253,8 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await direito(c.x, c.y)
       await clicarItem("Mostrar agora")
       ok("E4 Mostrar agora do item vai ao ar e o roteiro nao muda", (await algoNoAr()) && (await projeto()) === antes)
+      // achado 11: Mostrar agora de um show do roteiro abre ESSE item no centro (o leiaute gravado nele), como o clique faz: o telao e a grade concordam
+      ok("E4b Mostrar agora de um show do roteiro abre o item clicado no centro (indice 0)", (await dom(`get(S.activeShow)?.index`)) === 0, `index=${await dom(`get(S.activeShow)?.index`)}`)
       await limpar()
       const d = await localizar(j, `[...document.querySelectorAll('[data-acao=lista-roteiro] button.item')].slice(-1)[0]`)
       const nAntes = await tamanho()

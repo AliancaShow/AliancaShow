@@ -97,4 +97,8 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         expect(reg).not.toMatch(/nada selecionado para pôr no roteiro/)
         expect(reg).toContain('newToast("A seleção mudou. Abra o menu de novo.")')
     })
+    it("revisao da fatia 6, achado 11: Mostrar agora de um show do roteiro aplica o leiaute do item, abre o item no centro e so entao manda ao ar", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).toMatch(/swichProjectItem\(indice, item\.id\)[\s\S]{0,120}abrirItemDoRoteiro\(item, indice\)[\s\S]{0,120}tocarShowNoAr\(item\.id/)
+    })
 })

@@ -9,7 +9,7 @@ import { get } from "svelte/store"
 import { addProjectItem } from "../../converters/project"
 import { AudioPlayer } from "../../audio/audioPlayer"
 import { playScripture } from "../drawer/bible/scripture"
-import { activeProject, contextActive, editingProjectTemplate, outLocked, overlays, projects } from "../../stores"
+import { activeProject, contextActive, editingProjectTemplate, outLocked, overlays, projects, showsCache } from "../../stores"
 import { newToast } from "../../utils/common"
 import { falhaAlta } from "../../utils/aliancaFalha"
 import { porShowNoFim } from "../../utils/aliancaBiblioteca"
@@ -21,6 +21,8 @@ import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
 import { deleteAction } from "../helpers/clipboard"
 import { history } from "../helpers/history"
+import { loadShows } from "../helpers/setShow"
+import { swichProjectItem } from "../helpers/showActions"
 import { getExtension, getMediaType } from "../helpers/media"
 import { contextMenuItems, contextMenuLayouts, type ContextMenuItem } from "./contextMenus"
 import { menuClick } from "./menuClick"
@@ -213,7 +215,18 @@ function mostrarAgoraDoItem(contextElem: HTMLElement | null, sel: Sel) {
     if (get(outLocked)) return void newToast(MOTIVO_TRAVADA)
     if (engolir("agora-item:" + r.projetoId + ":" + r.indice, performance.now())) return
     const tipo = (r.item.type || "show") as string
-    if (tipo === "show") return void tocarShowNoAr(r.item.id, { entrarNoRoteiro: false })
+    if (tipo === "show") {
+        // o item do roteiro tem o SEU leiaute gravado e o centro tem que mostrar ESSE item (a mesma musica duas vezes, com arranjos diferentes): aplica o
+        // leiaute do item, abre o item e so entao manda ao ar (revisao da fatia 6, achado 11)
+        const { indice, item } = r
+        void (async () => {
+            await loadShows([item.id])
+            if (get(showsCache)[item.id]) swichProjectItem(indice, item.id)
+            abrirItemDoRoteiro(item, indice)
+            await tocarShowNoAr(item.id, { entrarNoRoteiro: false })
+        })()
+        return
+    }
     if (tipo === "audio") return void AudioPlayer.start(r.item.id, { name: r.item.name })
     if (tipo === "video" || tipo === "image") return menuClick("play", false, contextMenuItems.play, contextElem as any, null, { id: "show", data: [{ id: r.item.id, type: tipo, index: r.indice }] } as any)
     falhaAlta("menu-roteiro", `"Mostrar agora" nao existe para itens do tipo ${tipo}`)
