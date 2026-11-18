@@ -9,5 +9,3 @@ export const TELA_PADRAO: AliancaTelaValores = { esq: 280, dir: 330, bib: 260 }
 
 export const aliancaTela = writable<AliancaTelaValores>({ ...TELA_PADRAO })
 
-// Bancada de desenvolvimento (commits 3 a 9 da fatia 1): NAO e flag de produto, nao existe no build e some no commit da troca.
-export const telaNova = writable(false)

@@ -14,7 +14,8 @@
     $: lista = ($activeProject ? $projects[$activeProject]?.shows || [] : []).filter((a) => typeof a === "object")
     $: indice = typeof $activeShow?.index === "number" ? $activeShow.index : lista.findIndex((a) => a.id === $activeShow?.id)
     $: proximo = nomeDe(lista.slice(indice + 1).find((a) => a.type !== "section") as any)
-    $: noArIds = ($outputs, noAr().ids)
+    const lerNoAr = (_saidas: unknown) => noAr().ids
+    $: noArIds = lerNoAr($outputs)
     $: aoVivo = !!$outputDisplay && !!$activeShow?.id && ($activeShow.type || "show") === "show" && noArIds.has($activeShow.id)
 </script>
 

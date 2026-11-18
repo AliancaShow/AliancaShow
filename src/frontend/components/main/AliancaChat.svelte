@@ -20,7 +20,7 @@
     //  - Som: desligado por padrão; a saída de áudio costuma ir para a mesa.
     //  - Admin desligou "conversa" no meio do culto: congela acinzentado, com aviso.
     // Texto do Sirvo só por interpolação {…}, nunca {@html}.
-    import { afterUpdate, tick } from "svelte"
+    import { afterUpdate } from "svelte"
     import { sirvo } from "../../utils/aliancaSirvo"
     import { descartarChat, enviarChat, marcarChatLido, sirvoChat, sirvoChatOperador, sirvoChatSaida, sirvoChatSom, tentarChatDeNovo } from "../../utils/aliancaSirvoChat"
     import { nomeDoAutor, resumoDaUltima, textoDaMensagem, textoDoMotivo, trechoDaCitacao, type MensagemChat } from "../../utils/aliancaSirvoChatLogica"
@@ -34,8 +34,6 @@
 
     $: e = $sirvoChat
     $: visivel = !!$sirvo.cultoId && e.cultoId === $sirvo.cultoId && (e.ligado || e.congelado)
-    const aberto = true
-    $: resumo = e.motivo ? textoDoMotivo(e.motivo) : resumoDaUltima(e.mensagens) || "Nenhuma mensagem ainda."
 
     // ---- responder (v1.1)
     // pode responder: interruptor ligado, culto que serve, não congelado

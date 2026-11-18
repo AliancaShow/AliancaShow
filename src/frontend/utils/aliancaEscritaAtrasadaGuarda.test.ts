@@ -48,10 +48,6 @@ export function escritasAtrasadasPelaFachada(src: string): { linha: number; trec
  * Escritas atrasadas que ficam pela fachada DE PROPOSITO, cada uma com o motivo e o numero exato (mudar o numero aparece no diff).
  */
 export const JUSTIFICADOS: Record<string, { quantas: number; motivo: string }> = {
-    "src/frontend/utils/shortcuts.ts": {
-        quantas: 1,
-        motivo: "Esc no Preparar: o timeout de 20 ms refaz o teste `get(modoAlianca) === 'preparar'` e le e escreve a gaveta no mesmo instante, no mesmo lado. So cruzaria se o modo mudasse nos 20 ms depois de uma tecla, e a unica troca programatica (o chip) nasce de clique, nao de tecla. Nao toca a saida."
-    }
 }
 
 const arquivos = () =>

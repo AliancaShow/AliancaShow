@@ -87,6 +87,11 @@ test("MUTACAO lista NOVOS_NO_FECHO crescida sem SHA_NOVOS reprova", () => {
 test("os sha das duas listas batem com o conteudo real do HEAD (CRLF -> LF)", () => {
     for (const lista of [EXCECOES, NOVOS_NO_FECHO])
         for (const [caminho, e] of Object.entries(lista)) {
+            // arquivo APAGADO de proposito (sha "apagado"): o juiz ignora o sha, e aqui o arquivo tem de nao existir mesmo no HEAD
+            if (e.sha === "apagado") {
+                assert.throws(() => execFileSync("git", ["show", `HEAD:${caminho}`], { encoding: "utf8", stdio: "pipe" }), caminho + " devia estar apagado")
+                continue
+            }
             const txt = execFileSync("git", ["show", `HEAD:${caminho}`], { encoding: "utf8", maxBuffer: 1 << 28 })
             assert.equal(shaDoTexto(txt), e.sha, caminho)
             assert.equal(shaDoTexto(txt.replace(/\n/g, "\r\n")), e.sha, caminho + " com CRLF")

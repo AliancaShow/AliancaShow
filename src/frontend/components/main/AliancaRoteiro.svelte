@@ -99,7 +99,8 @@
     }
 
     // ----- NO AR -----
-    $: noArIds = ($outputs, noAr().ids)
+    const lerNoAr = (_saidas: unknown) => noAr().ids
+    $: noArIds = lerNoAr($outputs)
     $: ao = faixaAoVivo({ telaoLigado: !!$outputDisplay })
     $: musicas = categoriasDeMusica($categories as Parameters<typeof categoriasDeMusica>[0])
     function tipoDe(item: ProjectShowRef): string {
@@ -146,12 +147,13 @@
             <DropArea id="project" selectChildren hoverTimeout={150} file let:fileOver>
                 {#each blocos as b (b.chave)}
                     {#if b.cabecalho}
+                        {@const cab = b.cabecalho}
                         {@const idSirvo = blocoDoSirvo(b)}
                         {#if idSirvo && idSirvo === roteiroVivo}
                             <AliancaBlocoVivo blocoId={idSirvo} nome={nomeBloco(b)} />
                         {:else}
-                            <SelectElem id="show" data={{ ...b.cabecalho.item, index: b.cabecalho.index }} {fileOver} borders="edges" trigger="column" draggable={!(projeto.sectionsLocked || blocoDoSirvo(b))} selectable={!(projeto.sectionsLocked || blocoDoSirvo(b))}>
-                                <button class="bloco {projetoSoLeitura ? '' : 'context #project_section'}" tabindex="-1" on:click={() => abrir(b.cabecalho.item, b.cabecalho.index)}>
+                            <SelectElem id="show" data={{ ...cab.item, index: cab.index }} {fileOver} borders="edges" trigger="column" draggable={!(projeto?.sectionsLocked || blocoDoSirvo(b))} selectable={!(projeto?.sectionsLocked || blocoDoSirvo(b))}>
+                                <button class="bloco {projetoSoLeitura ? '' : 'context #project_section'}" tabindex="-1" on:click={() => abrir(cab.item, cab.index)}>
                                     <span>{nomeBloco(b) || "(sem nome)"}</span><span class="tempo">{duracaoDoBloco(b)}</span>
                                 </button>
                             </SelectElem>
@@ -164,7 +166,7 @@
                         {/each}
                     {/if}
                     {#each b.linhas as l (l.item.id + ":" + l.index)}
-                        {@const trava = projeto.sectionsLocked}
+                        {@const trava = projeto?.sectionsLocked}
                         <SelectElem id="show" dropAbove={false} triggerOnHover data={{ ...l.item, name: nomeDe(l.item), index: l.index }} {fileOver} borders={l.item.type === "show_placeholder" ? "all" : "edges"} trigger="column" draggable={!trava} selectable={!trava}>
                             <button class="item {projetoSoLeitura ? '' : `context #project_${contextoDe(l.item.type)}`}" class:sel={$activeShow?.index === l.index && $activeShow?.id === l.item.id} tabindex="-1" on:click={() => abrir(l.item, l.index)}>
                                 <span class="tipo">{tipoDe(l.item)}</span>

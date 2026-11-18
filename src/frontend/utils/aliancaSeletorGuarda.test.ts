@@ -57,7 +57,7 @@ describe("b: quem importa o seletor", () => {
         for (const p of arquivos(FRONT)) {
             if (p.endsWith("SeletorDeCulto.svelte")) continue
             const t = readFileSync(p, "utf8")
-            if (/import[^\n]*\/SeletorDeCulto\.svelte["']/.test(t)) expect(p.replace(/\\/g, "/"), p).toMatch(/components\/show\/Projects\.svelte$/)
+            if (/import[^\n]*\/SeletorDeCulto\.svelte["']/.test(t)) expect(p.replace(/\\/g, "/"), p).toMatch(/components\/(show\/Projects|main\/AliancaRoteiro)\.svelte$/)
         }
     })
 })

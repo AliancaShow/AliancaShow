@@ -1,10 +1,8 @@
 <script lang="ts">
-    import MainLayout from "./MainLayout.svelte"
     import AliancaTela from "./components/main/AliancaTela.svelte"
     import MainOutput from "./MainOutput.svelte"
     import ContextMenu from "./components/context/ContextMenu.svelte"
     import Pdf from "./components/export/Pdf.svelte"
-    import Guide from "./components/guide/Guide.svelte"
     import { getContrast } from "./components/helpers/color"
     import { getBlending } from "./components/helpers/output"
     import { checkTimers, startEventTimer, startTimer } from "./components/helpers/timerTick"
@@ -20,7 +18,6 @@
     import QuickSearch from "./components/quicksearch/QuickSearch.svelte"
     import Center from "./components/system/Center.svelte"
     import { activeProfile, activeTimers, closeAd, currentWindow, disabledServers, events, language, loaded, localeDirection, os, outputDisplay, outputs, profiles, theme, themes, timers } from "./stores"
-    import { telaNova } from "./utils/aliancaTelaEstado"
     import { focusArea, logerror, mainClick, toggleRemoteStream } from "./utils/common"
     import { iniciarMarcaDeTecla } from "./utils/aliancaModo"
     import { keydown } from "./utils/shortcuts"
@@ -90,15 +87,9 @@
             <Toast />
             <StatusIndicator />
             <Recorder />
-            <Guide />
             <ProgressPanel />
 
-            <!-- bancada de dev (commits 3 a 9 da fatia 1): some no commit da troca. Fora de dev a condicao e sempre falsa. -->
-            {#if import.meta.env.DEV && $telaNova}
-                <AliancaTela />
-            {:else}
-                <MainLayout />
-            {/if}
+            <AliancaTela />
 
             {#if ready && Object.keys($profiles).filter((a) => a !== "admin").length && $activeProfile === null}
                 <ProfileSelector />

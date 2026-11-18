@@ -4,7 +4,7 @@
     // As larguras (esquerda, direita) e a altura (biblioteca) sao px, gravadas em `aliancaTela`; o centro absorve a sobra.
     // Cada regiao leva `data-regiao` (topo, roteiro, centro, no-ar, biblioteca, corpo-pagina): a Prova do Culto e a de fidelidade usam.
     //
-    // MOTOR (montado desde o primeiro dia e fora de qualquer {#if}): <Preview escondida /> (teclado do telao, temporizadores de slide),
+    // MOTOR (montado desde o primeiro dia e fora de qualquer {#if}): o Preview escondido (teclado do telao, temporizadores de slide),
     // FaixaDeFalha, AnteparoDeModo, ProfileChangerMenu e o disparo de show_opened. Nada disso tem markup visivel.
     import { onMount } from "svelte"
     import { customActionActivation } from "../actions/actions"
@@ -29,6 +29,7 @@
     import ProfileChangerMenu from "./ProfileChangerMenu.svelte"
 
     $: pagina = $activePage
+    $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"
     $: emPagina = pagina === "settings" || pagina === "stage" || pagina === "draw"
     // pagina sem lugar na tela nova (scripture, calendar, reflow ou valor novo do upstream): corpo vazio com o nome, e a faixa de falha acende.
     // Nunca cai calado numa tela antiga e nunca "volta para show". (O guarda de activePage, commit 11, recusa a escrita antes de chegar aqui.)
@@ -96,7 +97,7 @@
     {:else if emPagina}
         <div class="corpo" data-regiao="corpo-pagina" data-pagina={pagina}>
             <div class="painel" style="flex: 1; min-width: 0">
-                <AliancaCorpoPagina pagina={emPagina ? pagina : "settings"} esq={valores.esq} dir={valores.dir} />
+                <AliancaCorpoPagina pagina={paginaCorpo} esq={valores.esq} dir={valores.dir} />
             </div>
         </div>
     {:else}

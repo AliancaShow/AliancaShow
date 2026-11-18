@@ -58,10 +58,3 @@ export async function localizar(j, expr) {
     )
 }
 
-/** bancada de dev da fatia 1 do leiaute v2 (commits 3 a 9): liga a tela nova e para a moldura antiga (so existe em dev). Some no commit da troca. */
-export async function ligarTelaNova(j) {
-    await j.ev(`
-const E=await import(U("utils/aliancaTelaEstado")); E.telaNova.set(true)
-try { const M=await import(U("utils/aliancaMoldura")); M._pararMolduraAlianca && M._pararMolduraAlianca() } catch(e){}
-await esp(400)`)
-}

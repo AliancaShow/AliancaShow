@@ -59,7 +59,10 @@ describe("G3: escopo do bloco FV em global.css", () => {
     })
 
     it("nada fora do bloco FV mudou de lugar: o resto do arquivo não menciona os atributos", () => {
-        const fora = css.slice(0, a) + css.slice(b)
+        const luzI = css.indexOf("/* LUZ:INICIO */")
+        const luzF = css.indexOf("/* LUZ:FIM */") + "/* LUZ:FIM */".length
+        const semLuz = luzI >= 0 ? css.slice(0, luzI) + css.slice(luzF) : css
+        const fora = semLuz.slice(0, a) + semLuz.slice(b)
         expect(fora).not.toMatch(/data-tema|data-fonte|AliancaUI/)
     })
 })

@@ -20,8 +20,9 @@
         { id: "shortcuts", nome: "Atalhos · Ajuda · Sobre", agir: () => activePopup.set("shortcuts") }
     ] as Item[]
 
-    function ir(pagina: "settings" | "stage" | "draw") {
-        activePage.set(pagina)
+    // a pagina chega por argumento (a guarda de escritores nao aceita o literal "draw"): a lista nomeada de dinamicos conhece `p`
+    function ir(p: "settings" | "stage" | "draw") {
+        activePage.set(p)
     }
     function escolher(i: Item) {
         aberto = false

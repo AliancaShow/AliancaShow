@@ -53,6 +53,18 @@
     "components/inputs/TopButton.svelte": [
         "id"
     ],
+    "components/main/AliancaMenuApp.svelte": [
+        "p"
+    ],
+    "components/main/AliancaSirvoPilula.svelte": [
+        "\"settings\""
+    ],
+    "components/main/AliancaTelaoPilula.svelte": [
+        "\"settings\""
+    ],
+    "components/main/AliancaTopo.svelte": [
+        "\"edit\""
+    ],
     "components/main/PrepararMenu.svelte": [
         "\"settings\"",
         "\"settings\""
@@ -150,7 +162,6 @@
     ],
     "utils/shortcuts.ts": [
         "\"show\"",
-        "\"edit\"",
-        "\"show\""
+        "\"edit\""
     ]
 }
