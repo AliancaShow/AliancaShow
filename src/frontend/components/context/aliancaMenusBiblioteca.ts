@@ -15,7 +15,7 @@ import { falhaAlta } from "../../utils/aliancaFalha"
 import { porShowNoFim } from "../../utils/aliancaBiblioteca"
 import { motivoSemCulto } from "../../utils/aliancaGaveta"
 import { dispararNoAlvo } from "../../utils/aliancaGavetaToque"
-import { blocosDe, criarAnteparo, criarEngolidor, moverBloco, moverItem } from "../../utils/aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, moverBloco, moverItem } from "../../utils/aliancaMenusBibliotecaLogica"
 import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
 import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
@@ -104,14 +104,22 @@ const engolir = criarEngolidor(400)
 const classeDoMenu = (el: HTMLElement | null): string => [...(el?.classList || [])].find((c) => c.startsWith("#")) || ""
 const marca = (el: HTMLElement | null, nome: string) => (el as any)?.closest?.(`[${nome}]`)?.getAttribute?.(nome) ?? null
 
-/** o item de roteiro em que o botao direito foi dado: pela marca `data-indice` do botao, nunca pela selecao (com varios selecionados age no clicado) */
+/**
+ * o item de roteiro em que o botao direito foi dado: pela marca `data-indice` do botao, nunca pela selecao (com varios selecionados age no clicado).
+ * Confere tambem o `data-id`: se o roteiro mudou com o menu aberto (Sirvo, outro PC, Ctrl+Z) a posicao pode ser de OUTRO item; entao recusa com um aviso.
+ */
 function itemDoRoteiro(contextElem: HTMLElement | null) {
     const bruto = marca(contextElem, "data-indice")
     const indice = bruto === null || bruto === "" ? NaN : Number(bruto)
+    const idMarcado = marca(contextElem, "data-id")
     const projetoId = get(activeProject)
     const lista: any[] = (projetoId && get(projects)[projetoId]?.shows) || []
-    if (!Number.isInteger(indice) || !lista[indice]) {
-        falhaAlta("menu-roteiro", `o item clicado (${bruto}) nao existe no roteiro aberto`)
+    if (!idMarcado || !Number.isInteger(indice)) {
+        falhaAlta("menu-roteiro", `o botao do item do roteiro nao traz data-indice/data-id (${bruto}/${idMarcado})`)
+        return null
+    }
+    if (!itemContinuaLa(lista, indice, idMarcado)) {
+        newToast("O roteiro mudou. Abra o menu de novo.")
         return null
     }
     return { projetoId: projetoId!, lista, indice, item: lista[indice] }

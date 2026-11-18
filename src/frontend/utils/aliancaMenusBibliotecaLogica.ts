@@ -92,3 +92,12 @@ export function criarAnteparo(ms = 250) {
         }
     }
 }
+
+/**
+ * O item em que o menu abriu ainda e o que esta nessa posicao? (revisao da fatia 6, achado 5): o menu fica aberto enquanto o Sirvo reconcilia, outro PC
+ * edita ou alguem da Ctrl+Z; a posicao lida na hora do clique pode ser OUTRO item. Confere o ID gravado no botao (`data-id`) contra a lista de agora.
+ */
+export function itemContinuaLa(lista: { id?: string }[], indice: number, id: string | null | undefined): boolean {
+    if (!id || !Number.isInteger(indice) || indice < 0) return false
+    return lista[indice]?.id === id
+}

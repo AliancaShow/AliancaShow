@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { blocosDe, criarAnteparo, criarEngolidor, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
 
 const S = (id: string) => ({ id, type: "section", name: id })
 const I = (id: string) => ({ id, type: "show" })
@@ -88,5 +88,21 @@ describe("criarAnteparo (o 2o toque do duplo clique nao atravessa o menu que fec
         a.armar({ left: 0, top: 0, right: 10, bottom: 10 }, 200)
         expect(a.engole({ x: 150, y: 250 }, 210)).toBe(false)
         expect(a.engole({ x: 5, y: 5 }, 400)).toBe(true)
+    })
+})
+
+describe("itemContinuaLa (o menu do roteiro age no item em que abriu, nao na posicao)", () => {
+    const l = [{ id: "a" }, { id: "b" }, { id: "c" }]
+    it("confere o id na posicao", () => {
+        expect(itemContinuaLa(l, 1, "b")).toBe(true)
+        expect(itemContinuaLa(l, 1, "c")).toBe(false)
+        expect(itemContinuaLa([{ id: "x" }, ...l], 1, "b")).toBe(false)
+        expect(itemContinuaLa(l.slice(0, 1), 1, "b")).toBe(false)
+    })
+    it("sem id ou indice invalido recusa", () => {
+        expect(itemContinuaLa(l, 0, null)).toBe(false)
+        expect(itemContinuaLa(l, 0, "")).toBe(false)
+        expect(itemContinuaLa(l, -1, "a")).toBe(false)
+        expect(itemContinuaLa(l, NaN, "a")).toBe(false)
     })
 })

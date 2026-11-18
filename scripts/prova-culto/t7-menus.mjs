@@ -255,6 +255,19 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await j.ev(`T.trocarTela("show","segmentado"); await esp(600); return 1`)
       await limpar() }
 
+    // ---------- H: o roteiro mudou com o menu aberto (revisao da fatia 6, achado 5): recusa, nao age no item que passou a ocupar a posicao
+    await limpar()
+    { const a = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[1]`)
+      await j.ev(`window.__origH=JSON.parse(JSON.stringify(get(S.projects)[get(S.activeProject)].shows)); return 1`)
+      await direito(a.x, a.y)
+      // o Sirvo (ou outro PC) poe um item NA FRENTE com o menu aberto: a posicao 1 agora e outro item
+      await j.ev(`S.projects.update(a=>{const p=a[get(S.activeProject)]; p.shows=[{...window.__origH[0]}, ...window.__origH]; return a}); await esp(600); return 1`)
+      const depoisInsercao = await projeto()
+      await clicarItem("Tirar do roteiro")
+      ok("H1 roteiro mudou com o menu aberto: Tirar do roteiro recusa e nao tira o item que ocupa a posicao", (await projeto()) === depoisInsercao, `antes=${depoisInsercao.split("|").length} depois=${(await projeto()).split("|").length}`)
+      await j.ev(`S.projects.update(a=>{a[get(S.activeProject)].shows=window.__origH; return a}); await esp(400); return 1`)
+      await limpar() }
+
     // ---------- F: blocos (um projeto de blocos nossos: o do Sirvo e trancado e recusa)
     await j.ev(`const p=get(S.projects).f3; window.__orig=JSON.parse(JSON.stringify(p.shows)); const sh=window.__orig.filter(x=>(x.type||"show")==="show");
 S.projects.update(a=>{a.f3.shows=[{id:"t7a",type:"section",name:"Louvor"},sh[0],sh[1],{id:"t7b",type:"section",name:"Palavra"},sh[2],{id:"t7c",type:"section",name:"Final"},sh[3]]; return a}); S.activeProject.set("f3"); await esp(900); return 1`)
