@@ -31,6 +31,34 @@ export const EXCECOES = {
     "src/frontend/utils/aliancaBibliotecaLogica.ts": {
         "motivo": "revisao da fatia 2 (achado 2.1): acrescenta a funcao pura `chegadaZeraBiblioteca`; nada existente muda",
         "sha": "10ec435d1bdc5038f1ea231691ed4210e0d1551528d59f6cb85e6f97a69f2dbd"
+    },
+    "src/electron/index.ts": {
+        "motivo": "fatia 4 (decisao 8 do Andre, aprovada 18/nov): so `createMain` (janela principal) troca `frame/autoHideMenuBar` por `titleBarStyle: hidden` + `titleBarOverlay`, e `setGlobalMenu` zera o menu no Windows tambem em dev. A criacao da janela de saida nao muda",
+        "sha": "bf96cef8c00bec3e925bd74935e159bba906200eb46851c534480c123b640616"
+    },
+    "src/electron/IPC/responsesMain.ts": {
+        "motivo": "fatia 4 (aprovada 18/nov): novo canal `TOGGLE_DEVTOOLS` (sem efeito em producao; em dev abre o DevTools da janela principal). Nenhuma resposta existente muda",
+        "sha": "62f8168f7d46315cc4b98e581b3b16b5556719700e55ac1c260518f0493e61fd"
+    },
+    "src/types/IPC/Main.ts": {
+        "motivo": "fatia 4 (aprovada 18/nov): tipo do canal novo `TOGGLE_DEVTOOLS`; so acrescenta",
+        "sha": "1183d05780e63eb48a15dad507fbd8d607c1286e20bcb957cb98a0f82fe5b1dd"
+    },
+    "src/electron/utils/menuTemplate.ts": {
+        "motivo": "fatia 4 (aprovada 18/nov): tira `quick_start_guide` do menu (macOS); nada da saida usa",
+        "sha": "9ffaa005809bbc29f23e7e8777b840462f2dc40d570f9b85388611c6cc0c787f"
+    },
+    "src/frontend/components/context/contextMenus.ts": {
+        "motivo": "fatia 4 (aprovada 18/nov): apaga os layouts `file/edit/view/help` da barra de menus que saiu (MenuBar.svelte apagado); nenhum outro layout muda",
+        "sha": "f9b1c63342f5be2693e494f4c64ab4cdaa86aab7bd1a2babd2b67d57a5c0befa"
+    },
+    "src/frontend/utils/common.ts": {
+        "motivo": "fatia 4 (aprovada 18/nov): apaga a constante `MENU_BAR_HEIGHT` (sem mais usos); nada mais muda",
+        "sha": "e40aca15f3713ae101ff0475ca64d173adda3db2db857eed917a796282330746"
+    },
+    "src/frontend/components/main/popups/Initialize.svelte": {
+        "motivo": "fatia 4 (aprovada 18/nov): tira o paragrafo de dicas do FreeShow do primeiro uso; o popup so abre na janela principal",
+        "sha": "d8ea6859563eb19ea94aa9c71de9cf7fc102fd02aa84e1eadf98cdd815b3c31c"
     }
 }
 
@@ -45,7 +73,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "7674f112b1054a2e8c1ac34dc5cb20a9cddc51e51afa712ec29d62b8c7f15e33"
+export const SHA_EXCECOES = "8d4b5d265082cb60225838543e560505b051cef9f3b95cea0eaba187c5ccd434"
 export const SHA_NOVOS = "47371adb3acda4baf4b8989f09b8bb9ec7a54702963059d250f45ff69a958c92"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
