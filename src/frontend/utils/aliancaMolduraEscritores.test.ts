@@ -21,7 +21,6 @@ const DESTINOS = ['"show"', '"edit"', '"stage"', '"settings"', '"draw"']
 
 /** destinos que chegam por argumento: o valor vem de fora e a fachada recusa o que nao tem lugar */
 export const DINAMICOS: Record<string, string[]> = {
-    "components/quicksearch/quicksearch.ts": ["id as any"],
     "components/main/AliancaMenuApp.svelte": ["p"]
 }
 
@@ -50,12 +49,12 @@ export const CLASSES: Record<string, string> = {
     "components/main/popups/TemplateInfo.svelte": "gesto: botao de pagina (popup)",
     "components/main/popups/TemplateStyleOverrides.svelte": "gesto: botao de pagina (popup)",
     "components/output/preview/MultiOutputs.svelte": "gesto, morre com o arquivo",
-    "components/quicksearch/quicksearch.ts": "gesto, morre com o QuickSearch (fatia 5)",
     "components/settings/SettingsTabs.svelte": "gesto, morre com o arquivo (fatia 4)",
     "components/settings/tabs/Outputs.svelte": "gesto: botao de pagina",
     "components/settings/tabs/Styles.svelte": "gesto: botao de pagina (editar o modelo)",
     "components/stage/StageLayout.svelte": "gesto: botao de pagina",
     "utils/aliancaBiblioteca.ts": "gesto: Editar da biblioteca",
+    "utils/aliancaSpotlight.ts": "gesto: busca Spotlight (Ctrl+K): Configuracoes, Telas e abrir o que vive em Mostrar quando a busca abre numa pagina do menu",
     "utils/aliancaPilula.ts": "gesto: chips que levam a Mostrar"
 }
 

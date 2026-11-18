@@ -1,4 +1,4 @@
-// T-1a-2, 4, 6, 9, 10, 11, 12 (no Preparar), 14 e 15 (1a): a barra do Preparar de verdade. Cliques e teclas REAIS, nunca force.
+// T-1a-2, 4, 6, 9, 10, 11, 12 (no Preparar) e 14 (1a): a barra do Preparar de verdade. Cliques e teclas REAIS, nunca force.
 //   FS_PERFIL_DIR=... bash scripts/prova-culto/restaurar.sh && bash scripts/prova-culto/reiniciar.sh ; node scripts/prova-culto/t1a-barra.mjs ; restaurar.sh
 import { VARREDURA } from "./aparencia/fva-lib.mjs"
 import { abrir, clicarEm, desligarSaidaNoCulto, esperar, injetarChips, instalarContagem, irParaModo, lerContagem, ligarSaidaNoCulto, localizar, prepararCulto, recarregar, relato, tecla } from "./t1aLib.mjs"
@@ -167,73 +167,7 @@ await esperar(500)
     r.ok("T-1a-14.2 Voltar volta a show", (await j.ev(`return get(S.activePage)`)) === "show", "")
 }
 
-// ---------------------------------------------------------------- T-1a-15: busca no Preparar
-const busca = async (texto) => {
-    await tecla(j, "g", { ctrl: true })
-    await esperar(500)
-    await j.enviar("Input.insertText", { text: texto })
-    await esperar(700)
-}
-// o componente de toast consome o store (o valor pode sumir antes da leitura): um gravador assina e guarda tudo que ja passou por ele
-await j.ev(`window.__toasts=[]; S.toastMessages.subscribe(v=>{ for(const m of v) if(!window.__toasts.includes(m)) window.__toasts.push(m) }); return 1`)
-const toast = () => j.ev(`return window.__toasts.slice()`)
-const zerarToast = () => j.ev(`window.__toasts.length=0; S.toastMessages.set([]); S.quickSearchActive.set(false); return 1`)
-const fechou = () => j.ev(`return get(S.quickSearchActive)===false`)
-{
-    await j.ev(`S.toastMessages.set([]); return 1`)
-    await instalarContagem(j)
-    await busca("a")
-    const cats = await j.ev(`return [...document.querySelectorAll(".quicksearch .category-header")].map(x=>x.innerText.trim())`)
-    r.ok("T-1a-15.1 a lista nao mostra a categoria de acoes", !cats.some((x) => /^(a[cç][oõ]es|actions)$/i.test(x)), JSON.stringify(cats))
-    await tecla(j, "Escape")
-    await esperar(300)
-    for (const [rot, txt] of [
-        ["Gerenciar grupos", "Gerenciar grupos"],
-        ["Transição", "Transição"],
-        ["Letra (vista da grade)", "Letra"]
-    ]) {
-        await zerarToast()
-        await busca(txt)
-        await tecla(j, "Enter")
-        await esperar(500)
-        const t = await toast()
-        const dbg = await j.ev(`return {vals:[...document.querySelectorAll(".quicksearch .values button")].map(e=>e.innerText.trim().replace(/\s+/g," ").slice(0,30)), ativo:get(S.activePage), show:get(S.activeShow)?.id}`)
-        r.ok(`T-1a-15.2 '${rot}' + Enter: toast 'Use no Culto' e a busca fecha`, t.some((x) => x.startsWith("Use no Culto")) && (await fechou()), JSON.stringify({ t, dbg }))
-    }
-    // com o clique do mouse no 1o resultado
-    await zerarToast()
-    await busca("Gerenciar grupos")
-    const res = await localizar(j, `document.querySelector(".quicksearch .values button")`)
-    if (res.ok) {
-        await clicarEm(j, res.x, res.y)
-        await esperar(500)
-        const t = await toast()
-        r.ok("T-1a-15.3 o mesmo com o clique do mouse", t.some((x) => x.startsWith("Use no Culto")) && (await fechou()), JSON.stringify(t))
-    } else r.ok("T-1a-15.3 o mesmo com o clique do mouse", false, res.motivo)
-    // Desenhar: toast proprio e nao abre draw
-    await zerarToast()
-    await busca("Desenhar")
-    await tecla(j, "Enter")
-    await esperar(500)
-    r.ok("T-1a-15.4 'Desenhar' + Enter: toast de Desenhar e Biblia e nao abre draw", (await toast()).some((x) => x.startsWith("Desenhar e Bíblia")) && (await j.ev(`return get(S.activePage)`)) !== "draw", JSON.stringify(await toast()))
-    // permitidos
-    await zerarToast()
-    await j.ev(`S.activeShow.set({id:"impulso_aos_teus_pes",type:"show"}); T.trocarTela("show", "segmentado"); await esp(400); return 1`)
-    const n0 = await j.ev(`return Object.keys(get(S.showsCache)["impulso_aos_teus_pes"]?.slides||{}).length`)
-    await busca("Novo slide")
-    await tecla(j, "Enter")
-    await esperar(800)
-    const n1 = await j.ev(`return Object.keys(get(S.showsCache)["impulso_aos_teus_pes"]?.slides||{}).length`)
-    r.ok("T-1a-15.5 'Novo slide' + Enter: o show ganha um slide, sem toast", n1 === n0 + 1 && !(await toast()).some((x) => x.startsWith("Use no Culto")), JSON.stringify({ n0, n1, t: await toast() }))
-    await j.ev(`S.activePopup.set(null); S.quickSearchActive.set(false); return 1`)
-    await busca("Novo show")
-    await tecla(j, "Enter")
-    await esperar(700)
-    r.ok("T-1a-15.6 'Novo show' + Enter abre o popup de novo show", (await j.ev(`return get(S.activePopup)`)) === "show", String(await j.ev(`return get(S.activePopup)`)))
-    await j.ev(`S.activePopup.set(null); return 1`)
-    const c = await lerContagem(j)
-    r.ok("T-1a-15.7 zero escrita em outputs e zero OUTPUT:TOGGLE/CLEAR em toda a busca", c.out === 0 && !c.canais.some((k) => /TOGGLE|CLEAR|SLIDE|DRAW/.test(k)), JSON.stringify(c))
-}
+// T-1a-15 (busca no Preparar) morreu com o QuickSearch: a busca Spotlight (Ctrl+K) e provada em t6-busca.mjs.
 
 // ---------------------------------------------------------------- T-1a-12 (no Preparar): faixa de falha
 {
