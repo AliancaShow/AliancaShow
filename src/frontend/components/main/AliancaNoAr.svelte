@@ -4,6 +4,8 @@
     // O `Preview` antigo continua montado e escondido em AliancaTela: e ele que escuta o teclado.
     import { outputDisplay, outputs, styles } from "../../stores"
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
+    import { desligarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
+    import { ROTULO_FAIXA, SUBTITULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
     import { getResolution } from "../helpers/output"
     import PreviewOutput from "../output/preview/PreviewOutput.svelte"
     import AliancaCamadas from "./AliancaCamadas.svelte"
@@ -22,6 +24,10 @@
     $: proporcao = proporcaoDaSaida(resolucao.width, resolucao.height)
     $: nomePrincipal = $outputs[principal]?.name || "Telão"
 </script>
+
+{#if $soRetorno}
+    <div class="faixa-retorno" role="status" data-acao="faixa-so-retorno"><span class="fr-t">{ROTULO_FAIXA}</span><span class="fr-s">{SUBTITULO_FAIXA}</span><button type="button" class="fr-b" tabindex="-1" data-acao="desligar-so-retorno" on:mousedown|preventDefault on:click={desligarSoRetorno}>Desligar</button></div>
+{/if}
 
 <div class="cab">
     <span class="rotulo">NO AR</span>
@@ -48,6 +54,42 @@
 <AliancaChat />
 
 <style>
+    .faixa-retorno {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 28px;
+        padding: 0 8px;
+        border-radius: 6px;
+        background: var(--luz-laranja);
+        color: var(--luz-tinta);
+        font-size: 12px;
+    }
+    .fr-t {
+        font-weight: 700;
+        letter-spacing: 0.06em;
+    }
+    .fr-s {
+        flex-grow: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 11px;
+    }
+    .fr-b {
+        height: 20px;
+        padding: 0 8px;
+        border: 1px solid var(--luz-tinta);
+        border-radius: 10px;
+        background: transparent;
+        color: var(--luz-tinta);
+        font: inherit;
+        font-size: 11px;
+        font-weight: 650;
+        cursor: pointer;
+    }
     .cab {
         display: flex;
         align-items: baseline;
