@@ -7,6 +7,7 @@
     import { os } from "../../stores"
     import { tela, trocarTela } from "../../utils/aliancaTela"
     import { marcadoDoSegmentado } from "../../utils/aliancaSegmentadoLogica"
+    import StatusIndicator from "./StatusIndicator.svelte"
     import Clock from "../system/Clock.svelte"
     import AliancaMenuApp from "./AliancaMenuApp.svelte"
     import AliancaSirvoPilula from "./AliancaSirvoPilula.svelte"
@@ -28,6 +29,8 @@
 <div class="topo" class:comControles={$os.platform === "win32"} data-regiao="topo">
     <AliancaMenuApp />
     <AliancaSirvoPilula />
+    <!-- indicador de salvando/salvo: largura zero, ao lado da pilula Sirvo (no vazio do centro), nunca sobre o logo -->
+    <div class="estado"><StatusIndicator /></div>
 
     <div class="centro">
         <div class="seg" role="tablist" aria-label="O que o centro mostra" data-acao="segmentado">
@@ -60,6 +63,12 @@
     }
     .topo > :global(*) {
         -webkit-app-region: no-drag;
+    }
+    .estado {
+        position: relative;
+        width: 0;
+        height: 0;
+        align-self: center;
     }
     .centro {
         flex-grow: 1;

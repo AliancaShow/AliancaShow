@@ -88,20 +88,16 @@
 <style>
     .status {
         position: absolute;
-        top: 0;
+        top: -17px;
         left: 0;
 
         width: 40px;
-        padding-right: 2px;
         height: 34px;
-        margin-top: 3px;
 
         background-color: var(--primary-darker);
 
         border: 2px solid var(--primary-lighter);
-        border-left: none;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
+        border-radius: 8px;
 
         display: flex;
         align-items: center;
