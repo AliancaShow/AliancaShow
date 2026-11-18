@@ -39,8 +39,9 @@
             ]
         },
         "components/main/AliancaCorpoPagina.svelte": {
-            "classe": "gesto: botao Fechar do cabecalho das paginas do menu (volta a Mostrar)",
+            "classe": "gesto: botao Fechar do cabecalho das paginas do menu (volta a Mostrar ou a Editar, de onde veio)",
             "chamadas": [
+                "\"edit\", \"voltar-de-pagina\"",
                 "\"show\", \"voltar-de-pagina\""
             ]
         },

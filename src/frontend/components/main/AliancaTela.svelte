@@ -38,6 +38,9 @@
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"
+    // de onde a pagina foi aberta: a ultima tela "normal" (Mostrar ou Editar) vista; o Fechar volta para ela
+    let origem: "show" | "edit" = "show"
+    $: if (pagina === "show" || pagina === "edit") origem = pagina
     $: emPagina = pagina === "settings" || pagina === "stage" || pagina === "draw"
     // pagina sem lugar na tela nova (scripture, calendar, reflow ou valor novo do upstream): corpo vazio com o nome, e a faixa de falha acende.
     // Nunca cai calado numa tela antiga e nunca "volta para show". (O guarda de activePage, commit 11, recusa a escrita antes de chegar aqui.)
@@ -105,7 +108,7 @@
     {:else if emPagina}
         <div class="corpo" data-regiao="corpo-pagina" data-pagina={pagina}>
             <div class="painel" style="flex: 1; min-width: 0">
-                <AliancaCorpoPagina pagina={paginaCorpo} esq={valores.esq} dir={valores.dir} />
+                <AliancaCorpoPagina pagina={paginaCorpo} {origem} esq={valores.esq} dir={valores.dir} />
             </div>
         </div>
     {:else}
