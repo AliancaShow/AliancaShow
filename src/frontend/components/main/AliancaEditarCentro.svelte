@@ -3,11 +3,12 @@
     // (`edit/Editor.svelte`, o motor), a faixa de pendencia "O telao ainda mostra a versao anterior" com "Mandar pro ar" e a nota de uma linha.
     // Editar um slide que esta no ar e LIVRE: o telao mostra a foto do slide e so troca quando ele for mandado de novo. Fundo, sobreposicao e efeito sao lidos ao
     // vivo: la o aviso diz "muda no telao na hora". Nada aqui escreve em `outputs` a nao ser o botao "Mandar pro ar" (clique do mouse).
-    import { activeEdit, activePopup, activeShow, editMode, groups, outputs, showsCache, styles, templates } from "../../stores"
+    import { activeEdit, activePopup, activeShow, editMode, focusMode, groups, outputs, showsCache, styles, templates } from "../../stores"
     import { dividirAberto, abrirDividir, fecharDividir } from "../../utils/aliancaDividir"
     import { atualizarSlideNoAr } from "../../utils/aliancaEditarAcoes"
     import { avisoAoVivo, faixaDefasada, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide } from "../../utils/aliancaEditarLogica"
     import { zoomDoEditor } from "../../utils/aliancaEditarEstado"
+    import { notasAtivas, timelineAtiva } from "../../utils/aliancaModo"
     import { getAccess } from "../../utils/profile"
     import { getSlideChords } from "../edit/scripts/chords"
     import { getSlideText } from "../edit/scripts/textStyle"
@@ -16,6 +17,7 @@
     import { _show } from "../helpers/shows"
     import LazyLoad from "../helpers/LazyLoad.svelte"
     import AliancaDividir from "../show/AliancaDividir.svelte"
+    import ItemAddMenu from "../edit/ItemAddMenu.svelte"
 
     $: ehShow = ($activeEdit.type || "show") === "show"
     $: showId = ehShow ? ($activeShow?.type === undefined || $activeShow?.type === "show" ? $activeShow?.id : "") || $activeEdit.showId || "" : ""
@@ -51,6 +53,9 @@
         }
     }
     $: vistaAtiva = dividindo ? "dividir" : $editMode
+
+    // o "+ Caixa": o que o Editor mostrava por cima do slide (slide na vista Slide, e modelo/sobreposicao), agora no cabecalho
+    $: podeAdicionar = $activeEdit.type === "overlay" || $activeEdit.type === "template" || (ehShow && !!show && !dividindo && $editMode === "default" && !$notasAtivas && !$timelineAtiva && !$focusMode)
 
     // ----- zoom -----
     const passo = 0.1
@@ -99,6 +104,7 @@
         </div>
     {/if}
     <span class="folga"></span>
+    {#if podeAdicionar}<ItemAddMenu isLocked={travado} noCabecalho />{/if}
     {#if ehShow && show && !dividindo && $editMode === "default"}
         <div class="zoom" data-acao="editar-zoom">
             <button type="button" aria-label="Menos zoom" disabled={$zoomDoEditor <= 0.2} on:click={() => zoomDoEditor.update((v) => limitar(v - passo))}>−</button>

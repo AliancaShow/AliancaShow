@@ -16,6 +16,8 @@
     import { slideItems, stageItems } from "./values/items"
 
     export let isLocked = false
+    // Editar (leiaute v2): o botao mora no cabecalho do centro e o menu abre dele para baixo (nada flutua sobre o slide). Sem isto: o botao redondo flutuante de sempre (Stage).
+    export let noCabecalho = false
 
     let isOpen = false
     let hoveredId: string | null = null
@@ -171,6 +173,7 @@
 <svelte:window on:mousedown={handleMousedown} on:keydown|capture={handleKeydown} />
 
 {#if !isLocked && (isStage ? $activeStage.id : $activeEdit.slide !== undefined || $activeEdit.type === "overlay" || $activeEdit.type === "template")}
+<div class="raiz" class:cab={noCabecalho}>
     {#if isOpen}
         <div class="addMenu" transition:fade={{ duration: 80 }} style="overflow: visible;">
             <div class="menu-content">
@@ -250,14 +253,45 @@
         </div>
     {/if}
 
-    <FloatingInputs gradient style="width: 50px;height: 50px;border: none;">
-        <MaterialButton class="addButton" title={isOpen ? "actions.close" : "edit.add_items"} style="width: 50px; height: 50px;" on:click={() => (isOpen = !isOpen)} on:dblclick={handleDoubleClick}>
-            <Icon id="add" size={1.5} style={isOpen ? "transform: rotate(135deg);" : ""} white />
-        </MaterialButton>
-    </FloatingInputs>
+    {#if noCabecalho}
+        <button type="button" class="addCab addButton" data-acao="editar-adicionar-item" aria-expanded={isOpen} title={isOpen ? "Fechar" : "Adicionar caixa ao slide"} on:click={() => (isOpen = !isOpen)} on:dblclick={handleDoubleClick}>＋ Caixa</button>
+    {:else}
+        <FloatingInputs gradient style="width: 50px;height: 50px;border: none;">
+            <MaterialButton class="addButton" title={isOpen ? "actions.close" : "edit.add_items"} style="width: 50px; height: 50px;" on:click={() => (isOpen = !isOpen)} on:dblclick={handleDoubleClick}>
+                <Icon id="add" size={1.5} style={isOpen ? "transform: rotate(135deg);" : ""} white />
+            </MaterialButton>
+        </FloatingInputs>
+    {/if}
+</div>
 {/if}
 
 <style>
+    /* sem cabecalho a raiz some do layout (o menu e o botao seguem absolutos como sempre); no cabecalho ela e a ancora do menu */
+    .raiz {
+        display: contents;
+    }
+    .raiz.cab {
+        display: block;
+        position: relative;
+        flex-shrink: 0;
+    }
+    .raiz.cab .addMenu {
+        top: calc(100% + 6px);
+        bottom: auto;
+        right: 0;
+    }
+    .addCab {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--luz-borda);
+        border-radius: 6px;
+        background: var(--luz-campo);
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
     .addMenu {
         position: absolute;
         bottom: 70px;

@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import { activeEdit, activePopup, activeShow, cloudUsers, editMode, focusMode, refreshEditSlide, showsCache } from "../../stores"
-    import { notasAtivas, timelineAtiva } from "../../utils/aliancaModo"
     import { isActiveShowInUseByCloudUser } from "../../utils/cloudSync"
     import { getAccess } from "../../utils/profile"
     import Icon from "../helpers/Icon.svelte"
@@ -17,7 +16,6 @@
     import OverlayEditor from "./editors/OverlayEditor.svelte"
     import SlideEditor from "./editors/SlideEditor.svelte"
     import TemplateEditor from "./editors/TemplateEditor.svelte"
-    import ItemAddMenu from "./ItemAddMenu.svelte"
     import { getSlideText } from "./scripts/textStyle"
 
     $: currentShowId = $activeShow?.id || $activeEdit.showId || ""
@@ -38,7 +36,7 @@
         setTimeout(() => refreshEditSlide.set(false), 100)
     }
 
-    // leiaute v2 (fatia 3): as vistas (Slide, Acordes, Texto) e o zoom moram no cabecalho do centro (AliancaEditarCentro); a biblioteca nao fecha mais ao entrar aqui
+    // leiaute v2 (fatia 3): o botao "+ Caixa" (ItemAddMenu) mora no cabecalho do centro (nada flutua sobre o slide); as vistas (Slide, Acordes, Texto) e o zoom moram no cabecalho do centro (AliancaEditarCentro); a biblioteca nao fecha mais ao entrar aqui
 
     onMount(() => {
         // mainly for overlay preview
@@ -54,12 +52,8 @@
     {#key $refreshEditSlide}
         {#if $activeEdit.type === "overlay"}
             <OverlayEditor />
-
-            <ItemAddMenu {isLocked} />
         {:else if $activeEdit.type === "template"}
             <TemplateEditor />
-
-            <ItemAddMenu {isLocked} />
         {:else if $activeEdit.type === "effect"}
             <EffectEditor />
 
@@ -101,10 +95,6 @@
                     <TextEditor currentShow={$showsCache[$activeShow?.id || ""]} />
                 {:else}
                     <SlideEditor />
-
-                    {#if $editMode === "default" && !$notasAtivas && !$timelineAtiva && !$focusMode}
-                        <ItemAddMenu {isLocked} />
-                    {/if}
                 {/if}
             </div>
         {:else}
