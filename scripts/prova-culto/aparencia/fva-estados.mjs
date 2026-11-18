@@ -71,10 +71,10 @@ async function sequencia() {
     // sem transicoes nem animacoes CSS: um :hover/fade em andamento no quadro do print variava entre rodadas do MESMO codigo (A/A medida:
     // backgroundColor 0.004 x 0.05 na barra de menus). O estado final e o que se compara; o movimento no caminho nao.
     await j.ev(`if(!document.getElementById("__sem_transicao")){const s=document.createElement("style");s.id="__sem_transicao";s.textContent="*,*::before,*::after{transition:none!important;animation:none!important}";document.head.appendChild(s)} return 1`)
-    await j.ev(`S.activePopup.set(null); S.focusMode.set(false); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.activePage.set("show"); S.modoAlianca.set("culto"); return 1`)
+    await j.ev(`S.activePopup.set(null); S.focusMode.set(false); S.editMode.set("default"); S.activeEdit.set({items:[]}); T.trocarTela("show", "segmentado"); MODO("culto"); return 1`)
     await esperar(500)
     await abrirShow(j, ID, 0, "culto", true)
-    await j.ev(`S.activePage.set("show"); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); return 1`)
     await esperar(800)
     await mover(j, PARADO.x, PARADO.y)
     await g(N["01"])
@@ -91,7 +91,7 @@ async function sequencia() {
     await mover(j, s3.x, s3.y)
     await g(N["04"])
     await escape()
-    await j.ev(`S.activePage.set("show"); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); return 1`)
     await mover(j, PARADO.x, PARADO.y)
     // abas da gaveta (cliques reais no texto exato dentro do menu da biblioteca)
     for (const [t, n] of [
@@ -108,24 +108,24 @@ async function sequencia() {
     await clicarSel(j, `document.querySelector('.top button[data-title^="Configurações"]')`, "config")
     await g(N["09"])
     await limpar()
-    await j.ev(`S.activePage.set("show"); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); return 1`)
     await esperar(300)
     // pagina de edicao
     await abrirShow(j, ID, 1, "culto", false)
-    await j.ev(`S.activePage.set("edit"); return 1`)
+    await j.ev(`T.trocarTela("edit", "segmentado"); return 1`)
     await mover(j, PARADO.x, PARADO.y)
     await g(N["10"])
-    await j.ev(`S.activePage.set("show"); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); return 1`)
     // Preparar
-    await j.ev(`S.modoAlianca.set("preparar"); return 1`)
+    await j.ev(`MODO("preparar"); return 1`)
     await esperar(1200)
     await mover(j, PARADO.x, PARADO.y)
     await g(N["11"])
-    await j.ev(`S.activePage.set("edit"); return 1`)
+    await j.ev(`T.trocarTela("edit", "segmentado"); return 1`)
     await g(N["12"])
-    await j.ev(`S.activePage.set("show"); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); return 1`)
     // ida e volta
-    await j.ev(`S.modoAlianca.set("culto"); return 1`)
+    await j.ev(`MODO("culto"); return 1`)
     await g(N["13"])
     await limpar()
 }

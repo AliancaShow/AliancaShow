@@ -30,9 +30,9 @@ async function recarregar() {
 await recarregar()
 
 // ---------------------------------------------------------------- 1. rects: a faixa nao muda nenhum outro elemento
-await j.ev(`S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
+await j.ev(`S.activePopup.set(null); MODO("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
 const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(ID_SHOW)}]);
-S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); S.activePage.set("show"); S.drawer.set({height:300,stored:null}); S.activeDrawerTab.set("shows"); document.activeElement?.blur?.(); await esp(900); return 1`)
+S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); T.trocarTela("show", "segmentado"); S.drawer.set({height:300,stored:null}); S.activeDrawerTab.set("shows"); document.activeElement?.blur?.(); await esp(900); return 1`)
 const slide0 = await localizar(j, `document.querySelectorAll("#showArea .slide")[0]`)
 ok("1.0 o 1o slide da grade existe e esta livre para o clique", slide0.ok, slide0.motivo)
 if (slide0.ok) await clicarEm(j, slide0.x, slide0.y)
@@ -66,7 +66,7 @@ ok("2.3 sem filho interativo", alvo.filhos === 0, `${alvo.filhos} filhos`)
 // ---------------------------------------------------------------- 3. toque duplo com a faixa nascendo no meio
 await recarregar()
 ok("3.0 o app recarregou sem a faixa", (await j.ev(`return !${FAIXA}`)) === true, "a faixa sobreviveu ao reload")
-await j.ev(`S.modoAlianca.set("culto"); S.activePage.set("show"); await esp(400); return 1`)
+await j.ev(`MODO("culto"); T.trocarTela("show", "segmentado"); await esp(400); return 1`)
 await j.ev(`window.__t24={out:0,ipc:0,canais:[]}; let primeiro=true; S.outputs.subscribe(()=>{ if(primeiro){primeiro=false;return} window.__t24.out++ })
 const ant=globalThis.__gravarIPC; globalThis.__gravarIPC=(id,canal,dados)=>{ const k=String(id)+":"+String(canal); if(/OUTPUT/.test(k)) { window.__t24.ipc++; window.__t24.canais.push(k) }; ant?.(id,canal,dados) }; return 1`)
 // o app que acabou de recarregar ainda termina a propria partida (cria as saidas, ajusta valores): so conta o que vem DEPOIS de 4 s de repouso
@@ -90,7 +90,7 @@ if (aba.ok) {
 
 // ---------------------------------------------------------------- 5. operavel com a faixa na tela (antes do passo 4, que espera 30 s)
 // o reload tirou o show ativo (sem show o Editar do topo fica desabilitado): abre de novo SEM mexer em outputs
-await j.ev(`const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(ID_SHOW)}]); S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); S.activePage.set("show"); await esp(700); return 1`)
+await j.ev(`const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(ID_SHOW)}]); S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); T.trocarTela("show", "segmentado"); await esp(700); return 1`)
 // o `Editar` da navegacao de paginas (titulo "Editando [2]"); o #edit de 25 px no alto da janela e regiao de arrastar e nao recebe clique
 const editar = await localizar(j, `[...document.querySelectorAll("button")].find(b=>b.innerText.trim()==="Editar" && (b.getAttribute("data-title")||"").startsWith("Editando"))`)
 ok("5.1 o botao Editar do topo esta livre (a faixa nao o cobre)", editar.ok, editar.motivo)
@@ -98,7 +98,7 @@ if (editar.ok) {
     await clicarEm(j, editar.x, editar.y)
     await esperar(700)
     ok("5.2 clique real em Editar troca a pagina para edit com a faixa na tela", (await j.ev(`return get(S.activePage)`)) === "edit", "a pagina nao mudou")
-    await j.ev(`S.activePage.set("show"); await esp(300); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); await esp(300); return 1`)
 }
 
 // ---------------------------------------------------------------- 4. persistente e so na principal

@@ -137,7 +137,7 @@ await clicarItem(ITEM)
 await esperar(500)
 const e = await j.ev(`return {pagina:get(S.activePage), aba:get(S.settingsTab)}`)
 r.ok("7.3 o clique abre Configuracoes em display_settings", e.pagina === "settings" && e.aba === "display_settings", JSON.stringify(e))
-await j.ev(`S.outputs.update(o=>{o.default.invisible=false; return o}); S.activePage.set("show"); await esp(400); return 1`)
+await j.ev(`S.outputs.update(o=>{o.default.invisible=false; return o}); T.trocarTela("show", "segmentado"); await esp(400); return 1`)
 
 await desligarSaidaNoCulto(j)
 j.fechar()

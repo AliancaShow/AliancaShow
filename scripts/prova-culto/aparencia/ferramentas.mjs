@@ -19,7 +19,7 @@ export async function clicarSel(j, expr, desc, count = 1) {
 }
 // abre um show no editor (navegacao por store; as interacoes do teste sao reais)
 export async function abrirShow(j, id, slide = 0, modo = "culto", limpar = true) {
-    await j.ev(`S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default"); ${limpar ? "S.outputs.update(a=>{a.default.out={};return a});" : ""} const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(id)}]); S.activeShow.set({id:${JSON.stringify(id)},type:"show"}); S.activePage.set("edit"); S.activeEdit.set({slide:${slide},items:[],showId:${JSON.stringify(id)}}); S.modoAlianca.set(${JSON.stringify(modo)}); return 1`)
+    await j.ev(`S.activePopup.set(null); MODO("culto"); S.editMode.set("default"); ${limpar ? "S.outputs.update(a=>{a.default.out={};return a});" : ""} const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(id)}]); S.activeShow.set({id:${JSON.stringify(id)},type:"show"}); T.trocarTela("edit", "segmentado"); S.activeEdit.set({slide:${slide},items:[],showId:${JSON.stringify(id)}}); S.modoAlianca.set(${JSON.stringify(modo)}); return 1`)
     await esperar(1500)
 }
 export { RAIZ }

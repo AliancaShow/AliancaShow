@@ -6,7 +6,7 @@ import { PREPARAR_SAIDA } from "./saidaLib.mjs"
 
 const j = await abrir("principal")
 await j.ev(PREPARAR_SAIDA)
-await j.ev(`S.modoAlianca.set("culto"); S.activePage.set("show"); await esp(800); return 1`)
+await j.ev(`MODO("culto"); T.trocarTela("show", "segmentado"); await esp(800); return 1`)
 await j.ev(`window.__m1=[]; S.outputDisplay.subscribe(v=>window.__m1.push([performance.now(),v])); return 1`)
 const btn = await localizar(j, `document.querySelector("#output_window_button")`)
 if (!btn.ok) {

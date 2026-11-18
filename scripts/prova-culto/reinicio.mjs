@@ -36,7 +36,7 @@ const j = fase === "fechar" ? null : await abrir("principal")
 const e = lerEstado()
 
 if (fase === "antes") {
-    await j.ev(`S.modoAlianca.set("culto"); S.activePage.set("show"); S.drawer.set({height:300,stored:null}); S.resized.update(a=>({...a,leftPanel:290,rightPanel:290,leftPanelDrawer:290,rightPanelDrawer:290})); S.activeDrawerTab.set("shows"); await esp(800)`)
+    await j.ev(`MODO("culto"); T.trocarTela("show", "segmentado"); S.drawer.set({height:300,stored:null}); S.resized.update(a=>({...a,leftPanel:290,rightPanel:290,leftPanelDrawer:290,rightPanelDrawer:290})); S.activeDrawerTab.set("shows"); await esp(800)`)
     await salvar(j)
     e.H0 = settings()
     e.culto0 = await j.ev(`return {drawer:get(S.drawer.culto||S.drawer), resized:get(S.resized.culto||S.resized), aba:get(S.activeDrawerTab.culto||S.activeDrawerTab)}`)
@@ -94,12 +94,12 @@ if (fase === "fechar") {
 }
 if (fase === "depois") {
     await esperar(2000)
-    e.culto2 = await j.ev(`return {modo:get(S.modoAlianca), drawer:get(S.drawer.culto||S.drawer), resized:get(S.resized.culto||S.resized), aba:get(S.activeDrawerTab.culto||S.activeDrawerTab)}`)
+    e.culto2 = await j.ev(`return {modo:MODOATUAL(), drawer:get(S.drawer.culto||S.drawer), resized:get(S.resized.culto||S.resized), aba:get(S.activeDrawerTab.culto||S.activeDrawerTab)}`)
     await salvar(j)
     e.H2 = settings()
     e.dif_H2_H0 = diferencas(e.H0, e.H2)
     // entra no Preparar de novo: ele nasce igual ao Culto (semente), gaveta como a do Culto
-    await j.ev(`S.modoAlianca.set("preparar"); await esp(600)`)
+    await j.ev(`MODO("preparar"); await esp(600)`)
     e.preparar2 = await j.ev(`return {drawer:get(S.drawer), resized:get(S.resized)}`)
     console.log("Culto depois de reabrir:", JSON.stringify(e.culto2))
     console.log("chaves que diferem de H0 depois de reabrir:", Object.keys(e.dif_H2_H0))

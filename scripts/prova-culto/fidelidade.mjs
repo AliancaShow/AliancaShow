@@ -30,7 +30,7 @@ async function print(nome, w, h) {
 
 try {
     await j.ev(`
-S.activePopup.set(null); S.activePage.set("show"); S.modoAlianca.set("culto")
+S.activePopup.set(null); T.trocarTela("show", "segmentado"); MODO("culto")
 const O=await import(U("components/helpers/output"))
 S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a})
 const p=get(S.projects); const alvo=Object.entries(p).find(([k,v])=>(v.shows||[]).some(s=>(s.type===undefined||s.type==="show")))

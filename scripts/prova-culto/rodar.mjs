@@ -17,7 +17,7 @@
 //   saida-estilo        so a janela de saida muda de aparencia (escritas iguais, pixel diferente)
 //   cobrir:<passo>      um elemento transparente cobre o alvo do passo (tem de reprovar pela regra C1)
 //   --css ARQUIVO       injeta o CSS na janela principal antes do roteiro (T7, prototipo descartavel)
-//   digito-troca        antes de A11 injeta um keydown em captura que, para a tecla 2, faz S.activePage.set("edit") (o comportamento que a 1b tirou): o juiz de passo morto reprova A11
+//   digito-troca        antes de A11 injeta um keydown em captura que, para a tecla 2, faz T.trocarTela("edit", "segmentado") (o comportamento que a 1b tirou): o juiz de passo morto reprova A11
 //   escreve-no-preparar (so --roteiro preparar) um outputs.update depois do 1o passo de H: o invariantes.mjs tem de reprovar
 //   canal-no-preparar   (so --roteiro preparar) um send(OUTPUT, [COLORBARS]) depois do 1o passo de H: o invariantes.mjs tem de reprovar
 import { createHash } from "node:crypto"
@@ -187,7 +187,7 @@ for (const secao of SECOES_RODAR) {
         } else if (g.clique && coord) await clicarEm(principal, coord.x, coord.y)
         else if (g.clique && !coord) falhas.push("clique sem alvo valido")
         else if (g.tecla) {
-            if (MUTAR === "digito-troca" && passo.id === "A11-digito-2") await principal.ev('window.addEventListener("keydown", (e) => { if (e.key === "2") S.activePage.set("edit") }, true); return 1')
+            if (MUTAR === "digito-troca" && passo.id === "A11-digito-2") await principal.ev('window.addEventListener("keydown", (e) => { if (e.key === "2") T.trocarTela("edit", "segmentado") }, true); return 1')
             await tecla(principal, g.tecla, g.mods || {})
         } else if (g.sequencia) {
             // varios gestos reais em ordem: tecla (Input.dispatchKeyEvent) ou texto (Input.insertText)

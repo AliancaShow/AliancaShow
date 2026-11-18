@@ -91,7 +91,7 @@ for (const alvo of ["draw", "scripture"]) {
     // (a) desfazer de uma entrada feita em `alvo`
     await instalarContagem(j)
     await limparToasts()
-    await j.ev(`${ENTRADA(alvo)}; S.activePage.set("show"); await esp(300); document.activeElement?.blur?.(); return 1`)
+    await j.ev(`${ENTRADA(alvo)}; T.trocarTela("show", "segmentado"); await esp(300); document.activeElement?.blur?.(); return 1`)
     await tecla(j, "z", { ctrl: true })
     await esperar(600)
     const lim = await limpo()
@@ -108,7 +108,7 @@ for (const alvo of ["draw", "scripture"]) {
 
 // ---------------------------------------------------------------- T-1b-7: undo que pula (stage com moldura e Voltar; Ctrl+Y idem)
 await limparToasts()
-await j.ev(`${ENTRADA("stage")}; S.activePage.set("show"); await esp(300); document.activeElement?.blur?.(); return 1`)
+await j.ev(`${ENTRADA("stage")}; T.trocarTela("show", "segmentado"); await esp(300); document.activeElement?.blur?.(); return 1`)
 await tecla(j, "z", { ctrl: true })
 await esperar(500)
 b = await barra()
@@ -125,7 +125,7 @@ await clicar(VOLTAR, "Voltar do Palco")
 for (const modo of ["preparar", "culto"]) {
     if (modo === "culto") await irParaModo(j, "Culto")
     for (const d of ["1", "2", "3", "4", "5", "6"]) {
-        await j.ev(`S.activePage.set("show"); await esp(200); document.activeElement?.blur?.(); return document.activeElement===document.body`)
+        await j.ev(`T.trocarTela("show", "segmentado"); await esp(200); document.activeElement?.blur?.(); return document.activeElement===document.body`)
         await tecla(j, d)
         await esperar(450)
         if ((await pagina()) !== "show") r.ok(`T-1b-4 ${modo}: a tecla ${d} nao troca de pagina`, false, await pagina())
@@ -134,7 +134,7 @@ for (const modo of ["preparar", "culto"]) {
 }
 // Culto com numberKeys: o digito toca o slide N como antes (e so isso)
 await instalarContagem(j)
-await j.ev(`S.special.update(s=>({...s, numberKeys:true})); S.activePage.set("show"); await esp(300); document.activeElement?.blur?.(); return 1`)
+await j.ev(`S.special.update(s=>({...s, numberKeys:true})); T.trocarTela("show", "segmentado"); await esp(300); document.activeElement?.blur?.(); return 1`)
 await tecla(j, "2")
 await esperar(900)
 r.ok("T-1b-4 Culto com numberKeys: o 2 toca o slide 2 (escreve em outputs) e a pagina nao muda", (await lerContagem(j)).out > 0 && (await pagina()) === "show", JSON.stringify(await lerContagem(j)))
@@ -159,7 +159,7 @@ r.ok("T-1b-6 nenhuma moldura no Culto", (await j.ev(`return !document.querySelec
 await irParaModo(j, "Preparar")
 // stage e settings: popup fecha antes; depois volta
 for (const alvo of ["settings", "stage"]) {
-    await j.ev(`S.activePage.set(${JSON.stringify(alvo)}); await esp(400); S.drawer.set({height:40,stored:null}); document.activeElement?.blur?.(); return 1`)
+    await j.ev(`T.trocarTela(${JSON.stringify(alvo)}, "menu-app"); await esp(400); S.drawer.set({height:40,stored:null}); document.activeElement?.blur?.(); return 1`)
     await j.ev(`S.activePopup.set("shortcuts"); await esp(400); return 1`)
     await tecla(j, "Escape")
     await esperar(300)
@@ -170,7 +170,7 @@ for (const alvo of ["settings", "stage"]) {
 }
 // settings com foco num campo: 1o Esc tira o foco, 2o volta
 {
-    await j.ev(`S.activePage.set("settings"); await esp(500); return 1`)
+    await j.ev(`T.trocarTela("settings", "menu-app"); await esp(500); return 1`)
     // clica no primeiro campo de texto da pagina (aba Saidas tem o nome da saida; Conexao tem campos): ach a um que seja input de texto
     const achou = await j.ev(`S.settingsTab.set("connection"); await esp(500); const i=[...document.querySelectorAll("input[type=text], input:not([type])")].find(e=>e.offsetParent && !e.disabled); return i?true:false`)
     if (achou) {
@@ -196,14 +196,14 @@ for (; escs < 4 && (await pagina()) === "edit"; escs++) {
 r.ok("T-1b-5 editor: o Esc volta para show em ate 3 toques (a cadeia de hoje: solta o item, depois volta)", (await pagina()) === "show" && escs <= 3, JSON.stringify({ escs, p: await pagina() }))
 // Culto: o Esc em settings segue igual a hoje (nao volta)
 await irParaModo(j, "Culto")
-await j.ev(`S.activePage.set("settings"); await esp(400); document.activeElement?.blur?.(); return 1`)
+await j.ev(`T.trocarTela("settings", "menu-app"); await esp(400); document.activeElement?.blur?.(); return 1`)
 await tecla(j, "Escape")
 await esperar(300)
 r.ok("T-1b-5 no Culto o Esc em settings nao volta (igual a hoje)", (await pagina()) === "settings", await pagina())
-await j.ev(`S.activePage.set("show"); return 1`)
+await j.ev(`T.trocarTela("show", "segmentado"); return 1`)
 // gaveta aberta: ir a Configuracoes, um Esc com foco no corpo volta, e a gaveta continua aberta
 await irParaModo(j, "Preparar")
-await j.ev(`S.drawer.set({height:300,stored:null}); S.activePage.set("show"); await esp(400); document.activeElement?.blur?.(); return 1`)
+await j.ev(`S.drawer.set({height:300,stored:null}); T.trocarTela("show", "segmentado"); await esp(400); document.activeElement?.blur?.(); return 1`)
 await clicar(MENU, "menu")
 await clicar(ITEM("config"), "item Configuracoes")
 await tecla(j, "Escape")
@@ -213,7 +213,7 @@ r.ok("T-1b-5 gaveta aberta: um Esc em Configuracoes volta, e a gaveta continua a
 // ---------------------------------------------------------------- T-1b-11: segunda camada (com a guarda de pagina desligada, so dev)
 await limparToasts()
 await instalarContagem(j)
-await j.ev(`const M=await import(U("utils/aliancaMoldura")); M._pararMolduraAlianca(); S.drawer.set({height:40,stored:null}); S.activePage.set("scripture"); await esp(1500); return 1`)
+await j.ev(`const M=await import(U("utils/aliancaMoldura")); M._pararMolduraAlianca(); S.drawer.set({height:40,stored:null}); T.trocarTela("scripture", "menu-app"); await esp(1500); return 1`)
 r.ok("T-1b-11.0 sem a guarda de pagina o Preparar chega em scripture (e a prova mede so a segunda camada)", (await pagina()) === "scripture", await pagina())
 {
     // seleciona um versiculo por clique real e tenta enviar pelo botao primario
@@ -232,7 +232,7 @@ r.ok("T-1b-11.0 sem a guarda de pagina o Preparar chega em scripture (e a prova 
     } else r.ok("T-1b-11.1 scripture: clique real num versiculo", false, v.motivo)
 }
 await instalarContagem(j)
-await j.ev(`S.activePage.set("draw"); await esp(1500); return 1`)
+await j.ev(`T.trocarTela("draw", "menu-app"); await esp(1500); return 1`)
 r.ok("T-1b-11.2 sem a guarda de pagina o Preparar chega em draw", (await pagina()) === "draw", await pagina())
 {
     const ferrAntes = await j.ev(`return JSON.stringify({t:get(S.drawTool), s:get(S.drawSettings)})`)

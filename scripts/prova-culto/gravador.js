@@ -96,7 +96,7 @@ if (!window.__provaCulto) {
     }
     window.__provaSinais = () => {
         const base = (s) => (s && s.culto ? s.culto : s)
-        const m = get(S.modoAlianca)
+        const m = MODOATUAL()
         return {
             modo: m,
             drawer: copia(get(S.drawer)),

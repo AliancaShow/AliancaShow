@@ -10,7 +10,7 @@ import { abrir, esperar } from "./lib.mjs"
 const AQUI = dirname(fileURLToPath(import.meta.url))
 const css = readFileSync(join(AQUI, "prototipo-painel-largo.css"), "utf8")
 const j = await abrir("principal")
-await j.ev(`S.modoAlianca.set("culto"); S.activePage.set("show"); S.drawer.set({height:300,stored:null}); await esp(600)`)
+await j.ev(`MODO("culto"); T.trocarTela("show", "segmentado"); S.drawer.set({height:300,stored:null}); await esp(600)`)
 await j.ev(`const s=document.createElement("style"); s.id="__t7"; s.textContent=${JSON.stringify(css)}; document.head.appendChild(s); await esp(500); return 1`)
 const medir = () =>
     j

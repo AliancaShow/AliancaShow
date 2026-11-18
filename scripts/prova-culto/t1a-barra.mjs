@@ -24,7 +24,7 @@ await instalarContagem(j)
     const b = await localizar(j, `[...document.querySelectorAll(".top.panel .modo button")].find(b=>b.innerText.trim()==="Culto")`)
     await clicarEm(j, b.x, b.y, 2) // duplo clique rapido no seletor
     await esperar(600)
-    const e = await j.ev(`return {modo:get(S.modoAlianca), faixa:!!document.querySelector(".faixaFalha"), falhas:get((await import(U("utils/aliancaFalha"))).falhas).length}`)
+    const e = await j.ev(`return {modo:MODOATUAL(), faixa:!!document.querySelector(".faixaFalha"), falhas:get((await import(U("utils/aliancaFalha"))).falhas).length}`)
     const c = await lerContagem(j)
     r.ok("T-1a-2.2 duplo clique no seletor termina num modo coerente, sem erro e sem escrita em outputs", (e.modo === "culto" || e.modo === "preparar") && !e.faixa && e.falhas === 0 && c.out === 0, JSON.stringify({ e, c }))
 }
@@ -138,9 +138,9 @@ await esperar(500)
     await esperar(600)
     r.ok("T-1a-9.5 'Música (colar letra)' abre o mesmo popup", (await j.ev(`return get(S.activePopup)`)) === "alianca_letra", "popup diferente")
     await j.ev(`S.activePopup.set(null); await esp(300); return 1`)
-    await j.ev(`S.activePage.set("settings"); await esp(400); return 1`)
+    await j.ev(`T.trocarTela("settings", "menu-app"); await esp(400); return 1`)
     r.ok("T-1a-9.6 fora de show o botao nao aparece", (await j.ev(`return document.querySelectorAll(".prepararBarra .alianca-novo").length`)) === 0, "apareceu")
-    await j.ev(`S.activePage.set("show"); await esp(400); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); await esp(400); return 1`)
 }
 
 // ---------------------------------------------------------------- T-1a-11: modo foco
@@ -218,7 +218,7 @@ const fechou = () => j.ev(`return get(S.quickSearchActive)===false`)
     r.ok("T-1a-15.4 'Desenhar' + Enter: toast de Desenhar e Biblia e nao abre draw", (await toast()).some((x) => x.startsWith("Desenhar e Bíblia")) && (await j.ev(`return get(S.activePage)`)) !== "draw", JSON.stringify(await toast()))
     // permitidos
     await zerarToast()
-    await j.ev(`S.activeShow.set({id:"impulso_aos_teus_pes",type:"show"}); S.activePage.set("show"); await esp(400); return 1`)
+    await j.ev(`S.activeShow.set({id:"impulso_aos_teus_pes",type:"show"}); T.trocarTela("show", "segmentado"); await esp(400); return 1`)
     const n0 = await j.ev(`return Object.keys(get(S.showsCache)["impulso_aos_teus_pes"]?.slides||{}).length`)
     await busca("Novo slide")
     await tecla(j, "Enter")
@@ -237,7 +237,7 @@ const fechou = () => j.ev(`return get(S.quickSearchActive)===false`)
 
 // ---------------------------------------------------------------- T-1a-12 (no Preparar): faixa de falha
 {
-    await j.ev(`S.quickSearchActive.set(false); S.activePage.set("show"); await esp(400); return 1`)
+    await j.ev(`S.quickSearchActive.set(false); T.trocarTela("show", "segmentado"); await esp(400); return 1`)
     const varrer = async () => JSON.parse(await j.ev(VARREDURA)).els
     const antes = await varrer()
     await j.ev(`const f=await import(U("utils/aliancaFalha")); f.falhaAlta("teste-cdp", new Error("x")); return 1`)

@@ -19,7 +19,7 @@ try {
     await j.ev(`
 const p=get(S.projects); const alvo=Object.entries(p).find(([k,v])=>(v.shows||[]).some(s=>(s.type===undefined||s.type==="show")))
 if(!alvo) throw new Error("perfil sem projeto com show")
-S.activePage.set("show"); S.activeProject.set(alvo[0]); await esp(600)`)
+T.trocarTela("show", "segmentado"); S.activeProject.set(alvo[0]); await esp(600)`)
     const linhas = await j.avaliar(`return document.querySelectorAll('[data-acao="lista-roteiro"] button.item').length`)
     ok("roteiro mostra itens", linhas > 0, String(linhas))
     await j.avaliar(`document.querySelector('[data-acao="lista-roteiro"] button.item').click(); await new Promise(r=>setTimeout(r,900))`)
