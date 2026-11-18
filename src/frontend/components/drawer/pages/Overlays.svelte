@@ -12,6 +12,7 @@
     import { findMatchingOut, getResolution, setOutput } from "../../helpers/output"
     import T from "../../helpers/T.svelte"
     import FloatingInputs from "../../input/FloatingInputs.svelte"
+    import { estiloDock } from "../../../utils/aliancaDock"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import Textbox from "../../slide/Textbox.svelte"
     import Zoomed from "../../slide/Zoomed.svelte"
@@ -207,13 +208,13 @@
 {/if}
 
 {#if active === "effects"}
-    <FloatingInputs onlyOne>
+    <FloatingInputs onlyOne style={estiloDock("right")}>
         <MaterialButton disabled={readOnly} icon="add" title="new.effect" on:click={() => history({ id: "UPDATE", location: { page: "drawer", id: "effect" } })}>
             {#if !$labelsDisabled}<T id="new.effect" />{/if}
         </MaterialButton>
     </FloatingInputs>
 {:else}
-    <FloatingInputs onlyOne>
+    <FloatingInputs onlyOne style={estiloDock("right")}>
         <MaterialButton disabled={readOnly} icon="add" title="new.overlay" on:click={() => history({ id: "UPDATE", location: { page: "drawer", id: "overlay" } })}>
             {#if !$labelsDisabled}<T id="new.overlay" />{/if}
         </MaterialButton>

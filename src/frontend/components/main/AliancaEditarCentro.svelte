@@ -314,7 +314,7 @@
         padding: 8px 8px 8px 12px;
         border: 1px solid rgba(242, 26, 39, 0.45);
         border-radius: 8px;
-        background: rgba(242, 26, 39, 0.12);
+        background: var(--luz-vermelho-lavagem);
     }
     .faixa.aviso {
         padding: 8px 12px;

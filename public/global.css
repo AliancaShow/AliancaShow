@@ -302,6 +302,12 @@ body[data-tema="luz"] {
     --luz-ambar: #f1d278;
     --luz-laranja: #eba640;
     --luz-tinta: #161616;
+    /* fatia 9: as lavagens e a sombra de popover que se repetiam soltas nos componentes */
+    --luz-vermelho-lavagem: rgba(242, 26, 39, 0.12);
+    --luz-vermelho-claro: #ff9aa0;
+    --luz-verde-lavagem: rgba(94, 196, 141, 0.14);
+    --luz-laranja-lavagem: rgba(235, 166, 64, 0.14);
+    --luz-sombra-pop: 0 18px 40px rgba(0, 0, 0, 0.5);
     --luz-raio: 14px;
     --luz-fonte: "AliancaUI Archivo", "Segoe UI", system-ui, sans-serif;
 

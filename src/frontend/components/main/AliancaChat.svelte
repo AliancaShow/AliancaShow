@@ -233,7 +233,7 @@
         user-select: text;
     }
     .balao.nova {
-        background: rgba(242, 26, 39, 0.12);
+        background: var(--luz-vermelho-lavagem);
     }
     .balao.fraco {
         opacity: 0.7;

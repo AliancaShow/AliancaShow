@@ -276,7 +276,7 @@
     }
     .telao.erro {
         border-color: var(--luz-vermelho);
-        color: #ff9aa0;
+        color: var(--luz-vermelho-claro);
     }
     .telao.desabilitada {
         opacity: 0.5;
@@ -297,7 +297,7 @@
         border-radius: 12px;
         box-shadow:
             inset 0 0 0 1px var(--luz-borda),
-            0 18px 40px rgba(0, 0, 0, 0.5);
+            var(--luz-sombra-pop);
         backdrop-filter: var(--luz-vidro, none);
         transform-origin: top right;
         animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
