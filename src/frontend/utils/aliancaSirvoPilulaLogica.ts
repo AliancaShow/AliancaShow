@@ -11,7 +11,7 @@ export type MaterialSirvo = Val<typeof sirvoMaterialEstado>
 
 const fmtDia = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "short", day: "2-digit", month: "2-digit" })
 const fmtHora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
-function quando(iso: string): string {
+export function quando(iso: string): string {
     const d = new Date(iso)
     if (isNaN(d.getTime())) return ""
     const [h, m] = fmtHora.format(d).split(":")
