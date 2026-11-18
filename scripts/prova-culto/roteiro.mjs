@@ -39,13 +39,13 @@ export const SECOES = [
             { id: "A07-page-up", gesto: { tecla: "PageUp" }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "A08-home", gesto: { tecla: "Home" }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "A09-end", gesto: { tecla: "End" }, efeito: { fluxo: "outputs", n: 1 } },
-            { id: "A10-digito-1", antes: "T.trocarTela('show', "segmentado"); await esp(300)", gesto: { tecla: "1" }, semEfeito: "ja esta na pagina Mostrar: o digito 1 nao troca nada (a fatia 1b declara a diferenca)" },
-            { id: "A11-digito-2", antes: "T.trocarTela('show', "segmentado"); await esp(300)", gesto: { tecla: "2" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A12-digito-3", antes: "T.trocarTela('show', "segmentado"); await esp(300)", gesto: { tecla: "3" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A13-digito-4", antes: "T.trocarTela('show', "segmentado"); await esp(300)", gesto: { tecla: "4" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A14-digito-5", antes: "T.trocarTela('show', "segmentado"); await esp(300)", gesto: { tecla: "5" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A15-digito-6", antes: "T.trocarTela('show', "segmentado"); await esp(300)", gesto: { tecla: "6" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A16-escape", antes: "T.trocarTela('show', "segmentado"); await esp(300)", gesto: { tecla: "Escape" }, efeito: { fluxo: "outputs", n: 1 } }
+            { id: "A10-digito-1", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "1" }, semEfeito: "ja esta na pagina Mostrar: o digito 1 nao troca nada (a fatia 1b declara a diferenca)" },
+            { id: "A11-digito-2", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "2" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A12-digito-3", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "3" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A13-digito-4", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "4" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A14-digito-5", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "5" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A15-digito-6", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "6" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A16-escape", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "Escape" }, efeito: { fluxo: "outputs", n: 1 } }
         ]
     },
     {
