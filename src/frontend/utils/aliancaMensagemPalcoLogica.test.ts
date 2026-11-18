@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { PRAZO_ERRO_MS, avisoDaCaixa, conferirDuvida, duvidaDoEnvio } from "./aliancaMensagemPalcoLogica"
+import { PRAZO_ERRO_MS, acompanharEnvio, avisoDaCaixa, campoEstaNoPalco, chavesDaMensagem, conferirDuvida, duvidaDoEnvio, rotuloNoPalco, textoDaVariavel } from "./aliancaMensagemPalcoLogica"
 
 describe("M1: o erro nunca esconde a mensagem viva nem o Limpar", () => {
     it("o aviso e uma linha propria: a viva (e o Limpar) nao dependem dele", () => {
@@ -53,5 +53,40 @@ describe("M6: Enter so solta o foco quando o envio e aceito para sair", () => {
         expect(envioAceito("a".repeat(121), "", false)).toBe(false)
         expect(envioAceito("oi", "Nenhum culto do Sirvo sendo seguido.", false)).toBe(false)
         expect(envioAceito("oi", "", true)).toBe(false)
+    })
+})
+
+describe("A3: o texto fica no campo enquanto a mensagem esta no palco", () => {
+    const e = { campo: "Pastor, 5 min", texto: "Pastor, 5 min", visto: false, venceEm: 1_000_000 + 15_000 }
+    it("o rotulo e 'no palco · m:ss'", () => {
+        expect(rotuloNoPalco(1_000_000 + 161_000, 1_000_000)).toBe("no palco · 2:41")
+    })
+    it("o campo acende como 'no palco' so quando e o MESMO texto da viva (ignora espacos duplos)", () => {
+        expect(campoEstaNoPalco("Pastor,   5 min", { texto: "Pastor, 5 min" })).toBe(true)
+        expect(campoEstaNoPalco("outra", { texto: "Pastor, 5 min" })).toBe(false)
+        expect(campoEstaNoPalco("Pastor, 5 min", null)).toBe(false)
+        expect(campoEstaNoPalco("", { texto: "" })).toBe(false)
+    })
+    it("antes de a viva aparecer o envio ESPERA (o campo nao esvazia); com ela, esta no palco", () => {
+        expect(acompanharEnvio(e, null, 1_001_000)).toBe("esperando")
+        expect(acompanharEnvio(e, { texto: "Pastor, 5 min" }, 1_002_000)).toBe("noPalco")
+    })
+    it("visto e depois sumiu = SAIU (esvazia o campo); nunca visto dentro do prazo = perdeu (o campo fica)", () => {
+        expect(acompanharEnvio({ ...e, visto: true }, null, 1_100_000)).toBe("saiu")
+        expect(acompanharEnvio(e, null, 1_000_000 + 16_000)).toBe("perdeu")
+        expect(acompanharEnvio(e, { texto: "outra" }, 1_001_000)).toBe("esperando")
+    })
+})
+
+describe("A2: a mensagem viva alimenta a variavel do layout de palco", () => {
+    it("acha as variaveis de texto pelo NOME (como o FreeShow) ou pela chave: 'Mensagem palco', sirvo_mensagem", () => {
+        const v = { a1: { name: "Mensagem palco", type: "text" }, sirvo_mensagem: { name: "sirvo_mensagem", type: "text" }, x: { name: "Outra", type: "text" }, n: { name: "mensagem_palco", type: "number" }, u: { name: " Mensagem Palco " } }
+        expect(chavesDaMensagem(v).sort()).toEqual(["a1", "sirvo_mensagem", "u"])
+        expect(chavesDaMensagem(null)).toEqual([])
+    })
+    it("o texto vira variavel sem HTML nem chaves (como o Sirvo faz com sirvo_mensagem)", () => {
+        expect(textoDaVariavel("Pastor <b>{x}</b>\n5 min")).toBe("Pastor ‹b›(x)‹/b› 5 min")
+        expect(textoDaVariavel("a".repeat(300)).length).toBe(200)
+        expect(textoDaVariavel(null)).toBe("")
     })
 })
