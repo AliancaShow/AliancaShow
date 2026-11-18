@@ -33,11 +33,11 @@ describe("modo foco: as portas (D6)", () => {
     it("shortcuts.ts nao tem focus_mode", () => {
         expect(ler("src/frontend/utils/shortcuts.ts")).not.toContain("focus_mode")
     })
-    it("contextMenus.ts: view sem focus_mode e a definicao continua", () => {
+    it("contextMenus.ts: sem layout da barra de menus (fatia 4) e a definicao de focus_mode continua", () => {
         const src = ler("src/frontend/components/context/contextMenus.ts")
-        const view = src.split("\n").find((l) => /^\s*view:/.test(l)) || ""
-        expect(view).not.toContain("focus_mode")
-        expect(view).toContain("fullscreen")
+        // a barra de menus saiu: nenhum layout view/file/edit/help e, portanto, nenhum que pudesse listar focus_mode
+        for (const l of ["view", "file", "help"]) expect(src, l).not.toMatch(new RegExp(`^\\s*${l}:\\s*\\[`, "m"))
+        expect(src).not.toMatch(/^\s*edit:\s*\["undo"/m)
         expect(src).toMatch(/^\s*focus_mode:\s*\{/m)
     })
     it("menuClick.ts: focus_mode so desliga", () => {

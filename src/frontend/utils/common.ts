@@ -13,7 +13,6 @@ import { save } from "./save"
 
 export const DEFAULT_WIDTH = 290 // --navigation-width (global.css) | resized (stores.ts & defaults.ts)
 export const DEFAULT_DRAWER_HEIGHT = 300
-export const MENU_BAR_HEIGHT = 25 // main (ManuBar.svelte) - Windows
 
 export function isMainWindow() {
     return get(currentWindow) === null

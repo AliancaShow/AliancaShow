@@ -8,7 +8,6 @@
     import { checkTimers, startEventTimer, startTimer } from "./components/helpers/timerTick"
     import Loader from "./components/main/Loader.svelte"
     import ProgressPanel from "./components/main/ProgressPanel.svelte"
-    import MenuBar from "./components/main/MenuBar.svelte"
     import Popup from "./components/main/Popup.svelte"
     import ProfileSelector from "./components/main/ProfileSelector.svelte"
     import Recorder from "./components/main/Recorder.svelte"
@@ -17,7 +16,7 @@
     import TooltipManager from "./components/main/TooltipManager.svelte"
     import QuickSearch from "./components/quicksearch/QuickSearch.svelte"
     import Center from "./components/system/Center.svelte"
-    import { activeProfile, activeTimers, closeAd, currentWindow, disabledServers, events, language, loaded, localeDirection, os, outputDisplay, outputs, profiles, theme, themes, timers } from "./stores"
+    import { activeProfile, activeTimers, closeAd, currentWindow, disabledServers, events, language, loaded, localeDirection, outputDisplay, outputs, profiles, theme, themes, timers } from "./stores"
     import { focusArea, logerror, mainClick, toggleRemoteStream } from "./utils/common"
     import { iniciarMarcaDeTecla } from "./utils/aliancaModo"
     import { keydown } from "./utils/shortcuts"
@@ -25,8 +24,6 @@
 
     startup()
     iniciarMarcaDeTecla()
-
-    $: isWindows = !$currentWindow && $os.platform === "win32"
 
     ///// UPDATERS /////
 
@@ -53,7 +50,7 @@
 
     $: contrastColor = getContrast($themes[$theme]?.colors?.secondary || "")
     $: secondaryContrast = `--secondary-text: ${contrastColor === "#000000" ? "#161616" : "#f8f8f0"};`
-    $: globalStyle = `${isWindows ? "height: calc(100% - 25px);" : ""}${secondaryContrast}${blending}`
+    $: globalStyle = `${secondaryContrast}${blending}`
 
     let ready = false
     $: if ($loaded) hasLoaded()
@@ -70,11 +67,6 @@
 {#if $currentWindow === "pdf"}
     <Pdf />
 {:else}
-    <!-- "isWindows" is only set in main window -->
-    {#if isWindows}
-        <MenuBar />
-    {/if}
-
     <main style={globalStyle} class:closeAd={$closeAd} class:background={$currentWindow === "output"}>
         <ContextMenu />
         <TooltipManager />

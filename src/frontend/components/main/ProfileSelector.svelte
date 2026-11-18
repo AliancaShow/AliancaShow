@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { activeProfile, os, profiles, special } from "../../stores"
+    import { activeProfile, profiles, special } from "../../stores"
     import { newToast, wait } from "../../utils/common"
     import { translateText } from "../../utils/language"
     import { confirmCustom, promptCustom } from "../../utils/popup"
@@ -9,8 +9,6 @@
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
-
-    $: isWindows = $os.platform === "win32"
 
     $: profilesList = sortByName(keysToID($profiles).filter((a) => a.id !== "admin"))
 
@@ -46,7 +44,7 @@
     }
 </script>
 
-<div class="profiles" style="top: {isWindows ? '25px' : '0'};height: {isWindows ? 'calc(100% - 25px)' : '100%'};">
+<div class="profiles">
     <h1>AliançaShow</h1>
     <p style="opacity: 0.8;margin-bottom: 20px;"><T id="profile.choose_profile" /></p>
 

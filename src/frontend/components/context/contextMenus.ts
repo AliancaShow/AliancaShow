@@ -235,10 +235,7 @@ export const contextMenuGroups = {
 
 export const contextMenuLayouts: { [key: string]: string[] } = {
     // MENU
-    file: ["save", "import_more", "export_more", "SEPARATOR", "quit"],
-    edit: ["undo", "redo", "history", "SEPARATOR", "cut", "copy", "paste", "delete", "SEPARATOR", "selectAll"], // , "cut"
-    view: ["fullscreen"], // , "resetZoom", "zoomIn", "zoomOut"
-    help: ["quick_search", "shortcuts", "docs", "quick_start_guide", "about"],
+    // leiaute v2, fatia 4: a barra de menus (file, edit, view, help) saiu; os itens moram no menu do app (AliancaMenuApp.svelte)
     // MAIN
     // default: ["save", "settings", "history", "SEPARATOR", "about", "quit"],
     default: ["quick_search"],

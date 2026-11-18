@@ -27,6 +27,7 @@ export enum Main {
     // DEV
     LOG = "LOG",
     IS_DEV = "IS_DEV",
+    TOGGLE_DEVTOOLS = "TOGGLE_DEVTOOLS",
     GET_CACHE_PATH = "GET_CACHE_PATH",
     // APP
     VERSION = "VERSION",
@@ -311,6 +312,7 @@ export interface MainSendPayloads {
 export interface MainReturnPayloads {
     // DEV
     [Main.IS_DEV]: boolean
+    [Main.TOGGLE_DEVTOOLS]: void
     [Main.GET_CACHE_PATH]: string
     // APP
     [Main.VERSION]: string

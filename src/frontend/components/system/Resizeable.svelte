@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
-    import { drawer, editColumns, localeDirection, os, resized } from "../../stores"
+    import { drawer, editColumns, localeDirection, resized } from "../../stores"
     import { DEFAULT_WIDTH } from "../../utils/common"
     import { startResizing, stopResizing } from "../../utils/cursor"
     import Icon from "../helpers/Icon.svelte"
@@ -73,7 +73,7 @@
         if (width > defaultWidth - 20 && width < defaultWidth + 20) return defaultWidth
         if (width > maxWidth) return maxWidth
         if (side === "bottom") {
-            const availableHeight = window.innerHeight - ($os.platform === "win32" ? 25 : 0) - $drawer.height - 40
+            const availableHeight = window.innerHeight - $drawer.height - 40
             if (width > availableHeight) return availableHeight
         }
         move = true

@@ -46,6 +46,7 @@ export const mainResponses: MainResponses = {
     // DEV
     [Main.LOG]: (data) => console.info(data),
     [Main.IS_DEV]: () => !isProd,
+    [Main.TOGGLE_DEVTOOLS]: () => (isProd ? undefined : getMainWindow()?.webContents.toggleDevTools()),
     [Main.GET_CACHE_PATH]: () => getThumbnailFolderPath(),
     // APP
     [Main.VERSION]: () => getVersion(),
