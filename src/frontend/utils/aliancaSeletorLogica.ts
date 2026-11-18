@@ -111,6 +111,8 @@ export type OpcaoDeDia = {
     foraDeCulto: boolean
     /** nome da agenda quando e culto */
     agenda: string
+    /** cabine 18/nov (A8): culto que existe no Sirvo e ainda nao tem projeto aqui. O id e `sirvo:<event_id>`; escolher segue o culto e abre o projeto quando a montagem o cria */
+    soNoSirvo?: boolean
 }
 export type GrupoDeDias = { chave: string; titulo: string; opcoes: OpcaoDeDia[] }
 
@@ -196,6 +198,47 @@ export function removerGruposVazios<T extends { type?: string }>(itens: T[], tem
     }
     fechar()
     return saida
+}
+
+export const PREFIXO_SO_NO_SIRVO = "sirvo:"
+export type CultoDoSirvo = { event_id: string; titulo?: string; comeca_em: string; encerrado?: boolean }
+
+/**
+ * Cabine 18/nov (A8): Configuracoes > Sirvo lista TODOS os proximos cultos do Sirvo, mas o Show so monta o projeto do culto que SEGUE; o seletor listava
+ * so projetos e mostrava um. Esta conta devolve, em um grupo no fim, os cultos futuros do Sirvo que ainda nao tem projeto aqui. Um culto "tem projeto"
+ * quando algum projeto esta ligado a ele (`sirvo.eventId`) ou ja ha um projeto local na mesma data (a decisao de montagem acha o do dia pelo nome).
+ * `dataDoCulto` entra de fora (fuso de Sao Paulo, utils/aliancaPastas.ts): esta logica nao importa store.
+ */
+export function gruposSoNoSirvo({ cultos, ligados, datasLocais, hoje, dataDoCulto, horaDoCulto }: { cultos: CultoDoSirvo[]; ligados: Set<string>; datasLocais: Set<string>; hoje: string; dataDoCulto: (comecaEm: string) => string | null; horaDoCulto: (comecaEm: string) => string }): GrupoDeDias[] {
+    const anoAtual = dataValida(hoje)?.ano ?? new Date().getFullYear()
+    const futuros = (cultos || [])
+        .filter((c) => c?.event_id && !c.encerrado && !ligados.has(c.event_id))
+        .map((c) => ({ c, dia: dataDoCulto(c.comeca_em) }))
+        .filter((x): x is { c: CultoDoSirvo; dia: string } => !!x.dia && x.dia >= hoje && !datasLocais.has(x.dia))
+        .sort((a, b) => (a.c.comeca_em < b.c.comeca_em ? -1 : a.c.comeca_em > b.c.comeca_em ? 1 : 0))
+    if (!futuros.length) return []
+    const opcoes: OpcaoDeDia[] = futuros.map(({ c, dia }) => {
+        const rot = rotuloDoDia({ cultoId: dia, nomeProjeto: c.titulo || "", anoAtual })
+        return {
+            id: PREFIXO_SO_NO_SIRVO + c.event_id,
+            curto: rot.curto,
+            semSemana: rot.semSemana,
+            longo: rot.longo,
+            evento: (c.titulo || "").trim(),
+            hora: horaDoCulto(c.comeca_em),
+            nome: (c.titulo || "").trim() || rot.longo,
+            cultoId: dia,
+            itens: 0,
+            vazio: true,
+            passado: false,
+            hoje: dia === hoje,
+            arquivado: false,
+            foraDeCulto: false,
+            agenda: "Aliança",
+            soNoSirvo: true
+        }
+    })
+    return [{ chave: "so-no-sirvo", titulo: "No Sirvo", opcoes }]
 }
 
 export const opcoesPlanas = (grupos: GrupoDeDias[]): OpcaoDeDia[] => grupos.flatMap((g) => g.opcoes)

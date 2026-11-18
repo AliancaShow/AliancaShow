@@ -21,6 +21,8 @@
     import { algoNoAr } from "../../utils/aliancaModo"
     import { abaLateral } from "../../utils/aliancaBibliotecaEstado"
     import { quantosDoOperador } from "../../utils/aliancaSirvoProjeto"
+    import { sirvo } from "../../utils/aliancaSirvo"
+    import { ehSoNoSirvo, gruposDoSirvo, seguirCultoEAbrir } from "../../utils/aliancaSeletorSirvo"
     import { CARENCIA_ABERTURA_MS, CARENCIA_MUDANCA_MS, OCIOSO_MS, TETO_TECLA_MS, assinaturaDasOpcoes, camadaPodeSair, corDaAgenda, decidirTecla, dentroDaCarencia, ehHoje, estadoDoBotaoDia, hojeLocalISO, indiceInicial, larguraDoLayout, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, partesDoDia, posicaoDoPopover, subDaAgenda } from "../../utils/aliancaSeletorLogica"
     import { history } from "../helpers/history"
     import { openProject } from "./project"
@@ -72,9 +74,9 @@
 
     let hojeISO = hojeLocalISO()
     let noAr = false
-    $: grupos = aberto === "dia" && fase === "aberto" ? montarGrupos(tree, $projects, pastasVivas, $activeProject, hojeISO, emTodos) : []
-    function montarGrupos(itens: Tree[], projetos: typeof $projects, pastas: typeof pastasVivas, ativoId: string | null, hoje: string, todos: boolean) {
-        return montarOpcoesDeDia({
+    $: grupos = aberto === "dia" && fase === "aberto" ? montarGrupos(tree, $projects, pastasVivas, $activeProject, hojeISO, emTodos, $sirvo.cultos, agendaAtiva) : []
+    function montarGrupos(itens: Tree[], projetos: typeof $projects, pastas: typeof pastasVivas, ativoId: string | null, hoje: string, todos: boolean, cultosSirvo: typeof $sirvo.cultos, agenda: string) {
+        const locais = montarOpcoesDeDia({
             itens,
             resolver: (id) => cultoDoProjeto(id, projetos, pastas),
             contar: (id) => quantosDoOperador(projetos[id]?.shows),
@@ -82,6 +84,9 @@
             ativoId,
             emTodos: todos
         })
+        // A8 (cabine 18/nov): os proximos cultos do Sirvo sem projeto aqui (a lista de Configuracoes > Sirvo); todo culto do Sirvo e da agenda Aliança
+        const doSirvo = agenda === "todos" || agenda === "alianca" ? gruposDoSirvo(cultosSirvo, projetos, opcoesPlanas(locais), hoje) : []
+        return [...locais, ...doSirvo]
     }
     $: planas = aberto === "dia" ? opcoesPlanas(grupos) : aberto === "agenda" ? abas.map((a) => ({ id: a.id, cultoId: "" })) : []
     $: idAtivo = aberto === "dia" ? $activeProject : agendaAtiva
@@ -294,6 +299,8 @@
 
     // o MESMO caminho de ProjectStrip.abrir (faixa antiga): sai cedo quando ja e o ativo e a visao nao e a lista; nunca toca em `outputs`
     function escolherDia(id: string) {
+        // culto que so existe no Sirvo: segue o culto e abre o projeto quando a montagem o criar
+        if (ehSoNoSirvo(id)) return seguirCultoEAbrir(id, (projetoId) => escolherDia(projetoId))
         if ($activeProject === id && !$projectView) return
         projectView.set(false)
         openProject(id)
@@ -356,7 +363,8 @@
 
     onDestroy(fecharTudo)
 
-    function dicaDaOpcao(o: { nome: string; itens: number; vazio: boolean }) {
+    function dicaDaOpcao(o: { nome: string; itens: number; vazio: boolean; soNoSirvo?: boolean }) {
+        if (o.soNoSirvo) return `${o.nome} — só no Sirvo: escolher segue este culto e monta o roteiro aqui`
         return `${o.nome}${o.vazio ? " — vazio" : ` — ${o.itens} ${o.itens === 1 ? "item" : "itens"}`}`
     }
 </script>
@@ -403,7 +411,7 @@
                                             {#if partes}
                                                 <span class="sem">{partes.semana}</span>
                                                 <span class="num">{partes.num}</span>
-                                                <span class="qtd" aria-label={o.vazio ? "sem material" : `${o.itens} itens`}>{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>
+                                                <span class="qtd" aria-label={o.soNoSirvo ? "so no Sirvo" : o.vazio ? "sem material" : `${o.itens} itens`}>{o.soNoSirvo ? "no Sirvo" : o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>
                                                 <span class="tag" class:hojeTag={o.hoje}>{o.hoje ? (o.hora ? `hoje · ${o.hora}` : "hoje") : o.arquivado ? "arquivado" : o.evento || o.hora}</span>
                                             {:else}
                                                 <span class="nomeCartao">{o.curto}</span>
