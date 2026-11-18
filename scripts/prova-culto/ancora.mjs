@@ -21,8 +21,8 @@ export const EXCECOES = {
         "sha": "fd746e6f21ff4c7fc67a9ab5e9dd1e0bfb405bf5aa9867e9fd2f7a6fa70bdd47"
     },
     "src/frontend/utils/aliancaModo.ts": {
-        "motivo": "revisao da fatia 2 (achado 2): `tecladoPodeMexerNaSaida(alvo)` consulta `tecladoVivo(tela, campoDeTexto)`; na saida a tela e `mostrar` e a funcao devolve true como antes",
-        "sha": "0a77c5f35b4b8dc7ccb3b713e5319fad21a1de09df13c7412f161eaa1816e590"
+        "motivo": "revisao da fatia 2 (achado 2) + fatia 3: `tecladoPodeMexerNaSaida(alvo, tecla)` consulta `tecladoVivo(tela, campoDeTexto, tecla)` (em Editar so o Esc passa) e a marca de tecla em curso nao conta o Esc; na saida a tela e `mostrar` e a funcao devolve true como antes",
+        "sha": "78f5a520f89be3540ccfede738033a357fe3904e25aea8db3fd29aba99d0c4e6"
     },
     "src/frontend/utils/aliancaBibliotecaEstado.ts": {
         "motivo": "revisao da fatia 2 (achado 2.1): so zera a biblioteca ao chegar em Mostrar vindo de Editar; assinante da `tela` so montado pela janela principal (iniciarEstadoDaBiblioteca nao roda na saida)",
@@ -40,13 +40,13 @@ export const EXCECOES = {
  */
 export const NOVOS_NO_FECHO = {
     "src/frontend/utils/aliancaTecladoLogica.ts": {
-        "motivo": "revisao da fatia 2 (achado 2): funcao pura `tecladoVivo(tela, campo)`, importada por aliancaModo.ts; em `mostrar` devolve true",
-        "sha": "3f3ab70796196fa1561ae9206f95cd0ba1ba2de10d3a01ec05d551b47d7eef5b"
+        "motivo": "revisao da fatia 2 (achado 2) + fatia 3: funcao pura `tecladoVivo(tela, campo, tecla)`, importada por aliancaModo.ts; em `mostrar` devolve true (o terceiro argumento so muda o ramo `editar`, que a saida nunca tem)",
+        "sha": "ef3200817fe6961538c62f2b685672b5395f8ce47575c20731a9d2e2f27fb057"
     }
 }
 
-export const SHA_EXCECOES = "b05feb122fd5d412d341f94a9b4668c13e82c70535c0641ffe832233aa195f0a"
-export const SHA_NOVOS = "141a39ed1c90c9e9a84a09c5fc575b45d070255cc4cdcd35cbba9cbd974ce98c"
+export const SHA_EXCECOES = "7674f112b1054a2e8c1ac34dc5cb20a9cddc51e51afa712ec29d62b8c7f15e33"
+export const SHA_NOVOS = "47371adb3acda4baf4b8989f09b8bb9ec7a54702963059d250f45ff69a958c92"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
