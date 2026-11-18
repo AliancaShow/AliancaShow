@@ -3,7 +3,7 @@
     // A logica de listar/filtrar/buscar e a de AliancaBiblioteca (Preparar): `listarBiblioteca` + `showSearch`. Clicar na linha ABRE o show no
     // centro (nao vai ao ar); "＋ roteiro" poe no fim do culto (uma entrada de historico). Chips e busca moram no cabecalho do painel.
     import { onDestroy } from "svelte"
-    import { activeProfile, activeProject, activeShow, categories, editingProjectTemplate, projects, shows, showsCache, textCache } from "../../stores"
+    import { activeProfile, activeProject, outLocked, activeShow, categories, editingProjectTemplate, projects, shows, showsCache, textCache } from "../../stores"
     import { motivoSemCulto } from "../../utils/aliancaGaveta"
     import { porShowNoFim } from "../../utils/aliancaBiblioteca"
     import { buscaDaBiblioteca, soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
@@ -13,6 +13,8 @@
     import { getAccess } from "../../utils/profile"
     import { formatSearch, showSearch } from "../../utils/search"
     import { openShow } from "../helpers/show"
+    import { tela } from "../../utils/aliancaTela"
+    import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
 
     export let firstMatch: null | { id: string } = null
 
@@ -59,6 +61,11 @@
         if (motivo) return
         porShowNoFim(id)
     }
+    // ▶: entra no roteiro E o primeiro slide vai ao ar (so em Mostrar; em Editar a biblioteca nunca toca o telao)
+    function tocar(id: string) {
+        ;(document.activeElement as HTMLElement | null)?.blur?.()
+        void tocarShowNoAr(id)
+    }
 </script>
 
 {#if lista.length}
@@ -73,6 +80,9 @@
                 {#if linha.semLetra}<span class="selo aviso">sem letra</span>{/if}
                 {#if noCulto.has(linha.id)}<span class="selo">no roteiro</span>{/if}
                 <button class="mais" aria-disabled={!!motivo} aria-label="Adicionar ao roteiro" data-title={motivo || "Adicionar ao fim do roteiro"} tabindex="-1" on:mousedown|preventDefault on:click|stopPropagation={() => mais(linha.id)}>＋ roteiro</button>
+                {#if $tela === "mostrar"}
+                    <button class="tocar" class:travada={$outLocked} aria-disabled={$outLocked} aria-label="Adicionar ao roteiro e mandar ao ar" data-acao="biblioteca-tocar" data-title={$outLocked ? MOTIVO_TRAVADA : "Adicionar ao roteiro e mandar o primeiro slide ao ar"} tabindex="-1" on:mousedown|preventDefault on:click|stopPropagation={() => tocar(linha.id)}>▶</button>
+                {/if}
             </div>
         {/each}
     </div>
@@ -139,6 +149,26 @@
         font-size: 12px;
         cursor: pointer;
         color: var(--luz-texto);
+    }
+    .tocar {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 1px solid var(--luz-borda);
+        border-radius: 6px;
+        background: var(--luz-campo);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        color: var(--luz-texto);
+    }
+    .tocar:hover {
+        background: var(--luz-hover);
+        border-color: var(--luz-borda-forte);
+    }
+    .tocar.travada {
+        opacity: 0.4;
+        cursor: not-allowed;
     }
     .mais[aria-disabled="true"] {
         opacity: 0.4;

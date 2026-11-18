@@ -170,6 +170,16 @@
         newToast(`"${displayName || name}" entrou no fim do roteiro`)
     }
 
+    // leiaute v2: o ▶ do cartao poe a midia no fim do roteiro E a manda ao ar, pelo mesmo `click` do cartao (alterna: se ja esta no ar, limpa)
+    function tocarMidia(e: MouseEvent) {
+        if ($outLocked) {
+            e.stopPropagation()
+            return newToast("a saída está travada: destrave para mandar ao ar")
+        }
+        maisNoRoteiro(e)
+        click({})
+    }
+
     function dblclick(e: any) {
         if (e.ctrlKey || e.metaKey || iconClicked) return
 
@@ -339,6 +349,9 @@
     <div class="rodape" data-acao="midia-rodape">
         <span class="rn" data-title={path}>{displayName}</span>
         <button type="button" class="rmais" aria-label="Adicionar ao roteiro" title="Adicionar ao fim do roteiro" tabindex="-1" on:mousedown|preventDefault on:click={maisNoRoteiro}>＋</button>
+        {#if $tela === "mostrar"}
+            <button type="button" class="rmais" data-acao="midia-tocar" aria-label="Adicionar ao roteiro e mandar ao ar" title="Adicionar ao roteiro e mandar ao ar" tabindex="-1" on:mousedown|preventDefault on:click={tocarMidia}>▶</button>
+        {/if}
     </div>
 {/if}
 
