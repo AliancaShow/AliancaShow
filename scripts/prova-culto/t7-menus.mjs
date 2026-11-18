@@ -293,6 +293,15 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
         ok("I4 Mostrar agora (botao direito) manda a Tela ao ar", await algoNoAr(), JSON.stringify(await noAr()))
         await limpar()
       } else ok("I1 ha uma Tela para testar (Mídia > Entradas > Telas)", false, tela.motivo) }
+    // as cameras (Cameras/Cam estao no fecho da saida: o ▶ entra por tocavelLista)
+    { const c = await localizar(j, `[...document.querySelectorAll('[data-regiao=biblioteca] button')].find(b=>b.innerText.split(String.fromCharCode(10))[0].trim()==="Câmeras")`)
+      if (c.ok) { await clicarEm(j, c.x, c.y); await esperar(1500) }
+      const cam = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#camera_card"]')`)
+      if (cam.ok) {
+        await clicarEm(j, cam.x, cam.y); await esperar(700)
+        ok("I5 clique simples numa Camera: zero escritas em outputs e nada no ar", (await escritas()) === 0 && !(await algoNoAr()), `n=${await escritas()}`)
+        ok("I6 a Camera tem o ▶ (entra por tocavelLista)", await dom(`!!document.querySelector('[data-regiao=biblioteca] [class*="#camera_card"] [data-acao=tocar-ao-ar]')`))
+      } else ok("I5 ha uma Camera no perfil", false, cam.motivo) }
     await noDaArvore("Shows")
 
     // ---------- G: o 2o toque do duplo clique nao atravessa o menu (revisao da fatia 6, achado 2)
