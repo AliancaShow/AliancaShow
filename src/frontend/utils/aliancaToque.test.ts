@@ -2,11 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { get } from "svelte/store"
 
 // Revisao da fatia 3, achados 4 e 5: um Esc = uma coisa, e o que o Esc fecha/desseleciona em Editar arma os 700 ms.
+const menuAberto = vi.hoisted(() => ({ on: false }))
 const janela = vi.hoisted(() => {
     const corpo = {}
     const j = new EventTarget()
     ;(globalThis as any).window = j
-    ;(globalThis as any).document = { body: corpo, activeElement: corpo }
+    ;(globalThis as any).document = { body: corpo, activeElement: corpo, querySelector: (sel: string) => (menuAberto.on && sel.includes("addMenu") ? {} : null) }
     return j
 })
 
@@ -41,6 +42,7 @@ beforeEach(() => {
     activeEdit.set({ items: [] } as any)
     dividirAberto.set(null)
     listaAberta.set(false)
+    menuAberto.on = false
     trocarTela("edit", "botao-direito")
 })
 afterEach(() => {
@@ -94,6 +96,13 @@ describe("Esc que desseleciona caixa arma os 700 ms (achado 5)", () => {
         expect(esc()).toBe(false)
         passar(800)
         expect(esc()).toBe(true)
+    })
+    it("menu + Caixa aberto: o Esc que o fecha arma os 700 ms", () => {
+        menuAberto.on = true
+        esc()
+        menuAberto.on = false
+        passar(300)
+        expect(esc()).toBe(false)
     })
     it("nada selecionado: o Esc passa e nao arma nada", () => {
         expect(esc()).toBe(true)

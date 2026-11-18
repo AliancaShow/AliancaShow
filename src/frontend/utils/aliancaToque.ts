@@ -23,10 +23,16 @@ function campoComFoco(): boolean {
     return a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)
 }
 
+/**
+ * O menu "+ Caixa" (ItemAddMenu) fecha no proprio Esc, mas nao pode importar esta trava (a janela de saida importa o ItemAddMenu): a trava o ve no DOM.
+ * Ele sai do DOM so depois do fade de fechar, entao no instante deste Esc ele ainda esta la.
+ */
+const menuDeItensAberto = (): boolean => !!document.querySelector?.('[data-acao="editar-adicionar-item"] .addMenu')
+
 /** algo que ESTE Esc vai fechar ou desselecionar (olhado ANTES dos outros ouvintes) */
 function algoParaFechar(): boolean {
     // em Editar o Esc tambem desseleciona a caixa do slide (imagem, forma, caixa arrastada): `clearAll` o sabe, a trava tambem tem de saber
-    return !!(get(activePopup) || get(quickSearchActive) || get(contextActive) || get(topContextActive) || get(selected)?.id || campoComFoco() || (emEditar() && get(activeEdit)?.items?.length))
+    return !!(get(activePopup) || get(quickSearchActive) || get(contextActive) || get(topContextActive) || get(selected)?.id || campoComFoco() || (emEditar() && (get(activeEdit)?.items?.length || menuDeItensAberto())))
 }
 
 /**

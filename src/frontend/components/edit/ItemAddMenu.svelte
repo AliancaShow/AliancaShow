@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { escFechou } from "../../utils/aliancaToque"
     import { fade } from "svelte/transition"
     import { uid } from "uid"
     import type { StageItem } from "../../../types/Stage"
@@ -16,8 +15,6 @@
     import { slideItems, stageItems } from "./values/items"
 
     export let isLocked = false
-    // Editar (leiaute v2): o botao mora no cabecalho do centro e o menu abre dele para baixo (nada flutua sobre o slide). Sem isto: o botao redondo flutuante de sempre (Stage).
-    export let noCabecalho = false
 
     let isOpen = false
     let hoveredId: string | null = null
@@ -163,7 +160,6 @@
     function handleKeydown(e: KeyboardEvent) {
         if (isOpen && e.key === "Escape") {
             isOpen = false
-            escFechou()
             e.preventDefault()
             e.stopPropagation()
         }
@@ -173,125 +169,93 @@
 <svelte:window on:mousedown={handleMousedown} on:keydown|capture={handleKeydown} />
 
 {#if !isLocked && (isStage ? $activeStage.id : $activeEdit.slide !== undefined || $activeEdit.type === "overlay" || $activeEdit.type === "template")}
-    <div class="raiz" class:cab={noCabecalho}>
-        {#if isOpen}
-            <div class="addMenu" transition:fade={{ duration: 80 }} style="overflow: visible;">
-                <div class="menu-content">
-                    {#each groupedItems as group, i}
-                        {#if group.label}
-                            <div class="group-label"><T id={group.label} /></div>
-                        {:else if i > 0}
-                            <div class="group-spacer" />
-                        {/if}
+    {#if isOpen}
+        <div class="addMenu" transition:fade={{ duration: 80 }} style="overflow: visible;">
+            <div class="menu-content">
+                {#each groupedItems as group, i}
+                    {#if group.label}
+                        <div class="group-label"><T id={group.label} /></div>
+                    {:else if i > 0}
+                        <div class="group-spacer" />
+                    {/if}
 
-                        {#each group.items as item, j}
-                            {@const isFirst = i === 0 && j === 0}
-                            <div
-                                class="item-wrapper"
-                                on:mouseenter={(e) => {
-                                    clearTimeout(hoverTimeout)
-                                    clearTimeout(delayedHoverTimeout)
+                    {#each group.items as item, j}
+                        {@const isFirst = i === 0 && j === 0}
+                        <div
+                            class="item-wrapper"
+                            on:mouseenter={(e) => {
+                                clearTimeout(hoverTimeout)
+                                clearTimeout(delayedHoverTimeout)
 
-                                    const target = e.currentTarget
-                                    const open = () => {
-                                        const rect = target.getBoundingClientRect()
-                                        const shell = target.closest(".addMenu")
-                                        if (!shell) return
+                                const target = e.currentTarget
+                                const open = () => {
+                                    const rect = target.getBoundingClientRect()
+                                    const shell = target.closest(".addMenu")
+                                    if (!shell) return
 
-                                        const parentRect = shell.getBoundingClientRect()
-                                        hoveredSubmenu = item.children || null
-                                        hoveredId = item.id
-                                        hoveredY = parentRect.bottom - rect.bottom
-                                    }
+                                    const parentRect = shell.getBoundingClientRect()
+                                    hoveredSubmenu = item.children || null
+                                    hoveredId = item.id
+                                    hoveredY = parentRect.bottom - rect.bottom
+                                }
 
-                                    if (item.children) {
-                                        delayedHoverTimeout = setTimeout(open, 120)
-                                    } else {
-                                        hoveredSubmenu = null
-                                        hoveredId = null
-                                    }
-                                }}
-                                on:mouseleave={() => {
-                                    clearTimeout(delayedHoverTimeout)
-                                    hoverTimeout = setTimeout(() => {
-                                        hoveredSubmenu = null
-                                        hoveredId = null
-                                    }, 150)
-                                }}
-                            >
-                                <MaterialButton class="add-item-button" variant={item.children ? "text" : "outlined"} on:click={() => (item.children ? null : handleAdd(item.id))} title={item.title || item.label} white={!isFirst}>
-                                    <Icon id={item.icon} size={1.2} white={!isFirst} />
-                                    <T id={item.label} />{item.suffix || ""}
-                                </MaterialButton>
-                            </div>
-                        {/each}
+                                if (item.children) {
+                                    delayedHoverTimeout = setTimeout(open, 120)
+                                } else {
+                                    hoveredSubmenu = null
+                                    hoveredId = null
+                                }
+                            }}
+                            on:mouseleave={() => {
+                                clearTimeout(delayedHoverTimeout)
+                                hoverTimeout = setTimeout(() => {
+                                    hoveredSubmenu = null
+                                    hoveredId = null
+                                }, 150)
+                            }}
+                        >
+                            <MaterialButton class="add-item-button" variant={item.children ? "text" : "outlined"} on:click={() => (item.children ? null : handleAdd(item.id))} title={item.title || item.label} white={!isFirst}>
+                                <Icon id={item.icon} size={1.2} white={!isFirst} />
+                                <T id={item.label} />{item.suffix || ""}
+                            </MaterialButton>
+                        </div>
+                    {/each}
+                {/each}
+            </div>
+
+            {#if hoveredSubmenu && hoveredSubmenu.length > 0 && hoveredId}
+                <div
+                    class="addMenu submenu"
+                    transition:fade={{ duration: 80 }}
+                    style="bottom: {hoveredY - 6}px;"
+                    on:mouseenter={() => clearTimeout(hoverTimeout)}
+                    on:mouseleave={() => {
+                        hoveredSubmenu = null
+                        hoveredId = null
+                    }}
+                >
+                    {#each hoveredSubmenu as subItem}
+                        <MaterialButton class="add-item-button" variant="outlined" on:click={() => handleAdd(subItem.id)} title={subItem.title || subItem.label} white>
+                            {#if subItem.icon}<Icon id={subItem.icon} size={1.2} white />{/if}
+                            <span class="item-name">
+                                {translateText(subItem.label)}{subItem.suffix || ""}
+                            </span>
+                            {#if subItem.data}<span class="item-preview">{subItem.data}</span>{/if}
+                        </MaterialButton>
                     {/each}
                 </div>
+            {/if}
+        </div>
+    {/if}
 
-                {#if hoveredSubmenu && hoveredSubmenu.length > 0 && hoveredId}
-                    <div
-                        class="addMenu submenu"
-                        transition:fade={{ duration: 80 }}
-                        style="bottom: {hoveredY - 6}px;"
-                        on:mouseenter={() => clearTimeout(hoverTimeout)}
-                        on:mouseleave={() => {
-                            hoveredSubmenu = null
-                            hoveredId = null
-                        }}
-                    >
-                        {#each hoveredSubmenu as subItem}
-                            <MaterialButton class="add-item-button" variant="outlined" on:click={() => handleAdd(subItem.id)} title={subItem.title || subItem.label} white>
-                                {#if subItem.icon}<Icon id={subItem.icon} size={1.2} white />{/if}
-                                <span class="item-name">
-                                    {translateText(subItem.label)}{subItem.suffix || ""}
-                                </span>
-                                {#if subItem.data}<span class="item-preview">{subItem.data}</span>{/if}
-                            </MaterialButton>
-                        {/each}
-                    </div>
-                {/if}
-            </div>
-        {/if}
-
-        {#if noCabecalho}
-            <button type="button" class="addCab addButton" data-acao="editar-adicionar-item" aria-expanded={isOpen} title={isOpen ? "Fechar" : "Adicionar caixa ao slide"} on:click={() => (isOpen = !isOpen)} on:dblclick={handleDoubleClick}>＋ Caixa</button>
-        {:else}
-            <FloatingInputs gradient style="width: 50px;height: 50px;border: none;">
-                <MaterialButton class="addButton" title={isOpen ? "actions.close" : "edit.add_items"} style="width: 50px; height: 50px;" on:click={() => (isOpen = !isOpen)} on:dblclick={handleDoubleClick}>
-                    <Icon id="add" size={1.5} style={isOpen ? "transform: rotate(135deg);" : ""} white />
-                </MaterialButton>
-            </FloatingInputs>
-        {/if}
-    </div>
+    <FloatingInputs gradient style="width: 50px;height: 50px;border: none;">
+        <MaterialButton class="addButton" title={isOpen ? "actions.close" : "edit.add_items"} style="width: 50px; height: 50px;" on:click={() => (isOpen = !isOpen)} on:dblclick={handleDoubleClick}>
+            <Icon id="add" size={1.5} style={isOpen ? "transform: rotate(135deg);" : ""} white />
+        </MaterialButton>
+    </FloatingInputs>
 {/if}
 
 <style>
-    /* sem cabecalho a raiz some do layout (o menu e o botao seguem absolutos como sempre); no cabecalho ela e a ancora do menu */
-    .raiz {
-        display: contents;
-    }
-    .raiz.cab {
-        display: block;
-        position: relative;
-        flex-shrink: 0;
-    }
-    .raiz.cab .addMenu {
-        top: calc(100% + 6px);
-        bottom: auto;
-        right: 0;
-    }
-    .addCab {
-        height: 28px;
-        padding: 0 10px;
-        border: 1px solid var(--luz-borda);
-        border-radius: 6px;
-        background: var(--luz-campo);
-        color: var(--luz-texto);
-        font: inherit;
-        font-size: 12px;
-        cursor: pointer;
-        white-space: nowrap;
-    }
     .addMenu {
         position: absolute;
         bottom: 70px;

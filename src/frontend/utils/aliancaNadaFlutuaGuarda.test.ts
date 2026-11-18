@@ -10,12 +10,15 @@ describe("o botao + de itens nao flutua sobre o slide", () => {
     it("o Editor nao monta mais o ItemAddMenu", () => {
         expect(ler("edit/Editor.svelte")).not.toMatch(/<ItemAddMenu/)
     })
-    it("o cabecalho do centro de Editar monta o ItemAddMenu no modo de cabecalho", () => {
-        expect(ler("main/AliancaEditarCentro.svelte")).toMatch(/<ItemAddMenu[^>]*\bnoCabecalho\b/)
+    it("o cabecalho do centro de Editar monta o ItemAddMenu dentro do wrapper .addCab", () => {
+        expect(ler("main/AliancaEditarCentro.svelte")).toMatch(/<div class="addCab"[^>]*><ItemAddMenu/)
     })
-    it("no modo de cabecalho o botao nao e FloatingInputs (que posiciona por cima do conteudo)", () => {
-        const fonte = ler("edit/ItemAddMenu.svelte")
-        const cab = fonte.slice(fonte.indexOf("{#if noCabecalho}"))
-        expect(cab.slice(0, cab.indexOf("{:else}"))).not.toMatch(/FloatingInputs/)
+    it("o wrapper e a ancora (relative) e o botao redondo deixa de ser posicionado pelo conteudo", () => {
+        const fonte = ler("main/AliancaEditarCentro.svelte")
+        expect(fonte).toMatch(/\.addCab \{[^}]*position: relative/)
+        expect(fonte).toMatch(/\.addCab :global\(\.row\) \{[^}]*position: absolute !important[^}]*bottom: auto !important/)
+    })
+    it("o ItemAddMenu nao mudou (a janela de saida o importa; a ancora o vigia)", () => {
+        expect(ler("edit/ItemAddMenu.svelte")).not.toMatch(/noCabecalho|aliancaToque/)
     })
 })
