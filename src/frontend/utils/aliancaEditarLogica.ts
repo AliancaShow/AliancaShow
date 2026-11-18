@@ -82,6 +82,18 @@ export function avisoAoVivo(e: { tipo?: string; id?: string; noAr: ConteudoDoAr[
 // ---------------------------------------------------------------- o item em edicao (roteiro ou aberto da biblioteca)
 
 export type TipoEditavel = "show" | "media" | "audio" | "camera" | "overlay" | "template" | "effect"
+export const TIPOS_EDITAVEIS: TipoEditavel[] = ["show", "media", "audio", "camera", "overlay", "template", "effect"]
+/** `activeEdit.type` que o seletor nao sabe descrever (pdf, ppt...): nao se edita aqui, e quem ve isso tem de avisar em voz alta */
+export const tipoDeEdicaoDesconhecido = (t: string | undefined): boolean => !!t && !(TIPOS_EDITAVEIS as string[]).includes(t)
+
+/** o `activeEdit` de cada item do roteiro quando ele e escolhido no seletor (null = o tipo nao se edita aqui) */
+export function editDoItemDoRoteiro(it: { id: string; type?: string }): { type: TipoEditavel; slide?: number; id?: string; showId?: string; items: any[] } | null {
+    const tipo = tipoEditavelDoRoteiro(it.type)
+    if (tipo === "show") return { type: "show", slide: 0, items: [], showId: it.id }
+    if (tipo === "media" || tipo === "audio") return { type: tipo, id: it.id, items: [] }
+    return null
+}
+
 export type ItemEditavel = { chave: string; tipo: TipoEditavel; id: string; nome: string }
 export const MAX_AVULSOS = 5
 
@@ -156,6 +168,7 @@ export function contagemDeSlides(n: number): string {
  */
 export function itemEmEdicao(e: { edit: { type?: string; id?: string; showId?: string } | null | undefined; show: { id?: string; type?: string } | null | undefined; nomeDe: (tipo: TipoEditavel, id: string) => string }): ItemEditavel | null {
     const tipoEdit = (e.edit?.type || "show") as TipoEditavel
+    if (tipoDeEdicaoDesconhecido(tipoEdit)) return null
     let tipo: TipoEditavel
     let id = ""
     if (tipoEdit === "show") {

@@ -5,7 +5,7 @@
     import { onDestroy } from "svelte"
     import { activeEdit, activePopup, activeProject, activeShow, categories, effects, overlays, popupData, projects, refreshEditSlide, shows, showsCache, templates, textCache } from "../../stores"
     import { avulsosEditando, type Avulso } from "../../utils/aliancaEditarEstado"
-    import { SIMBOLO_DO_TIPO, contagemDeSlides, empurrarAvulso, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, tirarAvulso, ROTULO_DO_TIPO, type OpcaoDoSeletor, type TipoEditavel } from "../../utils/aliancaEditarLogica"
+    import { SIMBOLO_DO_TIPO, contagemDeSlides, editDoItemDoRoteiro, empurrarAvulso, estaNoRoteiro, itemEmEdicao, tipoDeEdicaoDesconhecido, opcoesDoSeletor, tirarAvulso, ROTULO_DO_TIPO, type OpcaoDoSeletor, type TipoEditavel } from "../../utils/aliancaEditarLogica"
     import { escFechou } from "../../utils/aliancaToque"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
@@ -30,6 +30,8 @@
     $: atual = itemEmEdicao({ edit: $activeEdit as any, show: $activeShow as any, nomeDe: (t, i) => (void $shows, void $overlays, void $templates, void $effects, nomeDe(t, i)) })
     $: showId = atual?.tipo === "show" ? atual.id : ""
     $: roteiro = ($activeProject ? $projects[$activeProject]?.shows || [] : []) as { id: string; type?: string; name?: string }[]
+    // um activeEdit.type que o seletor nao conhece (pdf, ppt) nao e silenciado: acende a falha, e o seletor diz "Nenhum item aberto"
+    $: if (tipoDeEdicaoDesconhecido(($activeEdit as any)?.type)) falhaAlta("editar-tipo-desconhecido", `activeEdit.type ${($activeEdit as any).type} nao se edita aqui`)
     $: foraRoteiro = !!atual && !estaNoRoteiro(roteiro, atual.tipo, atual.id)
 
     // o que se abre e nao e do roteiro entra na lista de avulsos (a mais recente na frente)
@@ -90,7 +92,10 @@
     function abrirDoRoteiro(it: { id: string; type?: string }, index: number) {
         try {
             abrirItemDoRoteiro(it as any, index)
-            if ((it.type || "show") === "show") activeEdit.set({ type: "show", slide: 0, items: [], showId: it.id } as any)
+            // cada tipo escreve o SEU activeEdit (sem isto o audio ficava com o show anterior e a midia nao trocava com um modelo aberto por cima)
+            const edicao = editDoItemDoRoteiro(it)
+            if (edicao) activeEdit.set(edicao as any)
+            else falhaAlta("editar-abrir-item", `o item ${it.id} (${it.type}) do roteiro nao se edita aqui`)
             refreshEditSlide.set(true)
         } catch (erro) {
             falhaAlta("editar-abrir-item", erro)

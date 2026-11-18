@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { mostrarMandarSo, saidasParaMandar } from "./aliancaEditarSaidas"
-import { FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
+import { FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, editDoItemDoRoteiro, tipoDeEdicaoDesconhecido, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
 
 const ref = [{ id: "a" }, { id: "b" }, { id: "c" }]
 const slides = (itemsB: any[] = [1]) => ({ a: { items: [0] }, b: { items: itemsB }, c: { items: [2] } })
@@ -194,5 +194,23 @@ describe("modelo e camera no ar avisam 'na hora' (achado 7)", () => {
     it("camera no fundo avisa pelo id; outra camera nao", () => {
         expect(avisoAoVivo({ tipo: "camera", id: "cam1", noAr: [{ background: { id: "cam1" } }] })).toContain("na hora")
         expect(avisoAoVivo({ tipo: "camera", id: "cam2", noAr: [{ background: { id: "cam1" } }] })).toBe("")
+    })
+})
+
+describe("audio e tipos fora do seletor (menor 9)", () => {
+    it("o activeEdit de cada item do roteiro: show, midia e audio sao escritos (audio nao cai no show anterior)", () => {
+        expect(editDoItemDoRoteiro({ id: "s" })).toEqual({ type: "show", slide: 0, items: [], showId: "s" })
+        expect(editDoItemDoRoteiro({ id: "v.mp4", type: "video" })).toEqual({ type: "media", id: "v.mp4", items: [] })
+        expect(editDoItemDoRoteiro({ id: "a.mp3", type: "audio" })).toEqual({ type: "audio", id: "a.mp3", items: [] })
+        expect(editDoItemDoRoteiro({ id: "p", type: "pdf" })).toBeNull()
+    })
+    it("audio aberto vira o item em edicao (nao a musica anterior)", () => {
+        const e = itemEmEdicao({ edit: editDoItemDoRoteiro({ id: "a.mp3", type: "audio" }) as any, show: { id: "a.mp3", type: "audio" }, nomeDe: (_t, id) => id })
+        expect(e).toEqual({ chave: "audio:a.mp3", tipo: "audio", id: "a.mp3", nome: "a.mp3" })
+    })
+    it("tipo de edicao fora da lista (pdf) nao vira item com rotulo undefined", () => {
+        expect(tipoDeEdicaoDesconhecido("pdf")).toBe(true)
+        expect(tipoDeEdicaoDesconhecido("audio")).toBe(false)
+        expect(itemEmEdicao({ edit: { type: "pdf", id: "x.pdf" }, show: { id: "x.pdf", type: "pdf" }, nomeDe: () => "x" })).toBeNull()
     })
 })
