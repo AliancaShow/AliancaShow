@@ -24,8 +24,7 @@ import { iniciarPonteiros } from "./aliancaPonteiros"
 import { iniciarAbasDoEditor } from "./aliancaAbasEditor"
 import { iniciarTemaAlianca } from "./aliancaTema"
 import { iniciarTelaAlianca } from "./aliancaTelaEfeitos"
-import { configurarRegistroDeFalha, falhaAlta } from "./aliancaFalha"
-import { iniciarSoRetorno } from "./aliancaSoRetorno"
+import { configurarRegistroDeFalha } from "./aliancaFalha"
 
 let initialized = false
 let startupProfile = ""
@@ -78,9 +77,6 @@ async function startupMain() {
     getStoredData()
 
     await waitUntilValueIsDefined(() => get(loaded), 50, 8000)
-
-    // 8b (R2): devolve o que uma queda com o modo "so retorno" ligado deixou trocado e vigia o retorno sumir (uma vez, na partida)
-    iniciarSoRetorno((m) => falhaAlta("so-retorno", m))
 
     if (startupProfile) openProfileByName(startupProfile)
     else autoOpenLastUsedProfile()
