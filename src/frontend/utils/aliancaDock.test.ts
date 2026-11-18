@@ -6,7 +6,7 @@ describe("estiloDock (fatia 9)", () => {
         const e = estiloDock("left")
         expect(e).toContain("position: sticky !important")
         expect(e).toContain("bottom: 0 !important")
-        expect(e).toContain("var(--luz-campo)")
+        expect(e).toContain("background-color: var(--luz-painel-opaco)")
         expect(e).toContain("box-shadow: none !important")
         expect(
             e
