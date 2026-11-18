@@ -15,7 +15,7 @@ const ITENS: { [id: string]: ContextMenuItem } = {
     // so em Editar: o botao direito na miniatura do slide. "Mandar so para" lista as telas (o monitor de retorno nao entra: decisao 5)
     alianca_ar: { label: "Mandar pro ar", icon: "play", iconColor: "#f21a27", translate: false },
     alianca_so: { label: "Mandar só para", icon: "play", iconColor: "#f21a27", items: ["LOAD_alianca_so"], translate: false },
-    // linha de show da biblioteca: hoje so "Editar" (abre em Editar sem pôr no roteiro); o resto do menu da biblioteca e da fatia 6
+    // "Editar": abre o show em Editar sem pôr no roteiro (linha da biblioteca e item do roteiro; o menu de cada um e de aliancaMenusBiblioteca.ts)
     alianca_editar: { label: "Editar", icon: "edit", iconColor: "#97c7ff", translate: false }
 }
 
@@ -23,8 +23,8 @@ const BASE_DO_SLIDE = ["slideGroups", "actions", "bind_to", "format", "remove_la
 const LAYOUTS: { [id: string]: string[] } = {
     // Editar: Mandar pro ar e Mandar so para em cima; o resto do menu do slide continua (grupo, acoes, duplicar, excluir...)
     slideEditar: ["alianca_ar", "alianca_so", "SEPARATOR", ...BASE_DO_SLIDE],
-    slideChildEditar: ["alianca_ar", "alianca_so", "SEPARATOR", ...BASE_DO_SLIDE],
-    show_drawer: ["alianca_editar"]
+    slideChildEditar: ["alianca_ar", "alianca_so", "SEPARATOR", ...BASE_DO_SLIDE]
+    // `show_drawer` (a linha de show da biblioteca) e a fatia 6: aliancaMenusBiblioteca.ts
 }
 Object.assign(contextMenuItems, ITENS)
 Object.assign(contextMenuLayouts, LAYOUTS)

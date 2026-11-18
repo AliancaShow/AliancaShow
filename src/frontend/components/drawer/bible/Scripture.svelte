@@ -7,9 +7,10 @@
     import { sanitizeVerseText } from "../../../../common/scripture/sanitizeVerseText"
     import { defaultBibleBookNames } from "../../../converters/bebliaBible"
     import { activeEdit, activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected } from "../../../stores"
-    import { tela } from "../../../utils/aliancaTela"
+    import { naoEMostrar, tela } from "../../../utils/aliancaTela"
     import { marcarBiblia } from "../../../utils/aliancaGaveta"
-    import { gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { cliqueVaiSerEngolido } from "../../../utils/aliancaToque"
     import { wait } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
@@ -1247,10 +1248,10 @@
 {:else if $scriptureMode !== "grid" || $resized.rightPanelDrawer > 5}
     <FloatingInputs>
         {#if isActiveInOutput}
-            <MaterialButton disabled={activeReference.book?.toString() === "1" && !!activeReference.chapters?.find((a) => a.toString() === "1") && !!activeReference.verses[0]?.find((a) => a.toString() === "1")} title="{translateText('preview._previous_slide')} [Ctrl+Arrow Left]" on:click={() => _moveSelection(true, gavetaNaoToca())}>
+            <MaterialButton disabled={activeReference.book?.toString() === "1" && !!activeReference.chapters?.find((a) => a.toString() === "1") && !!activeReference.verses[0]?.find((a) => a.toString() === "1")} title="{translateText('preview._previous_slide')} [Ctrl+Arrow Left]" on:click={() => _moveSelection(true, naoEMostrar())}>
                 <Icon size={1.3} id="previous" />
             </MaterialButton>
-            <MaterialButton disabled={activeReference.book?.toString() === books?.length.toString() && activeReference.chapters?.includes(chapters ? chapters.length : 1) && activeReference.verses[0]?.includes(verses ? verses.length : 1)} title="{translateText('preview._next_slide')} [Ctrl+Arrow Right]" on:click={() => _moveSelection(false, gavetaNaoToca())}>
+            <MaterialButton disabled={activeReference.book?.toString() === books?.length.toString() && activeReference.chapters?.includes(chapters ? chapters.length : 1) && activeReference.verses[0]?.includes(verses ? verses.length : 1)} title="{translateText('preview._next_slide')} [Ctrl+Arrow Right]" on:click={() => _moveSelection(false, naoEMostrar())}>
                 <Icon size={1.3} id="next" />
             </MaterialButton>
         {/if}

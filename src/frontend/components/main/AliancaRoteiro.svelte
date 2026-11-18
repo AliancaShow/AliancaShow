@@ -159,7 +159,7 @@
                             <AliancaBlocoVivo blocoId={idSirvo} nome={nomeBloco(b)} />
                         {:else}
                             <SelectElem id="show" data={{ ...cab.item, index: cab.index }} {fileOver} borders="edges" trigger="column" draggable={!(projeto?.sectionsLocked || blocoDoSirvo(b))} selectable={!(projeto?.sectionsLocked || blocoDoSirvo(b))}>
-                                <button class="bloco {projetoSoLeitura ? '' : 'context #project_section'}" tabindex="-1" on:click={(e) => abrir(cab.item, cab.index, e)}>
+                                <button class="bloco {projetoSoLeitura ? '' : 'context #project_section'}" data-indice={cab.index} data-id={cab.item.id} data-menu-titulo={nomeBloco(b) || "Bloco"} tabindex="-1" on:click={(e) => abrir(cab.item, cab.index, e)}>
                                     <span>{nomeBloco(b) || "(sem nome)"}</span><span class="tempo">{duracaoDoBloco(b)}</span>
                                 </button>
                             </SelectElem>
@@ -174,7 +174,7 @@
                     {#each b.linhas as l (l.item.id + ":" + l.index)}
                         {@const trava = projeto?.sectionsLocked}
                         <SelectElem id="show" dropAbove={false} triggerOnHover data={{ ...l.item, name: nomeDe(l.item, $shows), index: l.index }} {fileOver} borders={l.item.type === "show_placeholder" ? "all" : "edges"} trigger="column" draggable={!trava} selectable={!trava}>
-                            <button class="item {projetoSoLeitura ? '' : `context #project_${contextoDe(l.item.type)}`}" class:sel={$activeShow?.index === l.index && $activeShow?.id === l.item.id} tabindex="-1" on:click={(e) => abrir(l.item, l.index, e)}>
+                            <button class="item {projetoSoLeitura ? '' : `context #project_${contextoDe(l.item.type)}`}" data-indice={l.index} data-id={l.item.id} data-show={(l.item.type || "show") === "show" ? l.item.id : undefined} data-menu-titulo={nomeDe(l.item, $shows)} class:sel={$activeShow?.index === l.index && $activeShow?.id === l.item.id} tabindex="-1" on:click={(e) => abrir(l.item, l.index, e)}>
                                 <span class="tipo">{tipoDe(l.item, [$shows, musicas])}</span>
                                 <span class="nome">{nomeDe(l.item, $shows)}</span>
                                 {#if noArDe(l.item)}<span class="noar">NO AR</span>{/if}

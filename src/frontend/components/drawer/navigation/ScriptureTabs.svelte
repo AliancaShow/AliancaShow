@@ -1,6 +1,6 @@
 <script lang="ts">
     import { activePopup, activeScripture, drawerTabsData, labelsDisabled, openScripture, scriptures } from "../../../stores"
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { getAccess } from "../../../utils/profile"
     import { keysToID } from "../../helpers/array"
     import Icon from "../../helpers/Icon.svelte"

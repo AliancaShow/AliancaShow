@@ -1,0 +1,127 @@
+import { describe, expect, it } from "vitest"
+import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, motivoDaTrava, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
+
+const S = (id: string) => ({ id, type: "section", name: id })
+const I = (id: string) => ({ id, type: "show" })
+const ids = (l: { id: string }[] | null) => (l ? l.map((x) => x.id).join(",") : null)
+
+describe("moverItem", () => {
+    it("troca com o vizinho e nao mexe na lista original", () => {
+        const l = [I("a"), I("b"), I("c")]
+        expect(ids(moverItem(l, 1, -1))).toBe("b,a,c")
+        expect(ids(moverItem(l, 1, 1))).toBe("a,c,b")
+        expect(ids(l)).toBe("a,b,c")
+    })
+    it("nas pontas e com indice ruim devolve null (nunca engole calado: quem chama avisa)", () => {
+        const l = [I("a"), I("b")]
+        expect(moverItem(l, 0, -1)).toBeNull()
+        expect(moverItem(l, 1, 1)).toBeNull()
+        expect(moverItem(l, 5, -1)).toBeNull()
+        expect(moverItem(l, -1, 1)).toBeNull()
+        expect(moverItem(l, 1.5, 1)).toBeNull()
+    })
+})
+
+describe("moverBloco", () => {
+    const lista = [I("solto"), S("A"), I("a1"), I("a2"), S("B"), I("b1"), S("C")]
+    it("o bloco anda com os itens dele e os soltos do comeco ficam", () => {
+        expect(ids(moverBloco(lista, 4, -1))).toBe("solto,B,b1,A,a1,a2,C")
+        expect(ids(moverBloco(lista, 1, 1))).toBe("solto,B,b1,A,a1,a2,C")
+        expect(ids(moverBloco(lista, 4, 1))).toBe("solto,A,a1,a2,S".replace("S", "C") + ",B,b1")
+    })
+    it("nas pontas, em item que nao e bloco e com bloco duplicado por referencia: null / certo", () => {
+        expect(moverBloco(lista, 1, -1)).toBeNull()
+        expect(moverBloco(lista, 6, 1)).toBeNull()
+        expect(moverBloco(lista, 2, 1)).toBeNull()
+    })
+})
+
+describe("renomearBloco / blocosDe", () => {
+    it("renomeia so a section; vazio, igual e item comum dao null", () => {
+        const l = [S("A"), I("a1")]
+        expect((renomearBloco(l, 0, "  Louvor ") as any)[0].name).toBe("Louvor")
+        expect(renomearBloco(l, 0, "   ")).toBeNull()
+        expect(renomearBloco(l, 0, "A")).toBeNull()
+        expect(renomearBloco(l, 1, "x")).toBeNull()
+        expect((l[0] as any).name).toBe("A")
+    })
+    it("blocosDe separa os soltos do comeco", () => {
+        const r = blocosDe([I("x"), S("A"), I("a1"), S("B")])
+        expect(r.lead.map((i) => i.id)).toEqual(["x"])
+        expect(r.blocos.map((b) => b.map((i) => i.id))).toEqual([["A", "a1"], ["B"]])
+    })
+})
+
+describe("semDestino (nada some calado do menu antigo)", () => {
+    it("item antigo fora do novo e sem declaracao e acusado; declarado nao; SEPARATOR nunca", () => {
+        expect(semDestino(["a", "SEPARATOR", "b", "c"], ["a", "c"], {})).toEqual(["b"])
+        expect(semDestino(["a", "b"], ["a"], { b: "foi para X" })).toEqual([])
+        expect(semDestino(["a"], ["a", "novo"], {})).toEqual([])
+    })
+})
+
+describe("criarEngolidor (o gesto repetido no mesmo item em < 400 ms nao dispara 2x)", () => {
+    it("engole dentro da janela, deixa passar depois e por chave", () => {
+        const e = criarEngolidor(400)
+        expect(e("x", 1000)).toBe(false)
+        expect(e("x", 1200)).toBe(true)
+        expect(e("y", 1200)).toBe(false)
+        expect(e("x", 1400)).toBe(false)
+    })
+})
+
+describe("criarAnteparo (o 2o toque do duplo clique nao atravessa o menu que fechou)", () => {
+    const menu = { left: 100, top: 200, right: 300, bottom: 400 }
+    it("engole dentro do retangulo e da janela; passa fora do retangulo, antes de armar e depois do prazo", () => {
+        const a = criarAnteparo(250)
+        expect(a.engole({ x: 150, y: 250 }, 0)).toBe(false)
+        a.armar(menu, 1000)
+        expect(a.engole({ x: 150, y: 250 }, 1100)).toBe(true)
+        expect(a.engole({ x: 99, y: 250 }, 1100)).toBe(false)
+        expect(a.engole({ x: 150, y: 401 }, 1100)).toBe(false)
+        expect(a.engole({ x: 150, y: 250 }, 1250)).toBe(false)
+        expect(a.engole({ x: 150, y: 250 }, 1260)).toBe(false)
+    })
+    it("armar de novo troca o retangulo e reinicia o prazo", () => {
+        const a = criarAnteparo(250)
+        a.armar(menu, 0)
+        a.armar({ left: 0, top: 0, right: 10, bottom: 10 }, 200)
+        expect(a.engole({ x: 150, y: 250 }, 210)).toBe(false)
+        expect(a.engole({ x: 5, y: 5 }, 400)).toBe(true)
+    })
+})
+
+describe("itemContinuaLa (o menu do roteiro age no item em que abriu, nao na posicao)", () => {
+    const l = [{ id: "a" }, { id: "b" }, { id: "c" }]
+    it("confere o id na posicao", () => {
+        expect(itemContinuaLa(l, 1, "b")).toBe(true)
+        expect(itemContinuaLa(l, 1, "c")).toBe(false)
+        expect(itemContinuaLa([{ id: "x" }, ...l], 1, "b")).toBe(false)
+        expect(itemContinuaLa(l.slice(0, 1), 1, "b")).toBe(false)
+    })
+    it("sem id ou indice invalido recusa", () => {
+        expect(itemContinuaLa(l, 0, null)).toBe(false)
+        expect(itemContinuaLa(l, 0, "")).toBe(false)
+        expect(itemContinuaLa(l, -1, "a")).toBe(false)
+        expect(itemContinuaLa(l, NaN, "a")).toBe(false)
+    })
+})
+
+describe("motivoDaTrava (cabecalho e rodape do Sirvo so recusam estrutura; Novo bloco so recusa roteiro travado)", () => {
+    const sirvo = { sirvo: { eventId: "e1" } }
+    const cab = { id: "sirvo_bloco_x", type: "section" }
+    const rod = { id: "sirvo_fim", type: "section" }
+    const meu = { id: "s1", type: "section" }
+    it("estrutura: cabecalho e rodape do Sirvo recusam; bloco do operador passa", () => {
+        expect(motivoDaTrava(sirvo, cab, "estrutura", false)).toContain("Sirvo")
+        expect(motivoDaTrava(sirvo, rod, "estrutura", false)).toContain("Fora do roteiro")
+        expect(motivoDaTrava(sirvo, meu, "estrutura", false)).toBe("")
+        expect(motivoDaTrava({}, cab, "estrutura", false)).toBe("")
+    })
+    it("novo bloco: depois de um bloco do Sirvo ou do rodape pode; roteiro travado e modelo recusam", () => {
+        expect(motivoDaTrava(sirvo, cab, "novo", false)).toBe("")
+        expect(motivoDaTrava(sirvo, rod, "novo", false)).toBe("")
+        expect(motivoDaTrava({ ...sirvo, sectionsLocked: true }, cab, "novo", false)).not.toBe("")
+        expect(motivoDaTrava(sirvo, cab, "novo", true)).not.toBe("")
+    })
+})

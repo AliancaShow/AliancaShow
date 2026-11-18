@@ -1,10 +1,8 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
     import { onDestroy } from "svelte"
     import { uid } from "uid"
     import { Main } from "../../../../types/IPC/Main"
     import { ToMain } from "../../../../types/IPC/ToMain"
-    import { AudioPlaylist } from "../../../audio/audioPlaylist"
     import { destroyMain, receiveToMain, requestMain, sendMain } from "../../../IPC/main"
     import { activeRename, audioFolders, audioPlaylists, drawerTabsData, effectsLibrary, labelsDisabled, media } from "../../../stores"
     import { getAccess } from "../../../utils/profile"
@@ -64,7 +62,7 @@
         let playlists = sortObject(keysToID(playlistUpdater), "name")
         playlists = playlists.map((a) => {
             const count = a.songs?.length
-            return { id: a.id, label: a.name, icon: "playlist", count, onDoubleClick: () => (gavetaNaoToca() ? undefined : AudioPlaylist.start(a.id)), boxedIcon: true }
+            return { id: a.id, label: a.name, icon: "playlist", count, boxedIcon: true }
         })
         if (!playlists.length) return []
 

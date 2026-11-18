@@ -5,6 +5,7 @@ import { activeEdit, activePopup, contextActive, quickSearchActive, selected, to
 import { dividirAberto } from "./aliancaDividir"
 import { falhaAlta } from "./aliancaFalha"
 import { listaAberta } from "./aliancaGavetaEstado"
+import { arAutorizado } from "./aliancaGavetaToque"
 import { emEditar, tela } from "./aliancaTela"
 import { chaveDoClique, criarEscSeguro, criarRepeticao, escEngolidoPorRepeticao } from "./aliancaToqueLogica"
 
@@ -74,8 +75,13 @@ function aoEsc(e: KeyboardEvent) {
     }
 }
 
-/** onde um duplo clique nao faz nada: um .context do centro (a grade de slides) */
-const ITEM_DO_CENTRO = '[data-regiao="centro"] .context'
+/**
+ * onde um duplo clique nao faz nada em Mostrar: um .context do centro (a grade de slides), da biblioteca e do roteiro (fatia 6: o duplo clique do FreeShow
+ * que mandava ao ar ou punha no roteiro some; o clique so seleciona e ir ao ar e ▶, Ctrl+Enter ou o botao direito).
+ */
+const ITEM_DO_CENTRO = '[data-regiao="centro"] .context, [data-regiao="biblioteca"] .context, [data-regiao="roteiro"] .context'
+/** campos de texto continuam recebendo o duplo clique (selecionar palavra, renomear) */
+const CAMPO = 'input, textarea, select, [contenteditable="true"], [contenteditable=""]'
 
 const ponto = (e: MouseEvent) => ({ x: e.clientX, y: e.clientY })
 
@@ -99,12 +105,14 @@ function aoClique(e: MouseEvent) {
     try {
         // so em Mostrar: em Editar o duplo clique e gesto de editar (marcar, renomear)
         if (get(tela) !== "mostrar") return
+        // o clique sintetico do "Mostrar agora" e um gesto deliberado (a repeticao dele e engolida em aliancaGavetaToque, nao aqui)
+        if (arAutorizado()) return
         const alvo = e.target instanceof Element ? e.target : null
         if (!alvo) return
-        // duplo clique no slide de Mostrar: NAO faz nada (decisao do Andre: "gente clica 2x e o video dispara 2x"). Na biblioteca e no roteiro o
-        // dblclick e uma acao propria (a biblioteca ganha a regra na fatia 6): so o clique repetido e engolido ali.
+        // duplo clique no slide de Mostrar: NAO faz nada (decisao do Andre: "gente clica 2x e o video dispara 2x"). Na biblioteca e no roteiro (fatia 6) vale
+        // a mesma regra; fora o duplo clique, o clique repetido (< 400 ms no mesmo item) tambem e engolido.
         if (e.type === "dblclick") {
-            if (!alvo.closest(ITEM_DO_CENTRO)) return
+            if (!alvo.closest(ITEM_DO_CENTRO) || alvo.closest(CAMPO)) return
             e.preventDefault()
             e.stopImmediatePropagation()
             e.stopPropagation()

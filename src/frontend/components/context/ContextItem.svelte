@@ -12,6 +12,7 @@
     import T from "../helpers/T.svelte"
     import { type ContextMenuItem, contextMenuItems } from "./contextMenus"
     import { acaoDeEditar } from "./aliancaMenusEditar"
+    import { acaoDaBiblioteca } from "./aliancaMenusBiblioteca"
     import { menuClick } from "./menuClick"
 
     export let contextElem: HTMLDivElement | null = null
@@ -420,7 +421,8 @@
         let sel = $selected
 
         // Leiaute v2, fatia 3: os itens de Editar ficam fora de menuClick.ts (fecho da janela de saida); o resto segue o fluxo de sempre
-        if (!acaoDeEditar({ id, menu, contextElem, sel })) menuClick(id, enabled, menu, contextElem, actionItem, sel)
+        // fatia 6: os itens do botao direito da biblioteca e do roteiro tambem ficam fora de menuClick.ts
+        if (!acaoDeEditar({ id, menu, contextElem, sel }) && !acaoDaBiblioteca({ id, menu, contextElem, sel })) menuClick(id, enabled, menu, contextElem, actionItem, sel)
 
         // don't hide context menu
         const keepOpen = ["uppercase", "lowercase", "capitalize", "trim"] // "dynamic_values" (caret position is lost)
@@ -488,11 +490,15 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        padding: 6px 16px;
+        /* leiaute v2: linha de 34 px com cantos (o protótipo) */
+        min-height: 34px;
+        padding: 0 10px;
+        margin: 0 4px;
+        border-radius: 6px;
         cursor: pointer;
     }
     div:hover:not(.disabled) {
-        background-color: rgb(0 0 0 / 0.2);
+        background-color: var(--luz-hover, rgb(0 0 0 / 0.2));
     }
 
     div.disabled {

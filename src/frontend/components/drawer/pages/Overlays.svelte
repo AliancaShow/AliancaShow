@@ -3,7 +3,8 @@
     import type { Overlay } from "../../../../types/Show"
     import { addProjectItem } from "../../../converters/project"
     import { activeEdit, activePage, activeShow, labelsDisabled, mediaOptions, outLocked, outputs, overlayCategories, overlays, styles, timelineRecordingAction } from "../../../stores"
-    import { destinoRecusaTecla, gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
+    import { destinoRecusaTecla, teclaIgnorada } from "../../../utils/aliancaModo"
+    import { autorizarAr, gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import { clone, keysToID, sortByName } from "../../helpers/array"
@@ -18,6 +19,7 @@
     import DropArea from "../../system/DropArea.svelte"
     import SelectElem from "../../system/SelectElem.svelte"
     import Card from "../Card.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
     import Effects from "../effects/Effects.svelte"
     import OverlayActions from "./OverlayActions.svelte"
     import { runAction } from "../../actions/actions"
@@ -122,7 +124,8 @@
             // play
             if (e.ctrlKey || e.metaKey) {
                 if (teclaIgnorada()) return
-                overlayClick({}, overlay.id)
+                // Ctrl+Enter e um gesto deliberado de ir ao ar: levanta a guarda da biblioteca so para esta chamada (revisao da fatia 6, achado 8)
+                autorizarAr(() => overlayClick({}, overlay.id))
                 return
             }
 
@@ -157,8 +160,6 @@
                                 icon={overlay.isDefault ? "protected" : null}
                                 color={overlay.color}
                                 {resolution}
-                                showPlayOnHover
-                                on:click={(e) => overlayClick(e, overlay.id)}
                                 on:dblclick={(e) => {
                                     if (e.ctrlKey || e.metaKey) return
                                     if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
@@ -171,6 +172,8 @@
                                 {#if loaded || i < lazyLoader}
                                     <!-- icons -->
                                     <OverlayActions columns={$mediaOptions.columns} overlayId={overlay.id} />
+
+                                    <TocarAgora flutuante titulo={isActive ? "Tirar do ar" : "Mandar ao ar"} on:tocar={() => overlayClick({}, overlay.id)} />
 
                                     <Zoomed {resolution} background={overlay.items.length ? "var(--primary);" : overlay.color || "var(--primary);"} checkered={!!overlay.items.length}>
                                         {#each overlay.items as item}

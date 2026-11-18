@@ -6,7 +6,8 @@
     import { addProjectItem } from "../../../converters/project"
     import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
     import { tela } from "../../../utils/aliancaTela"
-    import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, gavetaNaoToca, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
+    import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
+    import { autorizarAr, gavetaNaoToca, podeMarcar } from "../../../utils/aliancaGavetaToque"
     import { chaveDe } from "../../../utils/aliancaGavetaLogica"
     import { camadaNaHora, ehAbaDePasta, pastaDaMidia, resolverFim, tagsSemPasta } from "../../../utils/aliancaPastasMidiaLogica"
     import { translateText } from "../../../utils/language"
@@ -121,6 +122,8 @@
     function click(e: any) {
         if (gavetaNaoToca()) {
             if (e.ctrlKey || e.metaKey || e.shiftKey || iconClicked) return
+            // fatia 6: em Mostrar o clique so seleciona (a previa); marcar para levar ao culto e coisa de Editar
+            if (!podeMarcar()) return
             const m = marcadoDeArquivo({ path, name, type, contentProvider })
             if (m) cliqueDeMarcar(m)
             return
@@ -177,13 +180,15 @@
             return newToast("a saída está travada: destrave para mandar ao ar")
         }
         maisNoRoteiro(e)
-        click({})
+        // o ▶ e um gesto deliberado: levanta a guarda da biblioteca so para este clique
+        autorizarAr(() => click({}))
     }
 
     function dblclick(e: any) {
         if (e.ctrlKey || e.metaKey || iconClicked) return
 
         if (gavetaNaoToca()) {
+            if (!podeMarcar()) return
             const m = marcadoDeArquivo({ path, name, type, contentProvider })
             if (m) duploCliqueDeMarcar(m)
             return
@@ -269,7 +274,7 @@
         title={contentProvider ? "" : path}
         icon={thumbnail ? icon : null}
         white={type === "image"}
-        showPlayOnHover={!marcavel}
+        showPlayOnHover={false}
         {marcavel}
         marcado={estaMarcado}
         checkered={$mediaOptions.mode === "grid" && mediaStyle.fit !== "blur" && !failed}

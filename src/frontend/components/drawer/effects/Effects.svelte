@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { onMount } from "svelte"
     import { activeEdit, activePage, activeShow, effects, mediaOptions, outLocked, outputs, styles } from "../../../stores"
     import { addProjectItem } from "../../../converters/project"
@@ -11,6 +11,7 @@
     import Center from "../../system/Center.svelte"
     import SelectElem from "../../system/SelectElem.svelte"
     import Card from "../Card.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
     import EffectIcons from "./EffectIcons.svelte"
 
     export let searchValue = ""
@@ -23,6 +24,13 @@
     $: if (filteredEffects || searchValue !== undefined) filterSearch()
     const filter = (s: string) => s.toLowerCase().replace(/[.,\/#!?$%\^&\*;:{}=\-_`~()]/g, "")
     let fullFilteredEffects: any[] = []
+    // o clique so seleciona; o ▶ (e o "Mostrar agora" do botao direito) manda o efeito ao ar (revisao da fatia 6, achado 4)
+    function tocar(id: string) {
+        if (gavetaNaoToca() || $outLocked) return
+
+        setOutput("effects", id, true)
+    }
+
     function filterSearch() {
         fullFilteredEffects = clone(filteredEffects)
         if (searchValue.length > 1) fullFilteredEffects = fullFilteredEffects.filter((a) => filter(a.name).includes(filter(searchValue)))
@@ -65,13 +73,6 @@
                     renameId="effect_{effect.id}"
                     icon={effect.isDefault ? "protected" : null}
                     color={effect.color}
-                    showPlayOnHover
-                    on:click={(e) => {
-                        if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
-                        if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
-
-                        setOutput("effects", effect.id, true)
-                    }}
                     on:dblclick={(e) => {
                         if (e.ctrlKey || e.metaKey) return
                         if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
@@ -85,6 +86,7 @@
                 >
                     <!-- icons -->
                     <EffectIcons columns={$mediaOptions.columns} effectId={effect.id} />
+                    <TocarAgora flutuante titulo={findMatchingOut(effect.id, $outputs) !== null ? "Tirar do ar" : "Mandar ao ar"} on:tocar={() => tocar(effect.id)} />
 
                     <SelectElem id="effect" data={effect.id} fill draggable>
                         <Zoomed {resolution} background={effect.items?.length ? "var(--primary);" : effect.color || "var(--primary);"} checkered={!!effect.items?.length}>
