@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, MAX_VERSICULOS, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { lerSoLivro, acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, MAX_VERSICULOS, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -210,5 +210,18 @@ describe("spotlight: Enter repetido e seta", () => {
         expect(andar(2, 1, 3)).toBe(2)
         expect(andar(0, 1, 3)).toBe(1)
         expect(andar(0, 1, 0)).toBe(-1)
+    })
+})
+
+describe("cabine 18/nov, A6: so o nome do livro (sem capitulo) nao fica calado", () => {
+    it("reconhece nome e abreviatura de 3+ letras, com numeral", () => {
+        expect(lerSoLivro("João")?.livro).toBe(43)
+        expect(lerSoLivro("rom")?.livro).toBe(45)
+        expect(lerSoLivro("1 Co")?.livro).toBe(46)
+        expect(lerSoLivro("1 João")?.livro).toBe(62)
+        expect(lerSoLivro("Salmos")?.livro).toBe(19)
+    })
+    it("abreviatura de 2 letras (palavra comum de titulo), texto livre e referencia completa nao entram", () => {
+        for (const q of ["is", "os", "at", "Ouvir", "amor de deus", "Jo 3:16", "Romanos 8", ""]) expect(lerSoLivro(q), q).toBeNull()
     })
 })
