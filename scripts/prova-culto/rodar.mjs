@@ -126,6 +126,13 @@ const violacoes = []
 const passos = []
 let hashAnterior = null
 
+// FS_VIEWPORT=LxA (fatia 4): fixa a viewport da janela principal por emulacao. Sem barra de menus nem titulo nativo a janela nova tem outra altura
+// util que a antiga; so com a MESMA viewport as duas gravacoes se comparam (o que difere dentro dela e estrutura de tela, e a prova mostra).
+if (process.env.FS_VIEWPORT) {
+    const [w, h] = process.env.FS_VIEWPORT.split("x").map(Number)
+    await principal.enviar("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: false })
+    await esperar(800)
+}
 const dims = await principal.ev("return {w:innerWidth,h:innerHeight,dpr:devicePixelRatio}")
 // CRLF -> LF: o checkout no Windows (autocrlf) troca o fim de linha do modelo e nao pode mudar o sha do perfil
 const perfilSha = createHash("sha256")

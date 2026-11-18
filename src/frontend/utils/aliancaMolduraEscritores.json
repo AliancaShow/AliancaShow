@@ -38,6 +38,13 @@
                 "\"edit\", \"botao-de-pagina\""
             ]
         },
+        "components/main/AliancaCorpoPagina.svelte": {
+            "classe": "gesto: botao Fechar do cabecalho das paginas do menu (volta a Mostrar ou a Editar, de onde veio)",
+            "chamadas": [
+                "\"edit\", \"voltar-de-pagina\"",
+                "\"show\", \"voltar-de-pagina\""
+            ]
+        },
         "components/main/AliancaMenuApp.svelte": {
             "classe": "gesto: menu do app",
             "chamadas": [
@@ -47,7 +54,6 @@
         "components/main/AliancaSirvoPilula.svelte": {
             "classe": "gesto: pilula Sirvo",
             "chamadas": [
-                "\"settings\", \"pilula-sirvo\"",
                 "\"settings\", \"pilula-sirvo\""
             ]
         },

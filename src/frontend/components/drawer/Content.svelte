@@ -1,8 +1,10 @@
 <script lang="ts">
-    import { drawerTabsData } from "../../stores"
+    import { activeAudioEffects, drawerTabsData } from "../../stores"
     import T from "../helpers/T.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import Audio from "./audio/Audio.svelte"
+    import AudioEffects from "./audio/AudioEffects.svelte"
+    import AudioMixers from "./audio/AudioMixers.svelte"
     import Scripture from "./bible/Scripture.svelte"
     import Calendar from "./calendar/Calendar.svelte"
     import Media from "./media/Media.svelte"
@@ -55,7 +57,12 @@
     {:else if id === "media"}
         <Media {active} {searchValue} bind:streams />
     {:else if id === "audio"}
-        <Audio {active} {searchValue} />
+        <!-- leiaute v2, fatia 4: o mixer morava no painel Info de Audio (que saiu); agora e a pasta "Mixer" da arvore de Audio (decisao 12) -->
+        {#if active === "mixer"}
+            {#if $activeAudioEffects}<AudioEffects />{:else}<AudioMixers />{/if}
+        {:else}
+            <Audio {active} {searchValue} />
+        {/if}
     {:else if id === "overlays"}
         <Overlays {active} {searchValue} />
     {:else if id === "templates"}

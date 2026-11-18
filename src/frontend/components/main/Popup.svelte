@@ -1,8 +1,7 @@
 <script lang="ts">
     import { fade, scale } from "svelte/transition"
     import type { Popups } from "../../../types/Main"
-    import { activePopup, alertMessage, os, popupData, special } from "../../stores"
-    import { MENU_BAR_HEIGHT } from "../../utils/common"
+    import { activePopup, alertMessage, popupData, special } from "../../stores"
     import { popups } from "../../utils/popup"
     import { disablePopupClose } from "../../utils/shortcuts"
     import T from "../helpers/T.svelte"
@@ -31,8 +30,6 @@
         }, 250)
     }
 
-    $: isWindows = $os.platform === "win32"
-
     let scrolled = false
     $: if (popupId === null) scrolled = false
     function scroll(e) {
@@ -44,7 +41,7 @@
 
 {#if popupId !== null}
     {#key popupId}
-        <div style={isWindows ? `height: calc(100% - ${MENU_BAR_HEIGHT}px);` : null} class="popup" class:isOptimized transition:fade={{ duration: isOptimized ? 20 : 100 }} on:mousedown={mousedown}>
+        <div class="popup" class:isOptimized transition:fade={{ duration: isOptimized ? 20 : 100 }} on:mousedown={mousedown}>
             <div class="card" transition:scale={{ duration: isOptimized ? 50 : 200 }}>
                 {#if popupId !== "alert"}
                     <div class="headerContent" style="border-bottom: 1px solid var(--primary-lighter);{scrolled ? 'box-shadow: 2px 2px 4px 5px rgb(0 0 0 / 0.1);' : ''}">
@@ -72,7 +69,7 @@
                         </div>
                     </div>
                 {/if}
-                <div class="scroll" style="--top-height: {isWindows ? MENU_BAR_HEIGHT : 0}px;" on:scroll={scroll}>
+                <div class="scroll" on:scroll={scroll}>
                     <div class="body">
                         <svelte:component this={popups[popupId]} />
                     </div>
@@ -95,6 +92,8 @@
         height: 100%;
         padding: 20px var(--navigation-width);
         z-index: 5000;
+        /* tela inteira por cima do topo: sem isto a faixa de arrastar do topo vence por baixo e o X do cabecalho vira alca da janela */
+        -webkit-app-region: no-drag;
 
         backdrop-filter: blur(4px);
 
@@ -162,8 +161,8 @@
     .scroll {
         overflow: auto;
         overflow-x: hidden;
-        /* 40px(popup margin) - 4px(popup border) - 35.2px(popup header) - 20px(body padding) - 25px(menubar) */
-        max-height: calc(100vh - 99.2px - var(--top-height));
+        /* 40px(popup margin) - 4px(popup border) - 35.2px(popup header) - 20px(body padding) */
+        max-height: calc(100vh - 99.2px);
     }
 
     .body {

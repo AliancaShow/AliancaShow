@@ -1,11 +1,9 @@
 <script lang="ts">
     import { slide } from "svelte/transition"
-    import { os, settingsTab, statusIndicator } from "../../stores"
+    import { settingsTab, statusIndicator } from "../../stores"
     import { trocarTela } from "../../utils/aliancaTela"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
-
-    $: isWindows = $os.platform === "win32"
 
     const titles = {
         saving: "toast.saving",
@@ -61,7 +59,7 @@
 </script>
 
 {#if indicatorId}
-    <div class="status" style={isWindows ? "transform: translateY(25px);" : ""} role="none" data-title={translateText(titles[indicatorId] || "")} on:click={onClick} transition:slide={{ axis: "x", duration: 300 }}>
+    <div class="status" role="none" data-title={translateText(titles[indicatorId] || "")} on:click={onClick} transition:slide={{ axis: "x", duration: 300 }}>
         <div class={indicatorId}>
             {#if indicatorId === "saving"}
                 <Icon id="save" white />
@@ -90,20 +88,16 @@
 <style>
     .status {
         position: absolute;
-        top: 0;
+        top: -17px;
         left: 0;
 
         width: 40px;
-        padding-right: 2px;
         height: 34px;
-        margin-top: 3px;
 
         background-color: var(--primary-darker);
 
         border: 2px solid var(--primary-lighter);
-        border-left: none;
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
+        border-radius: 8px;
 
         display: flex;
         align-items: center;

@@ -37,6 +37,7 @@ export const CLASSES: Record<string, string> = {
     "components/context/menuClick.ts": "gesto: botao direito (Editar e abrir em Mostrar) e paginas do menu",
     "components/drawer/info/ScriptureInfo.svelte": "gesto: botao de pagina",
     "components/edit/tools/SlideStyle.svelte": "gesto: botao de pagina (editar o modelo)",
+    "components/main/AliancaCorpoPagina.svelte": "gesto: botao Fechar do cabecalho das paginas do menu (volta a Mostrar ou a Editar, de onde veio)",
     "components/main/AliancaMenuApp.svelte": "gesto: menu do app",
     "components/main/AliancaSirvoPilula.svelte": "gesto: pilula Sirvo",
     "components/main/AliancaTelaoPilula.svelte": "gesto: pilula do telao",
@@ -184,7 +185,12 @@ describe("escritores de activePage (secao 3, fatia 2)", () => {
         }
     })
     it("os dinamicos nomeados existem de verdade (lista sem entrada morta)", () => {
-        for (const [arq, args] of Object.entries(DINAMICOS)) for (const a of args) expect(ESPERADO.portas[arq]?.chamadas.some((c) => c.startsWith(a + ",")), arq).toBe(true)
+        for (const [arq, args] of Object.entries(DINAMICOS))
+            for (const a of args)
+                expect(
+                    ESPERADO.portas[arq]?.chamadas.some((c) => c.startsWith(a + ",")),
+                    arq
+                ).toBe(true)
     })
     it("so a janela principal chama a porta: nenhum arquivo do fecho da saida tem chamada (a saida nunca troca de tela)", () => {
         // a porta tem `if (!ehPrincipal()) return false`; aqui so a conferencia do texto

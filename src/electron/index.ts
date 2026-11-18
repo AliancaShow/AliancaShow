@@ -192,8 +192,9 @@ function createMain() {
     const options: Electron.BrowserWindowConstructorOptions = {
         width: getWindowBounds("width"),
         height: getWindowBounds("height"),
-        frame: !isProd || !isWindows,
-        autoHideMenuBar: isProd && isWindows
+        // leiaute v2, fatia 4: no Windows nao ha titulo nativo nem barra de menus. A barra de titulo e escondida e os tres botoes
+        // nativos (minimizar, maximizar, fechar) ficam por cima do canto direito do topo do app (56 px de altura); o resto do topo arrasta a janela
+        ...(isWindows ? { titleBarStyle: "hidden" as const, titleBarOverlay: { color: "#0d0d0f", symbolColor: "#f8f8f0", height: 56 }, autoHideMenuBar: true } : {})
     }
 
     // should be centered to screen if x & y is not set (or bottom left on mac)
@@ -316,8 +317,8 @@ export function maximizeMain() {
 
 // set/update global application menu
 export function setGlobalMenu(strings: Dictionary = {}) {
-    if (isProd && isWindows) {
-        // set to null as it is not used on Windows
+    if (isWindows) {
+        // leiaute v2, fatia 4: a barra de menus do Windows saiu (os itens moram no menu do app, sob o logo)
         Menu.setApplicationMenu(null)
         return
     }

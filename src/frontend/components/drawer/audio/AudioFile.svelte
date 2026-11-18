@@ -6,6 +6,9 @@
     import { AudioPlaylist } from "../../../audio/audioPlaylist"
     import { addProjectItem } from "../../../converters/project"
     import { activePlaylist, activeShow, media, outLocked, playingAudio } from "../../../stores"
+    import { tela } from "../../../utils/aliancaTela"
+    import { motivoSemCulto } from "../../../utils/aliancaGaveta"
+    import { newToast } from "../../../utils/common"
     import Icon from "../../helpers/Icon.svelte"
     import { joinTime, secondsToTime } from "../../helpers/time"
     import Button from "../../inputs/Button.svelte"
@@ -24,8 +27,30 @@
     // AliançaShow (Preparar F6): no Preparar o clique MARCA o áudio para o culto; nunca toca
     $: marcadoDaGaveta = marcadoDeArquivo({ path, name })
     $: estaMarcado = !!marcadoDaGaveta && $chavesMarcadas.has(chaveDe(marcadoDaGaveta))
+
+    // leiaute v2 (so em Mostrar, fora de playlist): "＋" poe o audio no fim do roteiro; "▶" poe E toca (o mesmo `AudioPlayer.start` do clique)
+    let ultimoMais = 0
+    function noRoteiro(): boolean {
+        const agora = Date.now()
+        if (agora - ultimoMais < 500) return false
+        ultimoMais = agora
+        const motivo = motivoSemCulto()
+        if (motivo) {
+            newToast(`Não entrou no roteiro: ${motivo}`)
+            return false
+        }
+        addProjectItem({ id: path, name, type: "audio" })
+        newToast(`"${name.slice(0, name.lastIndexOf("."))}" entrou no fim do roteiro`)
+        return true
+    }
+    function tocarAgora() {
+        if ($outLocked) return newToast("a saída está travada: destrave para tocar")
+        noRoteiro()
+        AudioPlayer.start(path, { name }, { playMultiple: false })
+    }
 </script>
 
+<div class="linhaAudio">
 <SelectElem id="audio" data={{ path, name, index }} {fileOver} borders={playlist ? "edges" : "all"} trigger={playlist ? "column" : null} draggable>
     <Button
         class="context #audio_button{playlist ? '_playlist' : ''}"
@@ -75,8 +100,34 @@
         </span>
     </Button>
 </SelectElem>
+{#if !playlist && $tela === "mostrar"}
+    <button type="button" class="aux" data-acao="audio-mais" aria-label="Adicionar ao roteiro" title="Adicionar ao fim do roteiro" tabindex="-1" on:mousedown|preventDefault on:click|stopPropagation={noRoteiro}>＋</button>
+    <button type="button" class="aux" data-acao="audio-tocar" aria-label="Adicionar ao roteiro e tocar" title="Adicionar ao roteiro e tocar" tabindex="-1" on:mousedown|preventDefault on:click|stopPropagation={tocarAgora}>▶</button>
+{/if}
+</div>
 
 <style>
+    .linhaAudio {
+        display: flex;
+        align-items: stretch;
+        gap: 4px;
+    }
+    .linhaAudio > :global(:first-child) {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .aux {
+        flex: none;
+        width: 32px;
+        border: 1px solid var(--luz-borda, rgb(248 248 240 / 0.13));
+        border-radius: 6px;
+        background: var(--luz-campo, rgb(248 248 240 / 0.06));
+        color: var(--luz-texto, #f8f8f0);
+        cursor: pointer;
+    }
+    .aux:hover {
+        background: var(--luz-hover, rgb(248 248 240 / 0.1));
+    }
     span {
         display: flex;
         align-items: center;

@@ -6,7 +6,7 @@ const falhas = []
 const ok = (n, c, x = "") => (console.log(`${c ? "ok " : "FALHA"} ${n}${x ? " :: " + x : ""}`), c || falhas.push(n))
 const j = await abrir("principal")
 try {
-    await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1105, deviceScaleFactor: 1, mobile: false })
+    await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
     await j.ev(`S.activePopup.set(null); T.trocarTela("show","segmentado"); S.outputs.update(a=>{a.default.out={};return a}); const {loadShows}=await import(U("components/helpers/setShow")); await loadShows(["impulso_aos_teus_pes"]); S.activeShow.set({id:"impulso_aos_teus_pes",type:"show"}); await esp(900); return 1`)
     const noAr = () => j.ev(`return get(S.outputs).default?.out?.slide?.index ?? null`)
     // 1. Esc com foco em campo

@@ -9,9 +9,11 @@
     import { escFechou } from "../../utils/aliancaToque"
     import { algoNoAr } from "../../utils/aliancaModo"
     import { desenhoAtivo } from "../../utils/aliancaPilulaLogica"
+    import { motivoVoltarLimpo } from "../../utils/aliancaVoltarLimpoLogica"
     import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
     import { toggleOutputs } from "../helpers/output"
     import { restoreOutput } from "../output/clear"
+    import AliancaCortina from "./AliancaCortina.svelte"
 
     export let semTelaFisica = false
 
@@ -69,7 +71,7 @@
     $: dica = estado === "desligadoNoAr" || estado === "desligadoDesenho" ? ROTULOS[estado].replace("pelo Culto", "em Mostrar") : estado === "semResposta" ? ROTULOS[estado].replace("o botão do Culto", "o botão de Mostrar").replace("Use o botão do Culto.", "Tente de novo em Mostrar.") : ROTULOS[estado]
     $: desabilitada = itemDesabilitado(estado) && estado !== "semResposta"
 
-    // menu do telao (decisao 16): Travar saida e Restaurar saida. Abre so por clique no ▾; nada aqui toca em `outputs` sem um clique no item.
+    // menu do telao (decisao 16): Travar saida e Voltar o que foi limpo. Abre so por clique no ▾; nada aqui toca em `outputs` sem um clique no item.
     let menuAberto = false
     // Restaurar so vale 1 s depois de limpar (a mesma carencia do botao antigo de ClearButtons: o clique que limpou nao restaura)
     let restauraPronto = false
@@ -86,7 +88,7 @@
     const lerDesenho = (_a: unknown, _b: unknown, _c: unknown) => desenhoAtivo(get(drawTool), get(drawSettings), get(paintCache) as any)
     $: desenho = lerDesenho($drawTool, $drawSettings, $paintCache)
     $: podeRestaurar = !$outLocked && !!$outputCache && restauraPronto
-    $: motivoRestaurar = $outLocked ? "A saída está travada." : !$outputCache ? "Não há nada limpo para restaurar." : !restauraPronto ? "Espere um instante." : ""
+    $: motivoRestaurar = motivoVoltarLimpo({ travada: $outLocked, haCache: !!$outputCache, pronto: restauraPronto })
     $: if (pergunta) menuAberto = false
     function travar() {
         outLocked.set(!$outLocked)
@@ -127,11 +129,21 @@
         <span class="ponto" />
         <span>{rotulo}</span>
     </button>
-    <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}>▾{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button>
+    <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}
+        ><svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button
+    >
+    {#if menuAberto || pergunta}
+        <AliancaCortina
+            on:fechar={() => {
+                if (pergunta) maquina.cancelar()
+                menuAberto = false
+            }}
+        />
+    {/if}
     {#if menuAberto}
         <div class="pop menu" role="menu" data-acao="telao-menu-pop">
             <button role="menuitem" class="item" data-item="travar" class:ativo={$outLocked} tabindex="-1" on:mousedown|preventDefault on:click={travar}><span class="it">{$outLocked ? "Destravar saída" : "Travar saída"}</span><span class="sub">{$outLocked ? "libera o telão para mudar" : "nada muda no telão até destravar"}</span></button>
-            <button role="menuitem" class="item" data-item="restaurar" aria-disabled={!podeRestaurar} class:inerte={!podeRestaurar} title={motivoRestaurar} tabindex="-1" on:mousedown|preventDefault on:click={restaurar}><span class="it">Restaurar saída</span><span class="sub">{podeRestaurar ? "volta o que foi limpo por último" : motivoRestaurar}</span></button>
+            <button role="menuitem" class="item" data-item="restaurar" aria-disabled={!podeRestaurar} class:inerte={!podeRestaurar} title={motivoRestaurar} tabindex="-1" on:mousedown|preventDefault on:click={restaurar}><span class="it">Voltar o que foi limpo</span><span class="sub" class:motivo={!podeRestaurar}>{podeRestaurar ? "traz de volta o último conteúdo limpo" : motivoRestaurar}</span></button>
         </div>
     {/if}
     {#if pergunta}
@@ -150,18 +162,18 @@
         gap: 4px;
     }
     .seta {
-        width: 28px;
-        height: 40px;
-        border: 0;
-        border-radius: 14px;
-        background: transparent;
-        color: var(--luz-mudo);
-        font: inherit;
-        font-size: 12px;
-        cursor: pointer;
-    }
-    .seta {
         position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid var(--luz-borda);
+        border-radius: 14px;
+        background: var(--luz-campo);
+        color: rgba(248, 248, 240, 0.78);
+        cursor: pointer;
     }
     .seta .aviso {
         position: absolute;
@@ -174,8 +186,15 @@
     }
     .seta:hover,
     .seta.aberto {
-        background: var(--luz-campo);
+        background: var(--luz-hover);
+        border-color: var(--luz-borda-forte);
         color: var(--luz-texto);
+    }
+    .seta .chev {
+        transition: transform 140ms ease;
+    }
+    .seta.aberto .chev {
+        transform: rotate(180deg);
     }
     .pop.menu {
         width: 260px;
@@ -203,8 +222,13 @@
         color: var(--luz-laranja);
     }
     .item.inerte {
-        opacity: 0.45;
         cursor: not-allowed;
+    }
+    .item.inerte .it {
+        opacity: 0.5;
+    }
+    .item .sub.motivo {
+        color: var(--luz-ambar);
     }
     .item .it {
         font-size: 13px;
@@ -265,7 +289,9 @@
         background: var(--luz-pop);
         border: 1px solid var(--luz-borda);
         border-radius: 12px;
-        box-shadow: inset 0 0 0 1px var(--luz-borda), 0 18px 40px rgba(0, 0, 0, 0.5);
+        box-shadow:
+            inset 0 0 0 1px var(--luz-borda),
+            0 18px 40px rgba(0, 0, 0, 0.5);
         backdrop-filter: var(--luz-vidro, none);
         transform-origin: top right;
         animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);

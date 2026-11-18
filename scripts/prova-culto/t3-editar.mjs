@@ -20,8 +20,8 @@ const j = await abrir("principal")
 
 async function print(nome, w = 1920, h = 1080) {
     await esperar(700)
-    // o conteudo e o `main` (w x h): a janela tem 25 px de barra de menus em cima, fora do recorte (viewport = conteudo + 25)
-    const r = { x: 0, y: 25, w, h }
+    // o conteudo e o `main` (w x h): desde a fatia 4 nao ha barra de menus nem titulo nativo (viewport = conteudo)
+    const r = { x: 0, y: 0, w, h }
     const d = await j.enviar("Page.captureScreenshot", { format: "png", clip: { x: r.x, y: r.y, width: r.w, height: r.h, scale: 1 } })
     writeFileSync(join(saida, nome + ".png"), Buffer.from(d.result.data, "base64"))
     console.log("print", nome, JSON.stringify(r))
@@ -37,7 +37,7 @@ async function direito(x, y) {
 }
 
 try {
-    await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1105, deviceScaleFactor: 1, mobile: false })
+    await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
     // preparo: culto aberto, um show com slides, telao ligado (so o store: a janela de saida de verdade poe-se por cima e o CDP nao entrega o quadro)
     await j.ev(`S.activePopup.set(null); T.trocarTela("show","segmentado"); S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a})
 const p=get(S.projects); const alvo=Object.entries(p).find(([k,v])=>(v.shows||[]).some(s=>(s.type===undefined||s.type==="show")))
