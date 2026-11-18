@@ -10,7 +10,7 @@
     import { sirvo, sirvoAgora } from "../../utils/aliancaSirvo"
     import { enviarMensagemPalco, limparMensagemPalco } from "../../utils/aliancaMensagemPalco"
     import { mensagemDaCaixa } from "../../utils/aliancaMensagemPalcoVista"
-    import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_ERRO_MS, avisoDaCaixa, caminhoDoEnvio, conferirDuvida, duvidaDoEnvio, mensagemViva, prepararMensagem, restanteTexto, type Duvida } from "../../utils/aliancaMensagemPalcoLogica"
+    import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_ERRO_MS, avisoDaCaixa, caminhoDoEnvio, campoAposEnvio, conferirDuvida, duvidaDoEnvio, envioAceito, mensagemViva, prepararMensagem, restanteTexto, type Duvida } from "../../utils/aliancaMensagemPalcoLogica"
     import { desligarSoRetorno, iniciarSoRetorno, ligarSoRetorno, porQueNaoLigarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { outputs } from "../../stores"
 
@@ -31,6 +31,8 @@
     $: viva = lerViva(tique, $mensagemDaCaixa)
     $: if (duvida) conferir(viva)
     $: motivo = lerMotivo($sirvo)
+    // a contagem nasce certa: com a viva recem-chegada o `agora` ainda podia ter ate 5 s (o relogio so anda de 5 em 5 s sem viva)
+    $: if (viva) agora = sirvoAgora()
     $: aviso = avisoDaCaixa({ erro, enviando, avisoModo, motivo })
     // 1 s: a contagem regressiva anda; a mensagem sai da caixa no segundo em que o `ate` passa
     const relogio = setInterval(() => {
@@ -66,7 +68,7 @@
         if (c === "vencida") return
         // chegou: o palco tem a mensagem; a caixa deixa de dizer que nao sabe
         limparErro()
-        if (texto === d.campo) texto = ""
+        texto = campoAposEnvio(texto, d.campo)
     }
     // o motivo do modo depende dos retornos configurados (a loja de saidas)
     const lerModo = (_o: unknown) => porQueNaoLigarSoRetorno()
@@ -85,15 +87,21 @@
         const a = document.activeElement as HTMLElement | null
         if (a && a !== document.body && typeof a.blur === "function") a.blur()
     }
-    async function enviar() {
-        if (enviando) return
+    /** devolve se o envio vai sair (o Enter so larga o foco nesse caso) */
+    function enviar(): boolean {
+        const aceito = envioAceito(texto, motivo, enviando)
+        if (enviando) return false
+        enviarAgora()
+        return aceito
+    }
+    async function enviarAgora() {
         enviando = true
         limparErro()
         duvida = null
         const campo = texto
         const r = await enviarMensagemPalco(texto, minutos)
         enviando = false
-        if (r.ok) texto = ""
+        if (r.ok) texto = campoAposEnvio(texto, campo)
         else {
             mostrarErro(r.mensagem)
             if (r.codigo === "rede") duvida = { ...duvidaDoEnvio((prepararMensagem(campo) as { texto?: string }).texto || campo, minutos, sirvoAgora()), campo }
@@ -115,8 +123,7 @@
         }
         if (ev.key === "Enter" && !ev.isComposing) {
             ev.preventDefault()
-            enviar()
-            soltarFoco()
+            if (enviar()) soltarFoco()
         }
     }
 </script>

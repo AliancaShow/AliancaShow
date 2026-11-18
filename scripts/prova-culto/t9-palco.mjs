@@ -109,9 +109,11 @@ ok("E. e nada some do telao nem ganha escrita: o desligar so tocou o retorno", (
 
 // ---------- G. revisao: erro x viva x Limpar, estado passageiro x faixa de falha
 // a mensagem viva entra pelo parafuso da prova (o Sirvo real nao e tocado); o envio continua indo ao main, que sem chave responde "Sem chave do Sirvo."
-await j.ev(`const V=await import(U("utils/aliancaMensagemPalcoVista")); const A=await import(U("utils/aliancaSirvo")); V.mensagemSubstituta.set({id:"g1",texto:"Culto acaba em 5 min",ate:new Date(A.sirvoAgora()+180000).toISOString()}); A.sirvo.update(e=>({...e,status:"conectado",cultoId:"cult-t9",podeConduzir:true})); await esp(1300); return 1`)
+await j.ev(`const V=await import(U("utils/aliancaMensagemPalcoVista")); const A=await import(U("utils/aliancaSirvo")); V.mensagemSubstituta.set({id:"g1",texto:"Culto acaba em 5 min",ate:new Date(A.sirvoAgora()+180000).toISOString()}); A.sirvo.update(e=>({...e,status:"conectado",cultoId:"cult-t9",podeConduzir:true})); await esp(120); return 1`)
+// lida LOGO depois da entrada (M5): sem o relogio ter andado, a contagem nao pode nascer acima da validade escolhida (3:00)
+ok("G. a contagem nasce dentro da validade (<= 3:00), mesmo recem-chegada", /sai em (3:00|2:5[0-9])/.test(await linhaViva()), await linhaViva())
+await esperar(1200)
 ok("G. a mensagem viva aparece com o Limpar", /Culto acaba em 5 min/.test(await linhaViva()) && (await temLimpar()), await linhaViva())
-ok("G. a contagem nasce dentro da validade (<= 3:00)", /sai em (3:00|2:5[0-9])/.test(await linhaViva()), await linhaViva())
 await print("t9-g1-viva")
 await clicarAcao("enviar-mensagem-palco")
 await esperar(900)

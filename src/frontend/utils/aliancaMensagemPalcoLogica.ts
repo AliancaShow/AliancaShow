@@ -90,3 +90,9 @@ export function conferirDuvida(d: Duvida, viva: { texto: string; ateMs: number }
     if (viva && viva.texto === d.texto && viva.ateMs >= d.minAteMs) return "resolvida"
     return agoraMs > d.venceEm ? "vencida" : "aberta"
 }
+
+/** M3: depois da resposta, o campo so esvazia se ainda e o texto que foi enviado (o operador pode ja ter digitado a proxima) */
+export const campoAposEnvio = (atual: string, enviado: string): string => (atual === enviado ? "" : atual)
+
+/** M6: o envio vai sair? (texto valido, caminho livre, nada em curso). So entao o Enter larga o foco do campo. */
+export const envioAceito = (texto: string, motivoSemCaminho: string, enviando: boolean): boolean => !enviando && !motivoSemCaminho && prepararMensagem(texto).ok

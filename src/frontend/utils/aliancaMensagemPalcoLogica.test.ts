@@ -34,3 +34,24 @@ describe("M1: envio que estourou o tempo mas chegou", () => {
         expect(conferirDuvida(d, null, 1_000_000 + 61_000)).toBe("vencida")
     })
 })
+
+import { campoAposEnvio, envioAceito } from "./aliancaMensagemPalcoLogica"
+
+describe("M3: a resposta do envio nao apaga o que foi digitado depois", () => {
+    it("esvazia so se o campo ainda e o que foi enviado", () => {
+        expect(campoAposEnvio("Pastor, 5 min", "Pastor, 5 min")).toBe("")
+        expect(campoAposEnvio("Pastor, 5 min e a proxima ja digitada", "Pastor, 5 min")).toBe("Pastor, 5 min e a proxima ja digitada")
+        expect(campoAposEnvio("outra", "Pastor, 5 min")).toBe("outra")
+    })
+})
+
+describe("M6: Enter so solta o foco quando o envio e aceito para sair", () => {
+    it("texto invalido, sem caminho ou com envio em curso: o foco fica no campo", () => {
+        expect(envioAceito("oi", "", false)).toBe(true)
+        expect(envioAceito("   ", "", false)).toBe(false)
+        expect(envioAceito("", "", false)).toBe(false)
+        expect(envioAceito("a".repeat(121), "", false)).toBe(false)
+        expect(envioAceito("oi", "Nenhum culto do Sirvo sendo seguido.", false)).toBe(false)
+        expect(envioAceito("oi", "", true)).toBe(false)
+    })
+})
