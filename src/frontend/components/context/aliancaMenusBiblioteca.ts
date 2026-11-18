@@ -200,7 +200,7 @@ function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
     if (item?.closest(".main.active")) return void newToast("Já está no ar")
     // o clique vai no ITEM (o cartao, a linha), nunca no elemento mais interno sob o ponteiro: um botao direito em cima da estrela/tag/filtro do
     // cartao refazia o clique do ICONE (tirava o favorito) e nada ia ao ar (revisao da fatia 6, achado 6)
-    dispararNoAlvo(item, "click")
+    if (!dispararNoAlvo(item, "click") && item) newToast("A lista mudou. Abra o menu de novo.")
 }
 
 /** "Mostrar agora" de um item que JA esta no roteiro (nao mexe no roteiro) */

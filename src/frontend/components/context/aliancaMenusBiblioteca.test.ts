@@ -83,6 +83,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
         expect(reg).toContain("function alvoDoItem(")
         expect(reg).toContain('dispararNoAlvo(item, "click")')
+        expect(reg).toContain('newToast("A lista mudou. Abra o menu de novo.")')
         expect(reg).toContain("const item = alvoDoItem(contextElem)")
         expect(reg).not.toMatch(/dispararNoAlvo\(alvo,/)
     })

@@ -5,7 +5,6 @@
 // Antes (fatias 1-5) `gavetaNaoToca` morava em `aliancaModo.ts` e valia `tela != mostrar`. Aquele arquivo faz parte do fecho da janela de saida (a ancora o
 // vigia) e nao pode mudar sem excecao, entao a regra nova mora aqui, fora do fecho: so a janela principal a importa.
 import { falhaAlta } from "./aliancaFalha"
-import { newToast } from "./common"
 import { naoEMostrar } from "./aliancaTela"
 
 let abertas = 0
@@ -47,10 +46,8 @@ export function dispararNoAlvo(alvo: Element | null, tipo: "click" | "dblclick" 
         falhaAlta("mostrar-agora", "o menu nao achou o item em que o botao direito foi dado")
         return false
     }
-    if (!(alvo as HTMLElement).isConnected) {
-        newToast("A lista mudou. Abra o menu de novo.")
-        return false
-    }
+    // (quem chama avisa o operador: este arquivo nao importa `common`, que arrasta componentes de popup e quebra os testes de logica que o importam)
+    if (!(alvo as HTMLElement).isConnected) return false
     autorizarAr(() => alvo.dispatchEvent(new MouseEvent(tipo, { bubbles: true, cancelable: true, view: window, detail: tipo === "dblclick" ? 2 : 1 })))
     return true
 }
