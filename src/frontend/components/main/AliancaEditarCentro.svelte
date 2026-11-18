@@ -99,7 +99,9 @@
         <div class="vistas" role="tablist" aria-label="Vista do editor" data-acao="editar-vistas">
             <button type="button" role="tab" aria-selected={vistaAtiva === "default"} class:on={vistaAtiva === "default"} on:click={() => vista("default")}>Slide</button>
             {#if !semAcordes}
-                <button type="button" role="tab" aria-selected={vistaAtiva === "chords"} class:on={vistaAtiva === "chords"} disabled={acordesOff} on:click={() => vista("chords")}>Acordes{#if nAcordes > 0}&nbsp;{nAcordes}{/if}</button>
+                <button type="button" role="tab" aria-selected={vistaAtiva === "chords"} class:on={vistaAtiva === "chords"} disabled={acordesOff} on:click={() => vista("chords")}
+                    >Acordes{#if nAcordes > 0}&nbsp;{nAcordes}{/if}</button
+                >
             {/if}
             <button type="button" role="tab" aria-selected={vistaAtiva === "text_edit"} class:on={vistaAtiva === "text_edit"} title="Editar tudo como texto [Ctrl+Shift+T]" on:click={() => vista("text_edit")}>Texto</button>
             <button type="button" role="tab" aria-selected={vistaAtiva === "dividir"} class:on={vistaAtiva === "dividir"} title="Cortar os slides com a tesoura" on:click={dividir}>Dividir</button>

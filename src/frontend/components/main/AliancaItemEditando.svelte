@@ -127,7 +127,10 @@
     function alternar() {
         if (aberto) return fechar()
         aberto = true
-        destaque = Math.max(0, opcoes().findIndex((o) => o.marcado))
+        destaque = Math.max(
+            0,
+            opcoes().findIndex((o) => o.marcado)
+        )
         window.addEventListener("mousedown", fora, true)
         window.addEventListener("keydown", tecla, true)
     }
@@ -204,7 +207,9 @@
 {#if temShow}
     <div class="dica">Botão direito num slide: mandar pro ar</div>
     {#if semLetra}
-        <button type="button" class="mais letra" title="Colar a letra desta música (pode ter acordes em cima)" on:click={colarLetra}>Colar letra{#if artista}&nbsp;· {artista}{/if}</button>
+        <button type="button" class="mais letra" title="Colar a letra desta música (pode ter acordes em cima)" on:click={colarLetra}
+            >Colar letra{#if artista}&nbsp;· {artista}{/if}</button
+        >
     {/if}
     <button type="button" class="mais" disabled={travado} data-acao="editando-mais-slide" title="Shift: novo grupo · Ctrl: em branco" on:click={maisSlide}>＋ Slide</button>
 {/if}

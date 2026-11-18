@@ -26,7 +26,18 @@ describe("selos NO AR / EDITADO (a foto manda)", () => {
         expect(Object.keys(s)).toEqual(["2"])
     })
     it("outro show ou outro layout no ar: nada", () => {
-        expect(selosDoShow({ showId: "s", layout: "L", ref, slides: slides(), noAr: [{ id: "z", layout: "L", index: 1 }, { id: "s", layout: "M", index: 1 }] })).toEqual({})
+        expect(
+            selosDoShow({
+                showId: "s",
+                layout: "L",
+                ref,
+                slides: slides(),
+                noAr: [
+                    { id: "z", layout: "L", index: 1 },
+                    { id: "s", layout: "M", index: 1 }
+                ]
+            })
+        ).toEqual({})
     })
     it("sem foto (a saida le ao vivo): NO AR e nunca EDITADO", () => {
         const s = selosDoShow({ showId: "s", layout: "L", ref, slides: slides([9]), noAr: [{ id: "s", layout: "L", index: 2 }] })
@@ -91,7 +102,16 @@ describe("o item em edicao e os avulsos", () => {
         expect(tirarAvulso(l, "show:e").map((i) => i.id)).toEqual(["f", "d", "c", "b"])
     })
     it("so show esta 'no roteiro'", () => {
-        expect(estaNoRoteiro([{ id: "a", type: "show" }, { id: "m", type: "video" }], "show", "a")).toBe(true)
+        expect(
+            estaNoRoteiro(
+                [
+                    { id: "a", type: "show" },
+                    { id: "m", type: "video" }
+                ],
+                "show",
+                "a"
+            )
+        ).toBe(true)
         expect(estaNoRoteiro([{ id: "a" }], "show", "a")).toBe(true)
         expect(estaNoRoteiro([{ id: "m", type: "video" }], "media", "m")).toBe(true)
         expect(estaNoRoteiro([{ id: "m", type: "image" }], "media", "m")).toBe(true)
@@ -148,7 +168,19 @@ describe("saidasQueMostram: quem a faixa 'Mandar pro ar' atualiza", () => {
         ])
     })
     it("outro show/layout ou saida limpa: nada", () => {
-        expect(saidasQueMostram({ showId: "s", layout: "L", ref, slides: slides(), posicao: 1, saidas: [{ saida: "x", slide: { id: "z", layout: "L", index: 1 } }, { saida: "y", slide: null }] })).toEqual([])
+        expect(
+            saidasQueMostram({
+                showId: "s",
+                layout: "L",
+                ref,
+                slides: slides(),
+                posicao: 1,
+                saidas: [
+                    { saida: "x", slide: { id: "z", layout: "L", index: 1 } },
+                    { saida: "y", slide: null }
+                ]
+            })
+        ).toEqual([])
     })
 })
 
@@ -163,8 +195,19 @@ describe("opcoesDoSeletor: chaves unicas (achado 6)", () => {
     const av = (tipo: any, id: string): ItemEditavel => ({ chave: `${tipo}:${id}`, tipo, id, nome: id })
     const unicas = (l: { chave: string }[]) => new Set(l.map((o) => o.chave)).size === l.length
     it("midia do roteiro entra em 'No roteiro' e nao se repete como avulso", () => {
-        const l = opcoesDoSeletor({ roteiro: [{ id: "a", type: "show" }, { id: "v.mp4", type: "video" }], avulsos: [av("media", "v.mp4")], atualChave: "media:v.mp4", nomeDe })
-        expect(l.map((o) => [o.secao, o.chaveItem, o.marcado])).toEqual([["No roteiro", "show:a", false], ["No roteiro", "media:v.mp4", true]])
+        const l = opcoesDoSeletor({
+            roteiro: [
+                { id: "a", type: "show" },
+                { id: "v.mp4", type: "video" }
+            ],
+            avulsos: [av("media", "v.mp4")],
+            atualChave: "media:v.mp4",
+            nomeDe
+        })
+        expect(l.map((o) => [o.secao, o.chaveItem, o.marcado])).toEqual([
+            ["No roteiro", "show:a", false],
+            ["No roteiro", "media:v.mp4", true]
+        ])
         expect(unicas(l)).toBe(true)
     })
     it("o mesmo show duas vezes no roteiro: chaves distintas e so a posicao ativa leva o visto", () => {
@@ -182,7 +225,17 @@ describe("opcoesDoSeletor: chaves unicas (achado 6)", () => {
         expect(l[1].marcado).toBe(true)
     })
     it("bloco e PDF do roteiro nao viram opcao", () => {
-        expect(opcoesDoSeletor({ roteiro: [{ id: "s", type: "section" }, { id: "p", type: "pdf" }], avulsos: [], atualChave: null, nomeDe })).toEqual([])
+        expect(
+            opcoesDoSeletor({
+                roteiro: [
+                    { id: "s", type: "section" },
+                    { id: "p", type: "pdf" }
+                ],
+                avulsos: [],
+                atualChave: null,
+                nomeDe
+            })
+        ).toEqual([])
     })
 })
 
@@ -217,12 +270,29 @@ describe("audio e tipos fora do seletor (menor 9)", () => {
 
 describe("saidasDoEnvio: os selos olham as mesmas saidas que o envio (menor 11)", () => {
     it("com uma saida ativa, a ligada-e-nao-ativa fica de fora (nunca recebe foto nova)", () => {
-        expect(saidasDoEnvio([{ id: "A", enabled: true, active: true }, { id: "B", enabled: true, active: false }])).toEqual(["A"])
+        expect(
+            saidasDoEnvio([
+                { id: "A", enabled: true, active: true },
+                { id: "B", enabled: true, active: false }
+            ])
+        ).toEqual(["A"])
     })
     it("sem nenhuma ativa, valem todas as ligadas", () => {
-        expect(saidasDoEnvio([{ id: "A", enabled: true }, { id: "B", enabled: true }])).toEqual(["A", "B"])
+        expect(
+            saidasDoEnvio([
+                { id: "A", enabled: true },
+                { id: "B", enabled: true }
+            ])
+        ).toEqual(["A", "B"])
     })
     it("desligada, chave e palco nunca entram", () => {
-        expect(saidasDoEnvio([{ id: "A", enabled: false }, { id: "K", enabled: true, isKeyOutput: true }, { id: "S", enabled: true, stageOutput: true }, { id: "B", enabled: true }])).toEqual(["B"])
+        expect(
+            saidasDoEnvio([
+                { id: "A", enabled: false },
+                { id: "K", enabled: true, isKeyOutput: true },
+                { id: "S", enabled: true, stageOutput: true },
+                { id: "B", enabled: true }
+            ])
+        ).toEqual(["B"])
     })
 })
