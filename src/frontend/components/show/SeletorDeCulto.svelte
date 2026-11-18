@@ -404,7 +404,7 @@
                                                 <span class="sem">{partes.semana}</span>
                                                 <span class="num">{partes.num}</span>
                                                 <span class="qtd" aria-label={o.vazio ? "sem material" : `${o.itens} itens`}>{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>
-                                                <span class="tag" class:hojeTag={o.hoje}>{o.hoje ? "hoje" : o.arquivado ? "arquivado" : o.evento}</span>
+                                                <span class="tag" class:hojeTag={o.hoje}>{o.hoje ? (o.hora ? `hoje · ${o.hora}` : "hoje") : o.arquivado ? "arquivado" : o.evento || o.hora}</span>
                                             {:else}
                                                 <span class="nomeCartao">{o.curto}</span>
                                                 <span class="qtd">{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>

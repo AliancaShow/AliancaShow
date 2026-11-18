@@ -66,6 +66,11 @@ export function eventoDoNome(nome: string): string {
     return /^\d{1,2}\s*-\s*(.+)$/.exec((nome || "").trim())?.[1]?.trim() || ""
 }
 
+/** "08 · 10h" -> "10h", "08 · 19h30" -> "19h30"; "" quando o nome nao leva hora (so os dias com mais de um culto levam, utils/aliancaPastas.ts) */
+export function horaDoNomeDoProjeto(nome: string): string {
+    return /·\s*(\d{1,2}h(?:\d{2})?)\s*$/.exec((nome || "").trim())?.[1] || ""
+}
+
 export function rotuloDoDia({ cultoId, nomeProjeto, anoAtual }: { cultoId: string | null | undefined; nomeProjeto?: string; anoAtual: number }): RotuloDoDia {
     const nome = (nomeProjeto || "").trim()
     const v = cultoId ? dataValida(cultoId) : null
@@ -92,6 +97,8 @@ export type OpcaoDeDia = {
     semSemana: string
     longo: string
     evento: string
+    /** "10h"/"19h30" quando o nome do projeto leva a hora; "" quando nao ha o dado */
+    hora: string
     /** nome do projeto, inteiro (vai na dica) */
     nome: string
     cultoId: string
@@ -148,6 +155,7 @@ export function montarOpcoesDeDia({ itens, resolver, contar, hoje, ativoId, emTo
             semSemana: ehCulto ? rot.semSemana : (item.name || "—").trim() || "—",
             longo: rot.longo,
             evento: ehCulto ? rot.evento : "",
+            hora: ehCulto ? horaDoNomeDoProjeto(item.name || "") : "",
             nome: (item.name || "").trim() || "—",
             cultoId,
             itens: n,

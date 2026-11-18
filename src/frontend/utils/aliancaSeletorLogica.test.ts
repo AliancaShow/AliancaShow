@@ -409,3 +409,14 @@ describe("marcacao do leiaute v2 (cartoes)", () => {
         expect(ehHoje(null, "2026-11-15")).toBe(false)
     })
 })
+
+describe("hora no cartao do dia (fatia 9)", () => {
+    it("so aparece quando o nome do projeto leva a hora", async () => {
+        const { horaDoNomeDoProjeto } = await import("./aliancaSeletorLogica")
+        expect(horaDoNomeDoProjeto("08 · 10h")).toBe("10h")
+        expect(horaDoNomeDoProjeto("15 · 19h30")).toBe("19h30")
+        expect(horaDoNomeDoProjeto("08")).toBe("")
+        expect(horaDoNomeDoProjeto("07 - Rede de Mulheres")).toBe("")
+        expect(horaDoNomeDoProjeto("")).toBe("")
+    })
+})
