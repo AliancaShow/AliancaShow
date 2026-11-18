@@ -133,12 +133,12 @@ const ler = (rel: string) => readFileSync(join(__dirname, "..", rel), "utf8").re
 describe("faixa de transporte (guarda de texto)", () => {
     it("a faixa e a linha levam data-sem-trava", () => {
         expect(ler("components/main/AliancaTransporte.svelte")).toMatch(/class="faixa"[^>]*data-sem-trava/)
-        expect(ler("components/main/AliancaTransporteLinha.svelte")).toMatch(/class="linha"[^>]*data-sem-trava/)
+        expect(ler("components/main/AliancaTransporteLinha.svelte")).toMatch(/class="tk"[^>]*data-sem-trava/)
     })
     it("mora no No ar, entre a tela e as outras telas, e a caixa da faixa nao e posicionada sobre ela", () => {
         expect(ler("components/main/AliancaNoAr.svelte")).toMatch(/<AliancaCamadas \/>\s*<\/div>\s*<AliancaTransporte \/>\s*<AliancaOutrasTelas/)
         const css = ler("components/main/AliancaTransporte.svelte")
-        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    /* so a primeira linha"))
+        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    .vazio {"))
         expect(caixa).not.toMatch(/position:\s*(absolute|fixed)/)
     })
     it("a faixa e a tela No ar escolhem a saida pela MESMA funcao (achado 4)", () => {
