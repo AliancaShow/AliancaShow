@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import type { Category } from "../../../../types/Tabs"
     import { activeFocus, activePlayerTagFilter, activeShow, focusMode, outLocked, outputs, playerTags, playerVideos } from "../../../stores"
     import { translateText } from "../../../utils/language"
@@ -86,9 +86,16 @@
             renameId="player_{video.rid}"
             title={video.id || ""}
             showPlayOnHover
+            tocar
             on:click={(e) => {
-                if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey || iconClicked) return
+                // o clique so seleciona: abre o video no centro (a previa), o que o duplo clique fazia e a trava de toque engole em Mostrar (revisao da fatia 6, achado 15)
+                if (e.ctrlKey || e.metaKey || iconClicked) return
                 if (e.target?.closest?.(".edit")) return
+                if ($focusMode) activeFocus.set({ id: video.rid, type: "player" })
+                else activeShow.set({ id: video.rid, type: "player" })
+            }}
+            on:tocar={() => {
+                if (gavetaNaoToca() || $outLocked) return
 
                 if (findMatchingOut(video.rid, $outputs)) {
                     clearBackground()
@@ -98,11 +105,6 @@
                 // set as "foreground" type (clear slide & ignore "background" layer)
                 clearSlide()
                 setOutput("background", { id: video.rid, type: "player", muted: false, loop: false, startAt: 0, ignoreLayer: true })
-            }}
-            on:dblclick={() => {
-                if (iconClicked) return
-                if ($focusMode) activeFocus.set({ id: video.rid, type: "player" })
-                else activeShow.set({ id: video.rid, type: "player" })
             }}
         >
             <!-- icons -->

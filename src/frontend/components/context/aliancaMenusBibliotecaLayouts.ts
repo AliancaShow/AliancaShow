@@ -4,7 +4,7 @@ import { semDestino } from "../../utils/aliancaMenusBibliotecaLogica"
 
 export type Layout = { [id: string]: string[] }
 /** layouts que o FreeShow nao tinha (a linha de show usava o menu `default`, com a busca rapida): nascem aqui */
-export const CRIADOS = ["show_drawer", "project_effect"]
+export const CRIADOS = ["show_drawer", "project_effect", "stream_card"]
 export const SO_O_LUGAR = "o clique simples agora so seleciona (a previa)"
 const SEM_MARCA = "a lista nova nao mostra essa marca"
 
@@ -25,6 +25,12 @@ export const NOVOS: Layout = {
     action_readonly: ["alianca_agora", "SEPARATOR", "action_tag_filter"],
     camera_card: ["alianca_agora", "SEPARATOR", "GROUP_edit", "startup_activate", "SEPARATOR", "recording"],
     screen_card: ["alianca_agora", "SEPARATOR", "recording"],
+    // NDI e BlackMagic: entradas de video que vao ao fundo da saida; o FreeShow nao tinha menu para elas (revisao da fatia 6, achado 4)
+    stream_card: ["alianca_agora"],
+    // video online (YouTube/Vimeo), efeito sonoro e stream de audio: o menu antigo ganha o "Mostrar agora" no topo (o clique so seleciona)
+    player_button: ["alianca_agora", "SEPARATOR", "GROUP_open", "player_tag_set", "player_tag_filter", "SEPARATOR", "rename", "delete"],
+    audio_effect_button: ["alianca_agora", "SEPARATOR", "GROUP_rename_only", "remove", "SEPARATOR", "system_open"],
+    audio_stream: ["alianca_agora", "SEPARATOR", "GROUP_edit", "delete"],
     // roteiro: itens
     project_show: ["alianca_editar", "alianca_agora_item", "SEPARATOR", "alianca_subir", "alianca_descer", "SEPARATOR", "alianca_tirar"],
     project_show_placeholder: ["alianca_subir", "alianca_descer", "SEPARATOR", "alianca_tirar"],
@@ -60,6 +66,10 @@ export const REMOVIDOS: { [layout: string]: { [item: string]: string } } = {
     action_readonly: {},
     camera_card: {},
     screen_card: {},
+    stream_card: {},
+    player_button: {},
+    audio_effect_button: {},
+    audio_stream: {},
     project_show: { GROUP_rename_only: "o nome do show se edita no editor (Editar); a lista nova nao renomeia no lugar", remove: "Tirar do roteiro", mark_played: SEM_MARCA, private: "show privado nao tem marca na lista nova" },
     project_show_placeholder: { remove: "Tirar do roteiro" },
     project_show_placeholder_template: { GROUP_rename_only: "a lista nova nao renomeia no lugar", remove: "Tirar do roteiro" },

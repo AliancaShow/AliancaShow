@@ -160,7 +160,8 @@
                                 color={overlay.color}
                                 {resolution}
                                 showPlayOnHover
-                                on:click={(e) => overlayClick(e, overlay.id)}
+                                tocar
+                                on:tocar={() => overlayClick({}, overlay.id)}
                                 on:dblclick={(e) => {
                                     if (e.ctrlKey || e.metaKey) return
                                     if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return

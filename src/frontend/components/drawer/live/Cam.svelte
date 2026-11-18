@@ -156,6 +156,8 @@
         icon="camera"
         white={!cam.id.includes("cam")}
         {showPlayOnHover}
+        tocar={showPlayOnHover}
+        on:tocar={() => click({})}
     >
         <SelectElem id="camera" data={{ id: cam.id, type: "camera", name: cam.name, cameraGroup: cam.group }} draggable>
             <!-- icons -->

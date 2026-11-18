@@ -38,7 +38,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
             if (a) antigos[k] = a
         }
         // show_drawer e project_effect nasceram aqui (o FreeShow nao tinha menu para eles)
-        expect(Object.keys(NOVOS).filter((k) => !antigos[k]).sort()).toEqual(["project_effect", "show_drawer"])
+        expect(Object.keys(NOVOS).filter((k) => !antigos[k]).sort()).toEqual(["project_effect", "show_drawer", "stream_card"])
         expect(semDestinoPorLayout(antigos)).toEqual({})
         for (const [layout, declarados] of Object.entries(REMOVIDOS)) for (const [item, destino] of Object.entries(declarados)) expect(destino.length, `${layout}.${item}`).toBeGreaterThan(5)
     })
@@ -48,7 +48,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
     })
     it("so os itens deliberados vao ao ar (Mostrar agora / play do roteiro)", () => {
         const aoAr = ["alianca_agora", "alianca_agora_item", "play_no_audio", "play_no_filters"]
-        for (const itens of Object.values(NOVOS)) for (const i of itens) if (/^play|agora/.test(i)) expect(aoAr).toContain(i)
+        for (const itens of Object.values(NOVOS)) for (const i of itens) if (/^play($|_no_)|agora/.test(i)) expect(aoAr).toContain(i)
     })
     it("revisao da fatia 6, achado 1: \"Mostrar agora\" num versiculo chama playScripture() direto, nunca refaz o duplo clique (que com a Biblia no ar devolve false)", () => {
         const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")

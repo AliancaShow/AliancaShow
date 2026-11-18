@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { AudioPlayer } from "../../../audio/audioPlayer"
     import { audioStreams, playingAudio } from "../../../stores"
     import T from "../../helpers/T.svelte"
@@ -8,6 +8,7 @@
     import Loader from "../../main/Loader.svelte"
     import Center from "../../system/Center.svelte"
     import SelectElem from "../../system/SelectElem.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
 
     $: streamsList = sortByName(keysToID($audioStreams))
 
@@ -30,8 +31,9 @@
         {#each streamsList as stream}
             {@const isLoading = loadingStreams.has(stream.id)}
 
+            <div class="linha" data-tocavel>
             <SelectElem id="audio_stream" data={{ id: stream.id, type: "audio_stream" }} draggable>
-                <Button class="context #audio_stream" style="flex: 1;" outline={Object.keys($playingAudio).includes(stream.value)} on:click={() => loadStream(stream.id)} bold={false}>
+                <Button class="context #audio_stream" style="flex: 1;" outline={Object.keys($playingAudio).includes(stream.value)} bold={false}>
                     <div class="stream">
                         <div class="loader" style="overflow: hidden;">
                             {#if isLoading}<Loader size={0.3} />{/if}
@@ -47,6 +49,8 @@
                     </div>
                 </Button>
             </SelectElem>
+            <TocarAgora titulo="Tocar o stream" desligado={isLoading} on:tocar={() => loadStream(stream.id)} />
+            </div>
         {/each}
     </div>
 {:else}
@@ -61,6 +65,14 @@
         overflow: auto;
 
         padding-bottom: 60px;
+    }
+    .linha {
+        display: flex;
+        align-items: stretch;
+        gap: 2px;
+    }
+    .linha :global(.selectElem) {
+        flex: 1;
     }
     .streams :global(.selectElem) {
         display: flex;

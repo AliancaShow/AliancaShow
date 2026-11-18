@@ -19,6 +19,10 @@ const CONVERTIDAS = [
     "src/frontend/components/inputs/ShowButton.svelte"
 ]
 
+// Paineis de controle (nao sao itens da biblioteca): o proprio botao liga/desliga e e o gesto deliberado. Revisao da fatia 6, achado 4, opcao 3: a excecao e
+// declarada aqui; uma porta nova com a guarda velha reprova este teste.
+const EXCECOES_PAINEL_DE_CONTROLE = ["src/frontend/components/drawer/audio/Metronome.svelte", "src/frontend/components/drawer/pages/OBS.svelte"]
+
 function arquivos(dir: string, saida: string[] = []): string[] {
     for (const n of readdirSync(dir)) {
         const p = join(dir, n)
@@ -35,6 +39,36 @@ describe("a guarda da biblioteca (fatia 6)", () => {
             expect(t, f).toMatch(/import \{[^}]*gavetaNaoToca[^}]*\} from "[./]*\/utils\/aliancaGavetaToque"/)
             expect(t, f).not.toMatch(/import \{[^}]*gavetaNaoToca[^}]*\} from "[./]*\/utils\/aliancaModo"/)
         }
+    })
+    it("revisao da fatia 6, achado 4: NENHUM arquivo de components/drawer/** importa a guarda antiga (aliancaModo), fora das excecoes nomeadas", () => {
+        const velhos = arquivos(join(RAIZ, "src", "frontend", "components", "drawer"))
+            .filter((p) => !/\.test\.ts$/.test(p))
+            .filter((p) => /import \{[^}]*gavetaNaoToca[^}]*\} from "[./]*\/utils\/aliancaModo"/.test(readFileSync(p, "utf8")))
+            .map((p) => relative(RAIZ, p).split("\\").join("/"))
+            .sort()
+        expect(velhos).toEqual(EXCECOES_PAINEL_DE_CONTROLE)
+    })
+    it("as portas que mandam algo ao ar pelo ▶ usam o TocarAgora (o clique so seleciona)", () => {
+        const comTocar = [
+            "live/Capture.svelte",
+            "live/NDIStream.svelte",
+            "live/BMDStream.svelte",
+            "live/Cam.svelte",
+            "pages/Overlays.svelte",
+            "effects/Effects.svelte",
+            "player/PlayerVideos.svelte",
+            "audio/AudioEffect.svelte",
+            "live/AudioStreams.svelte",
+            "live/Mic.svelte",
+            "pages/Actions.svelte"
+        ]
+        for (const f of comTocar) {
+            const t = ler("src/frontend/components/drawer/" + f)
+            expect(t, f).toContain("tocar")
+            expect(t, f).toMatch(/on:tocar(\s|=)/)
+        }
+        // os cartoes do clique-que-so-seleciona nao prometem tocar ao clicar (Card.tocaAoClicar)
+        expect(ler("src/frontend/components/drawer/Card.svelte")).toMatch(/tocaAoClicar = !tocar && !soSeleciona/)
     })
     it("marcar para levar ao culto so fora de Mostrar (`podeMarcar`): em Mostrar o clique so seleciona", () => {
         for (const f of CONVERTIDAS.filter((c) => /AudioFile|MediaCard/.test(c))) {
@@ -53,7 +87,7 @@ describe("a guarda da biblioteca (fatia 6)", () => {
             .filter((p) => /autorizarAr\(/.test(readFileSync(p, "utf8")))
             .map((p) => relative(RAIZ, p).split("\\").join("/"))
             .sort()
-        expect(usos).toEqual(["src/frontend/components/drawer/media/MediaCard.svelte", "src/frontend/components/drawer/pages/Overlays.svelte", "src/frontend/utils/aliancaGavetaToque.ts"])
+        expect(usos).toEqual(["src/frontend/components/drawer/TocarAgora.svelte", "src/frontend/components/drawer/media/MediaCard.svelte", "src/frontend/components/drawer/pages/Overlays.svelte", "src/frontend/utils/aliancaGavetaToque.ts"])
     })
     it("o duplo clique na biblioteca e no roteiro e engolido em Mostrar (aliancaToque)", () => {
         const t = ler("src/frontend/utils/aliancaToque.ts")

@@ -168,8 +168,12 @@ function paraORoteiro(classe: string, contextElem: HTMLElement | null, sel: Sel)
  * O elemento do ITEM da biblioteca que recebe o clique de "Mostrar agora": o proprio `.context` quando ele e o cartao (`.card`) ou o botao da linha;
  * quando o `.context` e um envoltorio (sobreposicao, acao) o cartao/botao de dentro. Nunca um icone interno.
  */
+const TOCAR = '[data-acao="tocar-ao-ar"]'
 function alvoDoItem(contextElem: HTMLElement | null): HTMLElement | null {
     if (!contextElem) return null
+    // as portas com ▶ (`TocarAgora`) tocam pelo ▶: e o caminho unico do gesto deliberado, dentro do item ou na linha que o envolve
+    const tocar = (contextElem.querySelector(TOCAR) || contextElem.closest("[data-tocavel]")?.querySelector(TOCAR)) as HTMLElement | null
+    if (tocar) return tocar
     if (contextElem.matches(".card, button")) return contextElem
     return (contextElem.querySelector(".card") as HTMLElement | null) || (contextElem.querySelector("button") as HTMLElement | null) || contextElem
 }

@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { onDestroy } from "svelte"
     import { AudioPlayer } from "../../../audio/audioPlayer"
     import { activeShow, outLocked, playingAudio } from "../../../stores"
     import { getFileName } from "../../helpers/media"
     import Button from "../../inputs/Button.svelte"
     import SelectElem from "../../system/SelectElem.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
 
     export let path: string
     export let name: string
@@ -40,9 +41,16 @@
     }
 
     $: outline = !!$playingAudio[path]
+
+    // o clique so seleciona; o ▶ (e o "Mostrar agora" do botao direito) toca (revisao da fatia 6, achado 4)
+    function tocar() {
+        if (gavetaNaoToca() || $outLocked) return
+        AudioPlayer.start(path, { name }, { playMultiple: true, stopIfPlaying: true, clearTime: 0.3 })
+    }
 </script>
 
-<SelectElem id="audio_effect" data={{ path, name }} style="width: calc(20% - 5px);" draggable>
+<div data-tocavel style="position: relative;width: calc(20% - 5px);">
+<SelectElem id="audio_effect" data={{ path, name }} style="width: 100%;" draggable>
     <Button
         class="context #audio_effect_button"
         {outline}
@@ -51,11 +59,6 @@
         style="width: 100%;height: 100px;border: 2px solid var(--primary-lighter);border-radius: 8px;"
         title={getFileName(path)}
         bold={false}
-        on:click={(e) => {
-            if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
-
-            AudioPlayer.start(path, { name }, { playMultiple: true, stopIfPlaying: true, clearTime: 0.3 })
-        }}
     >
         <div class="flex">
             <p style="font-size: 1.15em;white-space: normal;">{name}</p>
@@ -72,6 +75,8 @@
         {/if}
     </Button>
 </SelectElem>
+<TocarAgora flutuante titulo={outline ? "Parar o efeito" : "Tocar o efeito"} on:tocar={tocar} />
+</div>
 
 <style>
     .flex {

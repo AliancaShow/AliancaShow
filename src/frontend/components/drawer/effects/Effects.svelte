@@ -66,9 +66,9 @@
                     icon={effect.isDefault ? "protected" : null}
                     color={effect.color}
                     showPlayOnHover
-                    on:click={(e) => {
-                        if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
-                        if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
+                    tocar
+                    on:tocar={() => {
+                        if (gavetaNaoToca() || $outLocked) return
 
                         setOutput("effects", effect.id, true)
                     }}

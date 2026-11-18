@@ -63,8 +63,7 @@
 {#if background}
     <canvas bind:this={canvas} />
 {:else}
-    <!-- class="context #screen_card" -->
-    <Card outlineColor={findMatchingOut(screen.id, $outputs)} active={findMatchingOut(screen.id, $outputs) !== null} on:click title={screen.name} label={screen.name} {loaded} icon="ndi" white showPlayOnHover>
+    <Card class="context #stream_card" outlineColor={findMatchingOut(screen.id, $outputs)} active={findMatchingOut(screen.id, $outputs) !== null} on:click on:tocar tocar title={screen.name} label={screen.name} {loaded} icon="ndi" white showPlayOnHover>
         <SelectElem style="display: flex;" id="ndi" data={{ id: screen.id, type: "ndi", name: screen.name }} draggable>
             <canvas bind:this={canvas} />
         </SelectElem>
