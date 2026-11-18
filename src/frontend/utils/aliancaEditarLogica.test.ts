@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { mostrarMandarSo, saidasParaMandar } from "./aliancaEditarSaidas"
-import { FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, estaNoRoteiro, itemEmEdicao, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
+import { FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
 
 const ref = [{ id: "a" }, { id: "b" }, { id: "c" }]
 const slides = (itemsB: any[] = [1]) => ({ a: { items: [0] }, b: { items: itemsB }, c: { items: [2] } })
@@ -93,7 +93,10 @@ describe("o item em edicao e os avulsos", () => {
     it("so show esta 'no roteiro'", () => {
         expect(estaNoRoteiro([{ id: "a", type: "show" }, { id: "m", type: "video" }], "show", "a")).toBe(true)
         expect(estaNoRoteiro([{ id: "a" }], "show", "a")).toBe(true)
-        expect(estaNoRoteiro([{ id: "m", type: "video" }], "media", "m")).toBe(false)
+        expect(estaNoRoteiro([{ id: "m", type: "video" }], "media", "m")).toBe(true)
+        expect(estaNoRoteiro([{ id: "m", type: "image" }], "media", "m")).toBe(true)
+        expect(estaNoRoteiro([{ id: "x.mp3", type: "audio" }], "audio", "x.mp3")).toBe(true)
+        expect(estaNoRoteiro([{ id: "p", type: "pdf" }], "media", "p")).toBe(false)
         expect(estaNoRoteiro([], "show", "a")).toBe(false)
     })
     it("itemEmEdicao: show pelo show aberto (reserva: o showId do editor); os outros pelo id", () => {
@@ -153,4 +156,32 @@ describe("faixaDefasada: nomeia a tela defasada", () => {
     it("sem nomes (uma tela so): o texto de sempre", () => expect(faixaDefasada([])).toBe(FAIXA_DEFASADO))
     it("uma tela", () => expect(faixaDefasada(["Transmissão"])).toBe("Transmissão ainda mostra a versão anterior. Ela só troca quando você mandar pro ar de novo."))
     it("duas telas", () => expect(faixaDefasada(["Telão", "Transmissão"])).toContain("Telão e Transmissão ainda mostram"))
+})
+
+describe("opcoesDoSeletor: chaves unicas (achado 6)", () => {
+    const nomeDe = (_t: string, id: string, salvo: string) => salvo || id
+    const av = (tipo: any, id: string): ItemEditavel => ({ chave: `${tipo}:${id}`, tipo, id, nome: id })
+    const unicas = (l: { chave: string }[]) => new Set(l.map((o) => o.chave)).size === l.length
+    it("midia do roteiro entra em 'No roteiro' e nao se repete como avulso", () => {
+        const l = opcoesDoSeletor({ roteiro: [{ id: "a", type: "show" }, { id: "v.mp4", type: "video" }], avulsos: [av("media", "v.mp4")], atualChave: "media:v.mp4", nomeDe })
+        expect(l.map((o) => [o.secao, o.chaveItem, o.marcado])).toEqual([["No roteiro", "show:a", false], ["No roteiro", "media:v.mp4", true]])
+        expect(unicas(l)).toBe(true)
+    })
+    it("o mesmo show duas vezes no roteiro: chaves distintas e so a posicao ativa leva o visto", () => {
+        const l = opcoesDoSeletor({ roteiro: [{ id: "a" }, { id: "b" }, { id: "a" }], avulsos: [], atualChave: "show:a", indiceAtivo: 2, nomeDe })
+        expect(unicas(l)).toBe(true)
+        expect(l.map((o) => o.marcado)).toEqual([false, false, true])
+    })
+    it("sem posicao ativa: a primeira linha com o item leva o visto", () => {
+        const l = opcoesDoSeletor({ roteiro: [{ id: "a" }, { id: "a" }], avulsos: [], atualChave: "show:a", nomeDe })
+        expect(l.map((o) => o.marcado)).toEqual([true, false])
+    })
+    it("show aberto pela biblioteca e depois posto no roteiro: some dos avulsos", () => {
+        const l = opcoesDoSeletor({ roteiro: [{ id: "a" }], avulsos: [av("show", "a"), av("show", "z")], atualChave: "show:z", nomeDe })
+        expect(l.map((o) => o.chave)).toEqual(["roteiro:0", "avulso:show:z"])
+        expect(l[1].marcado).toBe(true)
+    })
+    it("bloco e PDF do roteiro nao viram opcao", () => {
+        expect(opcoesDoSeletor({ roteiro: [{ id: "s", type: "section" }, { id: "p", type: "pdf" }], avulsos: [], atualChave: null, nomeDe })).toEqual([])
+    })
 })

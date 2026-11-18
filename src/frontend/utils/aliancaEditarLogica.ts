@@ -94,10 +94,46 @@ export function tirarAvulso(lista: ItemEditavel[], chave: string): ItemEditavel[
     return lista.filter((a) => a.chave !== chave)
 }
 
-/** o item aberto esta no roteiro (culto) aberto? So `show`: midia e demais so entram como avulso. */
+/** o tipo de edicao de um item do roteiro (`image`/`video` editam como midia); null = nao se edita aqui (bloco, PDF, apresentacao...) */
+export function tipoEditavelDoRoteiro(tipo: string | undefined): TipoEditavel | null {
+    const t = tipo || "show"
+    return t === "show" ? "show" : t === "image" || t === "video" ? "media" : t === "audio" ? "audio" : null
+}
+
+/** o item aberto esta no roteiro (culto) aberto? Show, midia (imagem/video) e audio; o resto (modelo, camera...) so entra como avulso. */
 export function estaNoRoteiro(roteiro: { id?: string; type?: string }[] | null | undefined, tipo: string, id: string): boolean {
-    if (tipo !== "show") return false
-    return (roteiro || []).some((i) => i && i.id === id && (i.type || "show") === "show")
+    return (roteiro || []).some((i) => !!i && i.id === id && tipoEditavelDoRoteiro(i.type) === tipo)
+}
+
+export type OpcaoDoSeletor = { chave: string; chaveItem: string; secao: "No roteiro" | "Aberto da biblioteca"; tipo: TipoEditavel; nome: string; marcado: boolean; indice?: number; avulso?: boolean }
+
+/**
+ * As linhas do seletor do item. `chave` e UNICA na lista (o `{#each}` com chave repetida lanca em dev e atualiza errado em producao): o roteiro leva a
+ * POSICAO (o mesmo show/midia pode aparecer duas vezes no culto) e o avulso leva a chave do item. Avulso que ja esta no roteiro nao se repete.
+ * `indiceAtivo` = a posicao do roteiro que esta aberta (activeShow.index); sem ela, a primeira linha do roteiro com o item aberto leva o visto.
+ */
+export function opcoesDoSeletor(e: { roteiro: { id: string; type?: string; name?: string }[]; avulsos: ItemEditavel[]; atualChave: string | null; indiceAtivo?: number | null; nomeDe: (tipo: TipoEditavel, id: string, nomeSalvo: string) => string }): OpcaoDoSeletor[] {
+    const saida: OpcaoDoSeletor[] = []
+    const chaveNoRoteiro = (it: { id: string; type?: string }) => {
+        const tipo = tipoEditavelDoRoteiro(it.type)
+        return tipo ? chaveDoItem(tipo, it.id) : null
+    }
+    // qual linha do roteiro e a aberta: a posicao ativa se ela for o item aberto, senao a primeira com o item
+    const candidatas = e.roteiro.map((it, i) => (chaveNoRoteiro(it) === e.atualChave ? i : -1)).filter((i) => i > -1)
+    const marcada = typeof e.indiceAtivo === "number" && candidatas.includes(e.indiceAtivo) ? e.indiceAtivo : (candidatas[0] ?? -1)
+    const doRoteiro = new Set<string>()
+    e.roteiro.forEach((it, indice) => {
+        const tipo = tipoEditavelDoRoteiro(it.type)
+        const chaveItem = chaveNoRoteiro(it)
+        if (!tipo || !chaveItem) return
+        doRoteiro.add(chaveItem)
+        saida.push({ chave: `roteiro:${indice}`, chaveItem, secao: "No roteiro", tipo, nome: e.nomeDe(tipo, it.id, it.name || ""), marcado: indice === marcada, indice })
+    })
+    for (const a of e.avulsos) {
+        if (doRoteiro.has(a.chave)) continue
+        saida.push({ chave: `avulso:${a.chave}`, chaveItem: a.chave, secao: "Aberto da biblioteca", tipo: a.tipo, nome: e.nomeDe(a.tipo, a.id, a.nome), marcado: a.chave === e.atualChave, avulso: true })
+    }
+    return saida
 }
 
 /** O tipo curto que o seletor mostra ao lado do nome (o prototipo usa um simbolo) */

@@ -5,7 +5,7 @@
     import { onDestroy } from "svelte"
     import { activeEdit, activePopup, activeProject, activeShow, categories, effects, overlays, popupData, projects, refreshEditSlide, shows, showsCache, templates, textCache } from "../../stores"
     import { avulsosEditando, type Avulso } from "../../utils/aliancaEditarEstado"
-    import { SIMBOLO_DO_TIPO, contagemDeSlides, empurrarAvulso, estaNoRoteiro, itemEmEdicao, tirarAvulso, ROTULO_DO_TIPO, type TipoEditavel } from "../../utils/aliancaEditarLogica"
+    import { SIMBOLO_DO_TIPO, contagemDeSlides, empurrarAvulso, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, tirarAvulso, ROTULO_DO_TIPO, type OpcaoDoSeletor, type TipoEditavel } from "../../utils/aliancaEditarLogica"
     import { escFechou } from "../../utils/aliancaToque"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
@@ -75,22 +75,15 @@
     let pop: HTMLElement | undefined
     let destaque = -1
 
-    type Opcao = { chave: string; secao: string; tipo: TipoEditavel; nome: string; marcado: boolean; abrir: () => void }
+    // a conta (chaves unicas, avulso que ja esta no roteiro nao se repete) mora em `opcoesDoSeletor`; aqui so se pendura o `abrir`
+    type Opcao = OpcaoDoSeletor & { abrir: () => void }
     function opcoes(): Opcao[] {
-        const saida: Opcao[] = []
-        roteiro.forEach((it, index) => {
-            const t = it.type || "show"
-            const tipo: TipoEditavel | null = t === "show" ? "show" : t === "image" || t === "video" ? "media" : t === "audio" ? "audio" : null
-            if (!tipo) return
-            const nome = tipo === "show" ? $shows[it.id]?.name || it.name || "" : removeExtension(getFileName(it.id))
-            const chave = `${tipo}:${it.id}`
-            saida.push({ chave, secao: "No roteiro", tipo, nome, marcado: atual?.chave === chave, abrir: () => abrirDoRoteiro(it, index) })
+        const avulsos = $avulsosEditando.filter((a) => a.tipo !== "show" || !!$shows[a.id])
+        const nomeDeOpcao = (tipo: TipoEditavel, id: string, salvo: string) => (tipo === "show" ? $shows[id]?.name || salvo : tipo === "media" || tipo === "audio" ? removeExtension(getFileName(id)) : salvo)
+        return opcoesDoSeletor({ roteiro, avulsos, atualChave: atual?.chave ?? null, indiceAtivo: typeof ($activeShow as any)?.index === "number" ? ($activeShow as any).index : null, nomeDe: nomeDeOpcao }).map((o) => {
+            const avulso = o.avulso ? avulsos.find((a) => `avulso:${a.chave}` === o.chave) : undefined
+            return { ...o, abrir: () => (avulso ? abrirAvulso(avulso) : abrirDoRoteiro(roteiro[o.indice as number], o.indice as number)) }
         })
-        for (const a of $avulsosEditando) {
-            if (a.tipo === "show" && !$shows[a.id]) continue
-            saida.push({ chave: a.chave, secao: "Aberto da biblioteca", tipo: a.tipo, nome: a.tipo === "show" ? $shows[a.id]?.name || a.nome : a.nome, marcado: atual?.chave === a.chave, abrir: () => abrirAvulso(a) })
-        }
-        return saida
     }
     $: lista = aberto ? (void $shows, void $avulsosEditando, void roteiro, void atual, opcoes()) : []
 
