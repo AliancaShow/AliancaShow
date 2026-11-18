@@ -9,7 +9,7 @@
 //   F. botao direito num bloco: Editar titulo (cursor no titulo), Mover, Novo bloco, Tirar
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-6"
 mkdirSync(saida, { recursive: true })
@@ -183,6 +183,26 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await clicarItem("Mostrar agora")
       const ar = await noAr()
       ok("D4 Mostrar agora num efeito poe o efeito no ar", ar.some((x) => x.e || x.ov), JSON.stringify(ar))
+      await limpar() }
+    // achado 8: Ctrl+Enter na busca de Sobreposicoes manda a primeira ao ar (o PR lista Ctrl+Enter como caminho para o ar)
+    { const nome = await dom(`(()=>{const o=Object.values(get(S.overlays)).find(x=>x.name&&x.name.length>3); return o?o.name:null})()`)
+      // a sub-aba "Tudo" da arvore mostra as sobreposicoes (a "Efeitos" mostra so os efeitos)
+      const tudo = await localizar(j, `[...document.querySelectorAll('[data-acao=arvore] button')].find(b=>b.innerText.split(String.fromCharCode(10))[0].trim()==="Tudo")`)
+      if (tudo.ok) { await clicarEm(j, tudo.x, tudo.y); await esperar(700) }
+      const campo = await localizar(j, `document.querySelector('.drawer_search')`)
+      if (nome && campo.ok) {
+        await clicarEm(j, campo.x, campo.y)
+        await j.enviar("Input.insertText", { text: nome.slice(0, 4) })
+        await esperar(500)
+        await j.ev(`window.__n=0; window.__m=0; return 1`)
+        await tecla(j, "Enter", { ctrl: true })
+        await esperar(700)
+        ok("D4b Ctrl+Enter na busca de Sobreposicoes manda a sobreposicao ao ar", (await noAr()).some((x) => x.ov) && (await escritas()) >= 1, JSON.stringify(await noAr()))
+        await clicarEm(j, campo.x, campo.y)
+        await tecla(j, "a", { ctrl: true })
+        await tecla(j, "Backspace")
+        await esperar(300)
+      } else ok("D4b a busca e uma sobreposicao existem no perfil", false, `${nome} ${campo.motivo}`)
       await limpar() }
     await noDaArvore("Bíblia")
     { const v = await localizar(j, `document.querySelector('[data-regiao=biblioteca] .verse')`)

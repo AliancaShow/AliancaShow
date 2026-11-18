@@ -47,13 +47,13 @@ describe("a guarda da biblioteca (fatia 6)", () => {
         expect(sb).toContain("podeMarcar()) cliqueDeMarcar(")
         expect(sb).toContain("marcavel && podeMarcar()")
     })
-    it("so o ▶ do cartao de midia e o \"Mostrar agora\" levantam a guarda (autorizarAr)", () => {
+    it("so o ▶, o Ctrl+Enter da busca de Sobreposicoes e o \"Mostrar agora\" levantam a guarda (autorizarAr)", () => {
         const usos = arquivos(join(RAIZ, "src", "frontend"))
             .filter((p) => !/\.test\.ts$/.test(p))
             .filter((p) => /autorizarAr\(/.test(readFileSync(p, "utf8")))
             .map((p) => relative(RAIZ, p).split("\\").join("/"))
             .sort()
-        expect(usos).toEqual(["src/frontend/components/drawer/media/MediaCard.svelte", "src/frontend/utils/aliancaGavetaToque.ts"])
+        expect(usos).toEqual(["src/frontend/components/drawer/media/MediaCard.svelte", "src/frontend/components/drawer/pages/Overlays.svelte", "src/frontend/utils/aliancaGavetaToque.ts"])
     })
     it("o duplo clique na biblioteca e no roteiro e engolido em Mostrar (aliancaToque)", () => {
         const t = ler("src/frontend/utils/aliancaToque.ts")

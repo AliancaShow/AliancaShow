@@ -4,7 +4,7 @@
     import { addProjectItem } from "../../../converters/project"
     import { activeEdit, activePage, activeShow, labelsDisabled, mediaOptions, outLocked, outputs, overlayCategories, overlays, styles, timelineRecordingAction } from "../../../stores"
     import { destinoRecusaTecla, teclaIgnorada } from "../../../utils/aliancaModo"
-    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
+    import { autorizarAr, gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import { clone, keysToID, sortByName } from "../../helpers/array"
@@ -123,7 +123,8 @@
             // play
             if (e.ctrlKey || e.metaKey) {
                 if (teclaIgnorada()) return
-                overlayClick({}, overlay.id)
+                // Ctrl+Enter e um gesto deliberado de ir ao ar: levanta a guarda da biblioteca so para esta chamada (revisao da fatia 6, achado 8)
+                autorizarAr(() => overlayClick({}, overlay.id))
                 return
             }
 
