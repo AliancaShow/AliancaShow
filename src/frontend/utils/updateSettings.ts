@@ -406,6 +406,8 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
         }
     },
     special: (v: any) => {
+        // leiaute v2: a linha do tempo do PROJETO morreu com Projects.svelte; a flag salva so travaria o Espaco da linha do tempo do show (Timeline.svelte)
+        if (v.projectTimelineActive) delete v.projectTimelineActive
         if (v.capitalize_words === undefined) v.capitalize_words = "Jesus, Lord" // God
         // don't backup when just initialized (or reset)
         if (!v.autoBackupPrevious) v.autoBackupPrevious = Date.now()

@@ -49,3 +49,16 @@ describe("2.2: o tema salvo do FreeShow nao vaza para as pecas antigas", () => {
         expect(t).not.toMatch(/get\(themes\)\[data\.theme\]/)
     })
 })
+
+describe("2.3/1.7/5.1: sobras declaradas na revisao", () => {
+    it("o rotulo da biblioteca nao promete Ctrl+K (so a fatia 5 cria o atalho) e Shortcuts.svelte nao anuncia Ctrl+T", () => {
+        expect(ler("components/main/AliancaRoteiro.svelte")).not.toMatch(/<span class="atalho">/)
+        expect(ler("components/main/popups/Shortcuts.svelte")).not.toMatch(/toggle_panels/)
+    })
+    it("a flag salva projectTimelineActive e apagada na carga (special)", () => {
+        expect(ler("utils/updateSettings.ts")).toMatch(/if \(v\.projectTimelineActive\) delete v\.projectTimelineActive/)
+    })
+    it("o aviso de desenho ativo mora na pilula do telao", () => {
+        expect(ler("components/main/AliancaTelaoPilula.svelte")).toMatch(/data-acao="desenho-ativo"/)
+    })
+})

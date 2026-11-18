@@ -80,6 +80,8 @@
         restauraPronto = false
     }
     onDestroy(() => tRestaura && clearTimeout(tRestaura))
+    // aviso de desenho ativo (Preencher, zoom ou tracos): o telao pode estar coberto e nada mais no topo avisaria. Era o botao vermelho de Top.svelte.
+    $: desenho = ($drawTool, $drawSettings, $paintCache, desenhoAtivo(get(drawTool), get(drawSettings), get(paintCache) as any))
     $: podeRestaurar = !$outLocked && !!$outputCache && restauraPronto
     $: motivoRestaurar = $outLocked ? "A saída está travada." : !$outputCache ? "Não há nada limpo para restaurar." : !restauraPronto ? "Espere um instante." : ""
     $: if (pergunta) menuAberto = false
@@ -120,7 +122,7 @@
         <span class="ponto" />
         <span>{rotulo}</span>
     </button>
-    <button class="seta" class:aberto={menuAberto} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}>▾</button>
+    <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}>▾{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button>
     {#if menuAberto}
         <div class="pop menu" role="menu" data-acao="telao-menu-pop">
             <button role="menuitem" class="item" data-item="travar" class:ativo={$outLocked} tabindex="-1" on:mousedown|preventDefault on:click={travar}><span class="it">{$outLocked ? "Destravar saída" : "Travar saída"}</span><span class="sub">{$outLocked ? "libera o telão para mudar" : "nada muda no telão até destravar"}</span></button>
@@ -152,6 +154,18 @@
         font: inherit;
         font-size: 12px;
         cursor: pointer;
+    }
+    .seta {
+        position: relative;
+    }
+    .seta .aviso {
+        position: absolute;
+        top: 8px;
+        right: 4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--luz-laranja);
     }
     .seta:hover,
     .seta.aberto {

@@ -1,7 +1,7 @@
 <script lang="ts">
     // Leiaute v2: a coluna do roteiro em Mostrar. Faixa AO VIVO, cabecalho (ROTEIRO, N itens), os dois botoes de local e dia (SeletorDeCulto),
     // a linha reservada de 36 px para o aviso "o roteiro mudou" (D12), a lista em blocos com selo NO AR e o bloco ao vivo, e
-    // "＋ Adicionar ao roteiro · Ctrl+K". Marcacao nova; da lista de antes ficam a ordem, a selecao e o arrastar (SelectElem + DropArea), os
+    // "＋ Adicionar ao roteiro" (sem rotulo de atalho: Ctrl+K so existe na fatia 5; hoje abre a busca de Ctrl+G/F8). Marcacao nova; da lista de antes ficam a ordem, a selecao e o arrastar (SelectElem + DropArea), os
     // rastros do Sirvo (itens tirados com Desfazer) e a faixa do Sirvo do projeto (SirvoProjetoFaixa), sem mudar a regra de nenhum.
     //
     // Ouvintes de janela de Projects.svelte / ProjectContentList.svelte (conferidos ao portar):
@@ -194,7 +194,7 @@
     <div class="lista"><p class="vazio">Nenhum culto aberto. Escolha o dia acima.</p></div>
 {/if}
 
-<button class="trazer" data-acao="adicionar-ao-roteiro" tabindex="-1" on:mousedown|preventDefault on:click={() => quickSearchActive.set(true)}>＋ Adicionar ao roteiro <span class="atalho">· Ctrl+K</span></button>
+<button class="trazer" data-acao="adicionar-ao-roteiro" tabindex="-1" on:mousedown|preventDefault on:click={() => quickSearchActive.set(true)}>＋ Adicionar ao roteiro</button>
 
 <style>
     .aoVivo {
@@ -370,8 +370,5 @@
         font-size: 13px;
         color: var(--luz-texto);
         cursor: pointer;
-    }
-    .atalho {
-        color: var(--luz-mudo);
     }
 </style>
