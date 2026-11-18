@@ -37,16 +37,16 @@ export const EXCECOES = {
         "sha": "6d7a2b68f8890bfe94a7e2903d97638d37d3cf5f3bf0297f93564ef6973ab60b"
     },
     "src/frontend/utils/common.ts": {
-        "motivo": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes | leiaute v2 (commit 12): sai togglePanels (Ctrl+T) e o import de fecharTudoManual; so a janela principal o chamava",
-        "sha": "c4b4f3a3a962bf36b7355c84e5aa8bc817321b9cbf01a637fa36cd8d8dd5c1a9"
+        "motivo": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes | leiaute v2 (commit 12): sai togglePanels (Ctrl+T) e o import de fecharTudoManual; so a janela principal o chamava | fix: o import de fecharTudoManual sai de verdade",
+        "sha": "e8f3b59a839d133f876afa85db61d411f7a4bf7947c8f9e9373d65d5a33d3721"
     },
     "src/frontend/utils/startup.ts": {
         "motivo": "1b: iniciarLayoutAlianca(), iniciarMolduraAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca e iniciarMolduraAlianca ainda tem guarda de currentWindow | leiaute v2 (commit 10): iniciarMolduraAlianca sai de startupMain (so a janela principal rodava)",
         "sha": "91088ae04bd4cb6b529e47d2026b953d2d4ff7c4fd4420fb562571912c001b84"
     },
     "src/frontend/utils/shortcuts.ts": {
-        "motivo": "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal | leiaute v2 (commit 10): saem voltarDaPagina, tres ramos do Esc do Preparar, a abertura da gaveta no Ctrl+1..8 e projectTimelineActive de isTimelineActive; atalho so roda na janela principal | leiaute v2 (commit 12): sai o atalho `t` (Ctrl+T); atalho so roda na janela principal",
-        "sha": "60093a718fd3ec553b35fd7bb8255325f08954ac7e0d2b4d8e9dcd7e40ebf575"
+        "motivo": "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal | leiaute v2 (commit 10): saem voltarDaPagina, tres ramos do Esc do Preparar, a abertura da gaveta no Ctrl+1..8 e projectTimelineActive de isTimelineActive; atalho so roda na janela principal | leiaute v2 (commit 12): sai o atalho `t` (Ctrl+T); atalho so roda na janela principal | fix: a entrada Ctrl+T (togglePanels) sai de verdade",
+        "sha": "5d23178828d31d81af03ab957bf1df345924b1c344f51873eede05e52673481e"
     },
     "src/frontend/components/context/contextMenus.ts": {
         "motivo": "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
