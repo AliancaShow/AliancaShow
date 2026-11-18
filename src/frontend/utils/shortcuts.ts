@@ -55,7 +55,6 @@ const ctrlKeys = {
         }),
     o: () => (teclaIgnorada({ key: "o", ctrlKey: true }) ? null : toggleOutputs()),
     s: () => save(),
-    t: () => togglePanels(),
     y: () => (redo(), atualizarCaixasDaLista()),
     z: () => (undo(), atualizarCaixasDaLista()),
     "?": () => activePopup.set("shortcuts")

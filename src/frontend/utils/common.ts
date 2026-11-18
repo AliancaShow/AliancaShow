@@ -10,7 +10,6 @@ import { activePopup, activeTriggerFunction, autosave, currentWindow, disabledSe
 import { convertAutosave } from "../values/autosave"
 import { send } from "./request"
 import { save } from "./save"
-import { fecharTudoManual } from "./aliancaLayoutEstado"
 
 export const DEFAULT_WIDTH = 290 // --navigation-width (global.css) | resized (stores.ts & defaults.ts)
 export const DEFAULT_DRAWER_HEIGHT = 300
