@@ -57,3 +57,11 @@ export async function localizar(j, expr) {
         `const e=(${expr}); if(!e) return {ok:false,motivo:"alvo nao existe"}; e.scrollIntoView({block:"center",inline:"center"}); await esp(300); const r=e.getBoundingClientRect(); if(r.width<1||r.height<1) return {ok:false,motivo:"alvo sem tamanho"}; const x=r.x+r.width/2,y=r.y+r.height/2; const topo=document.elementFromPoint(x,y); const dentro=!!topo&&(topo===e||e.contains(topo)); return {ok:dentro,motivo:dentro?"":"coberto por <"+(topo?topo.tagName+"."+String(topo.className).slice(0,40):"nada")+">",x,y}`
     )
 }
+
+/** bancada de dev da fatia 1 do leiaute v2 (commits 3 a 9): liga a tela nova e para a moldura antiga (so existe em dev). Some no commit da troca. */
+export async function ligarTelaNova(j) {
+    await j.ev(`
+const E=await import(U("utils/aliancaTelaEstado")); E.telaNova.set(true)
+try { const M=await import(U("utils/aliancaMoldura")); M._pararMolduraAlianca && M._pararMolduraAlianca() } catch(e){}
+await esp(400)`)
+}

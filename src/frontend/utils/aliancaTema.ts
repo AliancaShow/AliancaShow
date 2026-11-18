@@ -1,5 +1,6 @@
 import { derived, get } from "svelte/store"
 import { currentWindow, modoAlianca, special, theme, themes } from "../stores"
+import { telaNova } from "./aliancaTelaEstado"
 import { atributosDoTema, FAMILIA_TEXTO, FAMILIA_TITULO, type AtributosDoTema } from "./aliancaTemaLogica"
 
 // ----- AliançaShow · FV-A: escreve data-tema e data-fonte no <body> da janela principal -----
@@ -14,7 +15,7 @@ import { atributosDoTema, FAMILIA_TEXTO, FAMILIA_TITULO, type AtributosDoTema } 
 let iniciado = false
 let geracao = 0
 
-const estadoAtual = (): AtributosDoTema => atributosDoTema({ id: get(theme), tema: get(themes)?.[get(theme)], modo: get(modoAlianca), desligado: get(special)?.aliancaVisual === false })
+const estadoAtual = (): AtributosDoTema => atributosDoTema({ id: get(theme), tema: get(themes)?.[get(theme)], modo: get(modoAlianca), desligado: get(special)?.aliancaVisual === false, luz: get(telaNova) })
 
 function definir(body: HTMLElement, nome: "tema" | "fonte", valor: string | null) {
     if (valor) {
@@ -54,7 +55,7 @@ export function iniciarTemaAlianca() {
     if (get(currentWindow)) return // saída, pdf e afins: nada
     if (iniciado) return
     iniciado = true
-    derived([theme, themes, modoAlianca, special], ([a, b, c, d]) => [a, b, c, d]).subscribe(() => {
+    derived([theme, themes, modoAlianca, special, telaNova], ([a, b, c, d, e]) => [a, b, c, d, e]).subscribe(() => {
         try {
             aplicarTemaAlianca()
         } catch (erro) {

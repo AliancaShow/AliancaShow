@@ -1,3 +1,4 @@
+import { aliancaTela, TELA_PADRAO } from "./aliancaTelaEstado"
 import { get } from "svelte/store"
 import { uid } from "uid"
 import { OUTPUT } from "../../types/Channels"
@@ -350,6 +351,7 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     overlayCategories: (v: any) => overlayCategories.set(v),
     playerVideos: (v: any) => playerVideos.set(v),
     resized: (v: any) => resized.culto.set(v),
+    aliancaTela: (v: any) => aliancaTela.set({ ...TELA_PADRAO, ...(v && typeof v === "object" ? v : {}) }),
     // AliancaShow: descarta as traducoes vindas da API do churchapps. Elas usam a
     // chave do projeto original, que nao podemos usar, e sao todas em ingles. Tirar
     // dos padroes nao bastava: quem ja abriu o app tem as 5 gravadas em

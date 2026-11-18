@@ -9,7 +9,7 @@ export const FAMILIA_TITULO = "AliancaUI Titulo"
 
 export type TemaParaAtributo = { colors?: { secondary?: string }; font?: { family?: string } } | null | undefined
 
-export type AtributosDoTema = { tema: "padrao" | null; fonte: "prep" | null }
+export type AtributosDoTema = { tema: "padrao" | "luz" | null; fonte: "prep" | null }
 
 /** Mesma condição de `updateThemeValues` (utils/updateSettings.ts): família vazia ou `sans-serif` = o tema não fixou fonte. */
 export function fonteDoTemaEhLivre(family: string | undefined | null): boolean {
@@ -22,7 +22,9 @@ export function fonteDoTemaEhLivre(family: string | undefined | null): boolean {
  * `fonte = "prep"` só no modo Preparar e só se o tema não fixou uma fonte (independe de `tema`).
  * `desligado` (special.aliancaVisual === false) é a chave técnica sem tela: tudo volta ao visual de antes.
  */
-export function atributosDoTema(e: { id: string; tema: TemaParaAtributo; modo: string; desligado?: boolean }): AtributosDoTema {
+export function atributosDoTema(e: { id: string; tema: TemaParaAtributo; modo: string; desligado?: boolean; luz?: boolean }): AtributosDoTema {
+    // leiaute v2: "luz" vale nos dois modos e nao depende do tema do FreeShow; as fontes do Preparar saem (a Archivo e a unica do app)
+    if (e.luz) return { tema: "luz", fonte: null }
     const nenhum: AtributosDoTema = { tema: null, fonte: null }
     if (e.desligado || !e.tema) return nenhum
     const acento = e.tema.colors?.secondary

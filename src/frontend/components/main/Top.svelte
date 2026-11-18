@@ -129,11 +129,11 @@
     </div>
 {/if}
 
-<div class="top panel" class:drag={!isWindows}>
+<div class="top panel" data-regiao="topo" class:drag={!isWindows}>
     <!-- {#if !isWindows}
     <div class="dragZone" />
     {/if} -->
-    <span style="width: var(--navigation-width);">
+    <span style="width: var(--navigation-width);" data-acao="segmentado">
         {#if !$saved && $os.platform !== "win32"}
             <div class="unsaved" />
         {/if}
