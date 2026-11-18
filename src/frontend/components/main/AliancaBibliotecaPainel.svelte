@@ -7,7 +7,9 @@
     // Teclado que morava em Drawer.svelte: Ctrl+F foca a busca; Enter na busca (pasta Shows) abre o primeiro e o poe no projeto;
     // Ctrl+Enter manda o primeiro ao ar (atras de teclaIgnorada); Esc com a busca vazia a recolhe; `drawer_search` foca a busca.
     // Morrem, por nao existir mais gaveta fechada: Ctrl+D e a troca para Shows do Ctrl+F.
-    import { activePage, activePopup, activeProject, activeShow, activeTriggerFunction, activeDrawerTab, projects, showsCache } from "../../stores"
+    import { activePage, activePopup, activeProject, activeShow, activeTriggerFunction, activeDrawerTab, categories, projects, shows, showsCache } from "../../stores"
+    import { filtroSemCategoria } from "../../utils/aliancaArvoreLogica"
+    import { getAccess } from "../../utils/profile"
     import { executarComandoNovo } from "../../utils/aliancaBiblioteca"
     import { buscaDaBiblioteca, soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
     import { teclaIgnorada } from "../../utils/aliancaModo"
@@ -33,6 +35,17 @@
     let novoAberto = false
 
     $: emShows = $activeDrawerTab === "shows"
+    // C6: "Sem categoria · N" no cabecalho da lista (era a linha "Sem etiqueta" da arvore); some quando N chega a zero
+    $: acessoShows = getAccess("shows")
+    $: semCategoria = Object.values($shows).filter((s: any) => s && !s.private && acessoShows[s.category || ""] !== "none" && (s.category === null || s.category === undefined || !$categories[s.category])).length
+    $: subShows = $drawerTabsData.shows?.activeSubTab || "all"
+    $: filtro = filtroSemCategoria(semCategoria, subShows)
+    function alternarSemCategoria() {
+        drawerTabsData.update((a) => {
+            a.shows = { ...a.shows, activeSubTab: filtro.ativo ? "all" : "unlabeled", enabled: a.shows?.enabled !== false }
+            return a
+        })
+    }
     // chips Video/Foto/Audio e zoom/modo da pasta Midia (nao valem nas abas online e de entradas)
     $: emMidia = $activeDrawerTab === "media" && !["online", "inputs"].includes($drawerTabsData.media?.activeSubTab || "")
     // a busca de Shows e a mesma `buscaDaBiblioteca` da lista; nas outras pastas vale o `searchValue` do Content
@@ -116,6 +129,9 @@
                     </div>
                 {/if}
             </div>
+            {#if filtro.visivel}
+                <button class="chip semCat" class:on={filtro.ativo} tabindex="-1" data-acao="filtro-sem-categoria" aria-pressed={filtro.ativo} on:mousedown|preventDefault on:click={alternarSemCategoria}>Sem categoria <b>{semCategoria}</b></button>
+            {/if}
         {/if}
         {#if emMidia}
             <AliancaFiltros />
@@ -172,6 +188,21 @@
         border: 1px solid var(--luz-borda);
         background: var(--luz-campo);
         color: var(--luz-texto);
+    }
+    /* pendencia de arrumacao (nao um lugar): laranja, com o contador; so existe enquanto houver algum */
+    .chip.semCat {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-color: var(--luz-laranja-borda);
+        color: var(--luz-laranja);
+    }
+    .chip.semCat b {
+        font-variant-numeric: tabular-nums;
+    }
+    .chip.semCat.on {
+        background: var(--luz-laranja);
+        color: var(--luz-tinta);
     }
     .chip.on {
         border-color: var(--luz-texto);

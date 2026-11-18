@@ -5,24 +5,23 @@
     import { Main } from "../../../../types/IPC/Main"
     import { ToMain } from "../../../../types/IPC/ToMain"
     import { destroyMain, receiveToMain, requestMain, sendMain } from "../../../IPC/main"
-    import { drawerTabsData, labelsDisabled, media, mediaFolders, mediaTags, providerConnections, special } from "../../../stores"
+    import { activeDrawerTab, drawerTabsData, media, mediaFolders, mediaTags, providerConnections, special } from "../../../stores"
     import { tela } from "../../../utils/aliancaTela"
     import { criarPasta } from "../../../utils/aliancaPastasMidia"
     import { membros, pastas } from "../../../utils/aliancaPastasMidiaEstado"
-    import { PASTA_RAIZ, PASTA_SIRVO, abaDaPasta, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
+    import { PASTA_SIRVO, abaDaPasta, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
     import { getAccess } from "../../../utils/profile"
     import { keysToID, sortObject } from "../../helpers/array"
     import { addDrawerFolder } from "../../helpers/dropActions"
-    import Icon from "../../helpers/Icon.svelte"
     import { countFolderMediaItems, getExtension, isMediaExtension } from "../../helpers/media"
-    import T from "../../helpers/T.svelte"
-    import MaterialButton from "../../inputs/MaterialButton.svelte"
+    import AliancaLinhaAdd from "./AliancaLinhaAdd.svelte"
     import NavigationSections from "./NavigationSections.svelte"
 
     const profile = getAccess("media")
     $: readOnly = profile.global === "read"
 
-    $: activeSubTab = $drawerTabsData.media?.activeSubTab || ""
+    // C6: com Audio (filho de Midia) aberto, nenhuma pasta fica marcada nem a 1a e escolhida sozinha
+    $: activeSubTab = $activeDrawerTab === "media" ? $drawerTabsData.media?.activeSubTab || "" : "__fora__"
 
     $: foldersList = keysToID($mediaFolders)
     $: favoritesListLength = Object.values($media).filter((a) => !a.audio && a.favourite).length
@@ -49,9 +48,8 @@
             .map((a: any) => a.path)
     }
 
-    // AliancaShow F7: a raiz "Midias" e as pastas (etiquetas). A raiz e o 1o nivel das pastas do sistema menos o que ja esta numa pasta
-    $: raizCount = arquivosDaRaiz.filter((p) => !pastaDaMidia($media[p]?.tags, $mediaTags)).length
-    $: secaoPastas = [{ id: "TITLE", label: "Pastas de mídia" }, { id: PASTA_RAIZ, label: "Mídias", icon: "media", count: raizCount }, ...$pastas.map((p) => ({ id: abaDaPasta(p.id), label: p.tag.name || "Pasta", icon: "folder", count: ($membros[p.id] || []).length, boxedIcon: true })), { id: PASTA_SIRVO, label: "Do Sirvo", icon: "web" }]
+    // AliancaShow F7: as pastas (etiquetas). C6: sem o rotulo "Pastas de midia" e sem a linha "Midias" (clicar na raiz Midia e "todas as midias")
+    $: secaoPastas = [...$pastas.map((p) => ({ id: abaDaPasta(p.id), label: p.tag.name || "Pasta", icon: "folder", count: ($membros[p.id] || []).length, boxedIcon: true })), { id: PASTA_SIRVO, label: "Do Sirvo", icon: "web" }]
 
     function novaPasta() {
         const id = criarPasta()
@@ -84,13 +82,9 @@
     let sections: any[] = []
     $: sections = [
         secaoPastas,
-        [
-            { id: "all", label: "category.all", icon: "all", count: allCount },
-            { id: "favourites", label: "category.favourites", icon: "star", count: favoritesListLength, hidden: !favoritesListLength && activeSubTab !== "favourites" }
-        ],
+        [{ id: "favourites", label: "category.favourites", icon: "star", count: favoritesListLength, hidden: !favoritesListLength && activeSubTab !== "favourites" }],
         ...(curriculumProviders.length ? [[{ id: "TITLE", label: "Curriculum" }, ...curriculumProviders.map((a) => ({ id: a.providerId, label: a.displayName, icon: "web" }))]] : []),
-        [{ id: "inputs", label: "emitters.inputs", icon: "input" }, "SEPARATOR", { id: "online", label: "media.online", icon: "web" }].filter(Boolean),
-        [{ id: "TITLE", label: "media.folders" }, ...convertToButton(foldersList, folderLengths)]
+        convertToButton(foldersList, folderLengths)
     ]
 
     function convertToButton(categories: any[], lengths: { [key: string]: number }) {
@@ -121,27 +115,12 @@
     }
 </script>
 
-<NavigationSections {sections} active={activeSubTab} on:rename={updateName}>
-    <div slot="section_0" style="padding: 8px;">
+<NavigationSections {sections} active={activeSubTab} extra={["all", "__fora__", "inputs", "online", "pasta:raiz"]} on:rename={updateName}>
+    <div slot="section_0">
         {#if $tela !== "mostrar"}
-            <MaterialButton style="width: 100%;" title="Nova pasta de mídia" variant="outlined" disabled={readOnly} on:click={novaPasta} small>
-                <Icon id="add" size={$labelsDisabled ? 0.9 : 1} white={$labelsDisabled} />
-                {#if !$labelsDisabled}Nova pasta{/if}
-            </MaterialButton>
+            <AliancaLinhaAdd rotulo="pasta de mídia" titulo="Nova pasta de mídia" desligada={readOnly} on:click={novaPasta} />
         {/if}
-    </div>
-    <div slot="section_3" style="{!curriculumProviders.length ? 'padding: 8px;' : ''}{foldersList.length && !curriculumProviders.length ? 'padding-top: 12px;' : ''}">
-        {#if !curriculumProviders.length}
-            <MaterialButton style="width: 100%;" title="new.system_folder" variant="outlined" disabled={readOnly} on:click={addFolder} small>
-                <Icon id="add" size={$labelsDisabled ? 0.9 : 1} white={$labelsDisabled} />
-                {#if !$labelsDisabled}<T id="new.system_folder" />{/if}
-            </MaterialButton>
-        {/if}
-    </div>
-    <div slot="section_4" style="padding: 8px;{foldersList.length ? 'padding-top: 12px;' : ''}">
-        <MaterialButton style="width: 100%;" title="new.system_folder" variant="outlined" disabled={readOnly} on:click={addFolder} small>
-            <Icon id="add" size={$labelsDisabled ? 0.9 : 1} white={$labelsDisabled} />
-            {#if !$labelsDisabled}<T id="new.system_folder" />{/if}
-        </MaterialButton>
     </div>
 </NavigationSections>
+<!-- C6: "＋ pasta" (pasta do sistema) e uma linha quieta no fim das pastas -->
+<AliancaLinhaAdd rotulo="pasta" titulo="Adicionar uma pasta do computador" desligada={readOnly} on:click={addFolder} />

@@ -14,6 +14,8 @@
 
     export let sections: any[]
     export let active: string
+    // C6: sub-abas validas que NAO tem linha propria (a raiz e o "tudo"; Entradas/Online/Audio sao linhas da arvore): nao disparam a escolha da 1a linha
+    export let extra: string[] = []
 
     let ready = false
     onMount(() => {
@@ -21,7 +23,7 @@
         setTimeout(() => (ready = true), 50)
     })
 
-    $: if (ready && sections.length && (!active || !sections.flat().find((a) => a.id === active))) {
+    $: if (ready && sections.length && (!active || (!extra.includes(active) && !sections.flat().find((a) => a.id === active)))) {
         const flat = sections.flat().filter((a) => a && a !== "SEPARATOR" && a.id !== "SEPARATOR" && a.id !== "TITLE")
         if (flat.length) setSubTab(flat[0].id)
     }

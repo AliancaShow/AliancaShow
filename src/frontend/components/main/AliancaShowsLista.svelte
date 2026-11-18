@@ -3,7 +3,8 @@
     // A logica de listar/filtrar/buscar e a de AliancaBiblioteca (Preparar): `listarBiblioteca` + `showSearch`. Clicar na linha ABRE o show no
     // centro (nao vai ao ar); "＋ roteiro" poe no fim do culto (uma entrada de historico). Chips e busca moram no cabecalho do painel.
     import { onDestroy } from "svelte"
-    import { activeProfile, activeProject, outLocked, activeShow, categories, editingProjectTemplate, projects, shows, showsCache, textCache } from "../../stores"
+    import { activeProfile, activeProject, drawerTabsData, outLocked, activeShow, categories, editingProjectTemplate, projects, shows, showsCache, textCache } from "../../stores"
+    import { aplicarRecorte, recorteDeShows } from "../../utils/aliancaArvoreLogica"
     import { motivoSemCulto } from "../../utils/aliancaGaveta"
     import { porShowNoFim } from "../../utils/aliancaBiblioteca"
     import { buscaDaBiblioteca, soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
@@ -24,7 +25,16 @@
         const s = $shows[id]
         return !!s && ehSemLetra({ ehMusica: musicasCat.has(s.category || ""), carregado: $showsCache[id], textoDoCache: $textCache[id] })
     }
-    $: base = listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: $tipoDaBiblioteca, soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe })
+    // C6: a arvore tambem recorta a lista: o filtro "Sem categoria" e cada categoria valem nos DOIS tipos (a raiz Shows = "tudo", o que os chips dizem)
+    $: recorte = recorteDeShows($drawerTabsData.shows?.activeSubTab, $categories)
+    $: base =
+        recorte.tipo === "chips"
+            ? listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: $tipoDaBiblioteca, soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe })
+            : aplicarRecorte(
+                  [...listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: "musicas", soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe }), ...listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: "apresentacoes", soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe })].sort((a, b) => a.nome.localeCompare(b.nome, "pt", { sensitivity: "base" }) || a.id.localeCompare(b.id)),
+                  recorte,
+                  $categories
+              )
     $: noCulto = idsNoCulto($projects, $activeProject, !!$editingProjectTemplate)
 
     let lista: LinhaDaBiblioteca[] = []
