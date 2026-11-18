@@ -1,4 +1,5 @@
 // Leiaute v2, fatia 6: a conta pura do botao direito da biblioteca e do roteiro. Sem stores, sem DOM.
+import { papelDoItem } from "./aliancaSirvoProjeto"
 
 type Ref = { id: string; type?: string; name?: string; [k: string]: unknown }
 
@@ -100,4 +101,22 @@ export function criarAnteparo(ms = 250) {
 export function itemContinuaLa(lista: { id?: string }[], indice: number, id: string | null | undefined): boolean {
     if (!id || !Number.isInteger(indice) || indice < 0) return false
     return lista[indice]?.id === id
+}
+
+export type AcaoDeBloco = "estrutura" | "novo"
+
+/**
+ * Por que o botao direito do roteiro recusa mexer neste item (vazio = pode). Revisao da fatia 6, achado 13:
+ *  - "estrutura" (tirar, mover, editar titulo): o cabecalho de bloco do Sirvo e o rodape "Fora do roteiro" (`sirvo_fim`) nao se mexem a mao;
+ *  - "novo" (Novo bloco): so recusa o roteiro travado e o modelo; as secoes do operador depois de um bloco do Sirvo sao previstas, e a nova secao nao
+ *    renomeia, move nem apaga o cabecalho trancado.
+ */
+export function motivoDaTrava(projeto: { sectionsLocked?: boolean; sirvo?: { eventId?: string } | null } | null | undefined, item: { id?: string; type?: string } | null | undefined, acao: AcaoDeBloco, editandoModelo: boolean): string {
+    if (editandoModelo) return "edite o modelo de culto pela tela de modelos"
+    if (projeto?.sectionsLocked) return "o roteiro esta travado"
+    if (acao === "novo") return ""
+    const papel = papelDoItem(item as any)
+    if (projeto?.sirvo?.eventId && papel === "cabecalho") return "esse bloco vem do Sirvo e esta trancado"
+    if (projeto?.sirvo?.eventId && papel === "rodape") return "o \"Fora do roteiro\" fica no projeto"
+    return ""
 }

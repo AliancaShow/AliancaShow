@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, motivoDaTrava, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
 
 const S = (id: string) => ({ id, type: "section", name: id })
 const I = (id: string) => ({ id, type: "show" })
@@ -104,5 +104,24 @@ describe("itemContinuaLa (o menu do roteiro age no item em que abriu, nao na pos
         expect(itemContinuaLa(l, 0, "")).toBe(false)
         expect(itemContinuaLa(l, -1, "a")).toBe(false)
         expect(itemContinuaLa(l, NaN, "a")).toBe(false)
+    })
+})
+
+describe("motivoDaTrava (cabecalho e rodape do Sirvo so recusam estrutura; Novo bloco so recusa roteiro travado)", () => {
+    const sirvo = { sirvo: { eventId: "e1" } }
+    const cab = { id: "sirvo_bloco_x", type: "section" }
+    const rod = { id: "sirvo_fim", type: "section" }
+    const meu = { id: "s1", type: "section" }
+    it("estrutura: cabecalho e rodape do Sirvo recusam; bloco do operador passa", () => {
+        expect(motivoDaTrava(sirvo, cab, "estrutura", false)).toContain("Sirvo")
+        expect(motivoDaTrava(sirvo, rod, "estrutura", false)).toContain("Fora do roteiro")
+        expect(motivoDaTrava(sirvo, meu, "estrutura", false)).toBe("")
+        expect(motivoDaTrava({}, cab, "estrutura", false)).toBe("")
+    })
+    it("novo bloco: depois de um bloco do Sirvo ou do rodape pode; roteiro travado e modelo recusam", () => {
+        expect(motivoDaTrava(sirvo, cab, "novo", false)).toBe("")
+        expect(motivoDaTrava(sirvo, rod, "novo", false)).toBe("")
+        expect(motivoDaTrava({ ...sirvo, sectionsLocked: true }, cab, "novo", false)).not.toBe("")
+        expect(motivoDaTrava(sirvo, cab, "novo", true)).not.toBe("")
     })
 })

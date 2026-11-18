@@ -108,4 +108,10 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
                 if (item === "preview" || /previa/i.test(destino)) expect(destino, `${layout}.${item}`).toContain("SEM SUBSTITUTO")
             }
     })
+    it("revisao da fatia 6, achado 13: as travas do roteiro vem de motivoDaTrava (Novo bloco so recusa roteiro travado; tirar/mover/titulo recusam cabecalho e rodape do Sirvo)", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).toContain("motivoDaTrava(get(projects)[projetoId], item, acao,")
+        const novo = reg.slice(reg.indexOf("alianca_novo_bloco: ({ contextElem })"))
+        expect(novo).toContain('roteiroTravado(r.projetoId, r.item, "novo")')
+    })
 })

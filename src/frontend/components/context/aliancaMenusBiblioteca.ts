@@ -15,9 +15,8 @@ import { falhaAlta } from "../../utils/aliancaFalha"
 import { porShowNoFim } from "../../utils/aliancaBiblioteca"
 import { motivoSemCulto } from "../../utils/aliancaGaveta"
 import { dispararNoAlvo } from "../../utils/aliancaGavetaToque"
-import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, moverBloco, moverItem } from "../../utils/aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, motivoDaTrava, moverBloco, moverItem, type AcaoDeBloco } from "../../utils/aliancaMenusBibliotecaLogica"
 import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
-import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
 import { deleteAction } from "../helpers/clipboard"
 import { history } from "../helpers/history"
@@ -127,12 +126,8 @@ function itemDoRoteiro(contextElem: HTMLElement | null) {
     return { projetoId: projetoId!, lista, indice, item: lista[indice] }
 }
 
-function roteiroTravado(projetoId: string, item: any): string {
-    const projeto: any = get(projects)[projetoId]
-    if (get(editingProjectTemplate)) return "edite o modelo de culto pela tela de modelos"
-    if (projeto?.sectionsLocked) return "o roteiro esta travado"
-    if (item?.type === "section" && cabecalhoTrancado(projeto, item)) return "esse bloco vem do Sirvo e esta trancado"
-    return ""
+function roteiroTravado(projetoId: string, item: any, acao: AcaoDeBloco = "estrutura"): string {
+    return motivoDaTrava(get(projects)[projetoId], item, acao, !!get(editingProjectTemplate))
 }
 
 function gravarLista(projetoId: string, nova: any[]) {
@@ -279,7 +274,7 @@ const ACOES: { [id: string]: (c: Chamada) => void } = {
     alianca_novo_bloco: ({ contextElem }) => {
         const r = itemDoRoteiro(contextElem)
         if (!r) return
-        const trava = roteiroTravado(r.projetoId, r.item)
+        const trava = roteiroTravado(r.projetoId, r.item, "novo")
         if (trava) return void newToast(trava)
         // o novo bloco entra logo DEPOIS do bloco clicado (depois do ultimo item dele), nao no meio dele
         const { lead, blocos } = blocosDe(r.lista)
