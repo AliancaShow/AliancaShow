@@ -25,6 +25,14 @@ export function semDesvio<T>(fn: () => T): T {
     }
 }
 
+/** suspende o desvio ate chamar a funcao devolvida (sem quadro extra na pilha: a prova do Culto atribui cada escrita a quem a pediu) */
+export function suspenderDesvio(): () => void {
+    desvio++
+    return () => {
+        desvio--
+    }
+}
+
 /** onde o envio ao ar vai AGORA: `null` = comportamento normal; senao os retornos (lista vazia = descartar, nunca o telao) */
 export function destinoDoEnvio(data: unknown): string[] | null {
     const r = roteamento(get(soRetorno), desvio, retornosLigados(), data)
