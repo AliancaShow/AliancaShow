@@ -50,4 +50,10 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         const aoAr = ["alianca_agora", "alianca_agora_item", "play_no_audio", "play_no_filters"]
         for (const itens of Object.values(NOVOS)) for (const i of itens) if (/^play|agora/.test(i)) expect(aoAr).toContain(i)
     })
+    it("revisao da fatia 6, achado 1: \"Mostrar agora\" num versiculo chama playScripture() direto, nunca refaz o duplo clique (que com a Biblia no ar devolve false)", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).not.toContain('"dblclick"')
+        expect(reg).toMatch(/startsWith\("#scripture"\)[\s\S]{0,260}playScripture\(\)/)
+        expect(reg).toMatch(/closest\?\.\("\.verse"\)/)
+    })
 })

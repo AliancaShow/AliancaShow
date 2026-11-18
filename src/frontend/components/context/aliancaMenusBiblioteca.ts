@@ -8,6 +8,7 @@
 import { get } from "svelte/store"
 import { addProjectItem } from "../../converters/project"
 import { AudioPlayer } from "../../audio/audioPlayer"
+import { playScripture } from "../drawer/bible/scripture"
 import { activeProject, editingProjectTemplate, outLocked, overlays, projects } from "../../stores"
 import { newToast } from "../../utils/common"
 import { falhaAlta } from "../../utils/aliancaFalha"
@@ -133,8 +134,14 @@ function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
     }
     const alvo = ultimoAlvo
     if (alvo && engolir("agora:" + (alvo.id || classe + ":" + (alvo.textContent || "").slice(0, 40)), performance.now())) return
-    // versiculo: o clique so previa; quem toca era o duplo clique (o antigo "tocar") — o gesto de ir ao ar dele
-    dispararNoAlvo(alvo, classe.startsWith("#scripture") ? "dblclick" : "click")
+    // versiculo: nao se refaz gesto (com a Biblia ja no ar o duplo clique devolve false e nada ia ao ar: revisao da fatia 6, achado 1). A selecao ja
+    // andou para o versiculo do botao direito; `playScripture` poe a selecao no telao, no ar ou nao.
+    if (classe.startsWith("#scripture")) {
+        if (!alvo?.closest?.(".verse")) return void newToast("Clique com o botão direito em cima de um versículo")
+        void playScripture()
+        return
+    }
+    dispararNoAlvo(alvo, "click")
 }
 
 /** "Mostrar agora" de um item que JA esta no roteiro (nao mexe no roteiro) */

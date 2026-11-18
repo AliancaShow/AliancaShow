@@ -176,6 +176,13 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
         await clicarItem("Mostrar agora")
         await esperar(500)
         ok("D6 Mostrar agora num versiculo escreve em outputs (o texto vai ao ar)", (await escritas()) >= 1, `n=${await escritas()}`)
+        // revisao da fatia 6, achado 1: com a Biblia JA no ar (o caso da leitura), Mostrar agora no versiculo seguinte tem que mandar o versiculo ao ar
+        const v2 = await localizar(j, `document.querySelectorAll('[data-regiao=biblioteca] .verse')[2]`)
+        await j.ev(`window.__n=0; window.__m=0; return 1`)
+        await direito(v2.x, v2.y)
+        await clicarItem("Mostrar agora")
+        await esperar(700)
+        ok("D7 versiculo A no ar: Mostrar agora no versiculo B manda o B ao ar (escreve em outputs)", (await escritas()) >= 1, `n=${await escritas()}`)
         await limpar()
       } else ok("D5 versiculo existe no perfil", false) }
     await noDaArvore("Shows")
