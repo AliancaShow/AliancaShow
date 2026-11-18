@@ -26,6 +26,8 @@
     let campo: HTMLInputElement
     let buscando = false
     // a consulta que gerou a lista na tela, e se ha busca por fazer (debounce pendente ou rodando): o Enter so age sobre a lista da consulta escrita
+    let busca = 0
+    let adiar: ReturnType<typeof setTimeout> | undefined
     let consultaDaLista = ""
     let pendente = false
     // o Enter que chegou antes da lista alcançar o campo: executa assim que a lista da consulta pintar
@@ -57,17 +59,30 @@
     async function abriu() {
         if (jaAberta) return
         jaAberta = true
-        consulta = ""
-        porSecao = {}
-        marcado = 0
+        zerar()
         await tick()
         campo?.focus()
     }
-    $: if (!$quickSearchActive) jaAberta = false
+    // ao abrir e ao fechar: nada da busca anterior sobrevive (promessa em voo, debounce pendente, Enter na fila, lista)
+    function zerar() {
+        busca++
+        clearTimeout(adiar)
+        adiar = undefined
+        fila = null
+        pendente = false
+        consultaDaLista = ""
+        buscando = false
+        consulta = ""
+        porSecao = {}
+        marcado = 0
+    }
+    function fechou() {
+        jaAberta = false
+        zerar()
+    }
+    $: if (!$quickSearchActive) fechou()
 
     // ---------- buscar
-    let busca = 0
-    let adiar: ReturnType<typeof setTimeout> | undefined
     function digitou() {
         clearTimeout(adiar)
         fila = null

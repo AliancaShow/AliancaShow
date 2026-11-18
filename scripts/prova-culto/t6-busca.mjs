@@ -283,6 +283,18 @@ for (const id of ids.slice(0,6)) { const t=(get(S.textCache)[id]||""); const nom
     ok("H1 trocar a consulta e dar Enter no mesmo instante age sobre a NOVA consulta (Configuracoes), nao manda o versiculo velho ao ar", h1.length === 0 && (await noAr()) === null && (await dom(`get(S.activePage)==="settings"`)), `${JSON.stringify(h1)} ${await noAr()} ${await dom("get(S.activePage)")}`)
     await j.ev(`S.activePage.set("show"); return 1`)
     await limpar()
+    // H2 (achado 5): fechar e reabrir com a busca velha ainda por chegar: a lista nao aparece com o campo vazio e o Enter nao executa nada invisivel
+    await ctrlK()
+    await j.enviar("Input.insertText", { text: "Jo 3.16" })
+    await tecla(j, "Escape")
+    await tecla(j, "k", { ctrl: true })
+    await esperar(1800)
+    const h2a = (await aberturas()).length
+    ok("H2a reaberta: o campo esta vazio e nenhuma lista da busca anterior", (await aberta()) && (await dom(`document.querySelector('[data-acao=spotlight-campo]').value===""`)) && (await linhas()).length === 0, JSON.stringify(await linhas()))
+    await tecla(j, "Enter")
+    await esperar(1200)
+    ok("H2b Enter com o campo vazio nao executa nada (a busca fica aberta)", (await aberta()) && (await aberturas()).length === h2a && (await noAr()) === null, `${(await aberturas()).length - h2a} ${await noAr()}`)
+    await limpar()
 } catch (erro) {
     console.error("ERRO", erro)
     falhas.push("erro: " + erro.message)
