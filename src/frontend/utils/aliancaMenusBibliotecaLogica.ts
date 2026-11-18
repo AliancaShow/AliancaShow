@@ -67,3 +67,28 @@ export function criarEngolidor(ms = 400) {
         return false
     }
 }
+
+export type Retangulo = { left: number; top: number; right: number; bottom: number }
+
+/**
+ * O anteparo do menu de contexto (revisao da fatia 6, achado 2): o primeiro toque num item fecha o menu; o segundo toque de um duplo clique
+ * cairia no que estava EMBAIXO dele (um slide do centro, o ▶ de outra linha). Durante `ms` depois do clique que fechou, o ponto dentro do
+ * retangulo que o menu ocupava e engolido. Fora do retangulo, ou depois da janela, passa.
+ */
+export function criarAnteparo(ms = 250) {
+    let ativo: { rect: Retangulo; ate: number } | null = null
+    return {
+        armar(rect: Retangulo, agora: number) {
+            ativo = { rect, ate: agora + ms }
+        },
+        engole(ponto: { x: number; y: number }, agora: number): boolean {
+            if (!ativo) return false
+            if (agora >= ativo.ate) {
+                ativo = null
+                return false
+            }
+            const r = ativo.rect
+            return ponto.x >= r.left && ponto.x <= r.right && ponto.y >= r.top && ponto.y <= r.bottom
+        }
+    }
+}

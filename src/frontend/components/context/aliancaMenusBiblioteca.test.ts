@@ -52,8 +52,15 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
     })
     it("revisao da fatia 6, achado 1: \"Mostrar agora\" num versiculo chama playScripture() direto, nunca refaz o duplo clique (que com a Biblia no ar devolve false)", () => {
         const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
-        expect(reg).not.toContain('"dblclick"')
+        expect(reg).not.toMatch(/dispararNoAlvo\([^)]*"dblclick"/)
         expect(reg).toMatch(/startsWith\("#scripture"\)[\s\S]{0,260}playScripture\(\)/)
         expect(reg).toMatch(/closest\?\.\("\.verse"\)/)
+    })
+    it("revisao da fatia 6, achado 2: o registro arma o anteparo no clique do menu e engole os toques sobre o retangulo que ele ocupava", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).toContain("criarAnteparo(")
+        expect(reg).toMatch(/anteparo\.armar\(menu\.getBoundingClientRect\(\)/)
+        for (const t of ["mousedown", "mouseup", "click", "dblclick"]) expect(reg, t).toContain(`"${t}"`)
+        expect(reg).toMatch(/anteparo\.engole\([\s\S]{0,400}stopImmediatePropagation\(\)/)
     })
 })

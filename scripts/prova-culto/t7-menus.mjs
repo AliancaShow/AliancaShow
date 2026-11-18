@@ -215,6 +215,40 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       ok("E5 Tirar do roteiro tira so o item clicado", (await tamanho()) === nAntes - 1)
     }
 
+    // ---------- G: o 2o toque do duplo clique nao atravessa o menu (revisao da fatia 6, achado 2)
+    await limpar()
+    await j.ev(`window.__vazou=0; if(!window.__vazouLigado){ window.__vazouLigado=1; document.addEventListener("click",(e)=>{ if(!e.target.closest(".contextMenu")) window.__vazou++ }) } return 1`)
+    for (const [rotulo, pausa] of [["120 ms (duplo clique de gente: o menu ja fechou)", 120], ["0 ms (o menu ainda esta no fade)", 0]]) {
+      const a = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[1]`)
+      const antesG = await projeto()
+      await j.ev(`window.__vazou=0; return 1`)
+      await direito(a.x, a.y)
+      const it = await itemDoMenu("Mover para baixo")
+      await clicarEm(j, it.x, it.y, 1)
+      if (pausa) await esperar(pausa)
+      await clicarEm(j, it.x, it.y, 2)
+      await esperar(500)
+      ok(`G1 duplo clique (${rotulo}): o 2o toque nao cai no que estava embaixo`, (await dom(`window.__vazou`)) === 0 && (await escritas()) === 0, `vazou=${await dom(`window.__vazou`)} n=${await escritas()}`)
+      // um unico "Mover para cima" desfaz: so houve UM mover
+      const b = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[2]`)
+      await direito(b.x, b.y)
+      await clicarItem("Mover para cima")
+      ok(`G2 duplo clique (${rotulo}): a acao rodou uma vez so`, (await projeto()) === antesG)
+      await limpar()
+    }
+    // passado o anteparo o ponto volta a ser do que esta embaixo (nao e uma area morta)
+    { const a = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[1]`)
+      await j.ev(`window.__vazou=0; return 1`)
+      await direito(a.x, a.y)
+      const it = await itemDoMenu("Editar")
+      await clicarEm(j, it.x, it.y, 1)
+      await esperar(500)
+      await clicarEm(j, it.x, it.y, 1)
+      await esperar(300)
+      ok("G3 depois do anteparo o clique no mesmo ponto chega ao que esta embaixo", (await dom(`window.__vazou`)) >= 1, `vazou=${await dom(`window.__vazou`)}`)
+      await j.ev(`T.trocarTela("show","segmentado"); await esp(600); return 1`)
+      await limpar() }
+
     // ---------- F: blocos (um projeto de blocos nossos: o do Sirvo e trancado e recusa)
     await j.ev(`const p=get(S.projects).f3; window.__orig=JSON.parse(JSON.stringify(p.shows)); const sh=window.__orig.filter(x=>(x.type||"show")==="show");
 S.projects.update(a=>{a.f3.shows=[{id:"t7a",type:"section",name:"Louvor"},sh[0],sh[1],{id:"t7b",type:"section",name:"Palavra"},sh[2],{id:"t7c",type:"section",name:"Final"},sh[3]]; return a}); S.activeProject.set("f3"); await esp(900); return 1`)

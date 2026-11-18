@@ -9,13 +9,13 @@ import { get } from "svelte/store"
 import { addProjectItem } from "../../converters/project"
 import { AudioPlayer } from "../../audio/audioPlayer"
 import { playScripture } from "../drawer/bible/scripture"
-import { activeProject, editingProjectTemplate, outLocked, overlays, projects } from "../../stores"
+import { activeProject, contextActive, editingProjectTemplate, outLocked, overlays, projects } from "../../stores"
 import { newToast } from "../../utils/common"
 import { falhaAlta } from "../../utils/aliancaFalha"
 import { porShowNoFim } from "../../utils/aliancaBiblioteca"
 import { motivoSemCulto } from "../../utils/aliancaGaveta"
 import { dispararNoAlvo } from "../../utils/aliancaGavetaToque"
-import { blocosDe, criarEngolidor, moverBloco, moverItem } from "../../utils/aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, moverBloco, moverItem } from "../../utils/aliancaMenusBibliotecaLogica"
 import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
 import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
@@ -60,6 +60,38 @@ if (typeof window !== "undefined") {
         },
         true
     )
+}
+
+// ---------------------------------------------------------------- o anteparo (revisao da fatia 6, achado 2)
+
+// O 1o toque num item fecha o menu; o 2o toque de um duplo clique cairia no que estava embaixo (um slide, o ▶ de outra linha: o mesmo desenho do
+// incidente de 09/ago). Por ~250 ms, so sobre o retangulo que o menu ocupava, o toque e engolido. Transparente: nao desenha nada, nao fica no caminho
+// de um clique fora do retangulo nem depois do prazo. Os toques que ainda caem no menu em fade tambem sao engolidos (a acao nao roda 2x).
+const anteparo = criarAnteparo(250)
+const GESTOS_DE_TOQUE = ["pointerdown", "pointerup", "mousedown", "mouseup", "click", "dblclick"]
+if (typeof window !== "undefined") {
+    window.addEventListener(
+        "click",
+        (e) => {
+            const menu = e.target instanceof Element ? e.target.closest(".contextMenu") : null
+            if (menu) anteparo.armar(menu.getBoundingClientRect(), performance.now())
+        },
+        true
+    )
+    for (const tipo of GESTOS_DE_TOQUE)
+        window.addEventListener(
+            tipo,
+            (e) => {
+                const me = e as MouseEvent
+                if (me.button !== 0 || !anteparo.engole({ x: me.clientX, y: me.clientY }, performance.now())) return
+                const noMenu = e.target instanceof Element && !!e.target.closest(".contextMenu")
+                if (noMenu && get(contextActive)) return // o menu segue aberto: o toque e dele
+                e.preventDefault()
+                e.stopImmediatePropagation()
+                e.stopPropagation()
+            },
+            true
+        )
 }
 
 // ---------------------------------------------------------------- as acoes

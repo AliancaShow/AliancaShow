@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { blocosDe, criarEngolidor, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
 
 const S = (id: string) => ({ id, type: "section", name: id })
 const I = (id: string) => ({ id, type: "show" })
@@ -67,5 +67,26 @@ describe("criarEngolidor (o gesto repetido no mesmo item em < 400 ms nao dispara
         expect(e("x", 1200)).toBe(true)
         expect(e("y", 1200)).toBe(false)
         expect(e("x", 1400)).toBe(false)
+    })
+})
+
+describe("criarAnteparo (o 2o toque do duplo clique nao atravessa o menu que fechou)", () => {
+    const menu = { left: 100, top: 200, right: 300, bottom: 400 }
+    it("engole dentro do retangulo e da janela; passa fora do retangulo, antes de armar e depois do prazo", () => {
+        const a = criarAnteparo(250)
+        expect(a.engole({ x: 150, y: 250 }, 0)).toBe(false)
+        a.armar(menu, 1000)
+        expect(a.engole({ x: 150, y: 250 }, 1100)).toBe(true)
+        expect(a.engole({ x: 99, y: 250 }, 1100)).toBe(false)
+        expect(a.engole({ x: 150, y: 401 }, 1100)).toBe(false)
+        expect(a.engole({ x: 150, y: 250 }, 1250)).toBe(false)
+        expect(a.engole({ x: 150, y: 250 }, 1260)).toBe(false)
+    })
+    it("armar de novo troca o retangulo e reinicia o prazo", () => {
+        const a = criarAnteparo(250)
+        a.armar(menu, 0)
+        a.armar({ left: 0, top: 0, right: 10, bottom: 10 }, 200)
+        expect(a.engole({ x: 150, y: 250 }, 210)).toBe(false)
+        expect(a.engole({ x: 5, y: 5 }, 400)).toBe(true)
     })
 })
