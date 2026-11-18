@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { onDestroy, onMount } from "svelte"
     import { Main } from "../../../../types/IPC/Main"
     import { AudioMicrophone } from "../../../audio/audioMicrophone"
@@ -7,6 +7,7 @@
     import { activeFocus, activeShow, focusMode, playingAudio } from "../../../stores"
     import Icon from "../../helpers/Icon.svelte"
     import Button from "../../inputs/Button.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
 
     export let mic: { id: string; name: string }
 
@@ -74,19 +75,21 @@
         context?.close().catch(() => {})
     })
 
+    // o clique so seleciona; o ▶ liga/desliga o microfone (revisao da fatia 6, achado 4)
+    function ligar() {
+        if (!context || gavetaNaoToca()) return
+        AudioMicrophone.start(mic.id, { name: mic.name }, { pauseIfPlaying: true })
+    }
+
     $: micId = "mic_sub_" + mic.id
     $: muted = !$playingAudio[micId]
 </script>
 
-<div class="main">
+<div class="main" data-tocavel>
     <Button
         style="width: 100%;"
         bold={false}
         disabled={!context}
-        on:click={() => {
-            if (!context || gavetaNaoToca()) return
-            AudioMicrophone.start(mic.id, { name: mic.name }, { pauseIfPlaying: true })
-        }}
         on:dblclick={(e) => {
             if (e.ctrlKey || e.metaKey) return
 
@@ -109,6 +112,7 @@
             </div>
         {/if}
     </Button>
+    <TocarAgora titulo={muted ? "Ligar o microfone" : "Desligar o microfone"} desligado={!context} on:tocar={ligar} />
 </div>
 
 <style>

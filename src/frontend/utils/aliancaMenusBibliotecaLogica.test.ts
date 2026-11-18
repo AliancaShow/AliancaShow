@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { blocosDe, criarEngolidor, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, motivoDaTrava, moverBloco, moverItem, renomearBloco, semDestino } from "./aliancaMenusBibliotecaLogica"
 
 const S = (id: string) => ({ id, type: "section", name: id })
 const I = (id: string) => ({ id, type: "show" })
@@ -67,5 +67,61 @@ describe("criarEngolidor (o gesto repetido no mesmo item em < 400 ms nao dispara
         expect(e("x", 1200)).toBe(true)
         expect(e("y", 1200)).toBe(false)
         expect(e("x", 1400)).toBe(false)
+    })
+})
+
+describe("criarAnteparo (o 2o toque do duplo clique nao atravessa o menu que fechou)", () => {
+    const menu = { left: 100, top: 200, right: 300, bottom: 400 }
+    it("engole dentro do retangulo e da janela; passa fora do retangulo, antes de armar e depois do prazo", () => {
+        const a = criarAnteparo(250)
+        expect(a.engole({ x: 150, y: 250 }, 0)).toBe(false)
+        a.armar(menu, 1000)
+        expect(a.engole({ x: 150, y: 250 }, 1100)).toBe(true)
+        expect(a.engole({ x: 99, y: 250 }, 1100)).toBe(false)
+        expect(a.engole({ x: 150, y: 401 }, 1100)).toBe(false)
+        expect(a.engole({ x: 150, y: 250 }, 1250)).toBe(false)
+        expect(a.engole({ x: 150, y: 250 }, 1260)).toBe(false)
+    })
+    it("armar de novo troca o retangulo e reinicia o prazo", () => {
+        const a = criarAnteparo(250)
+        a.armar(menu, 0)
+        a.armar({ left: 0, top: 0, right: 10, bottom: 10 }, 200)
+        expect(a.engole({ x: 150, y: 250 }, 210)).toBe(false)
+        expect(a.engole({ x: 5, y: 5 }, 400)).toBe(true)
+    })
+})
+
+describe("itemContinuaLa (o menu do roteiro age no item em que abriu, nao na posicao)", () => {
+    const l = [{ id: "a" }, { id: "b" }, { id: "c" }]
+    it("confere o id na posicao", () => {
+        expect(itemContinuaLa(l, 1, "b")).toBe(true)
+        expect(itemContinuaLa(l, 1, "c")).toBe(false)
+        expect(itemContinuaLa([{ id: "x" }, ...l], 1, "b")).toBe(false)
+        expect(itemContinuaLa(l.slice(0, 1), 1, "b")).toBe(false)
+    })
+    it("sem id ou indice invalido recusa", () => {
+        expect(itemContinuaLa(l, 0, null)).toBe(false)
+        expect(itemContinuaLa(l, 0, "")).toBe(false)
+        expect(itemContinuaLa(l, -1, "a")).toBe(false)
+        expect(itemContinuaLa(l, NaN, "a")).toBe(false)
+    })
+})
+
+describe("motivoDaTrava (cabecalho e rodape do Sirvo so recusam estrutura; Novo bloco so recusa roteiro travado)", () => {
+    const sirvo = { sirvo: { eventId: "e1" } }
+    const cab = { id: "sirvo_bloco_x", type: "section" }
+    const rod = { id: "sirvo_fim", type: "section" }
+    const meu = { id: "s1", type: "section" }
+    it("estrutura: cabecalho e rodape do Sirvo recusam; bloco do operador passa", () => {
+        expect(motivoDaTrava(sirvo, cab, "estrutura", false)).toContain("Sirvo")
+        expect(motivoDaTrava(sirvo, rod, "estrutura", false)).toContain("Fora do roteiro")
+        expect(motivoDaTrava(sirvo, meu, "estrutura", false)).toBe("")
+        expect(motivoDaTrava({}, cab, "estrutura", false)).toBe("")
+    })
+    it("novo bloco: depois de um bloco do Sirvo ou do rodape pode; roteiro travado e modelo recusam", () => {
+        expect(motivoDaTrava(sirvo, cab, "novo", false)).toBe("")
+        expect(motivoDaTrava(sirvo, rod, "novo", false)).toBe("")
+        expect(motivoDaTrava({ ...sirvo, sectionsLocked: true }, cab, "novo", false)).not.toBe("")
+        expect(motivoDaTrava(sirvo, cab, "novo", true)).not.toBe("")
     })
 })

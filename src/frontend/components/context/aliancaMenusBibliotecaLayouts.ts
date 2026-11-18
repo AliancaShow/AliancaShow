@@ -4,8 +4,8 @@ import { semDestino } from "../../utils/aliancaMenusBibliotecaLogica"
 
 export type Layout = { [id: string]: string[] }
 /** layouts que o FreeShow nao tinha (a linha de show usava o menu `default`, com a busca rapida): nascem aqui */
-export const CRIADOS = ["show_drawer", "project_effect"]
-export const SO_O_LUGAR = "o clique simples agora so seleciona (a previa)"
+export const CRIADOS = ["show_drawer", "project_effect", "stream_card"]
+export const SO_O_LUGAR = "SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)"
 const SEM_MARCA = "a lista nova nao mostra essa marca"
 
 /** layout -> o menu novo */
@@ -25,6 +25,12 @@ export const NOVOS: Layout = {
     action_readonly: ["alianca_agora", "SEPARATOR", "action_tag_filter"],
     camera_card: ["alianca_agora", "SEPARATOR", "GROUP_edit", "startup_activate", "SEPARATOR", "recording"],
     screen_card: ["alianca_agora", "SEPARATOR", "recording"],
+    // NDI e BlackMagic: entradas de video que vao ao fundo da saida; o FreeShow nao tinha menu para elas (revisao da fatia 6, achado 4)
+    stream_card: ["alianca_agora"],
+    // video online (YouTube/Vimeo), efeito sonoro e stream de audio: o menu antigo ganha o "Mostrar agora" no topo (o clique so seleciona)
+    player_button: ["alianca_agora", "SEPARATOR", "GROUP_open", "player_tag_set", "player_tag_filter", "SEPARATOR", "rename", "delete"],
+    audio_effect_button: ["alianca_agora", "SEPARATOR", "GROUP_rename_only", "remove", "SEPARATOR", "system_open"],
+    audio_stream: ["alianca_agora", "SEPARATOR", "GROUP_edit", "delete"],
     // roteiro: itens
     project_show: ["alianca_editar", "alianca_agora_item", "SEPARATOR", "alianca_subir", "alianca_descer", "SEPARATOR", "alianca_tirar"],
     project_show_placeholder: ["alianca_subir", "alianca_descer", "SEPARATOR", "alianca_tirar"],
@@ -47,19 +53,23 @@ export const NOVOS: Layout = {
 /** layout -> item do menu ANTIGO que nao esta no novo -> para onde foi. Texto vai para a descricao do PR e para o teste */
 export const REMOVIDOS: { [layout: string]: { [item: string]: string } } = {
     show_drawer: {},
-    media_card: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    audio_button: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    audio_button_playlist: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    overlay_card: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    overlay_card_default: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
+    media_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    audio_button: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    audio_button_playlist: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    overlay_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    overlay_card_default: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
     overlay_card_readonly: { preview: SO_O_LUGAR },
-    effect_card: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    effect_card_default: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
+    effect_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    effect_card_default: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
     scripture_verse: {},
     action: {},
     action_readonly: {},
     camera_card: {},
     screen_card: {},
+    stream_card: {},
+    player_button: {},
+    audio_effect_button: {},
+    audio_stream: {},
     project_show: { GROUP_rename_only: "o nome do show se edita no editor (Editar); a lista nova nao renomeia no lugar", remove: "Tirar do roteiro", mark_played: SEM_MARCA, private: "show privado nao tem marca na lista nova" },
     project_show_placeholder: { remove: "Tirar do roteiro" },
     project_show_placeholder_template: { GROUP_rename_only: "a lista nova nao renomeia no lugar", remove: "Tirar do roteiro" },

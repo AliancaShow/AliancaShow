@@ -9,7 +9,7 @@
 //   F. botao direito num bloco: Editar titulo (cursor no titulo), Mover, Novo bloco, Tirar
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-6"
 mkdirSync(saida, { recursive: true })
@@ -157,6 +157,24 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await clicarItem("Mostrar agora")
       ok("D3 saida travada: recusa e nada vai ao ar", !(await algoNoAr()) && (await escritas()) === 0)
       await j.ev(`S.outLocked.set(false); return 1`)
+      await limpar()
+      // revisao da fatia 6, achado 6: botao direito em cima do icone do cartao (a estrela de favorito) manda o ITEM ao ar; o icone nao e executado
+      const caminho = ar.find((x) => x.b)?.b
+      await j.ev(`S.media.update(a=>{a[${JSON.stringify(caminho)}]={...(a[${JSON.stringify(caminho)}]||{}),favourite:true}; return a}); await esp(700); return 1`)
+      const est = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#media_card"] .icons button')`)
+      if (est.ok) {
+        await direito(est.x, est.y)
+        await clicarItem("Mostrar agora")
+        const arI = await noAr()
+        const fav = await dom(`!!get(S.media)[${JSON.stringify(caminho)}]?.favourite`)
+        ok("D2b Mostrar agora com o botao direito no icone do cartao: a midia vai ao ar e o favorito nao e tirado", arI.some((x) => x.b) && fav, JSON.stringify({ arI, fav }))
+        // achado 9: repetir (passado o engolidor) nao tira do ar
+        await esperar(600)
+        await direito(est.x, est.y)
+        await clicarItem("Mostrar agora")
+        ok("D2c Mostrar agora num item que ja esta no ar nao o tira do ar (idempotente)", (await noAr()).some((x) => x.b))
+      } else ok("D2b o cartao tem o icone de favorito", false, est.motivo)
+      await j.ev(`S.media.update(a=>{a[${JSON.stringify(caminho)}]={...a[${JSON.stringify(caminho)}],favourite:false}; return a}); await esp(300); return 1`)
       await limpar() }
     await noDaArvore("Sobreposições")
     { const a = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#effect_card"]')`)
@@ -165,6 +183,26 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await clicarItem("Mostrar agora")
       const ar = await noAr()
       ok("D4 Mostrar agora num efeito poe o efeito no ar", ar.some((x) => x.e || x.ov), JSON.stringify(ar))
+      await limpar() }
+    // achado 8: Ctrl+Enter na busca de Sobreposicoes manda a primeira ao ar (o PR lista Ctrl+Enter como caminho para o ar)
+    { const nome = await dom(`(()=>{const o=Object.values(get(S.overlays)).find(x=>x.name&&x.name.length>3); return o?o.name:null})()`)
+      // a sub-aba "Tudo" da arvore mostra as sobreposicoes (a "Efeitos" mostra so os efeitos)
+      const tudo = await localizar(j, `[...document.querySelectorAll('[data-acao=arvore] button')].find(b=>b.innerText.split(String.fromCharCode(10))[0].trim()==="Tudo")`)
+      if (tudo.ok) { await clicarEm(j, tudo.x, tudo.y); await esperar(700) }
+      const campo = await localizar(j, `document.querySelector('.drawer_search')`)
+      if (nome && campo.ok) {
+        await clicarEm(j, campo.x, campo.y)
+        await j.enviar("Input.insertText", { text: nome.slice(0, 4) })
+        await esperar(500)
+        await j.ev(`window.__n=0; window.__m=0; return 1`)
+        await tecla(j, "Enter", { ctrl: true })
+        await esperar(700)
+        ok("D4b Ctrl+Enter na busca de Sobreposicoes manda a sobreposicao ao ar", (await noAr()).some((x) => x.ov) && (await escritas()) >= 1, JSON.stringify(await noAr()))
+        await clicarEm(j, campo.x, campo.y)
+        await tecla(j, "a", { ctrl: true })
+        await tecla(j, "Backspace")
+        await esperar(300)
+      } else ok("D4b a busca e uma sobreposicao existem no perfil", false, `${nome} ${campo.motivo}`)
       await limpar() }
     await noDaArvore("Bíblia")
     { const v = await localizar(j, `document.querySelector('[data-regiao=biblioteca] .verse')`)
@@ -176,6 +214,21 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
         await clicarItem("Mostrar agora")
         await esperar(500)
         ok("D6 Mostrar agora num versiculo escreve em outputs (o texto vai ao ar)", (await escritas()) >= 1, `n=${await escritas()}`)
+        // revisao da fatia 6, achado 1: com a Biblia JA no ar (o caso da leitura), Mostrar agora no versiculo seguinte tem que mandar o versiculo ao ar
+        const v2 = await localizar(j, `document.querySelectorAll('[data-regiao=biblioteca] .verse')[2]`)
+        await j.ev(`window.__n=0; window.__m=0; return 1`)
+        await direito(v2.x, v2.y)
+        await clicarItem("Mostrar agora")
+        await esperar(700)
+        ok("D7 versiculo A no ar: Mostrar agora no versiculo B manda o B ao ar (escreve em outputs)", (await escritas()) >= 1, `n=${await escritas()}`)
+        // achado 7: com a Biblia no ar o botao "proximo" do rodape anda a selecao E atualiza o telao (como o Ctrl+seta)
+        const prox = await localizar(j, `[...document.querySelectorAll('[data-regiao=biblioteca] button')].find(b=>/Arrow Right/.test((b.getAttribute("title")||"")+(b.getAttribute("data-title")||"")))`)
+        if (prox.ok) {
+          await j.ev(`window.__n=0; window.__m=0; return 1`)
+          await clicarEm(j, prox.x, prox.y)
+          await esperar(900)
+          ok("D8 Biblia no ar: o botao proximo do rodape manda o versiculo seguinte ao telao", (await escritas()) >= 1, `n=${await escritas()}`)
+        } else ok("D8 o botao proximo existe com a Biblia no ar", false, prox.motivo)
         await limpar()
       } else ok("D5 versiculo existe no perfil", false) }
     await noDaArvore("Shows")
@@ -200,13 +253,103 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await direito(c.x, c.y)
       await clicarItem("Mostrar agora")
       ok("E4 Mostrar agora do item vai ao ar e o roteiro nao muda", (await algoNoAr()) && (await projeto()) === antes)
+      // achado 11: Mostrar agora de um show do roteiro abre ESSE item no centro (o leiaute gravado nele), como o clique faz: o telao e a grade concordam
+      ok("E4b Mostrar agora de um show do roteiro abre o item clicado no centro (indice 0)", (await dom(`get(S.activeShow)?.index`)) === 0, `index=${await dom(`get(S.activeShow)?.index`)}`)
       await limpar()
       const d = await localizar(j, `[...document.querySelectorAll('[data-acao=lista-roteiro] button.item')].slice(-1)[0]`)
       const nAntes = await tamanho()
       await direito(d.x, d.y)
       await clicarItem("Tirar do roteiro")
       ok("E5 Tirar do roteiro tira so o item clicado", (await tamanho()) === nAntes - 1)
+      // revisao da fatia 6, achado 3: pela mesma porta do Delete (o rastro "tirado · Desfazer" aparece e o Desfazer repoe o item)
+      await esperar(300)
+      ok("E5b Tirar do roteiro deixa o rastro \"tirado\" com Desfazer", await dom(`!!document.querySelector('[data-acao=lista-roteiro] .tirado .td')`))
+      { const td = await localizar(j, `document.querySelector('[data-acao=lista-roteiro] .tirado .td')`)
+        if (td.ok) { await clicarEm(j, td.x, td.y); await esperar(500) }
+        ok("E5c Desfazer repoe o item no mesmo lugar", (await tamanho()) === nAntes && (await projeto()) === antes, `tam=${await tamanho()}`) }
     }
+
+    // ---------- I: as portas da biblioteca que antes iam ao ar com o clique simples (revisao da fatia 6, achado 4): so selecionam; ir ao ar e o ▶ ou o Mostrar agora
+    await limpar()
+    await noDaArvore("Mídia")
+    await noDaArvore("Entradas")
+    { const t = await localizar(j, `[...document.querySelectorAll('[data-regiao=biblioteca] button')].find(b=>b.innerText.split(String.fromCharCode(10))[0].trim()==="Telas")`)
+      if (t.ok) { await clicarEm(j, t.x, t.y); await esperar(1500) } }
+    { const tela = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#screen_card"]')`)
+      if (tela.ok) {
+        await clicarEm(j, tela.x, tela.y); await esperar(700)
+        ok("I1 clique simples numa Tela (Entradas): zero escritas em outputs e nada no ar", (await escritas()) === 0 && !(await algoNoAr()), `n=${await escritas()}`)
+        await clicarEm(j, tela.x, tela.y, 1); await clicarEm(j, tela.x, tela.y, 2); await esperar(700)
+        ok("I2 duplo clique numa Tela: nada no ar", (await escritas()) === 0 && !(await algoNoAr()))
+        const play = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#screen_card"] [data-acao=tocar-ao-ar]')`)
+        if (play.ok) {
+          await clicarEm(j, play.x, play.y); await esperar(800)
+          ok("I3 o ▶ da Tela manda a tela ao fundo da saida", await algoNoAr(), JSON.stringify(await noAr()))
+          await limpar()
+        } else ok("I3 a Tela tem o ▶", false, play.motivo)
+        await direito(tela.x, tela.y)
+        await clicarItem("Mostrar agora")
+        await esperar(800)
+        ok("I4 Mostrar agora (botao direito) manda a Tela ao ar", await algoNoAr(), JSON.stringify(await noAr()))
+        await limpar()
+      } else ok("I1 ha uma Tela para testar (Mídia > Entradas > Telas)", false, tela.motivo) }
+    // as cameras (Cameras/Cam estao no fecho da saida: o ▶ entra por tocavelLista)
+    { const c = await localizar(j, `[...document.querySelectorAll('[data-regiao=biblioteca] button')].find(b=>b.innerText.split(String.fromCharCode(10))[0].trim()==="Câmeras")`)
+      if (c.ok) { await clicarEm(j, c.x, c.y); await esperar(1500) }
+      const cam = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#camera_card"]')`)
+      if (cam.ok) {
+        await clicarEm(j, cam.x, cam.y); await esperar(700)
+        ok("I5 clique simples numa Camera: zero escritas em outputs e nada no ar", (await escritas()) === 0 && !(await algoNoAr()), `n=${await escritas()}`)
+        ok("I6 a Camera tem o ▶ (entra por tocavelLista)", await dom(`!!document.querySelector('[data-regiao=biblioteca] [class*="#camera_card"] [data-acao=tocar-ao-ar]')`))
+      } else ok("I5 ha uma Camera no perfil", false, cam.motivo) }
+    await noDaArvore("Shows")
+
+    // ---------- G: o 2o toque do duplo clique nao atravessa o menu (revisao da fatia 6, achado 2)
+    await limpar()
+    await j.ev(`window.__vazou=0; if(!window.__vazouLigado){ window.__vazouLigado=1; document.addEventListener("click",(e)=>{ if(!e.target.closest(".contextMenu")) window.__vazou++ }) } return 1`)
+    for (const [rotulo, pausa] of [["120 ms (duplo clique de gente: o menu ja fechou)", 120], ["0 ms (o menu ainda esta no fade)", 0]]) {
+      const a = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[1]`)
+      const antesG = await projeto()
+      await j.ev(`window.__vazou=0; return 1`)
+      await direito(a.x, a.y)
+      const it = await itemDoMenu("Mover para baixo")
+      await clicarEm(j, it.x, it.y, 1)
+      if (pausa) await esperar(pausa)
+      await clicarEm(j, it.x, it.y, 2)
+      await esperar(500)
+      ok(`G1 duplo clique (${rotulo}): o 2o toque nao cai no que estava embaixo`, (await dom(`window.__vazou`)) === 0 && (await escritas()) === 0, `vazou=${await dom(`window.__vazou`)} n=${await escritas()}`)
+      // um unico "Mover para cima" desfaz: so houve UM mover
+      const b = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[2]`)
+      await direito(b.x, b.y)
+      await clicarItem("Mover para cima")
+      ok(`G2 duplo clique (${rotulo}): a acao rodou uma vez so`, (await projeto()) === antesG)
+      await limpar()
+    }
+    // passado o anteparo o ponto volta a ser do que esta embaixo (nao e uma area morta)
+    { const a = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[1]`)
+      await j.ev(`window.__vazou=0; return 1`)
+      await direito(a.x, a.y)
+      const it = await itemDoMenu("Editar")
+      await clicarEm(j, it.x, it.y, 1)
+      await esperar(500)
+      await clicarEm(j, it.x, it.y, 1)
+      await esperar(300)
+      ok("G3 depois do anteparo o clique no mesmo ponto chega ao que esta embaixo", (await dom(`window.__vazou`)) >= 1, `vazou=${await dom(`window.__vazou`)}`)
+      await j.ev(`T.trocarTela("show","segmentado"); await esp(600); return 1`)
+      await limpar() }
+
+    // ---------- H: o roteiro mudou com o menu aberto (revisao da fatia 6, achado 5): recusa, nao age no item que passou a ocupar a posicao
+    await limpar()
+    { const a = await localizar(j, `document.querySelectorAll('[data-acao=lista-roteiro] button.item')[1]`)
+      await j.ev(`window.__origH=JSON.parse(JSON.stringify(get(S.projects)[get(S.activeProject)].shows)); return 1`)
+      await direito(a.x, a.y)
+      // o Sirvo (ou outro PC) poe um item NA FRENTE com o menu aberto: a posicao 1 agora e outro item
+      await j.ev(`S.projects.update(a=>{const p=a[get(S.activeProject)]; p.shows=[{...window.__origH[0]}, ...window.__origH]; return a}); await esp(600); return 1`)
+      const depoisInsercao = await projeto()
+      await clicarItem("Tirar do roteiro")
+      ok("H1 roteiro mudou com o menu aberto: Tirar do roteiro recusa e nao tira o item que ocupa a posicao", (await projeto()) === depoisInsercao, `antes=${depoisInsercao.split("|").length} depois=${(await projeto()).split("|").length}`)
+      await j.ev(`S.projects.update(a=>{a[get(S.activeProject)].shows=window.__origH; return a}); await esp(400); return 1`)
+      await limpar() }
 
     // ---------- F: blocos (um projeto de blocos nossos: o do Sirvo e trancado e recusa)
     await j.ev(`const p=get(S.projects).f3; window.__orig=JSON.parse(JSON.stringify(p.shows)); const sh=window.__orig.filter(x=>(x.type||"show")==="show");

@@ -40,10 +40,14 @@ export function podeMarcar(): boolean {
  * Versiculo: o que o antigo "duplo clique" fazia (o clique so previa); os demais: o clique.
  */
 export function dispararNoAlvo(alvo: Element | null, tipo: "click" | "dblclick" = "click"): boolean {
-    if (!alvo || !(alvo as HTMLElement).isConnected) {
-        falhaAlta("mostrar-agora", "o item em que o botao direito foi dado nao esta mais na tela")
+    // sem item e defeito de codigo (faixa de falha); o item que SAIU da tela entre o botao direito e o clique (a lista recriou os cartoes: o Sirvo acabou de
+    // baixar um arquivo, o roteiro mudou) e situacao normal de culto: so avisa o operador (revisao da fatia 6, achado 10)
+    if (!alvo) {
+        falhaAlta("mostrar-agora", "o menu nao achou o item em que o botao direito foi dado")
         return false
     }
+    // (quem chama avisa o operador: este arquivo nao importa `common`, que arrasta componentes de popup e quebra os testes de logica que o importam)
+    if (!(alvo as HTMLElement).isConnected) return false
     autorizarAr(() => alvo.dispatchEvent(new MouseEvent(tipo, { bubbles: true, cancelable: true, view: window, detail: tipo === "dblclick" ? 2 : 1 })))
     return true
 }
