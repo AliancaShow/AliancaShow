@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, destinoDaTecla, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -120,6 +120,21 @@ describe("spotlight: a selecao segue a identidade, nao o indice", () => {
         const ids = SECOES.map((s) => s.id)
         expect(ids[0]).toBe("versiculo")
         for (const tarde of ["midia", "audio"]) for (const cedo of ["versiculo", "show", "acao"]) expect(ids.indexOf(tarde)).toBeGreaterThan(ids.indexOf(cedo))
+    })
+})
+
+describe("spotlight: o teclado do telao fica de fora mesmo com o foco fora do campo", () => {
+    const t = (key: string, mods: { ctrl?: boolean; alt?: boolean } = {}, foco = false) => destinoDaTecla({ key, ctrl: !!mods.ctrl, alt: !!mods.alt }, foco)
+    it("com o foco no campo o fluxo normal segue (o campo e .edit, o telao ja ignora)", () => {
+        for (const k of ["Escape", " ", "ArrowLeft", "a", "PageDown"]) expect(t(k, {}, true)).toBe("deixar")
+    })
+    it("com o foco fora do campo: Esc fecha a busca, o resto e engolido (nunca chega ao telao)", () => {
+        expect(t("Escape")).toBe("fechar")
+        for (const k of [" ", "ArrowLeft", "ArrowRight", "PageDown", "PageUp", "a", "1", "F5", "Home", "."]) expect(t(k), k).toBe("engolir")
+        expect(t("o", { ctrl: true })).toBe("engolir")
+    })
+    it("so modificador e Tab nao fazem nada por si", () => {
+        for (const k of ["Control", "Shift", "Alt", "Meta", "Tab"]) expect(t(k)).toBe("deixar")
     })
 })
 

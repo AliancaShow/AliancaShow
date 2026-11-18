@@ -249,6 +249,18 @@ export function indiceDaChave(lista: { chave: string }[], chave: string | null):
     return i < 0 ? 0 : i
 }
 
+/**
+ * O que fazer com uma tecla enquanto a busca esta aberta e o foco ESCAPOU do campo (clique na barra de rolagem, num titulo, na barra de dicas...).
+ * No campo o fluxo normal segue. Fora dele o teclado do telao (Esc que limpa, setas e espaco que avancam, letras de atalho) nao pode agir: Esc fecha a
+ * busca, o resto e engolido. So modificador sozinho e Tab passam.
+ */
+export function destinoDaTecla(e: { key: string; ctrl: boolean; alt: boolean }, focoNoCampo: boolean): "deixar" | "fechar" | "engolir" {
+    if (focoNoCampo) return "deixar"
+    if (e.key === "Escape") return "fechar"
+    if (["Control", "Shift", "Alt", "Meta", "Tab", "CapsLock"].includes(e.key)) return "deixar"
+    return "engolir"
+}
+
 /** a seta anda sem dar a volta (parar no fim e a regra da lista do app); lista vazia = -1 */
 export function andar(atual: number, passo: number, total: number): number {
     if (total <= 0) return -1

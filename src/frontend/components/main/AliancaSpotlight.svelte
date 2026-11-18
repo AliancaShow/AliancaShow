@@ -15,8 +15,9 @@
     import { quickSearchActive, activePopup } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { acaoDoResultado, buscarAcoes, buscarAudio, buscarMidia, buscarShows, buscarVersiculo, executarResultado, type Resultado } from "../../utils/aliancaSpotlight"
-    import { andar, enterRepetido, indiceDaChave, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
+    import { andar, destinoDaTecla, enterRepetido, indiceDaChave, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
     import { tela } from "../../utils/aliancaTela"
+    import { escFechou } from "../../utils/aliancaToque"
     import { highlightText } from "../quicksearch/searchHighlight"
     import Icon from "../helpers/Icon.svelte"
 
@@ -57,9 +58,15 @@
     // ---------- abrir e fechar
     $: if ($quickSearchActive) abriu()
     let jaAberta = false
+    // onde o foco estava ao abrir (o chat, o campo da mensagem pro palco...): fechar sem escolher devolve o foco para la
+    let focoAnterior: HTMLElement | null = null
+    let escolheu = false
     async function abriu() {
         if (jaAberta) return
         jaAberta = true
+        const a = document.activeElement as HTMLElement | null
+        focoAnterior = a && a !== document.body && a !== campo ? a : null
+        escolheu = false
         zerar()
         await tick()
         campo?.focus()
@@ -78,8 +85,13 @@
         selChave = null
     }
     function fechou() {
+        if (!jaAberta) return
         jaAberta = false
         zerar()
+        const voltar = focoAnterior
+        focoAnterior = null
+        // escolher um resultado leva a atencao para onde o resultado foi aberto: so Esc, Ctrl+K e clique fora devolvem o foco
+        if (!escolheu && voltar?.isConnected) tick().then(() => (!document.activeElement || document.activeElement === document.body) && voltar.focus())
     }
     $: if (!$quickSearchActive) fechou()
 
@@ -141,6 +153,7 @@
     async function escolher(r: Resultado, acao: AcaoDeTecla | null) {
         if (!acao) return
         // o segundo Enter (ou clique) no mesmo resultado em menos de 400 ms nao faz nada: auto-repeat da tecla e duplo clique
+        escolheu = true
         const chave = r.chave + "|" + acao
         const agora = performance.now()
         if (enterRepetido(ultimo, chave, agora)) return
@@ -148,6 +161,9 @@
         await executarResultado(r, acao)
     }
 
+    function manterFoco(e: MouseEvent) {
+        if (e.target !== campo) e.preventDefault()
+    }
     function marcar(i: number) {
         selChave = lista[i]?.chave ?? null
     }
@@ -163,6 +179,17 @@
             return
         }
         if (!$quickSearchActive) return
+        // o foco escapou do campo: o teclado do telao nao pode agir (Esc limparia o telao, seta e espaco avancariam o slide no ar)
+        const destino = destinoDaTecla({ key: e.key, ctrl, alt: e.altKey }, document.activeElement === campo)
+        if (destino !== "deixar" && e.key !== "Enter" && e.key !== "ArrowDown" && e.key !== "ArrowUp") {
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            if (destino === "fechar") {
+                escFechou()
+                quickSearchActive.set(false)
+            } else campo?.focus()
+            return
+        }
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault()
             e.stopPropagation()
@@ -194,7 +221,8 @@
 <svelte:window on:keydown|capture={teclar} />
 
 {#if $quickSearchActive}
-    <div class="quicksearch spotlight" data-acao="spotlight" role="dialog" aria-label="Buscar">
+    <!-- o mousedown em qualquer parte que nao seja o campo nao tira o foco dele (o foco fora do campo deixaria o teclado do telao agir) -->
+    <div class="quicksearch spotlight" data-acao="spotlight" role="dialog" aria-label="Buscar" on:mousedown={manterFoco}>
         <div class="campo">
             <span class="lupa" aria-hidden="true"><Icon id="search" size={1.2} white /></span>
             <input bind:this={campo} class="edit" data-acao="spotlight-campo" type="text" placeholder="Buscar música, letra, mídia, versículo (Rm 8:28) ou ação" spellcheck="false" autocomplete="off" bind:value={consulta} on:input={digitou} />
