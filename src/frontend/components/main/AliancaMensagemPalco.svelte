@@ -178,6 +178,7 @@
         letter-spacing: 0.04em;
     }
     .modo {
+        min-width: 82px;
         height: 22px;
         padding: 0 8px;
         border: 1px solid var(--luz-linha);

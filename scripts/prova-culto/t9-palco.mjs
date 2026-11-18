@@ -96,9 +96,14 @@ ok("D. com retorno mas sem a saida respeitar o modo: recusa e diz o porque", /ou
 ok("D. o telao nao foi tocado (outputs so ganhou o retorno falso)", (await dom(`JSON.stringify(Object.keys(get(S.outputs)).filter(k=>k!=="retorno_t9").map(k=>[k,get(S.outputs)[k].out||null]))`)) === JSON.stringify(Object.keys(JSON.parse(base)).map((k) => [k, JSON.parse(base)[k].out || null])))
 
 // ---------- E. indicador (estado forcado na loja: o gesto real so liga depois do ajuste aprovado em output.ts)
+// a coluna inteira ANTES da faixa: a faixa ambar nao pode deslocar nada (nem reservar espaco), nem os 38 px que ela ocupava
+const colunaAlvos = `[...document.querySelectorAll('[data-acao=tela-principal],[data-acao=modo-so-retorno],[data-acao=mensagem-palco],[data-acao=enviar-mensagem-palco],[data-acao=estado-mensagem-palco]')].map(e=>{const r=e.getBoundingClientRect();return [e.dataset.acao,Math.round(r.x),Math.round(r.y),Math.round(r.width),Math.round(r.height)]})`
+const antesFaixa = await dom(`JSON.stringify(${colunaAlvos})`)
 await j.ev(`const R=await import(U("utils/aliancaSoRetorno")); R.soRetorno.set(true); await esp(400); return 1`)
 ok("E. a faixa ambar aparece no topo da coluna No ar", await dom(`!!${sel("faixa-so-retorno")} && ${sel("faixa-so-retorno")}.textContent.includes("SÓ RETORNO")`))
-ok("E. a faixa e o primeiro bloco da coluna", await dom(`(()=>{const f=${sel("faixa-so-retorno")}; return f.parentElement.firstElementChild===f})()`))
+const comFaixa = await dom(`JSON.stringify(${colunaAlvos})`)
+ok("E. a faixa NAO desloca a coluna (tela, caixa, Enviar, modo: mesmas posicoes com e sem ela)", antesFaixa === comFaixa, antesFaixa + " != " + comFaixa)
+ok("E. a faixa nao esta no fluxo da coluna (sobrepoe, nao reserva espaco)", await dom(`getComputedStyle(${sel("faixa-so-retorno")}).position==="absolute"`))
 ok("E. a pilula mostra SÓ RETORNO", await dom(`${sel("pilula-so-retorno")}?.textContent?.trim()==="SÓ RETORNO"`))
 ok("E. o botao ao lado da mensagem esta aceso", (await dom(`${sel("modo-so-retorno")}.getAttribute("aria-pressed")`)) === "true")
 await print("t9-e-so-retorno-ligado")
