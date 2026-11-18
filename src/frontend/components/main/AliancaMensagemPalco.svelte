@@ -27,7 +27,11 @@
     $: viva = lerViva(tique, $sirvoRoteiro)
     $: motivo = lerMotivo($sirvo)
     // 1 s: a contagem regressiva anda; a mensagem sai da caixa no segundo em que o `ate` passa
-    const relogio = setInterval(() => ((tique += 1), (agora = sirvoAgora())), 1000)
+    const relogio = setInterval(() => {
+        tique += 1
+        // sem mensagem viva nada precisa redesenhar a cada segundo: o relogio so anda quando ha contagem
+        if (viva || tique % 5 === 0) agora = sirvoAgora()
+    }, 1000)
     const parar = iniciarSoRetorno()
     onMount(() => (agora = sirvoAgora()))
     onDestroy(() => {
