@@ -13,7 +13,7 @@
     //    SelectElem ja limpa sozinho; MORTOS aqui, sem perda de efeito (conferido: Delete so age com selecao e o clique fora limpa pelo SelectElem).
     import type { ProjectShowRef, Tree } from "../../../types/Projects"
     import { activeProject, activeShow, categories, editingProjectTemplate, folders, outputDisplay, outputs, projects, quickSearchActive, shows, sorted, special } from "../../stores"
-    import { faixaAoVivo } from "../../utils/aliancaAoVivoLogica"
+    import { algoNoArEm, faixaAoVivo } from "../../utils/aliancaAoVivoLogica"
     import { noAr } from "../../utils/aliancaModo"
     import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
     import { ABAS, CHAVE_ABA, montarArvoreDeCultos } from "../../utils/aliancaRoteiroLogica"
@@ -102,7 +102,7 @@
     // ----- NO AR -----
     const lerNoAr = (_saidas: unknown) => noAr().ids
     $: noArIds = lerNoAr($outputs)
-    $: ao = faixaAoVivo({ telaoLigado: !!$outputDisplay })
+    $: ao = faixaAoVivo({ telaoLigado: !!$outputDisplay, algoNoAr: algoNoArEm($outputs) })
     $: musicas = categoriasDeMusica($categories as Parameters<typeof categoriasDeMusica>[0])
     // `_deps` existe so para o Svelte reavaliar o texto quando os stores chegam depois da montagem
     function tipoDe(item: ProjectShowRef, _deps?: unknown): string {
