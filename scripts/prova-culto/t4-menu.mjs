@@ -46,7 +46,13 @@ const {loadShows}=await import(U("components/helpers/setShow")); await loadShows
     await clique(`document.querySelector('[data-acao=menu-app]')`)
     await esperar(300)
     const itens = await dom(`JSON.stringify([...document.querySelectorAll('[role=menuitem][data-item]')].map(b=>b.dataset.item))`)
-    ok("B1 itens do menu (com os de dev)", itens === JSON.stringify(["settings", "stage", "draw", "import", "export", "history", "fullscreen", "shortcuts", "about", "reload", "devtools"]), itens)
+    ok("B1 itens do menu (com os de dev)", itens === JSON.stringify(["settings", "stage", "draw", "save", "undo", "redo", "import", "export", "history", "fullscreen", "shortcuts", "about", "reload", "devtools"]), itens)
+    // B1b: clique REAL no vazio do topo (area de arrastar) fecha o menu aberto (a cortina recebe o clique); reabre para o resto da secao
+    { const r = await dom(`(()=>{const c=document.querySelector('[data-regiao=topo] .centro').getBoundingClientRect(); return JSON.stringify({x:c.right-24,y:28})})()`); const { x, y } = JSON.parse(r); await clicarEm(j, x, y, 1); await esperar(300) }
+    ok("B1b clique no vazio do topo fecha o menu do app", await dom(`!document.querySelector('[role=menu]')`))
+    await clique(`document.querySelector('[data-acao=menu-app]')`)
+    await esperar(300)
+    ok("B1c Salvar, Desfazer e Refazer mostram o atalho ao lado", await dom(`['save','undo','redo'].map(i=>document.querySelector('[data-item='+i+'] .atalho')?.textContent).join()==="Ctrl+S,Ctrl+Z,Ctrl+Y"`))
     await print("M1-menu-do-app-1920")
     await tecla(j, "Escape")
     await esperar(300)
