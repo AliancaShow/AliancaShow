@@ -231,13 +231,6 @@ export class VideoPlayer {
         if (data.pitch !== undefined) this.setPitch(path, data.pitch)
     }
 
-    /** Depois de mexer no volume por fora (a faixa de transporte): reavalia "silenciar audio quando o video toca", como o `updateProperties` faz. */
-    static reavaliarSilencioDoAudio() {
-        if (!get(special).muteAudioWhenVideoPlays) return
-        if (this.hasAudibleVideo()) fadeoutAllPlayingAudio()
-        else fadeinAllPlayingAudio()
-    }
-
     static updateVolume(specificVideoPath: string | null = null) {
         const videos = specificVideoPath ? get(playingVideos).filter((v) => v.path === specificVideoPath) : get(playingVideos)
         videos.forEach((v) => {

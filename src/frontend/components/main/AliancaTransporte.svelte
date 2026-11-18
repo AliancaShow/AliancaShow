@@ -7,8 +7,9 @@
     // AudioMeter); a marcacao e nova. Nenhuma tecla nova: os atalhos de midia continuam no Preview escondido.
     import { onDestroy } from "svelte"
     import type { Unsubscriber } from "svelte/store"
+    import { fadeinAllPlayingAudio, fadeoutAllPlayingAudio } from "../../audio/audioFading"
     import { AudioPlayer } from "../../audio/audioPlayer"
-    import { activePage, activeTimers, media, outLocked, outputs, playerVideos, playingAudio, timers } from "../../stores"
+    import { activePage, activeTimers, media, outLocked, outputs, playerVideos, playingAudio, special, timers } from "../../stores"
     import { arrastoVale, criarLimitador, extrasDaFaixa, outrasSaidasComVideo, prenderBusca, prenderVolume, saidasHabilitadas, timersNaFaixa, type ArrastoMidia } from "../../utils/aliancaTransporteLogica"
     import { getAccess } from "../../utils/profile"
     import AudioMeter from "../drawer/audio/AudioMeter.svelte"
@@ -164,7 +165,11 @@
     function volumeFimDoVideo(e: CustomEvent<number>) {
         if (!caminho) return
         limiteVolumeVideo.fechar({ c: caminho, v: prenderVolume(e.detail) })
-        VideoPlayer.reavaliarSilencioDoAudio()
+        // "silenciar audio quando o video toca": o caminho do painel Info reavaliava isso a cada mudanca de volume (updateProperties)
+        if ($special.muteAudioWhenVideoPlays) {
+            if (VideoPlayer.hasAudibleVideo()) fadeoutAllPlayingAudio()
+            else fadeinAllPlayingAudio()
+        }
     }
 
     // ---------------- audio: o primeiro que nao e microfone (o Audio.svelte antigo) ----------------
