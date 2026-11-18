@@ -9,3 +9,15 @@ export const TELA_PADRAO: AliancaTelaValores = { esq: 280, dir: 330, bib: 260 }
 
 export const aliancaTela = writable<AliancaTelaValores>({ ...TELA_PADRAO })
 
+
+/** o que vale do `aliancaTela` salvo (settings.json): so numeros finitos, o resto cai no padrao. Os limites (min/max) sao de `prender`, depois. */
+export function normalizarTelaSalva(v: unknown): AliancaTelaValores {
+    const r: AliancaTelaValores = { ...TELA_PADRAO }
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+        for (const k of ["esq", "dir", "bib"] as const) {
+            const n = (v as Record<string, unknown>)[k]
+            if (typeof n === "number" && Number.isFinite(n)) r[k] = Math.round(n)
+        }
+    }
+    return r
+}

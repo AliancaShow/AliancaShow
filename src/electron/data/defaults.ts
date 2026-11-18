@@ -52,6 +52,8 @@ export const defaultSettings: { [key in SaveListSettings]: any } = {
     mediaOptions: { columns: 5, mode: "grid" },
     drawerTabsData: {},
     drawer: { height: 300, stored: null },
+    // leiaute v2: larguras da esquerda e da direita e altura da biblioteca (aliancaTelaEstado.ts)
+    aliancaTela: { esq: 280, dir: 330, bib: 260 },
     language: null,
     labelsDisabled: false,
     groupNumbers: true,
