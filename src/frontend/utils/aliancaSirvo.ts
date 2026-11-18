@@ -566,7 +566,8 @@ export function escolherCultoSirvo(eventId: string | null) {
 // o culto no ar (`sirvoForcarAte`): a pendência existe para a mudança ALHEIA.
 
 // show_tirar_musicas / show_devolver_musica (F3): o operador tirou do projeto uma música que o Sirvo pôs (aliancaSirvoDispensar.ts)
-export type FuncaoDeEscrita = "show_iniciar" | "show_encerrar" | "show_reabrir" | "show_avancar" | "show_desfazer_bloco" | "show_ajustar_duracao" | "show_mover_bloco" | "show_criar_bloco" | "show_apagar_bloco" | "show_editar_bloco" | "show_tirar_musicas" | "show_devolver_musica"
+// show_enviar_mensagem_palco / show_limpar_mensagem_palco (leiaute v2, migration 0093 do Sirvo): a caixa "mensagem pro palco" (aliancaMensagemPalco.ts)
+export type FuncaoDeEscrita = "show_iniciar" | "show_encerrar" | "show_reabrir" | "show_avancar" | "show_desfazer_bloco" | "show_ajustar_duracao" | "show_mover_bloco" | "show_criar_bloco" | "show_apagar_bloco" | "show_editar_bloco" | "show_tirar_musicas" | "show_devolver_musica" | "show_enviar_mensagem_palco" | "show_limpar_mensagem_palco"
 /** `codigo` (só na recusa que veio do main): "rede" = não chegou; "ocupado" = tente daqui a pouco; sem código = o Show não pôde pedir agora (porQueNaoConduz) */
 export type RespostaPedido = { ok: true; dados: any } | { ok: false; mensagem: string; codigo?: string }
 

@@ -2,6 +2,9 @@
     // Leiaute v2, coluna No ar: as outras telas (uma aba por saida habilitada alem da principal), recolhivel. A previa e a mesma de
     // PreviewOutput (a prova do telao nao muda: aqui so se olha).
     import { outputDisplay, outputs } from "../../stores"
+    import { getResolution } from "../helpers/output"
+    import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
+    import { styles } from "../../stores"
     import PreviewOutput from "../output/preview/PreviewOutput.svelte"
 
     export let ids: string[] = []
@@ -10,6 +13,8 @@
     let escolhida = ""
     $: if (!ids.includes(escolhida)) escolhida = ids[0] || ""
     $: nome = (id: string) => $outputs[id]?.name || "Saída"
+    $: res = escolhida ? getResolution(null, [$outputs, $styles], false, escolhida) : { width: 1920, height: 1080 }
+    $: prop = proporcaoDaSaida(res.width, res.height)
 </script>
 
 {#if ids.length}
@@ -26,8 +31,9 @@
             <div class="tela">
                 <div class="prev">
                     {#key escolhida}<PreviewOutput outputId={escolhida} />{/key}
+                    <span class="estado">{nome(escolhida)} · {prop}{$outputDisplay ? "" : " · desligado"}</span>
                 </div>
-                <span class="estado">{nome(escolhida)}{$outputDisplay ? "" : " · desligado"}</span>
+                <div class="espaco" aria-hidden="true"></div>
             </div>
         {/if}
     </div>
@@ -107,13 +113,23 @@
         background: #0b0b0a;
         border-radius: 6px;
         overflow: hidden;
+        padding: 3px;
+        box-sizing: border-box;
+        box-shadow: 0 0 0 1px var(--luz-borda);
         position: relative;
+    }
+    /* a coluna de 30 px da faixa de camadas: a outra tela fica do MESMO tamanho da principal */
+    .espaco {
+        width: 30px;
+        flex-shrink: 0;
     }
     .estado {
         position: absolute;
+        left: 8px;
+        bottom: 6px;
         margin: 0;
         font-size: 10px;
         color: var(--luz-fraco);
-        display: none;
+        pointer-events: none;
     }
 </style>

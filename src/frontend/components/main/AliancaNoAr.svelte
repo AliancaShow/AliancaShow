@@ -1,6 +1,6 @@
 <script lang="ts">
     // Leiaute v2: a coluna da direita em Mostrar ("o que a igreja ve"): a tela principal em proporcao real com a faixa de icones colada
-    // (camadas), as outras telas e o chat do culto, que ocupa o resto. A caixa "Mensagem pro palco" e da fatia 8 (D7); os controles do
+    // (camadas), as outras telas (abas, do mesmo tamanho), a caixa "Mensagem pro palco" e o chat do culto, que ocupa o resto. Os controles do
     // video sobre a tela sao da fatia 7 (D6). O `Preview` antigo continua montado e escondido em AliancaTela: e ele que escuta o teclado.
     import { outputDisplay, outputs, styles } from "../../stores"
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
@@ -8,6 +8,7 @@
     import PreviewOutput from "../output/preview/PreviewOutput.svelte"
     import AliancaCamadas from "./AliancaCamadas.svelte"
     import AliancaChat from "./AliancaChat.svelte"
+    import AliancaMensagemPalco from "./AliancaMensagemPalco.svelte"
     import AliancaOutrasTelas from "./AliancaOutrasTelas.svelte"
 
     // saidas habilitadas e visiveis; a primeira e a principal ("Telao"), as demais viram abas
@@ -38,6 +39,8 @@
 </div>
 
 <AliancaOutrasTelas ids={outras} />
+
+<AliancaMensagemPalco />
 
 <AliancaChat />
 
