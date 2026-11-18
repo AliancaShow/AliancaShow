@@ -11,3 +11,17 @@ export function saidasParaMandar(saidas: SaidaCandidata[]): { id: string; nome: 
 export function mostrarMandarSo(saidas: { id: string }[]): boolean {
     return saidas.length >= 2
 }
+
+/**
+ * Para que saidas um envio de slide vai: a tela pedida (o "Mandar so para"), senao as telas ligadas ao slide (`bind_to`), senao todas as ativas.
+ * E a mesma regra de `setOutput`/`updateOut`; ela e repetida aqui para o "mandar de novo" so tocar nas saidas que o envio tocou.
+ */
+export function destinosDoEnvio(e: { outputId?: string; bindings?: string[] | null; ativas: string[] }): string[] {
+    if (e.outputId) return [e.outputId]
+    return e.bindings && e.bindings.length ? e.bindings : e.ativas
+}
+
+/** dessas saidas, as que ja estavam NESTE slide (mesmo show, layout e posicao): so elas ganham foto nova */
+export function jaMostramOSlide(saidas: { id: string; slide?: { id?: string; layout?: string; index?: number } | null }[], showId: string, layout: string, index: number): string[] {
+    return saidas.filter((o) => o.slide?.id === showId && o.slide.layout === layout && o.slide.index === index).map((o) => o.id)
+}

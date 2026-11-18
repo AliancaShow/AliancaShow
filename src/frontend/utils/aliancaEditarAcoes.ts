@@ -1,12 +1,13 @@
 import { get } from "svelte/store"
 import { customActionActivation } from "../components/actions/actions"
-import { getActiveOutputs, refreshOut, setOutput } from "../components/helpers/output"
+import { getActiveOutputs, setOutput } from "../components/helpers/output"
 import { checkActionTrigger, updateOut } from "../components/helpers/showActions"
 import { _show } from "../components/helpers/shows"
 import { loadShows } from "../components/helpers/setShow"
 import { activeEdit, activeShow, outLocked, outputs, refreshEditSlide, showsCache } from "../stores"
 import { falhaAlta } from "./aliancaFalha"
-import { saidasParaMandar } from "./aliancaEditarSaidas"
+import { destinosDoEnvio, jaMostramOSlide, saidasParaMandar } from "./aliancaEditarSaidas"
+import { refotografarSaidas } from "./aliancaRefotografar"
 
 // Leiaute v2, fatia 3: "Mandar pro ar" de um slide que se esta EDITANDO (faixa de pendencia do centro e botao direito na miniatura).
 // E o clique do slide de Mostrar (components/show/Slides.svelte `slideClick`) sem o `e`: um gesto deliberado do operador. Quem chama e um clique do
@@ -25,12 +26,19 @@ export function mandarSlideAoAr(showId: string, index: number, outputId = ""): b
         customActionActivation("slide_click")
         checkActionTrigger(ref[index].data, index)
         // dar tempo para as acoes configuradas rodarem primeiro (igual ao clique em Mostrar)
+        const destinos = destinosDoEnvio({ outputId, bindings: ref[index].data?.bindings, ativas: getActiveOutputs(get(outputs) || {}, true, false, true) })
         setTimeout(() => {
-            const jaNoAr = Object.values(get(outputs) || {}).some((o: any) => o?.out?.slide?.id === showId && o.out.slide.layout === layout && o.out.slide.index === index)
+            // quem ja estava neste slide, ANTES do envio (depois o `setOutput` ja escreveu o indice novo)
+            const jaNoAr = jaMostramOSlide(
+                destinos.map((id) => ({ id, slide: (get(outputs)[id] as any)?.out?.slide })),
+                showId,
+                layout,
+                index
+            )
             setOutput("slide", { id: showId, layout, index, line: 0, revealCount: 0, itemClickReveal: false }, false, outputId)
             updateOut(showId, index, ref, true, outputId)
-            // o mesmo slide ja no ar: "mandar de novo" tira uma foto nova (e o que a faixa de pendencia pede)
-            if (jaNoAr) refreshOut(true, true)
+            // o mesmo slide ja no ar: "mandar de novo" tira uma foto nova (e o que a faixa de pendencia pede) so nas saidas DESTE envio
+            refotografarSaidas(jaNoAr)
         })
         return true
     } catch (erro) {
