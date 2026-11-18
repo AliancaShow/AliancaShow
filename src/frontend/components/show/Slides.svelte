@@ -2,6 +2,7 @@
     import { onDestroy, onMount } from "svelte"
     import { activeEdit, activeFocus, activePage, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, modoAlianca, notFound, outLocked, outputs, outputSlideCache, popupData, shows, showsCache, slidesOptions, special, templates, textCache } from "../../stores"
     import { dividirAberto } from "../../utils/aliancaDividir"
+    import { temFundoQuebrado } from "../../utils/aliancaFundoQuebrado"
     import { indiceDaFoto } from "../../utils/aliancaFotoLogica"
     import { showEstaSemLetra } from "../../utils/aliancaSemLetraLogica"
     import { hasNewerUpdate, wait } from "../../utils/common"
@@ -57,7 +58,8 @@
     // fix broken media
     $: if (showId) fixBrokenMedia()
     function fixBrokenMedia() {
-        if (!currentShow) return
+        // so escreve quando ha fundo quebrado: todo `set` de showsCache e reenviado inteiro a saida (remontar a grade nao pode causar isso)
+        if (!currentShow || !temFundoQuebrado(currentShow)) return
         showsCache.update((a) => {
             if (!a[showId]) return a
             Object.entries(currentShow.layouts || {}).forEach(([layoutId, layout]) => {
