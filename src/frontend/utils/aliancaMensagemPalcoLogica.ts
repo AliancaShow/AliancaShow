@@ -64,3 +64,29 @@ export function caminhoDoEnvio(e: { status: string; cultoId: string | null; pode
     if (!e.podeConduzir) return { motivo: "Esta chave só lê o roteiro. Um admin liga “conduz” no Sirvo (Perfil → chaves do AliançaShow).", persistente: true }
     return { motivo: "", persistente: false }
 }
+
+/** o erro da caixa some sozinho depois disto (ou no proximo envio) */
+export const PRAZO_ERRO_MS = 6000
+/** quanto tempo a caixa segue conferindo, pelo roteiro, um envio que estourou o tempo */
+export const PRAZO_DUVIDA_MS = 60_000
+
+/**
+ * A linha de aviso da caixa (a 2a linha; a 1a e SEMPRE a mensagem viva com o Limpar, que nenhum aviso esconde).
+ * Prioridade: erro > "Enviando…" > aviso do modo > motivo de a caixa nao poder mandar.
+ */
+export function avisoDaCaixa(e: { erro: string; enviando: boolean; avisoModo: string; motivo: string }): string {
+    return e.erro || (e.enviando ? "Enviando…" : "") || e.avisoModo || e.motivo
+}
+
+/** envio que estourou o tempo ("rede"): pode ter chegado. Quem decide e o proximo roteiro lido (`mensagem_palco`). */
+export type Duvida = { texto: string; minAteMs: number; venceEm: number }
+
+/** `minAteMs`: o menor `ate` que ESTE envio produziria (agora + validade, com 15 s de folga de relogio): mensagem velha igual nao conta */
+export function duvidaDoEnvio(texto: string, minutos: number, agoraMs: number): Duvida {
+    return { texto, minAteMs: agoraMs + minutos * 60_000 - 15_000, venceEm: agoraMs + PRAZO_DUVIDA_MS }
+}
+
+export function conferirDuvida(d: Duvida, viva: { texto: string; ateMs: number } | null, agoraMs: number): "resolvida" | "aberta" | "vencida" {
+    if (viva && viva.texto === d.texto && viva.ateMs >= d.minAteMs) return "resolvida"
+    return agoraMs > d.venceEm ? "vencida" : "aberta"
+}

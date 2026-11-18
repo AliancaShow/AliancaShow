@@ -7,25 +7,31 @@
     // Teclado: o campo e `.edit` (o espaco nao passa slide), nada do que se digita chega aos atalhos, Esc nao faz nada aqui (o 2o Esc da
     // pagina limparia o telao) e Enter envia e devolve o foco a pagina.
     import { onDestroy, onMount } from "svelte"
-    import { sirvo, sirvoAgora, sirvoRoteiro, porQueNaoConduz } from "../../utils/aliancaSirvo"
+    import { sirvo, sirvoAgora } from "../../utils/aliancaSirvo"
     import { enviarMensagemPalco, limparMensagemPalco } from "../../utils/aliancaMensagemPalco"
-    import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, mensagemViva, restanteTexto } from "../../utils/aliancaMensagemPalcoLogica"
+    import { mensagemDaCaixa } from "../../utils/aliancaMensagemPalcoVista"
+    import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_ERRO_MS, avisoDaCaixa, caminhoDoEnvio, conferirDuvida, duvidaDoEnvio, mensagemViva, prepararMensagem, restanteTexto, type Duvida } from "../../utils/aliancaMensagemPalcoLogica"
     import { desligarSoRetorno, iniciarSoRetorno, ligarSoRetorno, porQueNaoLigarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { outputs } from "../../stores"
 
     let texto = ""
     let enviando = false
     let erro = ""
+    let tErro: ReturnType<typeof setTimeout> | null = null
+    // envio que estourou o tempo e pode ter chegado: a proxima leitura do roteiro diz (conferirDuvida)
+    let duvida: (Duvida & { campo: string }) | null = null
     let minutos: number = MINUTOS_PADRAO
     let avisoModo = ""
     let tAviso: ReturnType<typeof setTimeout> | null = null
     let tique = 0
     let agora = 0
     // a mensagem some da caixa quando o `ate` passa (o tique reavalia a cada 5 s)
-    const lerViva = (_tique: number, r: typeof $sirvoRoteiro) => mensagemViva(r?.mensagem_palco, sirvoAgora())
-    const lerMotivo = (_estado: unknown) => porQueNaoConduz()
-    $: viva = lerViva(tique, $sirvoRoteiro)
+    const lerViva = (_tique: number, m: typeof $mensagemDaCaixa) => mensagemViva(m, sirvoAgora())
+    const lerMotivo = (e: typeof $sirvo) => caminhoDoEnvio(e).motivo
+    $: viva = lerViva(tique, $mensagemDaCaixa)
+    $: if (duvida) conferir(viva)
     $: motivo = lerMotivo($sirvo)
+    $: aviso = avisoDaCaixa({ erro, enviando, avisoModo, motivo })
     // 1 s: a contagem regressiva anda; a mensagem sai da caixa no segundo em que o `ate` passa
     const relogio = setInterval(() => {
         tique += 1
@@ -38,7 +44,30 @@
         clearInterval(relogio)
         parar()
         if (tAviso) clearTimeout(tAviso)
+        if (tErro) clearTimeout(tErro)
     })
+    // o erro some sozinho (PRAZO_ERRO_MS) ou no proximo envio; nunca fica para sempre e nunca esconde a viva nem o Limpar
+    function mostrarErro(m: string) {
+        erro = m
+        if (tErro) clearTimeout(tErro)
+        tErro = setTimeout(() => (erro = ""), PRAZO_ERRO_MS)
+    }
+    function limparErro() {
+        erro = ""
+        if (tErro) clearTimeout(tErro)
+        tErro = null
+    }
+    function conferir(v: typeof viva) {
+        const d = duvida
+        if (!d) return
+        const c = conferirDuvida(d, v, sirvoAgora())
+        if (c === "aberta") return
+        duvida = null
+        if (c === "vencida") return
+        // chegou: o palco tem a mensagem; a caixa deixa de dizer que nao sabe
+        limparErro()
+        if (texto === d.campo) texto = ""
+    }
     // o motivo do modo depende dos retornos configurados (a loja de saidas)
     const lerModo = (_o: unknown) => porQueNaoLigarSoRetorno()
     $: motivoModo = lerModo($outputs)
@@ -46,7 +75,7 @@
         if ($soRetorno) return desligarSoRetorno()
         const r = ligarSoRetorno()
         if (r.ok) return
-        erro = ""
+        limparErro()
         avisoModo = r.motivo
         if (tAviso) clearTimeout(tAviso)
         tAviso = setTimeout(() => (avisoModo = ""), 6000)
@@ -59,19 +88,24 @@
     async function enviar() {
         if (enviando) return
         enviando = true
-        erro = ""
+        limparErro()
+        duvida = null
+        const campo = texto
         const r = await enviarMensagemPalco(texto, minutos)
         enviando = false
         if (r.ok) texto = ""
-        else erro = r.mensagem
+        else {
+            mostrarErro(r.mensagem)
+            if (r.codigo === "rede") duvida = { ...duvidaDoEnvio((prepararMensagem(campo) as { texto?: string }).texto || campo, minutos, sirvoAgora()), campo }
+        }
     }
     async function limpar() {
         if (enviando) return
         enviando = true
-        erro = ""
+        limparErro()
         const r = await limparMensagemPalco()
         enviando = false
-        if (!r.ok) erro = r.mensagem
+        if (!r.ok) mostrarErro(r.mensagem)
     }
     function aoTeclar(ev: KeyboardEvent) {
         ev.stopPropagation()
@@ -93,7 +127,7 @@
         <button type="button" class="modo" class:ligado={$soRetorno} class:inerte={!$soRetorno && !!motivoModo} aria-pressed={$soRetorno} aria-disabled={!$soRetorno && !!motivoModo} tabindex="-1" data-acao="modo-so-retorno" title={$soRetorno ? "Só retorno ligado: clique para voltar ao normal." : motivoModo || "Só retorno: o que você mandar ao ar vai só para o monitor de retorno, não para o telão."} on:mousedown|preventDefault on:click={modo}>{$soRetorno ? "● Só retorno" : "○ Só retorno"}</button>
     </div>
     <div class="linha">
-        <input class="edit campo" type="text" maxlength={LIMITE_MENSAGEM} placeholder="Pastor, 5 min pro fim" aria-label="Mensagem pro palco" data-acao="mensagem-palco" bind:value={texto} on:input={() => (erro = "")} on:keydown={aoTeclar} />
+        <input class="edit campo" type="text" maxlength={LIMITE_MENSAGEM} placeholder="Pastor, 5 min pro fim" aria-label="Mensagem pro palco" data-acao="mensagem-palco" bind:value={texto} on:keydown={aoTeclar} />
         <button type="button" class="enviar" tabindex="-1" disabled={enviando || !texto.trim()} data-acao="enviar-mensagem-palco" on:mousedown|preventDefault on:click={enviar}>Enviar</button>
     </div>
     <div class="opcoes">
@@ -106,14 +140,13 @@
         <span class="conta" class:cheio={texto.length >= LIMITE_MENSAGEM} data-acao="contador-mensagem">{texto.length}/{LIMITE_MENSAGEM}</span>
     </div>
     <div class="estado" data-acao="estado-mensagem-palco">
-        {#if erro}
-            <span class="aviso erro">{erro}</span>
-        {:else if avisoModo}
-            <span class="aviso">{avisoModo}</span>
-        {:else if viva}
+        {#if viva}
             <span class="vt">No palco: “{viva.texto}” · sai em <b class="rest" data-acao="restante-mensagem">{restanteTexto(viva.ateMs, agora || sirvoAgora())}</b></span><button type="button" class="limpar" tabindex="-1" data-acao="limpar-mensagem-palco" on:mousedown|preventDefault on:click={limpar}>Limpar</button>
-        {:else if motivo}
-            <span class="aviso">{motivo}</span>
+        {/if}
+    </div>
+    <div class="estado" data-acao="aviso-mensagem-palco" role="status">
+        {#if aviso}
+            <span class="aviso" class:erro>{aviso}</span>
         {/if}
     </div>
 </div>

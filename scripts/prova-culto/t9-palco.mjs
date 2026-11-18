@@ -7,6 +7,8 @@
 //   C. Enviar sem chave volta o erro em portugues na linha de estado (que tem altura fixa: nada se desloca)
 //   D. modo so retorno: sem retorno configurado nao liga e diz o motivo; com um retorno falso na loja ainda recusa (a saida nao respeita o modo)
 //   E. indicador: com o modo ligado na loja, a faixa ambar aparece no topo da coluna No ar e a pilula mostra SO RETORNO; "Desligar" (clique real) volta
+//   G. (revisao da fatia 8) o erro NAO esconde a mensagem viva nem o Limpar, e some sozinho em ~6 s; Limpar que falha mantem o botao;
+//      estado passageiro (Sirvo fora do ar, sem culto) so aparece na linha de estado e NAO acende a faixa de falha (a chave que so le acende)
 //   F. nenhum alvo de clique da coluna se desloca entre o estado em repouso e com texto/erro (a linha de estado e fixa)
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
@@ -30,7 +32,10 @@ const clicarAcao = async (a, extra = "") => {
     if (!r.ok) throw new Error(`${a}: ${r.motivo}`)
     await clicarEm(j, r.x, r.y)
 }
-const estado = () => dom(`(${sel("estado-mensagem-palco")}?.textContent||"").trim()`)
+const estado = () => dom(`(${sel("aviso-mensagem-palco")}?.textContent||"").trim()`)
+const linhaViva = () => dom(`(${sel("estado-mensagem-palco")}?.textContent||"").trim()`)
+const temLimpar = () => dom(`!!${sel("limpar-mensagem-palco")}`)
+const falhasDaCaixa = () => j.ev(`const F=await import(U("utils/aliancaFalha")); return JSON.stringify(get(F.falhas).filter(f=>f.origem==="mensagem-palco").map(f=>f.mensagem))`)
 const textoDe = (a) => dom(`(${sel(a)}?.textContent||"").trim()`)
 const posicoes = () => dom(`Object.fromEntries(["mensagem-palco","enviar-mensagem-palco","modo-so-retorno","contador-mensagem"].map(a=>{const r=document.querySelector('[data-acao='+a+']').getBoundingClientRect(); return [a,[Math.round(r.x),Math.round(r.y),Math.round(r.width),Math.round(r.height)]]}))`)
 const saidasJson = () => dom(`JSON.stringify(get(S.outputs))`)
@@ -101,6 +106,45 @@ await clicarAcao("desligar-so-retorno")
 await esperar(400)
 ok("E. Desligar (um clique) tira a faixa e a pilula", await dom(`!${sel("faixa-so-retorno")} && !${sel("pilula-so-retorno")}`))
 ok("E. e nada some do telao nem ganha escrita: o desligar so tocou o retorno", (await dom(`JSON.stringify(Object.keys(get(S.outputs)).filter(k=>k!=="retorno_t9").map(k=>[k,get(S.outputs)[k].out||null]))`)) === JSON.stringify(Object.keys(JSON.parse(base)).map((k) => [k, JSON.parse(base)[k].out || null])))
+
+// ---------- G. revisao: erro x viva x Limpar, estado passageiro x faixa de falha
+// a mensagem viva entra pelo parafuso da prova (o Sirvo real nao e tocado); o envio continua indo ao main, que sem chave responde "Sem chave do Sirvo."
+await j.ev(`const V=await import(U("utils/aliancaMensagemPalcoVista")); const A=await import(U("utils/aliancaSirvo")); V.mensagemSubstituta.set({id:"g1",texto:"Culto acaba em 5 min",ate:new Date(A.sirvoAgora()+180000).toISOString()}); A.sirvo.update(e=>({...e,status:"conectado",cultoId:"cult-t9",podeConduzir:true})); await esp(1300); return 1`)
+ok("G. a mensagem viva aparece com o Limpar", /Culto acaba em 5 min/.test(await linhaViva()) && (await temLimpar()), await linhaViva())
+ok("G. a contagem nasce dentro da validade (<= 3:00)", /sai em (3:00|2:5[0-9])/.test(await linhaViva()), await linhaViva())
+await print("t9-g1-viva")
+await clicarAcao("enviar-mensagem-palco")
+await esperar(900)
+ok("G. envio recusado: o erro aparece na linha de aviso", /chave/i.test(await estado()), await estado())
+ok("G. ...e a mensagem viva e o Limpar CONTINUAM la (o erro nao os esconde)", /Culto acaba em 5 min/.test(await linhaViva()) && (await temLimpar()), await linhaViva())
+await print("t9-g2-erro-com-viva")
+await clicarAcao("limpar-mensagem-palco")
+await esperar(900)
+ok("G. Limpar que falha mostra o erro e MANTEM o botao", /chave/i.test(await estado()) && (await temLimpar()), await estado())
+await esperar(6600)
+ok("G. o erro some sozinho em ~6 s e o Limpar segue ali", (await estado()) === "" && (await temLimpar()), JSON.stringify(await estado()))
+await j.ev(`const V=await import(U("utils/aliancaMensagemPalcoVista")); V.mensagemSubstituta.set(undefined); await esp(1300); return 1`)
+ok("G. sem mensagem viva a linha da viva esvazia", (await linhaViva()) === "")
+// estado passageiro: Sirvo fora do ar -> so a linha de estado, com texto verdadeiro, e a faixa de falha NAO acende
+await j.ev(`const A=await import(U("utils/aliancaSirvo")); const F=await import(U("utils/aliancaFalha")); F.falhas.set([]); A.sirvo.update(e=>({...e,status:"caido"})); await esp(400); return 1`)
+ok("G. Sirvo fora do ar: a linha de estado diz a verdade", /não está respondendo/.test(await estado()), await estado())
+await clicarAcao("mensagem-palco")
+await j.enviar("Input.insertText", { text: "Teste passageiro" })
+await esperar(200)
+await clicarAcao("enviar-mensagem-palco")
+await esperar(700)
+ok("G. enviar com o Sirvo fora do ar: texto verdadeiro, nada de 'ainda nao ligada'", /não está respondendo/.test(await estado()) && !/ainda não ligada/.test(await estado()), await estado())
+ok("G. estado passageiro NAO acende a faixa de falha", (await falhasDaCaixa()) === "[]", await falhasDaCaixa())
+await j.ev(`const A=await import(U("utils/aliancaSirvo")); A.sirvo.update(e=>({...e,status:"conectado",cultoId:null})); await esp(400); return 1`)
+await clicarAcao("enviar-mensagem-palco")
+await esperar(700)
+ok("G. sem culto seguido: so a linha de estado, sem faixa", /Nenhum culto/.test(await estado()) && (await falhasDaCaixa()) === "[]", await estado())
+// controle positivo: a chave que so le e promessa quebrada e acende
+await j.ev(`const A=await import(U("utils/aliancaSirvo")); A.sirvo.update(e=>({...e,status:"conectado",cultoId:"cult-t9",podeConduzir:false})); await esp(400); return 1`)
+await clicarAcao("enviar-mensagem-palco")
+await esperar(700)
+ok("G. chave que so le: ACENDE a faixa de falha (controle positivo)", (await falhasDaCaixa()) !== "[]", await falhasDaCaixa())
+await j.ev(`const F=await import(U("utils/aliancaFalha")); F.falhas.set([]); const A=await import(U("utils/aliancaSirvo")); A.sirvo.update(e=>({...e,podeConduzir:true})); await esp(300); return 1`)
 
 // ---------- limpeza: devolve a loja ao que era
 await j.ev(`S.outputs.update(a=>{delete a.retorno_t9; return a}); const A=await import(U("utils/aliancaSirvo")); A.sirvo.set(JSON.parse(window.__sirvoAntes)); await esp(400); return 1`)
