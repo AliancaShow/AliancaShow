@@ -10,6 +10,12 @@
     $: modeloId = atual?.settings?.template || ""
     $: temModelo = !!(modeloId && $templates[modeloId])
 
+    // a linha de metadados que a linha de titulo antiga mostrava (artista, autor, direitos...): so leitura, no alto do menu
+    const ROTULOS: { [k: string]: string } = { artist: "Artista", author: "Autor", composer: "Compositor", copyright: "Direitos", number: "Número", key: "Tom", CCLI: "CCLI", ccli: "CCLI", title: "Título" }
+    $: metadados = Object.entries((atual?.meta || {}) as { [k: string]: unknown })
+        .filter(([, v]) => typeof v === "string" && v.trim() && v.trim() !== atual?.name)
+        .map(([k, v]) => ({ k, rotulo: ROTULOS[k] || k.charAt(0).toUpperCase() + k.slice(1), valor: (v as string).trim() }))
+
     let aberto = false
     $: if (!atual) aberto = false
 
@@ -42,6 +48,12 @@
         {#if aberto}
             <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
             <div class="menu" role="menu" tabindex="-1" on:click={() => (aberto = false)}>
+                {#if metadados.length}
+                    <div class="metas" data-acao="centro-metadados">
+                        {#each metadados as m (m.k)}<div class="meta"><span class="mk">{m.rotulo}</span><span class="mv">{m.valor}</span></div>{/each}
+                    </div>
+                    <div class="sep"></div>
+                {/if}
                 <button type="button" role="menuitem" tabindex="-1" on:click={() => showNotesActive.set(!$showNotesActive)}><span class="ck">{$showNotesActive ? "✓" : ""}</span>Notas do show</button>
                 <button type="button" role="menuitem" tabindex="-1" on:click={() => special.update((a) => ({ ...a, timelineActive: !a.timelineActive }))}><span class="ck">{$special.timelineActive ? "✓" : ""}</span>Linha do tempo do show</button>
                 <button type="button" role="menuitem" tabindex="-1" on:click={travar}><span class="ck">{atual.locked ? "✓" : ""}</span>Bloquear alterações</button>
@@ -91,7 +103,7 @@
         border-radius: 10px;
         box-shadow:
             inset 0 0 0 1px var(--luz-borda),
-            0 18px 40px rgb(0 0 0 / 0.5);
+            var(--luz-sombra-pop);
         backdrop-filter: var(--luz-vidro, none);
         transform-origin: top right;
         animation: luz-surgir 120ms ease-out;
@@ -118,6 +130,33 @@
         width: 18px;
         text-align: center;
         font-weight: 700;
+    }
+    .metas {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 4px 10px 2px;
+    }
+    .meta {
+        display: flex;
+        gap: 8px;
+        font-size: 12px;
+        line-height: 1.35;
+    }
+    .mk {
+        flex: none;
+        width: 64px;
+        color: var(--luz-mudo);
+    }
+    .mv {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        color: var(--luz-texto);
+    }
+    .menu button:focus-visible,
+    .mais:focus-visible {
+        outline: 2px solid var(--luz-texto);
+        outline-offset: -2px;
     }
     .sep {
         height: 1px;
