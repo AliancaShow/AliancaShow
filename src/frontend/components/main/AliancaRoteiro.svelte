@@ -15,6 +15,7 @@
     import { activeProject, activeShow, categories, editingProjectTemplate, folders, outputDisplay, outputs, projects, quickSearchActive, shows, sorted, special } from "../../stores"
     import { faixaAoVivo } from "../../utils/aliancaAoVivoLogica"
     import { noAr } from "../../utils/aliancaModo"
+    import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
     import { ABAS, CHAVE_ABA, montarArvoreDeCultos } from "../../utils/aliancaRoteiroLogica"
     import { sirvoRoteiro } from "../../utils/aliancaSirvo"
     import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
@@ -119,8 +120,9 @@
     const contextoDe = (t: string | undefined) => ((t || "show") === "show" ? "show" : t === "video" || t === "image" ? "media" : t)
     const noArDe = (item: ProjectShowRef) => !!$outputDisplay && (item.type || "show") === "show" && noArIds.has(item.id)
 
-    function abrir(item: ProjectShowRef, index: number) {
-        activeShow.set({ ...item, index } as any)
+    // o clique faz o mesmo que o ShowButton de antes (utils/aliancaRoteiroClique.ts): leiaute do item, ultimo do culto, conferido, editor
+    function abrir(item: ProjectShowRef, index: number, e?: MouseEvent) {
+        abrirItemDoRoteiro(item as any, index, { ctrl: !!(e?.ctrlKey || e?.metaKey), shift: !!e?.shiftKey })
     }
 
 </script>
@@ -154,7 +156,7 @@
                             <AliancaBlocoVivo blocoId={idSirvo} nome={nomeBloco(b)} />
                         {:else}
                             <SelectElem id="show" data={{ ...cab.item, index: cab.index }} {fileOver} borders="edges" trigger="column" draggable={!(projeto?.sectionsLocked || blocoDoSirvo(b))} selectable={!(projeto?.sectionsLocked || blocoDoSirvo(b))}>
-                                <button class="bloco {projetoSoLeitura ? '' : 'context #project_section'}" tabindex="-1" on:click={() => abrir(cab.item, cab.index)}>
+                                <button class="bloco {projetoSoLeitura ? '' : 'context #project_section'}" tabindex="-1" on:click={(e) => abrir(cab.item, cab.index, e)}>
                                     <span>{nomeBloco(b) || "(sem nome)"}</span><span class="tempo">{duracaoDoBloco(b)}</span>
                                 </button>
                             </SelectElem>
@@ -169,7 +171,7 @@
                     {#each b.linhas as l (l.item.id + ":" + l.index)}
                         {@const trava = projeto?.sectionsLocked}
                         <SelectElem id="show" dropAbove={false} triggerOnHover data={{ ...l.item, name: nomeDe(l.item, $shows), index: l.index }} {fileOver} borders={l.item.type === "show_placeholder" ? "all" : "edges"} trigger="column" draggable={!trava} selectable={!trava}>
-                            <button class="item {projetoSoLeitura ? '' : `context #project_${contextoDe(l.item.type)}`}" class:sel={$activeShow?.index === l.index && $activeShow?.id === l.item.id} tabindex="-1" on:click={() => abrir(l.item, l.index)}>
+                            <button class="item {projetoSoLeitura ? '' : `context #project_${contextoDe(l.item.type)}`}" class:sel={$activeShow?.index === l.index && $activeShow?.id === l.item.id} tabindex="-1" on:click={(e) => abrir(l.item, l.index, e)}>
                                 <span class="tipo">{tipoDe(l.item, [$shows, musicas])}</span>
                                 <span class="nome">{nomeDe(l.item, $shows)}</span>
                                 {#if noArDe(l.item)}<span class="noar">NO AR</span>{/if}
