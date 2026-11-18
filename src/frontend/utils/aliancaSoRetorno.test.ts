@@ -1,7 +1,8 @@
 import { get } from "svelte/store"
 import { beforeEach, describe, expect, it } from "vitest"
 import { outputs, stageShows } from "../stores"
-import { desligarSoRetorno, destinoDoEnvio, iniciarSoRetorno, ligarSoRetorno, saidaDeLeitura, semDesvio, soRetorno } from "./aliancaSoRetorno"
+import { desligarSoRetorno, destinoDoEnvio, emDesvio, iniciarAutomacao, iniciarSoRetorno, ligarSoRetorno, recusarNoModo, saidaDeLeitura, semDesvio, soRetorno, soRetornoLigado } from "./aliancaSoRetorno"
+import { falhas } from "./aliancaFalha"
 
 const base = () => ({
     telao: { enabled: true, active: true, name: "Telao", out: { slide: { id: "s", index: 3 }, background: { path: "v.mp4" } } },
@@ -63,5 +64,53 @@ describe("ligar / desligar (integracao com as stores)", () => {
         const r = ligarSoRetorno()
         expect(r.ok).toBe(false)
         expect(r.motivo).toContain("Nenhum monitor")
+    })
+})
+
+describe("I1: o modo so desvia GESTOS do operador; a automacao do telao segue no telao", () => {
+    it("dentro de semDesvio o modo NAO vale: soRetornoLigado e false, as setas leem o telao e o envio nao e desviado", () => {
+        ligarSoRetorno()
+        expect(soRetornoLigado()).toBe(true)
+        expect(emDesvio()).toBe(false)
+        semDesvio(() => {
+            expect(soRetornoLigado()).toBe(false)
+            expect(emDesvio()).toBe(true)
+            expect(saidaDeLeitura("telao")).toBe("telao")
+            expect(destinoDoEnvio({ id: "x" })).toBe(null)
+        })
+        expect(soRetornoLigado()).toBe(true)
+        expect(saidaDeLeitura("telao")).toBe("ret")
+    })
+    it("iniciarAutomacao: com o modo ligado abre a janela da automacao (o telao segue o telao) e fecha no finally; desligado devolve null", () => {
+        expect(iniciarAutomacao()).toBe(null)
+        ligarSoRetorno()
+        const solta = iniciarAutomacao()
+        expect(solta).not.toBe(null)
+        try {
+            expect(emDesvio()).toBe(true)
+            expect(soRetornoLigado()).toBe(false)
+            expect(saidaDeLeitura("telao")).toBe("telao")
+            expect(destinoDoEnvio({ id: "x" })).toBe(null)
+        } finally {
+            solta!()
+        }
+        expect(emDesvio()).toBe(false)
+        expect(soRetornoLigado()).toBe(true)
+        expect(saidaDeLeitura("telao")).toBe("ret")
+    })
+    it("desligado nada muda: soRetornoLigado e false, leitura e o proprio id", () => {
+        expect(soRetornoLigado()).toBe(false)
+        expect(semDesvio(() => saidaDeLeitura("telao"))).toBe("telao")
+    })
+})
+
+describe("D1: a recusa e ALTA", () => {
+    it("recusarNoModo acende a faixa de falha com o motivo escrito e nao lanca", () => {
+        falhas.set([])
+        recusarNoModo("midia")
+        const f = (get(falhas) as any[]).find((x) => x.origem === "so-retorno-recusa")
+        expect(f).toBeTruthy()
+        expect(f.mensagem).toContain("só letra vai para o retorno")
+        expect(f.mensagem).toContain("desligue o modo")
     })
 })

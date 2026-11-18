@@ -1,5 +1,5 @@
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist"
-import { semDesvio, soRetornoLigado } from "../../utils/aliancaSoRetorno"
+import { recusarNoModo, semDesvio, soRetornoLigado } from "../../utils/aliancaSoRetorno"
 import { get } from "svelte/store"
 import { STAGE } from "../../../types/Channels"
 import type { History } from "../../../types/History"
@@ -181,8 +181,10 @@ export async function startProjectItemByName(name: string) {
         let name = item.name || removeExtension(getFileName(item.id))
         setOutput("slide", { type: "pdf", id: item.id, page: 0, pages, name })
         if (!soRetornoLigado()) clearBackground()
-    } else if (item.type === "audio") AudioPlayer.start(item.id, { name: item.name || "" })
-    else if (item.type === "overlay") setOutput("overlays", item.id, false, "", true)
+    } else if (item.type === "audio") {
+        if (soRetornoLigado()) return recusarNoModo("áudio") // AliancaShow (8b, D1)
+        AudioPlayer.start(item.id, { name: item.name || "" })
+    } else if (item.type === "overlay") setOutput("overlays", item.id, false, "", true)
     else if (item.type === "player") setOutput("background", { id: item.id, type: "player" })
 }
 
@@ -790,6 +792,7 @@ export function toggleMediaMute() {
 
 export function playAudio(data: API_media) {
     if (get(outLocked)) return
+    if (soRetornoLigado()) return recusarNoModo("áudio") // AliancaShow (8b, D1)
     AudioPlayer.start(data.path, { name: removeExtension(getFileName(data.path)) })
 }
 export function pauseAudio(data: API_media) {

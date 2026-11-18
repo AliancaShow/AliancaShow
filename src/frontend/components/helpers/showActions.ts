@@ -68,7 +68,7 @@ import { loadShows } from "./setShow"
 import { getCustomMetadata, getGroupName, getLayoutRef } from "./show"
 import { _show } from "./shows"
 import { marcarConferidoSeFicar } from "../../utils/aliancaConferir"
-import { soRetornoLigado } from "../../utils/aliancaSoRetorno"
+import { recusarNoModo, soRetornoLigado } from "../../utils/aliancaSoRetorno"
 import { addZero, getMonthName, getWeekday, joinTime, joinTimeBig, secondsToTime } from "./time"
 import { stopTimers } from "./timerTick"
 
@@ -221,6 +221,8 @@ export function checkActionTrigger(layoutData: SlideData, slideIndex = 0) {
 
 export async function playPdf(data: OutSlide | null, next: boolean, loop = false) {
     if (!data?.id || data?.type !== "pdf") return
+    // AliancaShow (8b, D1/B1): no modo "so retorno" PDF e recusado ALTO ANTES de tocar em qualquer coisa (nem o fundo do telao, que o `clearBackground` abaixo limparia)
+    if (soRetornoLigado()) return recusarNoModo("PDF")
 
     GlobalWorkerOptions.workerSrc = "./assets/pdf.worker.min.mjs"
     const loadingTask = getDocument(encodeFilePath(data.id))

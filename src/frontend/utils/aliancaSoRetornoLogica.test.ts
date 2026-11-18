@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { MARCA, descreverRetorno, devolverFonte, ehEnvio, idDeLeitura, idsDeRetorno, outVazio, porQueNaoLigar, roteamento, slideDoTelao, temMarca, trocarFonte } from "./aliancaSoRetornoLogica"
+import { MARCA, aceitaNoModo, descreverRetorno, devolverFonte, ehEnvio, idDeLeitura, idsDeRetorno, outVazio, porQueNaoLigar, roteamento, slideDoTelao, temMarca, trocarFonte } from "./aliancaSoRetornoLogica"
 
 describe("idsDeRetorno", () => {
     it("so saida habilitada com stageOutput", () => {
@@ -82,5 +82,24 @@ describe("leitura, semente e descricao", () => {
         const outs = { r: { enabled: true, stageOutput: "L", out: { slide: { id: "s1", index: 0 } } } }
         expect(descreverRetorno(outs, () => "Grande e o Senhor")).toBe("Grande e o Senhor · slide 1")
         expect(descreverRetorno({ r: { enabled: true, stageOutput: "L", out: {} } }, () => "")).toBe("nada")
+    })
+})
+
+describe("D1: o modo aceita SO slide de texto", () => {
+    it('aceita slide de letra, de versiculo temporario e de show com tipo "show"', () => {
+        expect(aceitaNoModo("slide", { id: "s", layout: "l", index: 2, line: 0 })).toBe(true)
+        expect(aceitaNoModo("slide", { id: "temp", tempItems: [] })).toBe(true)
+        expect(aceitaNoModo("slide", { id: "s", type: "show", index: 0 })).toBe(true)
+    })
+    it("recusa PDF, PowerPoint e qualquer slide que nao e de texto", () => {
+        expect(aceitaNoModo("slide", { type: "pdf", id: "a.pdf", page: 0 })).toBe(false)
+        expect(aceitaNoModo("slide", { type: "ppt", id: "p" })).toBe(false)
+        expect(aceitaNoModo("slide", { type: "folder", id: "f" })).toBe(false)
+    })
+    it("recusa fundo/video, sobreposicao, efeito e temporizador de transicao", () => {
+        for (const t of ["background", "overlays", "effects", "transition"]) expect(aceitaNoModo(t, { x: 1 })).toBe(false)
+    })
+    it("slide de texto com VIDEO dentro (item de midia) tambem e recusado: o tocador nao pode nascer", () => {
+        expect(aceitaNoModo("slide", { id: "s", index: 0 }, true)).toBe(false)
     })
 })

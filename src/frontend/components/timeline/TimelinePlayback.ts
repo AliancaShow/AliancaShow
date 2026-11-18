@@ -17,6 +17,7 @@ import { clearBackground } from "../output/clear"
 import { ShowTimeline } from "./ShowTimeline"
 import { SlideTimeline } from "./SlideTimeline"
 import { destinoRecusaTecla } from "../../utils/aliancaModo"
+import { iniciarAutomacao } from "../../utils/aliancaSoRetorno"
 import { TimelineType } from "./TimelineActions"
 import { startListeningLTC, stopListeningLTC } from "./timecode"
 import { getProjectShowDurations } from "./timeline"
@@ -444,7 +445,13 @@ export class TimelinePlayback {
             const currentBackground = get(outputs)[outputId]?.out?.background
             if (currentBackground?.path !== path) {
                 if (hasBeenPlaying) return // was playing but cleared manually
-                setOutput("background", { name: action.name, path, type: "video", semPasta: true }, false, outputId)
+                // AliancaShow (8b, I1): a linha do tempo move o TELAO sozinha: o modo "so retorno" so desvia gestos do operador
+                const solta = iniciarAutomacao()
+                try {
+                    setOutput("background", { name: action.name, path, type: "video", semPasta: true }, false, outputId)
+                } finally {
+                    solta?.()
+                }
             }
 
             const key = `${path}_${outputId}`

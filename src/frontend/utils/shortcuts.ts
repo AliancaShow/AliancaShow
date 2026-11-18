@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { soRetornoLigado } from "./aliancaSoRetorno"
+import { emDesvio, recusarNoModo, soRetornoLigado, suspenderDesvio } from "./aliancaSoRetorno"
 import { OUTPUT } from "../../types/Channels"
 import { Main } from "../../types/IPC/Main"
 import type { ShowType } from "../../types/Show"
@@ -477,6 +477,8 @@ function createNew() {
 // this only works if opened in preview - if not api
 export async function togglePlayingMedia(e: Event | null = null, back = false, api = false) {
     if (get(outLocked)) return
+    // AliancaShow (8b, D1/B3): no modo "so retorno" midia/audio/pasta sao recusados ALTO. Espaco/seta/API nunca pausam nem retomam a midia que ja esta no telao
+    if (soRetornoLigado()) return recusarNoModo("mídia")
     // if ($focusMode || e.target?.closest(".edit") || e.target?.closest("input")) return
     let item = get(focusMode) ? get(activeFocus) : get(activeShow)
 
@@ -536,6 +538,8 @@ export async function togglePlayingMedia(e: Event | null = null, back = false, a
 
 // FolderShow.svelte shortcuts
 export async function playFolder(path: string, back = false) {
+    // AliancaShow (8b, I1): chamada da automacao do telao (a janela dela esta aberta AGORA): a escrita depois do `await` herda isso
+    const automacao = emDesvio()
     const currentOutput = getFirstActiveOutput()
     const currentlyPlaying = currentOutput?.out?.background?.path
 
@@ -557,7 +561,12 @@ export async function playFolder(path: string, back = false) {
     const outputStyle = get(styles)[currentOutput?.style || ""]
     const mediaStyle = getMediaStyle(get(media)[newMedia.path], outputStyle)
 
-    setOutput("background", { type: newMedia.type, path: newMedia.path, muted: false, loop: false, semPasta: true, ...mediaStyle, folderPath: path })
+    const solta = automacao ? suspenderDesvio() : null
+    try {
+        setOutput("background", { type: newMedia.type, path: newMedia.path, muted: false, loop: false, semPasta: true, ...mediaStyle, folderPath: path })
 
-    startFolderTimer(path, newMedia)
+        startFolderTimer(path, newMedia)
+    } finally {
+        solta?.()
+    }
 }
