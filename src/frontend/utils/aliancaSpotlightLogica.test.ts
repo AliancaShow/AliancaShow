@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, LIVROS, lerReferencia, listaEmDia, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -101,6 +101,25 @@ describe("spotlight: Enter so age sobre a lista da consulta escrita", () => {
     it("campo vazio nunca libera (lista de uma busca anterior e invisivel)", () => {
         expect(listaEmDia("", "", false)).toBe(false)
         expect(listaEmDia("   ", "jo 3 16", false)).toBe(false)
+    })
+})
+
+describe("spotlight: a selecao segue a identidade, nao o indice", () => {
+    const l = (...chaves: string[]) => chaves.map((chave) => ({ chave }))
+    it("acha o selecionado pela chave onde ele estiver", () => {
+        expect(indiceDaChave(l("a", "b", "c"), "b")).toBe(1)
+        // chegou uma secao ACIMA: o selecionado continua o mesmo, so mudou de indice
+        expect(indiceDaChave(l("v", "a", "b", "c"), "b")).toBe(2)
+    })
+    it("sem selecionado (ou ele sumiu): o topo", () => {
+        expect(indiceDaChave(l("a", "b"), null)).toBe(0)
+        expect(indiceDaChave(l("a", "b"), "x")).toBe(0)
+        expect(indiceDaChave([], "x")).toBe(0)
+    })
+    it("as secoes lentas (midia e audio) vem depois das imediatas: a que chega tarde entra ABAIXO", () => {
+        const ids = SECOES.map((s) => s.id)
+        expect(ids[0]).toBe("versiculo")
+        for (const tarde of ["midia", "audio"]) for (const cedo of ["versiculo", "show", "acao"]) expect(ids.indexOf(tarde)).toBeGreaterThan(ids.indexOf(cedo))
     })
 })
 

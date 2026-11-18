@@ -15,14 +15,15 @@
     import { quickSearchActive, activePopup } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { acaoDoResultado, buscarAcoes, buscarAudio, buscarMidia, buscarShows, buscarVersiculo, executarResultado, type Resultado } from "../../utils/aliancaSpotlight"
-    import { andar, enterRepetido, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
+    import { andar, enterRepetido, indiceDaChave, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
     import { tela } from "../../utils/aliancaTela"
     import { highlightText } from "../quicksearch/searchHighlight"
     import Icon from "../helpers/Icon.svelte"
 
     let consulta = ""
     let porSecao: { [id: string]: Resultado[] } = {}
-    let marcado = 0
+    // o selecionado e a CHAVE do resultado, nunca o indice: quando uma secao chega depois a lista muda de tamanho e o selecionado continua o mesmo
+    let selChave: string | null = null
     let campo: HTMLInputElement
     let buscando = false
     // a consulta que gerou a lista na tela, e se ha busca por fazer (debounce pendente ou rodando): o Enter so age sobre a lista da consulta escrita
@@ -35,7 +36,7 @@
 
     // a lista plana, na ordem das secoes (a seta anda por ela)
     $: lista = SECOES.flatMap((s) => porSecao[s.id] || [])
-    $: if (marcado >= lista.length) marcado = Math.max(0, lista.length - 1)
+    $: marcado = indiceDaChave(lista, selChave)
     $: atual = lista[marcado] || null
 
     const ROTULO: { [id in AcaoDeTecla]: string } = {
@@ -74,7 +75,7 @@
         buscando = false
         consulta = ""
         porSecao = {}
-        marcado = 0
+        selChave = null
     }
     function fechou() {
         jaAberta = false
@@ -116,14 +117,18 @@
         const minha = ++busca
         buscando = true
         try {
-            // o que e imediato aparece na hora; midia, audio e versiculo (leem disco/Biblia) entram quando chegam
-            porSecao = { show: buscarShows(q), acao: buscarAcoes(q) }
-            marcado = 0
-            const [versiculo, midia, audio] = await Promise.all([buscarVersiculo(q), buscarMidia(q), buscarAudio(q)])
+            // primeira pintura: versiculo (le a Biblia ja carregada, nao espera disco), musicas e acoes juntos, na ordem das secoes; o selecionado e o topo.
+            // Depois disso a selecao nunca mais sai do lugar: midia e audio (leem pasta) entram ABAIXO, cada um quando chega, sem esperar o outro
+            const versiculo = await buscarVersiculo(q)
             if (minha !== busca) return
-            porSecao = { ...porSecao, versiculo, midia, audio }
-            marcado = 0
+            selChave = null
+            porSecao = { versiculo, show: buscarShows(q), acao: buscarAcoes(q) }
             void listaPintou(q)
+            const entrar = async (id: "midia" | "audio", procurar: Promise<Resultado[]>) => {
+                const achados = await procurar
+                if (minha === busca) porSecao = { ...porSecao, [id]: achados }
+            }
+            await Promise.all([entrar("midia", buscarMidia(q)), entrar("audio", buscarAudio(q))])
         } catch (erro) {
             falhaAlta("spotlight-buscar", erro)
         } finally {
@@ -143,6 +148,10 @@
         await executarResultado(r, acao)
     }
 
+    function marcar(i: number) {
+        selChave = lista[i]?.chave ?? null
+    }
+
     function teclar(e: KeyboardEvent) {
         const ctrl = e.ctrlKey || e.metaKey
         const k = e.key.toLowerCase()
@@ -157,7 +166,7 @@
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault()
             e.stopPropagation()
-            marcado = andar(marcado, e.key === "ArrowDown" ? 1 : -1, lista.length)
+            marcar(andar(marcado, e.key === "ArrowDown" ? 1 : -1, lista.length))
             tick().then(() => document.querySelector(".quicksearch .linha.sel")?.scrollIntoView({ block: "nearest" }))
         } else if (e.key === "Enter") {
             e.preventDefault()
@@ -200,7 +209,7 @@
                         {#each porSecao[secao.id] as r (r.chave)}
                             {@const i = lista.indexOf(r)}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div class="linha" class:sel={i === marcado} class:aviso={!!r.versiculo?.motivo} role="option" aria-selected={i === marcado} tabindex="-1" data-resultado={r.chave} data-tipo={r.tipo} on:mousemove={() => (marcado = i)} on:mousedown|preventDefault on:click={() => escolher(r, acaoPrimaria(r))}>
+                            <div class="linha" class:sel={i === marcado} class:aviso={!!r.versiculo?.motivo} role="option" aria-selected={i === marcado} tabindex="-1" data-resultado={r.chave} data-tipo={r.tipo} on:mousemove={() => marcar(i)} on:mousedown|preventDefault on:click={() => escolher(r, acaoPrimaria(r))}>
                                 <span class="icone"><Icon id={r.icone || "slide"} size={1.1} white /></span>
                                 <span class="texto">
                                     <span class="nome">{r.titulo}</span>

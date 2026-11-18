@@ -242,6 +242,13 @@ export function listaEmDia(consulta: string, consultaDaLista: string, pendente: 
     return !!q && !pendente && q === consultaDaLista.trim()
 }
 
+/** o indice do resultado selecionado, achado pela chave (a lista ganha secoes no meio do caminho e o indice muda; a identidade nao). Sem chave ou sumiu: o topo */
+export function indiceDaChave(lista: { chave: string }[], chave: string | null): number {
+    if (chave === null) return 0
+    const i = lista.findIndex((r) => r.chave === chave)
+    return i < 0 ? 0 : i
+}
+
 /** a seta anda sem dar a volta (parar no fim e a regra da lista do app); lista vazia = -1 */
 export function andar(atual: number, passo: number, total: number): number {
     if (total <= 0) return -1
@@ -252,10 +259,11 @@ export function andar(atual: number, passo: number, total: number): number {
 export const MAXIMO_POR_SECAO = { show: 8, midia: 5, audio: 5, acao: 5 } as const
 
 export type SecaoDoSpotlight = { id: "versiculo" | "show" | "midia" | "audio" | "acao"; titulo: string }
+// a ordem e FIXA e as secoes que leem disco (midia, audio) ficam por ultimo: quando chegam tarde entram ABAIXO do que ja estava pintado
 export const SECOES: SecaoDoSpotlight[] = [
     { id: "versiculo", titulo: "Versículo" },
     { id: "show", titulo: "Músicas e apresentações" },
+    { id: "acao", titulo: "Ações" },
     { id: "midia", titulo: "Mídia" },
-    { id: "audio", titulo: "Áudio" },
-    { id: "acao", titulo: "Ações" }
+    { id: "audio", titulo: "Áudio" }
 ]
