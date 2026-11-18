@@ -20,6 +20,7 @@
     import { countFolderMediaItems, getExtension, getFileName, getMediaLayerType, getMediaStyle, getMediaType, isMediaExtension, removeExtension } from "../../helpers/media"
     import { getFirstActiveOutput, setOutput } from "../../helpers/output"
     import FloatingInputs from "../../input/FloatingInputs.svelte"
+    import { estiloDock } from "../../../utils/aliancaDock"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialZoom from "../../inputs/MaterialZoom.svelte"
     import { clearBackground, clearSlide } from "../../output/clear"
@@ -743,7 +744,7 @@
     <MaterialZoom hidden columns={$mediaOptions.columns} defaultValue={5} on:change={(e) => mediaOptions.set({ ...$mediaOptions, columns: e.detail })} />
 {:else if active === "online"}
     {#if onlineTab === "youtube" || onlineTab === "vimeo"}
-        <FloatingInputs onlyOne dock>
+        <FloatingInputs onlyOne style={estiloDock("right")}>
             <MaterialButton
                 title="groups.toggle_global_group"
                 on:click={() => {
@@ -765,7 +766,7 @@
 {:else}
     {#if active !== "all" && active !== "favourites"}
         {#if rootPath !== path}
-            <FloatingInputs side="left" dock>
+            <FloatingInputs side="left" style={estiloDock("left")}>
                 <MaterialButton disabled={rootPath === path} title="actions.back" on:click={goBack}>
                     <Icon id="back" white />
                 </MaterialButton>
@@ -782,7 +783,7 @@
                 </p>
             </FloatingInputs>
         {:else if hasAudio.count}
-            <FloatingInputs side="left" onlyOne dock>
+            <FloatingInputs side="left" onlyOne style={estiloDock("left")}>
                 <MaterialButton icon="autofill" on:click={hasAudio.exists ? openAudioFolder : createAudioFolder}>
                     <p>
                         <T id="audio.{hasAudio.exists ? 'open_audio_folder' : 'create_audio_folder'}" />
