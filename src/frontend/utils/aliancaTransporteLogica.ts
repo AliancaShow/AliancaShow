@@ -44,6 +44,50 @@ export function prenderBusca(valor: number, duracao: number, toTime = 0): number
     return Math.min(Math.max(0, valor || 0), limiteBusca(duracao, toTime))
 }
 
+/** O ajuste de volume da midia vai ate 125 % (`edit/values/media.ts`): a barra tem o mesmo teto, para nunca mostrar cheio e gravar menos do que esta salvo. */
+export const VOLUME_MAXIMO = 1.25
+
+export function prenderVolume(v: number, minimo = 0): number {
+    return Math.min(VOLUME_MAXIMO, Math.max(minimo, Number.isFinite(v) ? v : 0))
+}
+
+/**
+ * Limita a frequencia de uma escrita (arrastar o volume manda o `media` inteiro por IPC a todas as saidas): a primeira passa na hora, as
+ * seguintes esperam o intervalo e so a ULTIMA vale; `fechar` (soltar) aplica o valor final na hora e cancela o que estava esperando.
+ */
+export function criarLimitador<T>(aplicar: (v: T) => void, intervaloMs = 100) {
+    let ultimo = -Infinity
+    let pendente: { v: T } | null = null
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const rodar = (v: T) => {
+        ultimo = Date.now()
+        aplicar(v)
+    }
+    return {
+        empurrar(v: T) {
+            const espera = ultimo + intervaloMs - Date.now()
+            if (espera <= 0 && !timer) return rodar(v)
+            pendente = { v }
+            if (!timer)
+                timer = setTimeout(
+                    () => {
+                        timer = null
+                        const p = pendente
+                        pendente = null
+                        if (p) rodar(p.v)
+                    },
+                    Math.max(0, espera)
+                )
+        },
+        fechar(v: T) {
+            if (timer) clearTimeout(timer)
+            timer = null
+            pendente = null
+            rodar(v)
+        }
+    }
+}
+
 /** As saidas que a coluna No ar considera: habilitadas e visiveis, na ordem do objeto. A primeira e a principal (a que a tela mostra E a que a faixa controla). */
 export function saidasHabilitadas(outputs: Record<string, { enabled?: boolean; invisible?: boolean } | undefined> | null | undefined): string[] {
     return Object.entries(outputs || {})

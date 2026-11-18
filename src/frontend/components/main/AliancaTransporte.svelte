@@ -5,11 +5,11 @@
     // vao para o "+N", que abre um painel POR CIMA (nao empurra nada). Nao e camada sobre a tela: nenhum clique nela alcanca o slide.
     // A logica vem dos controles que o Preview antigo tinha (MediaControls/VideoSlider, Audio, Timers onlyPlaying, SpotifyController,
     // AudioMeter); a marcacao e nova. Nenhuma tecla nova: os atalhos de midia continuam no Preview escondido.
-    import { onDestroy, onMount } from "svelte"
+    import { onDestroy } from "svelte"
     import type { Unsubscriber } from "svelte/store"
     import { AudioPlayer } from "../../audio/audioPlayer"
     import { activePage, activeTimers, media, outLocked, outputs, playerVideos, playingAudio, timers } from "../../stores"
-    import { arrastoVale, extrasDaFaixa, outrasSaidasComVideo, prenderBusca, saidasHabilitadas, timersNaFaixa, type ArrastoMidia } from "../../utils/aliancaTransporteLogica"
+    import { arrastoVale, criarLimitador, extrasDaFaixa, outrasSaidasComVideo, prenderBusca, prenderVolume, saidasHabilitadas, timersNaFaixa, type ArrastoMidia } from "../../utils/aliancaTransporteLogica"
     import { getAccess } from "../../utils/profile"
     import AudioMeter from "../drawer/audio/AudioMeter.svelte"
     import { getCurrentTimerValue, playPauseGlobal, resetTimer } from "../drawer/timers/timers"
@@ -151,11 +151,20 @@
     }
     // o volume e o do arquivo (`media[caminho].volume`, o mesmo que o painel de informacoes da midia escreve)
     $: volumeVideo = $media[caminho]?.volume ?? 1
+    // arrastar o volume escreve o `media` inteiro e o manda por IPC a todas as saidas: no maximo 10 escritas por segundo, e soltar grava o final.
+    // O teto e 125 % (o que o ajuste da midia aceita): um volume salvo acima de 100 % aparece como e, e nao e reduzido calado.
+    const gravarVolumeVideo = ({ c, v }: { c: string; v: number }) => {
+        media.update((a) => ({ ...a, [c]: { ...(a[c] || {}), volume: v } }))
+        VideoPlayer.updateVolume(c)
+    }
+    const limiteVolumeVideo = criarLimitador(gravarVolumeVideo, 100)
     function volumeDoVideo(e: CustomEvent<number>) {
+        if (caminho) limiteVolumeVideo.empurrar({ c: caminho, v: prenderVolume(e.detail) })
+    }
+    function volumeFimDoVideo(e: CustomEvent<number>) {
         if (!caminho) return
-        const v = Math.max(0, Math.min(1, e.detail))
-        media.update((a) => ({ ...a, [caminho]: { ...(a[caminho] || {}), volume: v } }))
-        VideoPlayer.updateVolume(caminho)
+        limiteVolumeVideo.fechar({ c: caminho, v: prenderVolume(e.detail) })
+        VideoPlayer.reavaliarSilencioDoAudio()
     }
 
     // ---------------- audio: o primeiro que nao e microfone (o Audio.svelte antigo) ----------------
@@ -222,11 +231,17 @@
         })
     }
     $: volumeAudio = $media[idAudio]?.volume ?? 1
+    const gravarVolumeAudio = ({ id, v }: { id: string; v: number }) => {
+        media.update((a) => ({ ...a, [id]: { ...(a[id] || {}), volume: v } }))
+        AudioPlayer.updateVolume(id)
+    }
+    const limiteVolumeAudio = criarLimitador(gravarVolumeAudio, 100)
+    // o audio trata 0 como "sem valor" (= 1): o minimo e 1 %; para silenciar de vez, usar o mixer
     function volumeDoAudio(e: CustomEvent<number>) {
-        if (!idAudio) return
-        const v = Math.max(0.01, Math.min(1, e.detail)) // o audio trata 0 como "sem valor" (= 1); para silenciar, usar o mixer
-        media.update((a) => ({ ...a, [idAudio]: { ...(a[idAudio] || {}), volume: v } }))
-        AudioPlayer.updateVolume(idAudio)
+        if (idAudio) limiteVolumeAudio.empurrar({ id: idAudio, v: prenderVolume(e.detail, 0.01) })
+    }
+    function volumeFimDoAudio(e: CustomEvent<number>) {
+        if (idAudio) limiteVolumeAudio.fechar({ id: idAudio, v: prenderVolume(e.detail, 0.01) })
     }
 
     // ---------------- temporizadores (a mesma lista que o Timers onlyPlaying) ----------------
@@ -260,12 +275,12 @@
         {#if !total}<div class="item vazio">nada tocando{#if outrasVideo}<span class="outra" data-acao="transporte-outra">· +{outrasVideo} saída com mídia</span>{/if}</div>{/if}
         {#if temVideo}
             <div class="item">
-                <AliancaTransporteLinha tipo="video" cor={COR_VIDEO} nome={nomeVideo} saida={nomeSaida} pausado={dadosVideo.pausado} atual={tempoVideo} duracao={dadosVideo.duracao} repetir={dadosVideo.repetir} mudo={dadosVideo.mudo} volume={tipoFundo === "player" ? null : volumeVideo} travada={$outLocked} on:alternar={alternarVideo} on:repetir={alternarRepetir} on:mudo={alternarMudo} on:comecar={comecarVideo} on:mover={moverVideo} on:soltar={soltarVideo} on:volume={volumeDoVideo} />
+                <AliancaTransporteLinha tipo="video" cor={COR_VIDEO} nome={nomeVideo} saida={nomeSaida} pausado={dadosVideo.pausado} atual={tempoVideo} duracao={dadosVideo.duracao} repetir={dadosVideo.repetir} mudo={dadosVideo.mudo} volume={tipoFundo === "player" ? null : volumeVideo} travada={$outLocked} on:alternar={alternarVideo} on:repetir={alternarRepetir} on:mudo={alternarMudo} on:comecar={comecarVideo} on:mover={moverVideo} on:soltar={soltarVideo} on:volume={volumeDoVideo} on:volumefim={volumeFimDoVideo} />
             </div>
         {/if}
         {#if temAudio}
             <div class="item">
-                <AliancaTransporteLinha tipo="audio" cor={COR_AUDIO} nome={nomeAudio} pausado={pausadoAudio} atual={tempoAudio} duracao={duracaoAudio} volume={volumeAudio} travada={$outLocked} on:alternar={alternarAudio} on:comecar={comecarAudio} on:mover={moverAudio} on:soltar={soltarAudio} on:volume={volumeDoAudio} />
+                <AliancaTransporteLinha tipo="audio" cor={COR_AUDIO} nome={nomeAudio} pausado={pausadoAudio} atual={tempoAudio} duracao={duracaoAudio} volume={volumeAudio} travada={$outLocked} on:alternar={alternarAudio} on:comecar={comecarAudio} on:mover={moverAudio} on:soltar={soltarAudio} on:volume={volumeDoAudio} on:volumefim={volumeFimDoAudio} />
             </div>
         {/if}
         {#each lista as t (t.id)}

@@ -43,7 +43,7 @@ const clicarSel = async (sel, rotulo) => {
     await clicarEm(j, a.x, a.y)
     return a
 }
-async function arrastar(sel, de, ate) {
+async function arrastar(sel, de, ate, passos = 6, pausa = 60) {
     const a = await localizar(j, `document.querySelector(${JSON.stringify(sel)})`)
     if (!a.ok) throw new Error(`barra ${sel}: ${a.motivo}`)
     const medir = () => dom(`(()=>{const r=document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return {x:r.x,w:r.width,y:r.y+r.height/2}})()`)
@@ -55,9 +55,9 @@ async function arrastar(sel, de, ate) {
     const x1 = r.x + r.w * ate
     await mover(j, x0, r.y)
     await j.enviar("Input.dispatchMouseEvent", { type: "mousePressed", x: x0, y: r.y, button: "left", clickCount: 1 })
-    for (let i = 1; i <= 6; i++) {
-        await j.enviar("Input.dispatchMouseEvent", { type: "mouseMoved", x: x0 + ((x1 - x0) * i) / 6, y: r.y, button: "left", buttons: 1 })
-        await esperar(60)
+    for (let i = 1; i <= passos; i++) {
+        await j.enviar("Input.dispatchMouseEvent", { type: "mouseMoved", x: x0 + ((x1 - x0) * i) / passos, y: r.y, button: "left", buttons: 1 })
+        await esperar(pausa)
     }
     await j.enviar("Input.dispatchMouseEvent", { type: "mouseReleased", x: x1, y: r.y, button: "left", clickCount: 1 })
     await esperar(500)
@@ -187,7 +187,22 @@ try {
     ok("E: mudo desliga", (await videoState())?.muted === false)
     const fimVol = await arrastar('[data-transporte=video] .vol .barra', 0.99, 0.4)
     const vol = await dom(`get(S.media)[${JSON.stringify(VIDEO)}]?.volume`)
-    ok("E: arrastar o volume escreve o volume do arquivo (onde o ponteiro soltou, ~0,4)", typeof vol === "number" && Math.abs(vol - Math.min(1, Math.max(0, fimVol.fracaoFinal))) < 0.03 && vol > 0.2 && vol < 0.5, `${vol} esperado ${fimVol.fracaoFinal}`)
+    ok("E: arrastar o volume escreve o volume do arquivo (onde o ponteiro soltou, ate 125 %)", typeof vol === "number" && Math.abs(vol - Math.min(1.25, Math.max(0, fimVol.fracaoFinal * 1.25))) < 0.04 && vol > 0.3 && vol < 0.7, `${vol} esperado ${fimVol.fracaoFinal * 1.25}`)
+    // revisao da fatia 7, achado 5: o IPC do `media` (manda o objeto inteiro a todas as saidas) e limitado a ~10/s e o final nunca se perde
+    {
+        await j.ev(`window.__w=0; window.__u=S.media.subscribe(()=>window.__w++); return 1`)
+        const t0 = Date.now()
+        const fim2 = await arrastar('[data-transporte=video] .vol .barra', 0.99, 0.3, 40, 8)
+        const dt = (Date.now() - t0) / 1000
+        const w = await dom(`(()=>{window.__u(); return window.__w})()`)
+        const v2 = await dom(`get(S.media)[${JSON.stringify(VIDEO)}]?.volume`)
+        ok("E2: 40 movimentos do ponteiro nao viram 40 escritas (no maximo ~10 por segundo)", w <= dt * 10 + 4, `${w} escritas em ${dt.toFixed(1)} s`)
+        ok("E2: o valor final (onde soltou) foi gravado", Math.abs(v2 - fim2.fracaoFinal * 1.25) < 0.04, `${v2} vs ${fim2.fracaoFinal * 1.25}`)
+    }
+    // achado 5: volume salvo acima de 100 % aparece como e (barra cheia em 125 %), nao como "cheia" mentindo
+    await j.ev(`S.media.update(a=>({...a,[${JSON.stringify(VIDEO)}]:{...(a[${JSON.stringify(VIDEO)}]||{}),volume:1.25}})); await esp(400); return 1`)
+    ok("E3: 125 % salvo enche a barra de volume ate o fim e o rotulo diz 125%", (await dom(`(()=>{const b=document.querySelector('[data-transporte=video] .vol .barra'); return b.querySelector('.cheio').style.width==='100%' && b.getAttribute('aria-label')==='Volume 125%'})()`)) === true)
+    await j.ev(`S.media.update(a=>({...a,[${JSON.stringify(VIDEO)}]:{...(a[${JSON.stringify(VIDEO)}]||{}),volume:1}})); await esp(300); return 1`)
     ok("E: nenhum slide foi para o ar por causa da faixa", (await dom(`get(S.outputs).default.out.slide ?? null`)) === null)
 
     // ---- J. teclado: a faixa nao ficou com o foco (o espaco e as setas continuam sendo da pagina)

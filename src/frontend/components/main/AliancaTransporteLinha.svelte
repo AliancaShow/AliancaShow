@@ -3,7 +3,7 @@
     // arrastavel, tempo que falta (clique troca por duracao total), repetir, mudo e volume. O que a fonte nao tem (repetir/mudo no audio)
     // chega `null` e o botao nao aparece. So apresentacao: quem liga ao player e o AliancaTransporte.
     import { createEventDispatcher } from "svelte"
-    import { restante, tempoCurto } from "../../utils/aliancaTransporteLogica"
+    import { restante, tempoCurto, VOLUME_MAXIMO } from "../../utils/aliancaTransporteLogica"
     import AliancaBarra from "./AliancaBarra.svelte"
 
     export let nome = ""
@@ -18,7 +18,7 @@
     export let travada = false
     export let tipo: "video" | "audio" = "video"
 
-    const dispatch = createEventDispatcher<{ alternar: void; comecar: number; mover: number; soltar: number; repetir: void; mudo: void; volume: number }>()
+    const dispatch = createEventDispatcher<{ alternar: void; comecar: number; mover: number; soltar: number; repetir: void; mudo: void; volume: number; volumefim: number }>()
     let total = false
     $: falta = restante(duracao, atual)
     // os rotulos de tempo tem LARGURA FIXA (em `ch`, pelo numero de caracteres): com digitos proporcionais "0:11" e "0:22" diferem em px e tudo
@@ -57,7 +57,7 @@
             </button>
         {/if}
         {#if volume !== null}
-            <div class="vol"><AliancaBarra valor={volume} max={1} desligada={travada} rotulo="Volume" cor="var(--luz-texto)" on:mover={(e) => dispatch("volume", e.detail)} on:soltar={(e) => dispatch("volume", e.detail)} /></div>
+            <div class="vol"><AliancaBarra valor={volume} max={VOLUME_MAXIMO} desligada={travada} rotulo="Volume {Math.round(volume * 100)}%" cor="var(--luz-texto)" on:mover={(e) => dispatch("volume", e.detail)} on:soltar={(e) => dispatch("volumefim", e.detail)} /></div>
         {/if}
     </div>
 </div>

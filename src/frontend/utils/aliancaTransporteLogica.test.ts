@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest"
-import { arrastoVale, outrasSaidasComVideo, saidasHabilitadas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { describe, expect, it, vi } from "vitest"
+import { arrastoVale, criarLimitador, prenderVolume, VOLUME_MAXIMO, outrasSaidasComVideo, saidasHabilitadas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -69,8 +69,60 @@ describe("varias saidas: a faixa segue a mesma saida da tela (revisao da fatia 7
     it("conta so as outras saidas com video DIFERENTE do que a faixa controla", () => {
         expect(outrasSaidasComVideo([{ caminho: "/v/b.mp4", video: true }], "/v/a.mp4")).toBe(1)
         expect(outrasSaidasComVideo([{ caminho: "/v/a.mp4", video: true }], "/v/a.mp4")).toBe(0)
-        expect(outrasSaidasComVideo([{ caminho: "/i/foto.jpg", video: false }, { caminho: "", video: true }], "")).toBe(0)
-        expect(outrasSaidasComVideo([{ caminho: "/v/b.mp4", video: true }, { caminho: "/v/c.mp4", video: true }], "")).toBe(2)
+        expect(
+            outrasSaidasComVideo(
+                [
+                    { caminho: "/i/foto.jpg", video: false },
+                    { caminho: "", video: true }
+                ],
+                ""
+            )
+        ).toBe(0)
+        expect(
+            outrasSaidasComVideo(
+                [
+                    { caminho: "/v/b.mp4", video: true },
+                    { caminho: "/v/c.mp4", video: true }
+                ],
+                ""
+            )
+        ).toBe(2)
+    })
+})
+
+describe("volume (revisao da fatia 7, achado 5)", () => {
+    it("o teto e 125 %: o que o ajuste da midia aceita nao e reduzido calado", () => {
+        expect(VOLUME_MAXIMO).toBe(1.25)
+        expect(prenderVolume(1.25)).toBe(1.25)
+        expect(prenderVolume(9)).toBe(1.25)
+        expect(prenderVolume(-1)).toBe(0)
+        expect(prenderVolume(0, 0.01)).toBe(0.01)
+        expect(prenderVolume(NaN)).toBe(0)
+    })
+    it("limitador: no maximo uma escrita por intervalo, o valor final nunca se perde", () => {
+        vi.useFakeTimers()
+        const escritas: number[] = []
+        const l = criarLimitador<number>((v) => escritas.push(v), 100)
+        for (let i = 1; i <= 30; i++) {
+            l.empurrar(i / 100)
+            vi.advanceTimersByTime(10) // 30 movimentos em 300 ms
+        }
+        expect(escritas.length).toBeLessThanOrEqual(4) // ~10 por segundo
+        expect(escritas[0]).toBe(0.01) // o primeiro passa na hora
+        l.fechar(0.4)
+        expect(escritas[escritas.length - 1]).toBe(0.4) // soltar grava o final na hora
+        vi.advanceTimersByTime(500)
+        expect(escritas[escritas.length - 1]).toBe(0.4) // e nada espera atras
+        vi.useRealTimers()
+    })
+    it("limitador: sem nada pendente, nao escreve de novo", () => {
+        vi.useFakeTimers()
+        const escritas: number[] = []
+        const l = criarLimitador<number>((v) => escritas.push(v), 100)
+        l.empurrar(1)
+        vi.advanceTimersByTime(1000)
+        expect(escritas).toEqual([1])
+        vi.useRealTimers()
     })
 })
 
