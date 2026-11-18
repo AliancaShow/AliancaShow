@@ -113,7 +113,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "4d7d28ee6c5d9afa5de0323d2832ab32f72eca87a96a9f183d30e7f82cfc2eb1"
+export const SHA_EXCECOES = "bb4d8c1b6444e0ce4d47db89e054b4d36ce554ed84e80ef9f72509ebcad207aa"
 export const SHA_NOVOS = "3003f60b347bb4d80804c926fcedf1c48be2909a4e908d9a2e395840cff3f2a0"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
