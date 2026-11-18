@@ -18,7 +18,10 @@
     import { updateOut } from "../helpers/showActions"
     import { shouldOpenReplace } from "../../utils/shortcuts"
     import Content from "../drawer/Content.svelte"
+    import AliancaFiltros from "../drawer/media/AliancaFiltros.svelte"
+    import { drawerTabsData } from "../../stores"
     import AliancaArvore from "./AliancaArvore.svelte"
+    import AliancaMidiaControles from "./AliancaMidiaControles.svelte"
     import AliancaShowsLista from "./AliancaShowsLista.svelte"
 
     export let esq = 280
@@ -29,6 +32,8 @@
     let novoAberto = false
 
     $: emShows = $activeDrawerTab === "shows"
+    // chips Video/Foto/Audio e zoom/modo da pasta Midia (nao valem nas abas online e de entradas)
+    $: emMidia = $activeDrawerTab === "media" && !["online", "inputs"].includes($drawerTabsData.media?.activeSubTab || "")
     // a busca de Shows e a mesma `buscaDaBiblioteca` da lista; nas outras pastas vale o `searchValue` do Content
     $: if (emShows) buscaDaBiblioteca.set(searchValue)
     // trocar de pasta zera a busca (a do Content nao carrega de uma pasta para outra)
@@ -116,6 +121,13 @@
                 {/if}
             </div>
         {/if}
+        {#if emMidia}
+            <AliancaFiltros />
+        {/if}
+        <span class="espaco"></span>
+        {#if emMidia}
+            <AliancaMidiaControles />
+        {/if}
         <input bind:this={campo} class="busca search edit drawer_search" type="text" placeholder="Buscar música, trecho da letra ou versículo" spellcheck="false" autocomplete="off" bind:value={searchValue} on:keydown={teclaDoCampo} />
     </div>
     <div class="corpo">
@@ -170,8 +182,10 @@
         background: var(--luz-texto);
         color: var(--luz-tinta);
     }
+    .espaco {
+        flex: 1;
+    }
     .busca {
-        margin-left: auto;
         height: 32px;
         width: 300px;
         box-sizing: border-box;

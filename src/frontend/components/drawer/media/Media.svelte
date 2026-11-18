@@ -33,7 +33,6 @@
     import CLogo from "./CLogo.svelte"
     import Canva from "./Canva.svelte"
     import ContentLibraryBrowser from "./ContentLibraryBrowser.svelte"
-    import AliancaFiltros from "./AliancaFiltros.svelte"
     import AliancaPastaCfg from "./AliancaPastaCfg.svelte"
     import Folder from "./Folder.svelte"
     import Media from "./MediaCard.svelte"
@@ -43,6 +42,9 @@
     export let searchValue = ""
     export let streams: MediaStream[] = []
 
+    // leiaute v2: colunas pela largura (cartao de 150 px no zoom padrao 5, como o `auto-fill, minmax(150px, 1fr)` do prototipo); o zoom do cabecalho muda esse minimo
+    let larguraGrade = 1000
+    $: colunasAuto = Math.max(1, Math.floor(larguraGrade / (750 / ($mediaOptions.columns || 5))))
     const setView = (v: any) => mediaOptions.update((a) => ({ ...a, view: v }))
 
     let prevActiveSubTab = active
@@ -551,7 +553,6 @@
         path = folder.length > rootPath.length ? folder || rootPath : rootPath
     }
 
-    const slidesViews: any = { grid: "list", list: "grid" }
     // const nextActiveView = { all: "image", folder: "image", image: "video", video: "all" } // all: "folder"
     $: if ((notFolders.includes(active || "") || ehPastaView) && activeView === "folder") setView("image")
 
@@ -642,7 +643,7 @@
     {#if ehPastaView && cfgAberta && $modoAlianca === "preparar" && pastaId && tagDaPasta}
         <AliancaPastaCfg {pastaId} />
     {/if}
-    <div class="grid" class:list={$mediaOptions.mode === "list"} style="height: 100%;">
+    <div class="grid" class:list={$mediaOptions.mode === "list"} style="height: 100%;" bind:clientWidth={larguraGrade}>
         <!-- AliancaShow F7: os audios da pasta ficam em cima (a grade de video/foto ocupa a altura toda e empurraria a lista para fora da tela) -->
         {#if audiosVisiveis.length}
             <div class="audiosDaPasta" data-audios-da-pasta>
@@ -686,7 +687,7 @@
             <div class="context #media" style="display: contents;">
                 {#key searchedFiles}
                     {#if $mediaOptions.mode === "grid"}
-                        <MediaGrid items={searchedFiles} columns={$mediaOptions.columns} let:item>
+                        <MediaGrid items={searchedFiles} columns={colunasAuto} let:item>
                             {#if item.isFolder}
                                 <Folder
                                     name={item.name}
@@ -728,16 +729,11 @@
     </div>
 </div>
 
-{#if !isProviderSection && active !== "online" && active !== "inputs"}
-    <AliancaFiltros />
-{/if}
-
 <!-- NAV -->
 
 {#if isProviderSection}
-    <FloatingInputs onlyOne>
-        <MaterialZoom columns={$mediaOptions.columns} defaultValue={5} on:change={(e) => mediaOptions.set({ ...$mediaOptions, columns: e.detail })} />
-    </FloatingInputs>
+    <!-- leiaute v2: zoom e modo (grade/lista) moraram nos botoes flutuantes; agora ficam no cabecalho da biblioteca (AliancaMidiaControles). So a roda do mouse segue aqui. -->
+    <MaterialZoom hidden columns={$mediaOptions.columns} defaultValue={5} on:change={(e) => mediaOptions.set({ ...$mediaOptions, columns: e.detail })} />
 {:else if active === "online"}
     {#if onlineTab === "youtube" || onlineTab === "vimeo"}
         <FloatingInputs onlyOne>
@@ -750,19 +746,6 @@
             >
                 <Icon id="add" />
                 {#if !$labelsDisabled}<T id="settings.add" />{/if}
-            </MaterialButton>
-        </FloatingInputs>
-    {:else if onlineTab !== "canva" || $providerConnections.canva}
-        <FloatingInputs>
-            <MaterialButton
-                on:click={() =>
-                    mediaOptions.update((a) => {
-                        a.mode = slidesViews[$mediaOptions.mode]
-                        return a
-                    })}
-                title="show.{$mediaOptions.mode}"
-            >
-                <Icon size={1.3} id={$mediaOptions.mode} white />
             </MaterialButton>
         </FloatingInputs>
     {/if}
@@ -803,26 +786,7 @@
         {/if}
     {/if}
 
-    <FloatingInputs>
-        <!-- {#if open}
-            <MaterialButton title="media.{activeView}" on:click={() => setView(nextActiveView[activeView])}>
-                <Icon size={1.2} id={activeView === "all" ? "media" : activeView} white={activeView === "all"} />
-            </MaterialButton>
-        {/if} -->
-
-        <MaterialZoom columns={$mediaOptions.columns} defaultValue={5} on:change={(e) => mediaOptions.set({ ...$mediaOptions, columns: e.detail })} />
-
-        <MaterialButton
-            on:click={() =>
-                mediaOptions.update((a) => {
-                    a.mode = slidesViews[$mediaOptions.mode]
-                    return a
-                })}
-            title="show.{$mediaOptions.mode}"
-        >
-            <Icon size={1.3} id={$mediaOptions.mode} white />
-        </MaterialButton>
-    </FloatingInputs>
+    <MaterialZoom hidden columns={$mediaOptions.columns} defaultValue={5} on:change={(e) => mediaOptions.set({ ...$mediaOptions, columns: e.detail })} />
 {/if}
 
 <style>

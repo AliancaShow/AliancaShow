@@ -130,48 +130,32 @@
 </div>
 
 <style>
+    /* leiaute v2: sem cartao nem borda; so as linhas compactas da arvore (a linha-guia e do pai, em AliancaArvore) */
     .tabSection {
         display: flex;
         flex-direction: column;
-        gap: 5px;
-        padding: 8px 0;
+        gap: 4px;
+        padding: 2px 0;
     }
 
     .section {
         position: relative;
-
-        background-color: var(--primary-darker);
-        border: 1px solid var(--primary-lighter);
-        margin: 0 5px;
-        border-radius: 10px;
-
         display: flex;
         flex-direction: column;
-
-        overflow: hidden;
-
-        /* align to left */
-        margin-left: 0;
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-left-width: 0;
     }
 
     .title {
-        font-weight: 500;
-        padding: 4px 14px;
-        font-size: 0.8rem;
-        opacity: 0.8;
-        background: var(--primary-darkest);
-        border-bottom: 1px solid var(--primary-lighter);
+        font-weight: 600;
+        padding: 6px 8px 2px;
+        font-size: 11px;
+        color: var(--luz-mudo, rgb(248 248 240 / 0.5));
     }
 
     hr {
         height: 1px;
         border: none;
-        background-color: var(--primary-lighter);
+        background-color: var(--luz-linha, rgb(248 248 240 / 0.075));
         flex: 1;
-        opacity: 0.8;
     }
 
     .separator {
@@ -179,10 +163,9 @@
         align-items: center;
     }
     .sepLabel {
-        font-size: 0.6rem;
-        color: var(--text);
-        opacity: 0.5;
-        padding: 6px 14px;
+        font-size: 11px;
+        color: var(--luz-mudo, rgb(248 248 240 / 0.5));
+        padding: 6px 8px 2px;
         line-height: 1;
     }
 
@@ -197,5 +180,10 @@
     .add_button :global(button) {
         padding: 4px;
         border: none;
+    }
+    /* o botao "nova categoria / importar" do pe da secao: contorno tracejado, 26 px */
+    .section :global(div[slot]),
+    .section > :global(div:last-child:not(.title)) {
+        padding: 4px 0 !important;
     }
 </style>
