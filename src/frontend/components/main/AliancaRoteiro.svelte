@@ -103,7 +103,8 @@
     $: noArIds = lerNoAr($outputs)
     $: ao = faixaAoVivo({ telaoLigado: !!$outputDisplay })
     $: musicas = categoriasDeMusica($categories as Parameters<typeof categoriasDeMusica>[0])
-    function tipoDe(item: ProjectShowRef): string {
+    // `_deps` existe so para o Svelte reavaliar o texto quando os stores chegam depois da montagem
+    function tipoDe(item: ProjectShowRef, _deps?: unknown): string {
         const t = (item.type || "show") as string
         if (t === "show") return musicas.has($shows[item.id]?.category || "") ? "♪" : "T"
         if (t === "video" || t === "image" || t === "player") return "▶"
@@ -111,7 +112,7 @@
         if (t === "scripture") return "✝"
         return "T"
     }
-    function nomeDe(item: ProjectShowRef): string {
+    function nomeDe(item: ProjectShowRef, _deps?: unknown): string {
         if ((item.type || "show") === "show") return $shows[item.id]?.name || item.name || "(sem nome)"
         return item.name || removeExtension(getFileName(item.id)) || "(sem nome)"
     }
@@ -167,10 +168,10 @@
                     {/if}
                     {#each b.linhas as l (l.item.id + ":" + l.index)}
                         {@const trava = projeto?.sectionsLocked}
-                        <SelectElem id="show" dropAbove={false} triggerOnHover data={{ ...l.item, name: nomeDe(l.item), index: l.index }} {fileOver} borders={l.item.type === "show_placeholder" ? "all" : "edges"} trigger="column" draggable={!trava} selectable={!trava}>
+                        <SelectElem id="show" dropAbove={false} triggerOnHover data={{ ...l.item, name: nomeDe(l.item, $shows), index: l.index }} {fileOver} borders={l.item.type === "show_placeholder" ? "all" : "edges"} trigger="column" draggable={!trava} selectable={!trava}>
                             <button class="item {projetoSoLeitura ? '' : `context #project_${contextoDe(l.item.type)}`}" class:sel={$activeShow?.index === l.index && $activeShow?.id === l.item.id} tabindex="-1" on:click={() => abrir(l.item, l.index)}>
-                                <span class="tipo">{tipoDe(l.item)}</span>
-                                <span class="nome">{nomeDe(l.item)}</span>
+                                <span class="tipo">{tipoDe(l.item, [$shows, musicas])}</span>
+                                <span class="nome">{nomeDe(l.item, $shows)}</span>
                                 {#if noArDe(l.item)}<span class="noar">NO AR</span>{/if}
                                 {#if podeTirar}<span class="x" role="none" />{/if}
                             </button>

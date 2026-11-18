@@ -4,16 +4,16 @@
     import { noAr } from "../../utils/aliancaModo"
     import { getFileName, removeExtension } from "../helpers/media"
 
-    const nomeDe = (item: { id?: string; type?: string; name?: string } | null | undefined): string => {
+    const nomeDe = (item: { id?: string; type?: string; name?: string } | null | undefined, _shows?: unknown): string => {
         if (!item?.id) return ""
         if ((item.type || "show") === "show") return $shows[item.id]?.name || item.name || ""
         return item.name || removeExtension(getFileName(item.id)) || ""
     }
 
-    $: atual = nomeDe($activeShow as any)
+    $: atual = nomeDe($activeShow as any, $shows)
     $: lista = ($activeProject ? $projects[$activeProject]?.shows || [] : []).filter((a) => typeof a === "object")
     $: indice = typeof $activeShow?.index === "number" ? $activeShow.index : lista.findIndex((a) => a.id === $activeShow?.id)
-    $: proximo = nomeDe(lista.slice(indice + 1).find((a) => a.type !== "section") as any)
+    $: proximo = nomeDe(lista.slice(indice + 1).find((a) => a.type !== "section") as any, $shows)
     const lerNoAr = (_saidas: unknown) => noAr().ids
     $: noArIds = lerNoAr($outputs)
     $: aoVivo = !!$outputDisplay && !!$activeShow?.id && ($activeShow.type || "show") === "show" && noArIds.has($activeShow.id)
