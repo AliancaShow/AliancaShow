@@ -321,6 +321,12 @@ body[data-tema="luz"] {
     --luz-raio-botao: 6px;
     --luz-raio-thumb: 5px;
     --luz-raio-selo: 4px;
+    /* transporte (C2): contraste baixo de proposito, o telao continua a coisa mais forte da coluna */
+    --luz-texto-60: rgba(248, 248, 240, 0.6);
+    --luz-texto-80: rgba(248, 248, 240, 0.8);
+    --luz-texto-85: rgba(248, 248, 240, 0.85);
+    --luz-barra-fundo: rgba(248, 248, 240, 0.12);
+    --luz-barra-cheio: rgba(248, 248, 240, 0.5);
     --luz-raio: 14px;
     --luz-fonte: "AliancaUI Archivo", "Segoe UI", system-ui, sans-serif;
 

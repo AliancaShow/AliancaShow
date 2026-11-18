@@ -10,6 +10,8 @@
     export let desligada = false
     export let rotulo = ""
     export let cor = "var(--luz-texto)"
+    // C2: o alvo da barra e a linha inteira de 24 px; o traco continua fino (3 px)
+    export let alto = false
 
     const dispatch = createEventDispatcher<{ comecar: number; mover: number; soltar: number }>()
     let el: HTMLDivElement
@@ -56,7 +58,7 @@
     $: pct = fracao(mostrado, max) * 100
 </script>
 
-<div bind:this={el} class="barra" class:desligada class:arrastando role="slider" tabindex="-1" aria-label={rotulo} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(mostrado)} aria-disabled={desligada} data-title={rotulo} style="--cor: {cor}" on:pointerdown={baixo} on:pointermove={mexer} on:pointerup={soltar} on:pointercancel={soltarSemPonto} on:lostpointercapture={soltarSemPonto}>
+<div bind:this={el} class="barra" class:desligada class:arrastando class:alto role="slider" tabindex="-1" aria-label={rotulo} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(mostrado)} aria-disabled={desligada} data-title={rotulo} style="--cor: {cor}" on:pointerdown={baixo} on:pointermove={mexer} on:pointerup={soltar} on:pointercancel={soltarSemPonto} on:lostpointercapture={soltarSemPonto}>
     <div class="trilho"><div class="cheio" style="width: {pct}%" /></div>
     <div class="bolinha" style="left: {pct}%" />
 </div>
@@ -72,6 +74,23 @@
         cursor: pointer;
         touch-action: none;
         user-select: none;
+    }
+    .barra.alto {
+        height: 24px;
+        margin: 0 6px 0 4px;
+    }
+    .barra.alto .trilho {
+        height: 3px;
+        background: var(--luz-barra-fundo);
+    }
+    .barra.alto .cheio {
+        background: var(--luz-barra-cheio);
+    }
+    .barra.alto .bolinha {
+        width: 9px;
+        height: 9px;
+        margin: -4.5px 0 0 -4.5px;
+        background: var(--luz-texto-85);
     }
     .trilho {
         width: 100%;

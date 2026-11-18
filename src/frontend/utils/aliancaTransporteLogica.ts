@@ -137,3 +137,40 @@ export function timersNaFaixa(timers: Record<string, TimerBruto>, ativos: { id: 
 export function extrasDaFaixa(total: number): number {
     return Math.max(0, Math.floor(total) - 1)
 }
+
+// ---------------------------------------------------------------- cabine 18/nov, C2: a pilha de cartoes de 60 px
+
+/** altura de um cartao de midia (2 linhas de 24 px) e quantos cabem antes de a pilha rolar por dentro (3 cartoes + 2 respiros de 4 px = 188 px) */
+export const CARTAO_ALTURA = 60
+export const CARTOES_SEM_ROLAR = 3
+
+export type FundoDeSaida = { id: string; caminho: string; video: boolean }
+
+/** um cartao de video por ARQUIVO: a primeira saida que o toca comanda (o mesmo arquivo em duas saidas e controlado junto, como antes); sem "+1" de saida escondida */
+export function videosDaPilha(saidas: FundoDeSaida[]): { id: string; caminho: string }[] {
+    const vistos = new Set<string>()
+    const lista: { id: string; caminho: string }[] = []
+    for (const s of saidas) {
+        if (!s.video || !s.caminho || vistos.has(s.caminho)) continue
+        vistos.add(s.caminho)
+        lista.push({ id: s.id, caminho: s.caminho })
+    }
+    return lista
+}
+
+/** a etiqueta da saida so aparece quando ha duvida de qual saida o cartao comanda: mais de uma saida E elas nao mostram todas a mesma coisa */
+export function etiquetaDeSaidaNecessaria(saidas: FundoDeSaida[]): boolean {
+    if (saidas.length < 2) return false
+    const mostra = (s: FundoDeSaida) => (s.video ? s.caminho : "")
+    return saidas.some((s) => mostra(s) !== mostra(saidas[0]))
+}
+
+/** o nome da etiqueta: "Primaria"/"Primary" (nome de fabrica) nunca aparece, vira TELAO; o resto em caixa alta, curto */
+export function nomeDaEtiqueta(nome: string | null | undefined): string {
+    const n = String(nome ?? "").trim()
+    if (!n || /^prim[aá]ri[ao]$|^primary$/i.test(n)) return "TELÃO"
+    return n.toLocaleUpperCase("pt-BR")
+}
+
+/** altura maxima da pilha antes de rolar: N cartoes e (N-1) respiros de 4 px */
+export const pilhaAlturaMaxima = (cartoes = CARTOES_SEM_ROLAR): number => cartoes * CARTAO_ALTURA + (cartoes - 1) * 4
