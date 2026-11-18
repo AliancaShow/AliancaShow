@@ -4,7 +4,9 @@
     // Mostrar e Editar passam pela porta `trocarTela` (chegar em Mostrar arma o anteparo antes de escrever).
     // Fatia 4: sem titulo nativo nem barra de menus. O topo e a area de arrastar a janela (o que e botao nao arrasta) e, no Windows, deixa
     // livre o canto direito onde o Electron desenha minimizar, maximizar e fechar (titleBarOverlay, 56 px de altura, o mesmo do topo).
+    import { onMount } from "svelte"
     import { os } from "../../stores"
+    import { iniciarEspelhoDaMensagem } from "../../utils/aliancaMensagemPalcoEspelho"
     import { tela, trocarTela } from "../../utils/aliancaTela"
     import { marcadoDoSegmentado } from "../../utils/aliancaSegmentadoLogica"
     import StatusIndicator from "./StatusIndicator.svelte"
@@ -14,6 +16,9 @@
     import AliancaTelaoPilula from "./AliancaTelaoPilula.svelte"
 
     export let semTelaFisica = false
+
+    // A2: a mensagem pro palco viva alimenta a variavel do layout de palco (sobe uma vez, com a janela principal)
+    onMount(() => iniciarEspelhoDaMensagem())
 
     // a aba acesa e a da `tela` (a mesma regra que o teclado obedece)
     $: marcado = marcadoDoSegmentado($tela)

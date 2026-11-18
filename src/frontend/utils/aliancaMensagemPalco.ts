@@ -14,6 +14,7 @@ import { requestMain } from "../IPC/main"
 import { falhaAlta } from "./aliancaFalha"
 import { MINUTOS_PADRAO, caminhoDoEnvio, mensagemDeErro, minutosValidos, prepararMensagem } from "./aliancaMensagemPalcoLogica"
 import { sirvo } from "./aliancaSirvo"
+import { transporteAtual } from "./aliancaMensagemPalcoProva"
 
 /** `codigo` (do main): "rede" = nao sei se chegou; "ocupado" = o intervalo entre escritas */
 export type ResultadoMensagem = { ok: true } | { ok: false; mensagem: string; codigo?: string }
@@ -30,7 +31,8 @@ function semCaminho(): string {
 
 type Resposta = { ok: boolean; dados?: any; codigo?: string; mensagem?: string }
 async function chamar(funcao: string, args: { [key: string]: any }): Promise<Resposta> {
-    const uma = async () => ((await requestMain(Main.SIRVO_CHAMAR, { funcao, args } as any)) as Resposta | undefined) || { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." }
+    const prova = transporteAtual()
+    const uma = async () => (prova ? await prova(funcao, args) : ((await requestMain(Main.SIRVO_CHAMAR, { funcao, args } as any)) as Resposta | undefined) || { ok: false, codigo: "rede", mensagem: "Sem conexão com o Sirvo." })
     const r = await uma()
     if (r.ok || r.codigo !== "ocupado") return r
     await new Promise((resolve) => setTimeout(resolve, ESPERA_OCUPADO_MS))
