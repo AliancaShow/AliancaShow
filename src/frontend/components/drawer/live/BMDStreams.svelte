@@ -8,6 +8,7 @@
     import T from "../../helpers/T.svelte"
     import { clearBackground } from "../../output/clear"
     import Center from "../../system/Center.svelte"
+    import { tocavel } from "../tocavel"
     import BmdStream from "./BMDStream.svelte"
 
     let sources: any[] = []
@@ -27,18 +28,20 @@
     onDestroy(() => destroy(BLACKMAGIC, "GET_DEVICES_RECEIVER"))
 
     $: console.log(sources)
+
+    // o clique so seleciona; o ▶ (e o "Mostrar agora") manda a entrada Blackmagic ao fundo da saida (revisao da fatia 6, achado 4)
+    function tocar(screen: { id: string }) {
+        if (gavetaNaoToca() || $outLocked) return
+        if (currentOutput?.out?.background?.id === screen.id) clearBackground()
+        else setOutput("background", { id: screen.id, type: "blackmagic" })
+    }
 </script>
 
 {#if sources.length}
     {#each sources as screen}
-        <BmdStream
-            {screen}
-            on:tocar={() => {
-                if (gavetaNaoToca() || $outLocked) return
-                if (currentOutput?.out?.background?.id === screen.id) clearBackground()
-                else setOutput("background", { id: screen.id, type: "blackmagic" })
-            }}
-        />
+        <div style="display: contents;" use:tocavel={{ aoTocar: () => tocar(screen), titulo: "Mandar a entrada ao ar" }}>
+            <BmdStream {screen} />
+        </div>
     {/each}
 {:else}
     <Center faded>

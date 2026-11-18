@@ -65,7 +65,7 @@
 {#if background}
     <canvas bind:this={canvas} />
 {:else}
-    <Card class="context #stream_card" outlineColor={findMatchingOut(screen.id, $outputs)} active={findMatchingOut(screen.id, $outputs) !== null} on:click on:tocar tocar label={screen.name} {loaded} icon="blackmagic" white showPlayOnHover>
+    <Card outlineColor={findMatchingOut(screen.id, $outputs)} active={findMatchingOut(screen.id, $outputs) !== null} on:click label={screen.name} {loaded} icon="blackmagic" white showPlayOnHover>
         <canvas bind:this={canvas} />
     </Card>
 {/if}

@@ -37,6 +37,10 @@
         opacity: 0.4;
         cursor: default;
     }
+    /* o cartao de um componente que a saida tambem usa (tocavel.ts) ainda desenha o ▶ grande de hover ("clique toca"): escondido */
+    :global(.card.soSeleciona .overlayIcon) {
+        display: none;
+    }
     .flutuante {
         position: absolute;
         top: 4px;

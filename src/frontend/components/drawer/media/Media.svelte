@@ -26,6 +26,7 @@
     import VirtualList from "../VirtualList.svelte"
     import AudioFile from "../audio/AudioFile.svelte"
     import BMDStreams from "../live/BMDStreams.svelte"
+    import { tocavelLista } from "../tocavel"
     import Cameras from "../live/Cameras.svelte"
     import NDIStreams from "../live/NDIStreams.svelte"
     import Screens from "../live/Screens.svelte"
@@ -664,16 +665,19 @@
         {:else if active === "inputs"}
             <div class="gridgap">
                 {#if inputsTab === "cameras"}
-                    <Cameras
-                        on:click={({ detail }) => {
-                            let e = detail.event
-                            let cam = detail.cam
+                    <!-- o ▶ de cada camera entra por tocavelLista: Cameras/Cam estao no fecho da janela de saida e nao mudam -->
+                    <div style="display: contents;" use:tocavelLista={"Mandar a camera ao ar"}>
+                        <Cameras
+                            on:click={({ detail }) => {
+                                let e = detail.event
+                                let cam = detail.cam
 
-                            if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
-                            if (currentOutput?.out?.background?.id === cam.id) clearBackground()
-                            else setOutput("background", { name: cam.name, id: cam.id, cameraGroup: cam.group || cam.cameraGroup, type: "camera" })
-                        }}
-                    />
+                                if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey) return
+                                if (currentOutput?.out?.background?.id === cam.id) clearBackground()
+                                else setOutput("background", { name: cam.name, id: cam.id, cameraGroup: cam.group || cam.cameraGroup, type: "camera" })
+                            }}
+                        />
+                    </div>
                 {:else if inputsTab === "screens"}
                     <Screens bind:streams />
                     <div style="width: 100%;height: 10px;" />

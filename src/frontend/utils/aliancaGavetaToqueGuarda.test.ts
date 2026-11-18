@@ -8,7 +8,6 @@ const ler = (p: string) => readFileSync(join(RAIZ, p), "utf8")
 
 const CONVERTIDAS = [
     "src/frontend/components/drawer/audio/AudioFile.svelte",
-    "src/frontend/components/drawer/navigation/AudioTabs.svelte",
     "src/frontend/components/drawer/navigation/ScriptureTabs.svelte",
     "src/frontend/components/drawer/bible/Scripture.svelte",
     "src/frontend/components/drawer/media/Media.svelte",
@@ -49,26 +48,26 @@ describe("a guarda da biblioteca (fatia 6)", () => {
         expect(velhos).toEqual(EXCECOES_PAINEL_DE_CONTROLE)
     })
     it("as portas que mandam algo ao ar pelo ▶ usam o TocarAgora (o clique so seleciona)", () => {
-        const comTocar = [
-            "live/Capture.svelte",
-            "live/NDIStream.svelte",
-            "live/BMDStream.svelte",
-            "live/Cam.svelte",
-            "pages/Overlays.svelte",
-            "effects/Effects.svelte",
-            "player/PlayerVideos.svelte",
-            "audio/AudioEffect.svelte",
-            "live/AudioStreams.svelte",
-            "live/Mic.svelte",
-            "pages/Actions.svelte"
-        ]
+        const comTocar = ["pages/Overlays.svelte", "effects/Effects.svelte", "player/PlayerVideos.svelte", "audio/AudioEffect.svelte", "live/AudioStreams.svelte", "live/Mic.svelte", "pages/Actions.svelte"]
         for (const f of comTocar) {
             const t = ler("src/frontend/components/drawer/" + f)
-            expect(t, f).toContain("tocar")
-            expect(t, f).toMatch(/on:tocar(\s|=)/)
+            expect(t, f).toContain("<TocarAgora")
+            expect(t, f).toMatch(/on:tocar=/)
         }
-        // os cartoes do clique-que-so-seleciona nao prometem tocar ao clicar (Card.tocaAoClicar)
-        expect(ler("src/frontend/components/drawer/Card.svelte")).toMatch(/tocaAoClicar = !tocar && !soSeleciona/)
+    })
+    it("Telas, Janelas, NDI, BlackMagic e Cameras (cartoes de componentes que a SAIDA tambem importa) ganham o ▶ por `use:tocavel`, sem tocar nos arquivos do fecho da saida", () => {
+        for (const f of ["live/Screens.svelte", "live/Windows.svelte", "live/NDIStreams.svelte", "live/BMDStreams.svelte"]) {
+            const t = ler("src/frontend/components/drawer/" + f)
+            expect(t, f).toContain("use:tocavel=")
+            expect(t, f).toContain("aoTocar")
+        }
+        // as cameras: Cameras/Cam estao no fecho da saida; a lista inteira e envolvida em Media.svelte
+        expect(ler("src/frontend/components/drawer/media/Media.svelte")).toContain("use:tocavelLista=")
+        // esses arquivos estao no fecho da janela de saida (ancora): nao podem conhecer o ▶ nem a guarda nova
+        for (const f of ["Card.svelte", "live/Capture.svelte", "live/NDIStream.svelte", "live/BMDStream.svelte", "live/Cam.svelte", "live/Cameras.svelte"]) {
+            const t = ler("src/frontend/components/drawer/" + f)
+            expect(t, f).not.toMatch(/TocarAgora|autorizarAr|aliancaGavetaToque|on:tocar/)
+        }
     })
     it("marcar para levar ao culto so fora de Mostrar (`podeMarcar`): em Mostrar o clique so seleciona", () => {
         for (const f of CONVERTIDAS.filter((c) => /AudioFile|MediaCard/.test(c))) {
@@ -100,9 +99,14 @@ describe("a guarda da biblioteca (fatia 6)", () => {
         expect(t).not.toMatch(/_moveSelection\((true|false), gavetaNaoToca\(\)\)/)
     })
     it("revisao da fatia 6, achado 14: cartao e linha nao prometem tocar ao clicar (sem ▶ de hover nem a dica Reproduzir)", () => {
-        expect(ler("src/frontend/components/drawer/media/MediaCard.svelte")).toContain("soSeleciona")
+        expect(ler("src/frontend/components/drawer/media/MediaCard.svelte")).toContain("showPlayOnHover={false}")
         const acoes = ler("src/frontend/components/drawer/pages/Actions.svelte")
         expect(acoes).not.toContain("translateText('media.play')")
         expect(acoes).toContain("botão direito")
+    })
+    it("revisao da fatia 6, achado 15: a aba de playlists nao tem mais o duplo clique morto (a guarda sempre fechada o deixava undefined)", () => {
+        const t = ler("src/frontend/components/drawer/navigation/AudioTabs.svelte")
+        expect(t).not.toContain("onDoubleClick")
+        expect(t).not.toContain("AudioPlaylist.start")
     })
 })

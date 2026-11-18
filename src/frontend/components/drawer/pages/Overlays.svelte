@@ -19,6 +19,7 @@
     import DropArea from "../../system/DropArea.svelte"
     import SelectElem from "../../system/SelectElem.svelte"
     import Card from "../Card.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
     import Effects from "../effects/Effects.svelte"
     import OverlayActions from "./OverlayActions.svelte"
     import { runAction } from "../../actions/actions"
@@ -159,9 +160,6 @@
                                 icon={overlay.isDefault ? "protected" : null}
                                 color={overlay.color}
                                 {resolution}
-                                showPlayOnHover
-                                tocar
-                                on:tocar={() => overlayClick({}, overlay.id)}
                                 on:dblclick={(e) => {
                                     if (e.ctrlKey || e.metaKey) return
                                     if (e.target?.closest?.(".edit") || e.target?.closest?.(".icons")) return
@@ -174,6 +172,8 @@
                                 {#if loaded || i < lazyLoader}
                                     <!-- icons -->
                                     <OverlayActions columns={$mediaOptions.columns} overlayId={overlay.id} />
+
+                                    <TocarAgora flutuante titulo={isActive ? "Tirar do ar" : "Mandar ao ar"} on:tocar={() => overlayClick({}, overlay.id)} />
 
                                     <Zoomed {resolution} background={overlay.items.length ? "var(--primary);" : overlay.color || "var(--primary);"} checkered={!!overlay.items.length}>
                                         {#each overlay.items as item}

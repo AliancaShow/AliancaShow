@@ -9,6 +9,7 @@
     import Loader from "../../main/Loader.svelte"
     import { clearBackground } from "../../output/clear"
     import Center from "../../system/Center.svelte"
+    import { tocavel } from "../tocavel"
     import NDIStream from "./NDIStream.svelte"
 
     let sources: { name: string; id: string }[] = []
@@ -27,6 +28,13 @@
 
     $: groups = $special?.ndiInputGroups || ""
 
+    // o clique so seleciona; o ▶ (e o "Mostrar agora") manda a entrada NDI ao fundo da saida (revisao da fatia 6, achado 4)
+    function tocar(screen: { id: string }) {
+        if (gavetaNaoToca() || $outLocked) return
+        if (currentOutput?.out?.background?.id === screen.id) clearBackground()
+        else setOutput("background", { id: screen.id, type: "ndi" })
+    }
+
     receive(NDI, receiveNDI, "NDI_CAPTURE")
     $: send(NDI, ["RECEIVE_LIST"], { groups })
     onDestroy(() => destroy(NDI, "NDI_CAPTURE"))
@@ -38,14 +46,9 @@
     </Center>
 {:else if sources.length}
     {#each sources as screen}
-        <NDIStream
-            {screen}
-            on:tocar={() => {
-                if (gavetaNaoToca() || $outLocked) return
-                if (currentOutput?.out?.background?.id === screen.id) clearBackground()
-                else setOutput("background", { id: screen.id, type: "ndi" })
-            }}
-        />
+        <div style="display: contents;" use:tocavel={{ aoTocar: () => tocar(screen), titulo: "Mandar a entrada NDI ao ar" }}>
+            <NDIStream {screen} />
+        </div>
     {/each}
 {:else}
     <Center faded>

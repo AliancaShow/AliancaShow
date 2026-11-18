@@ -9,6 +9,7 @@
     import T from "../../helpers/T.svelte"
     import { clearBackground } from "../../output/clear"
     import Center from "../../system/Center.svelte"
+    import { tocavel } from "../tocavel"
     import Capture from "./Capture.svelte"
 
     export let streams: MediaStream[]
@@ -30,20 +31,21 @@
     }
 
     $: currentOutput = getFirstActiveOutput($outputs)
+
+    // o clique so seleciona; o ▶ (e o "Mostrar agora") manda a janela ao fundo da saida (revisao da fatia 6, achado 4)
+    function tocar(window: { id: string }) {
+        if (gavetaNaoToca() || $outLocked) return
+        if (currentOutput?.out?.background?.id === window.id) clearBackground()
+        else setOutput("background", { id: window.id, type: "screen" })
+    }
 </script>
 
 {#if fullFilteredWindows.length}
     {#key fullFilteredWindows}
         {#each fullFilteredWindows as window}
-            <Capture
-                bind:streams
-                screen={window}
-                on:tocar={() => {
-                    if (gavetaNaoToca() || $outLocked) return
-                    if (currentOutput?.out?.background?.id === window.id) clearBackground()
-                    else setOutput("background", { id: window.id, type: "screen" })
-                }}
-            />
+            <div style="display: contents;" use:tocavel={{ aoTocar: () => tocar(window), titulo: "Mandar a janela ao ar" }}>
+                <Capture bind:streams screen={window} />
+            </div>
         {/each}
     {/key}
 {:else}

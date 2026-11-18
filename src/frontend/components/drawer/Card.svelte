@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { Resolution } from "../../../types/Settings"
-    import { createEventDispatcher } from "svelte"
     import { mediaOptions, outputs, styles } from "../../stores"
     import { tela } from "../../utils/aliancaTela"
     import { triggerClickOnEnterSpace } from "../../utils/clickable"
@@ -9,7 +8,6 @@
     import { getResolution } from "../helpers/output"
     import Loader from "../main/Loader.svelte"
     import Label from "./Label.svelte"
-    import TocarAgora from "./TocarAgora.svelte"
 
     export let loaded = true
     export let preview = false
@@ -33,12 +31,7 @@
     // no Preparar nenhum card da gaveta toca: o ▶ ao passar o mouse só aparece no Culto
     // (quem toca fora da gaveta, como a pasta aberta no centro, passa tocaNoPreparar)
     export let tocaNoPreparar = false
-    // leiaute v2, fatia 6: na biblioteca o clique so seleciona. `tocar`: o cartao ganha o ▶ (evento `tocar`); `soSeleciona`: sem ▶ proprio (quem usa
-    // desenha o seu), mas o cartao tambem nao promete tocar ao clicar. So o cartao do CENTRO (pasta aberta) ainda toca ao clicar.
-    export let tocar = false
-    export let soSeleciona = false
-    const dispatch = createEventDispatcher()
-    $: tocaAoClicar = !tocar && !soSeleciona && showPlayOnHover && (tocaNoPreparar || $tela === "mostrar")
+    $: tocaAoClicar = showPlayOnHover && (tocaNoPreparar || $tela === "mostrar")
     export let marcado = false
     export let checkered = false
     export let mode: "grid" | "list" | "lyrics" = "grid"
@@ -48,7 +41,7 @@
 </script>
 
 <!-- display: table; -->
-<div class="main" data-tocavel style="{outlineColor ? 'outline: 2px solid ' + outlineColor + ';' : ''}flex-direction: {mode === 'grid' ? 'column' : 'row'};width: {mainWidth}%;" class:preview class:active>
+<div class="main" style="{outlineColor ? 'outline: 2px solid ' + outlineColor + ';' : ''}flex-direction: {mode === 'grid' ? 'column' : 'row'};width: {mainWidth}%;" class:preview class:active>
     <div class="over" style="flex-direction: {mode === 'grid' ? 'column' : 'row'};width: 100%;" on:mousedown on:click on:dblclick on:keydown={triggerClickOnEnterSpace} tabindex="0" role="button">
         {#if preview}
             <div class="overlay" />
@@ -74,7 +67,6 @@
                 </div>
             {/if}
             {#if marcado}<span class="marcadoGaveta" data-title="Marcado para o culto"><Icon id="check" size={0.9} white /></span>{/if}
-            {#if tocar && loaded}<TocarAgora flutuante titulo={active ? "Tirar do ar" : "Mandar ao ar"} on:tocar={() => dispatch("tocar")} />{/if}
             <slot />
         </div>
         {#if !semRotulo}<Label {label} {count} {renameId} {title} {icon} {white} {color} {mode} />{/if}
