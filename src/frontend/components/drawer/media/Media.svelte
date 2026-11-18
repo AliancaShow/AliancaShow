@@ -728,6 +728,7 @@
                         <p style="text-align: center;">Nenhuma mídia desta pasta neste computador</p>
                     {:else}
                         <Icon id="noImage" size={5} white />
+                        <p style="text-align: center;font-size: 0.8em;margin-top: 8px;">Nenhuma mídia aqui ainda</p>
                     {/if}
                 </Center>
             </div>
@@ -742,7 +743,7 @@
     <MaterialZoom hidden columns={$mediaOptions.columns} defaultValue={5} on:change={(e) => mediaOptions.set({ ...$mediaOptions, columns: e.detail })} />
 {:else if active === "online"}
     {#if onlineTab === "youtube" || onlineTab === "vimeo"}
-        <FloatingInputs onlyOne>
+        <FloatingInputs onlyOne dock>
             <MaterialButton
                 title="groups.toggle_global_group"
                 on:click={() => {
@@ -764,7 +765,7 @@
 {:else}
     {#if active !== "all" && active !== "favourites"}
         {#if rootPath !== path}
-            <FloatingInputs side="left">
+            <FloatingInputs side="left" dock>
                 <MaterialButton disabled={rootPath === path} title="actions.back" on:click={goBack}>
                     <Icon id="back" white />
                 </MaterialButton>
@@ -781,7 +782,7 @@
                 </p>
             </FloatingInputs>
         {:else if hasAudio.count}
-            <FloatingInputs side="left" onlyOne>
+            <FloatingInputs side="left" onlyOne dock>
                 <MaterialButton icon="autofill" on:click={hasAudio.exists ? openAudioFolder : createAudioFolder}>
                     <p>
                         <T id="audio.{hasAudio.exists ? 'open_audio_folder' : 'create_audio_folder'}" />

@@ -10,6 +10,8 @@
     export let round = false
     export let arrow = false
     export let bottom = 10
+    // leiaute v2 (fatia 9): a barra deixa de flutuar sobre o conteudo e assenta no rodape da area, no tema Luz
+    export let dock = false
 
     let open = false
 
@@ -18,7 +20,7 @@
 </script>
 
 <!-- in:fade={{ duration: 80 }} -->
-<div class="row {side}" class:isOptimized class:light class:onlyOne class:gradient class:round style="bottom: {bottom}px;{$$props.style || ''}" on:mousedown>
+<div class="row {side}" class:isOptimized class:light class:onlyOne class:gradient class:round class:dock style="bottom: {bottom}px;{$$props.style || ''}" on:mousedown>
     {#if arrow}
         <MaterialButton style={open ? "" : "opacity: 0.6;"} class="expand" title={open ? "actions.close" : "create_show.more_options"} isActive={open} on:click={() => (open = !open)}>
             <Icon class="submenu_{open ? 'close' : 'open'}" id="arrow_back_modern" size={0.9} white={!open} />
@@ -162,6 +164,41 @@
     }
     .row.gradient :global(button:not(.isActive):not(:disabled):active) {
         filter: hue-rotate(30deg);
+    }
+
+    /* acoplada (leiaute v2, fatia 9): fica no rodape da area em vez de boiar sobre os cartoes; tokens Luz, raio 8 px */
+    .row.dock {
+        position: sticky;
+        bottom: 0 !important;
+        left: auto;
+        right: auto;
+        transform: none;
+        flex: none;
+        margin-top: auto;
+        width: max-content;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--luz-borda, var(--primary-lighter));
+        background-color: var(--luz-campo, var(--background));
+        box-shadow: none;
+        backdrop-filter: none;
+    }
+    .row.dock.left {
+        align-self: flex-start;
+    }
+    .row.dock.right {
+        align-self: flex-end;
+    }
+    .row.dock.center {
+        align-self: center;
+    }
+    .row.dock :global(button) {
+        height: 32px;
+        color: var(--luz-texto, inherit);
+    }
+    .row.dock :global(button:focus-visible) {
+        outline: 2px solid var(--luz-texto, currentColor);
+        outline-offset: -2px;
     }
 
     .menu {

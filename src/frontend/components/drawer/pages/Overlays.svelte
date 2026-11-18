@@ -207,13 +207,13 @@
 {/if}
 
 {#if active === "effects"}
-    <FloatingInputs onlyOne>
+    <FloatingInputs onlyOne dock>
         <MaterialButton disabled={readOnly} icon="add" title="new.effect" on:click={() => history({ id: "UPDATE", location: { page: "drawer", id: "effect" } })}>
             {#if !$labelsDisabled}<T id="new.effect" />{/if}
         </MaterialButton>
     </FloatingInputs>
 {:else}
-    <FloatingInputs onlyOne>
+    <FloatingInputs onlyOne dock>
         <MaterialButton disabled={readOnly} icon="add" title="new.overlay" on:click={() => history({ id: "UPDATE", location: { page: "drawer", id: "overlay" } })}>
             {#if !$labelsDisabled}<T id="new.overlay" />{/if}
         </MaterialButton>
