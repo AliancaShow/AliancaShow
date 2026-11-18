@@ -1,48 +1,119 @@
 <script lang="ts">
     // Leiaute v2, coluna No ar: "Mensagem pro palco" (decisao P3). Campo de ate 120 caracteres + Enviar; a mensagem viva aparece embaixo com
     // "Limpar". O envio vai pelo Sirvo (aliancaMensagemPalco.ts): sem a chave "conduz" a faixa de falha acende e a caixa diz o motivo.
-    // Ao lado, o botao de MODO "so retorno" (decisao 5): ainda desligado (D17), a logica vem depois; ele nao muda nada na saida.
+    // Ao lado, o botao de MODO "so retorno" (decisao 5, aliancaSoRetorno.ts): liga/desliga o modo; sem retorno configurado fica inerte com o motivo.
+    // A validade (1, 3, 5, 10 min; padrao 3) e a contagem regressiva da mensagem viva ficam na caixa; a linha de estado tem altura fixa
+    // (nada se desloca quando a mensagem entra, sai ou da erro).
     // Teclado: o campo e `.edit` (o espaco nao passa slide), nada do que se digita chega aos atalhos, Esc nao faz nada aqui (o 2o Esc da
     // pagina limparia o telao) e Enter envia e devolve o foco a pagina.
-    import { onDestroy } from "svelte"
-    import { sirvo, sirvoAgora, sirvoRoteiro, porQueNaoConduz } from "../../utils/aliancaSirvo"
+    import { onDestroy, onMount } from "svelte"
+    import { sirvo, sirvoAgora } from "../../utils/aliancaSirvo"
     import { enviarMensagemPalco, limparMensagemPalco } from "../../utils/aliancaMensagemPalco"
-    import { LIMITE_MENSAGEM, mensagemViva } from "../../utils/aliancaMensagemPalcoLogica"
-
-    const fmtHora = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+    import { mensagemDaCaixa } from "../../utils/aliancaMensagemPalcoVista"
+    import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_ERRO_MS, avisoDaCaixa, caminhoDoEnvio, campoAposEnvio, conferirDuvida, duvidaDoEnvio, envioAceito, mensagemViva, prepararMensagem, restanteTexto, type Duvida } from "../../utils/aliancaMensagemPalcoLogica"
+    import { desligarSoRetorno, iniciarSoRetorno, ligarSoRetorno, porQueNaoLigarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
+    import { outputs } from "../../stores"
 
     let texto = ""
     let enviando = false
     let erro = ""
+    let tErro: ReturnType<typeof setTimeout> | null = null
+    // envio que estourou o tempo e pode ter chegado: a proxima leitura do roteiro diz (conferirDuvida)
+    let duvida: (Duvida & { campo: string }) | null = null
+    let minutos: number = MINUTOS_PADRAO
+    let avisoModo = ""
+    let tAviso: ReturnType<typeof setTimeout> | null = null
     let tique = 0
+    let agora = 0
     // a mensagem some da caixa quando o `ate` passa (o tique reavalia a cada 5 s)
-    const lerViva = (_tique: number, r: typeof $sirvoRoteiro) => mensagemViva(r?.mensagem_palco, sirvoAgora())
-    const lerMotivo = (_estado: unknown) => porQueNaoConduz()
-    $: viva = lerViva(tique, $sirvoRoteiro)
+    const lerViva = (_tique: number, m: typeof $mensagemDaCaixa) => mensagemViva(m, sirvoAgora())
+    const lerMotivo = (e: typeof $sirvo) => caminhoDoEnvio(e).motivo
+    $: viva = lerViva(tique, $mensagemDaCaixa)
+    $: if (duvida) conferir(viva)
     $: motivo = lerMotivo($sirvo)
-    const relogio = setInterval(() => (tique += 1), 5000)
-    onDestroy(() => clearInterval(relogio))
+    // a contagem nasce certa: com a viva recem-chegada o `agora` ainda podia ter ate 5 s (o relogio so anda de 5 em 5 s sem viva)
+    $: if (viva) agora = sirvoAgora()
+    $: aviso = avisoDaCaixa({ erro, enviando, avisoModo, motivo })
+    // 1 s: a contagem regressiva anda; a mensagem sai da caixa no segundo em que o `ate` passa
+    const relogio = setInterval(() => {
+        tique += 1
+        // sem mensagem viva nada precisa redesenhar a cada segundo: o relogio so anda quando ha contagem
+        if (viva || tique % 5 === 0) agora = sirvoAgora()
+    }, 1000)
+    const parar = iniciarSoRetorno()
+    onMount(() => (agora = sirvoAgora()))
+    onDestroy(() => {
+        clearInterval(relogio)
+        parar()
+        if (tAviso) clearTimeout(tAviso)
+        if (tErro) clearTimeout(tErro)
+    })
+    // o erro some sozinho (PRAZO_ERRO_MS) ou no proximo envio; nunca fica para sempre e nunca esconde a viva nem o Limpar
+    function mostrarErro(m: string) {
+        erro = m
+        if (tErro) clearTimeout(tErro)
+        tErro = setTimeout(() => (erro = ""), PRAZO_ERRO_MS)
+    }
+    function limparErro() {
+        erro = ""
+        if (tErro) clearTimeout(tErro)
+        tErro = null
+    }
+    function conferir(v: typeof viva) {
+        const d = duvida
+        if (!d) return
+        const c = conferirDuvida(d, v, sirvoAgora())
+        if (c === "aberta") return
+        duvida = null
+        if (c === "vencida") return
+        // chegou: o palco tem a mensagem; a caixa deixa de dizer que nao sabe
+        limparErro()
+        texto = campoAposEnvio(texto, d.campo)
+    }
+    // o motivo do modo depende dos retornos configurados (a loja de saidas)
+    const lerModo = (_o: unknown) => porQueNaoLigarSoRetorno()
+    $: motivoModo = lerModo($outputs)
+    function modo() {
+        if ($soRetorno) return desligarSoRetorno()
+        const r = ligarSoRetorno()
+        if (r.ok) return
+        limparErro()
+        avisoModo = r.motivo
+        if (tAviso) clearTimeout(tAviso)
+        tAviso = setTimeout(() => (avisoModo = ""), 6000)
+    }
 
     function soltarFoco() {
         const a = document.activeElement as HTMLElement | null
         if (a && a !== document.body && typeof a.blur === "function") a.blur()
     }
-    async function enviar() {
-        if (enviando) return
+    /** devolve se o envio vai sair (o Enter so larga o foco nesse caso) */
+    function enviar(): boolean {
+        const aceito = envioAceito(texto, motivo, enviando)
+        if (enviando) return false
+        enviarAgora()
+        return aceito
+    }
+    async function enviarAgora() {
         enviando = true
-        erro = ""
-        const r = await enviarMensagemPalco(texto)
+        limparErro()
+        duvida = null
+        const campo = texto
+        const r = await enviarMensagemPalco(texto, minutos)
         enviando = false
-        if (r.ok) texto = ""
-        else erro = r.mensagem
+        if (r.ok) texto = campoAposEnvio(texto, campo)
+        else {
+            mostrarErro(r.mensagem)
+            if (r.codigo === "rede") duvida = { ...duvidaDoEnvio((prepararMensagem(campo) as { texto?: string }).texto || campo, minutos, sirvoAgora()), campo }
+        }
     }
     async function limpar() {
         if (enviando) return
         enviando = true
-        erro = ""
+        limparErro()
         const r = await limparMensagemPalco()
         enviando = false
-        if (!r.ok) erro = r.mensagem
+        if (!r.ok) mostrarErro(r.mensagem)
     }
     function aoTeclar(ev: KeyboardEvent) {
         ev.stopPropagation()
@@ -52,8 +123,7 @@
         }
         if (ev.key === "Enter" && !ev.isComposing) {
             ev.preventDefault()
-            enviar()
-            soltarFoco()
+            if (enviar()) soltarFoco()
         }
     }
 </script>
@@ -61,20 +131,31 @@
 <div class="palco" data-regiao-filho="mensagem-palco">
     <div class="cabeca">
         <span class="titulo">MENSAGEM PRO PALCO</span>
-        <button type="button" class="modo" disabled aria-pressed="false" tabindex="-1" data-acao="modo-so-retorno" title="Só retorno: o que você mandar vai só para o monitor de retorno, não para o telão. Ainda não ligado.">○ Só retorno</button>
+        <button type="button" class="modo" class:ligado={$soRetorno} class:inerte={!$soRetorno && !!motivoModo} aria-pressed={$soRetorno} aria-disabled={!$soRetorno && !!motivoModo} tabindex="-1" data-acao="modo-so-retorno" title={$soRetorno ? "Só retorno ligado: clique para voltar ao normal." : motivoModo || "Só retorno: o que você mandar ao ar vai só para o monitor de retorno, não para o telão."} on:mousedown|preventDefault on:click={modo}>{$soRetorno ? "● Só retorno" : "○ Só retorno"}</button>
     </div>
     <div class="linha">
         <input class="edit campo" type="text" maxlength={LIMITE_MENSAGEM} placeholder="Pastor, 5 min pro fim" aria-label="Mensagem pro palco" data-acao="mensagem-palco" bind:value={texto} on:keydown={aoTeclar} />
         <button type="button" class="enviar" tabindex="-1" disabled={enviando || !texto.trim()} data-acao="enviar-mensagem-palco" on:mousedown|preventDefault on:click={enviar}>Enviar</button>
     </div>
-    {#if viva}
-        <div class="viva"><span class="vt">No palco: “{viva.texto}” · até {fmtHora.format(new Date(viva.ateMs))}</span><button type="button" class="limpar" tabindex="-1" on:mousedown|preventDefault on:click={limpar}>Limpar</button></div>
-    {:else if erro}
-        <div class="aviso erro">{erro}</div>
-    {:else if motivo}
-        <div class="aviso">{motivo}</div>
-    {/if}
-    {#if viva && erro}<div class="aviso erro">{erro}</div>{/if}
+    <div class="opcoes">
+        <div class="duracao" role="group" aria-label="Quanto tempo fica no palco">
+            {#each DURACOES_MINUTOS as m}
+                <button type="button" class="dur" class:sel={minutos === m} aria-pressed={minutos === m} tabindex="-1" data-acao="duracao-mensagem" data-min={m} on:mousedown|preventDefault on:click={() => (minutos = m)}>{m}</button>
+            {/each}
+            <span class="un">min</span>
+        </div>
+        <span class="conta" class:cheio={texto.length >= LIMITE_MENSAGEM} data-acao="contador-mensagem">{texto.length}/{LIMITE_MENSAGEM}</span>
+    </div>
+    <div class="estado" data-acao="estado-mensagem-palco">
+        {#if viva}
+            <span class="vt">No palco: “{viva.texto}” · sai em <b class="rest" data-acao="restante-mensagem">{restanteTexto(viva.ateMs, agora || sirvoAgora())}</b></span><button type="button" class="limpar" tabindex="-1" data-acao="limpar-mensagem-palco" on:mousedown|preventDefault on:click={limpar}>Limpar</button>
+        {/if}
+    </div>
+    <div class="estado" data-acao="aviso-mensagem-palco" role="status">
+        {#if aviso}
+            <span class="aviso" class:erro>{aviso}</span>
+        {/if}
+    </div>
 </div>
 
 <style>
@@ -97,6 +178,7 @@
         letter-spacing: 0.04em;
     }
     .modo {
+        min-width: 82px;
         height: 22px;
         padding: 0 8px;
         border: 1px solid var(--luz-linha);
@@ -106,7 +188,66 @@
         font: inherit;
         font-size: 11px;
         font-weight: 600;
+        cursor: pointer;
+    }
+    .modo.inerte {
         cursor: not-allowed;
+        opacity: 0.7;
+    }
+    .modo.ligado {
+        background: var(--luz-laranja);
+        border-color: var(--luz-laranja);
+        color: var(--luz-tinta);
+    }
+    .opcoes {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        height: 22px;
+    }
+    .duracao {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .dur {
+        min-width: 28px;
+        height: 22px;
+        padding: 0 6px;
+        border: 1px solid var(--luz-linha);
+        border-radius: 11px;
+        background: transparent;
+        color: var(--luz-mudo);
+        font: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .dur.sel {
+        border-color: var(--luz-texto);
+        color: var(--luz-texto);
+    }
+    .un,
+    .conta {
+        font-size: 11px;
+        color: var(--luz-mudo);
+    }
+    .conta.cheio {
+        color: var(--luz-laranja);
+    }
+    .estado {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 16px;
+        font-size: 11px;
+        color: var(--luz-mudo);
+    }
+    .rest {
+        font-variant-numeric: tabular-nums;
+        color: var(--luz-texto);
     }
     .linha {
         display: flex;
@@ -144,14 +285,6 @@
     .enviar:disabled {
         opacity: 0.45;
         cursor: default;
-    }
-    .viva {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        font-size: 11px;
-        color: var(--luz-mudo);
     }
     .vt {
         min-width: 0;

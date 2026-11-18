@@ -24,3 +24,75 @@ export function mensagemViva(msg: { id: string; texto: string; ate: string } | n
     const ateMs = Date.parse(msg.ate)
     return Number.isFinite(ateMs) && ateMs > agoraMs ? { texto: msg.texto, ateMs } : null
 }
+
+/** as validades que o operador escolhe (minutos); a 3 e a padrao */
+export const DURACOES_MINUTOS = [1, 3, 5, 10] as const
+
+/** "m:ss" ate a mensagem sair (nunca negativo) */
+export function restanteTexto(ateMs: number, agoraMs: number): string {
+    const s = Math.max(0, Math.ceil((ateMs - agoraMs) / 1000))
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
+}
+
+/**
+ * A recusa do Sirvo em portugues claro, pelo `codigo` que o Show ja recebe (`pedirAoSirvo`): o main repassa a frase do proprio Sirvo
+ * (0081/0093: "Esta chave só lê o roteiro...", "Pedidos demais desta chave em um minuto...", "Culto inexistente."), entao so o que o main
+ * ja classifica (culto inexistente, chave recusada, rede, ocupado) ganha frase propria; o resto passa como veio, com o texto do Sirvo.
+ */
+export function mensagemDeErro(codigo: string | undefined, mensagem: string): string {
+    switch (codigo) {
+        case "culto_inexistente":
+            return "Esse culto não existe mais no Sirvo. Escolha o culto de novo."
+        case "chave_invalida":
+            return "O Sirvo recusou a chave. Confira a chave em Configurações."
+        case "ocupado":
+            return "Calma: um pedido de cada vez. Tente de novo."
+        default:
+            return mensagem || "O Sirvo não aceitou."
+    }
+}
+
+/**
+ * Por que a caixa nao pode mandar agora, com texto VERDADEIRO para cada motivo. `persistente` = promessa quebrada que so uma pessoa
+ * conserta (a chave nao conduz): so esse acende a faixa de falha da janela. O resto e passageiro (Sirvo fora do ar, sem culto
+ * seguido, sem chave): fala so na linha de estado da caixa e some quando a causa some.
+ */
+export function caminhoDoEnvio(e: { status: string; cultoId: string | null; podeConduzir: boolean }): { motivo: string; persistente: boolean } {
+    if (e.status === "sem_chave" || e.status === "chave_invalida") return { motivo: "Sem chave do Sirvo. Coloque a chave em Configurações.", persistente: false }
+    if (!e.cultoId) return { motivo: "Nenhum culto do Sirvo sendo seguido.", persistente: false }
+    if (e.status !== "conectado") return { motivo: "O Sirvo não está respondendo agora. Tente de novo em instantes.", persistente: false }
+    if (!e.podeConduzir) return { motivo: "Esta chave só lê o roteiro. Um admin liga “conduz” no Sirvo (Perfil → chaves do AliançaShow).", persistente: true }
+    return { motivo: "", persistente: false }
+}
+
+/** o erro da caixa some sozinho depois disto (ou no proximo envio) */
+export const PRAZO_ERRO_MS = 6000
+/** quanto tempo a caixa segue conferindo, pelo roteiro, um envio que estourou o tempo */
+export const PRAZO_DUVIDA_MS = 60_000
+
+/**
+ * A linha de aviso da caixa (a 2a linha; a 1a e SEMPRE a mensagem viva com o Limpar, que nenhum aviso esconde).
+ * Prioridade: erro > "Enviando…" > aviso do modo > motivo de a caixa nao poder mandar.
+ */
+export function avisoDaCaixa(e: { erro: string; enviando: boolean; avisoModo: string; motivo: string }): string {
+    return e.erro || (e.enviando ? "Enviando…" : "") || e.avisoModo || e.motivo
+}
+
+/** envio que estourou o tempo ("rede"): pode ter chegado. Quem decide e o proximo roteiro lido (`mensagem_palco`). */
+export type Duvida = { texto: string; minAteMs: number; venceEm: number }
+
+/** `minAteMs`: o menor `ate` que ESTE envio produziria (agora + validade, com 15 s de folga de relogio): mensagem velha igual nao conta */
+export function duvidaDoEnvio(texto: string, minutos: number, agoraMs: number): Duvida {
+    return { texto, minAteMs: agoraMs + minutos * 60_000 - 15_000, venceEm: agoraMs + PRAZO_DUVIDA_MS }
+}
+
+export function conferirDuvida(d: Duvida, viva: { texto: string; ateMs: number } | null, agoraMs: number): "resolvida" | "aberta" | "vencida" {
+    if (viva && viva.texto === d.texto && viva.ateMs >= d.minAteMs) return "resolvida"
+    return agoraMs > d.venceEm ? "vencida" : "aberta"
+}
+
+/** M3: depois da resposta, o campo so esvazia se ainda e o texto que foi enviado (o operador pode ja ter digitado a proxima) */
+export const campoAposEnvio = (atual: string, enviado: string): string => (atual === enviado ? "" : atual)
+
+/** M6: o envio vai sair? (texto valido, caminho livre, nada em curso). So entao o Enter larga o foco do campo. */
+export const envioAceito = (texto: string, motivoSemCaminho: string, enviando: boolean): boolean => !enviando && !motivoSemCaminho && prepararMensagem(texto).ok

@@ -13,6 +13,8 @@
     import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
     import { toggleOutputs } from "../helpers/output"
     import { restoreOutput } from "../output/clear"
+    import { soRetorno } from "../../utils/aliancaSoRetorno"
+    import { ROTULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
     import AliancaCortina from "./AliancaCortina.svelte"
 
     export let semTelaFisica = false
@@ -132,6 +134,7 @@
     <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}
         ><svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button
     >
+    {#if $soRetorno}<span class="so-retorno" data-acao="pilula-so-retorno">{ROTULO_FAIXA}</span>{/if}
     {#if menuAberto || pergunta}
         <AliancaCortina
             on:fechar={() => {
@@ -314,5 +317,18 @@
     .mesmo.inerte {
         opacity: 0.35;
         cursor: not-allowed;
+    }
+    .so-retorno {
+        height: 22px;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        border-radius: 11px;
+        background: var(--luz-laranja);
+        color: var(--luz-tinta);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
     }
 </style>

@@ -2,20 +2,26 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { get } from "svelte/store"
-import { LIMITE_MENSAGEM, MINUTOS_PADRAO, mensagemViva, minutosValidos, prepararMensagem } from "./aliancaMensagemPalcoLogica"
+import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, mensagemDeErro, mensagemViva, minutosValidos, prepararMensagem, restanteTexto } from "./aliancaMensagemPalcoLogica"
 
-const mocks = vi.hoisted(() => ({ motivo: "", chamadas: [] as any[], resposta: { ok: true, dados: { id: "m1", texto: "oi", ate: "2026-11-18T22:00:00Z" } } as any, cultoId: "evt-1" }))
+const mocks = vi.hoisted(() => ({ motivo: "", chamadas: [] as any[], resposta: { ok: true, dados: { id: "m1", texto: "oi", ate: "2026-11-18T22:00:00Z" } } as any, cultoId: "evt-1", respostas: [] as any[] }))
 vi.mock("./aliancaSirvo", async () => {
     const { writable } = await import("svelte/store")
     return {
-        sirvo: writable({ cultoId: "evt-1" }),
+        sirvo: writable({ status: "conectado", cultoId: "evt-1", podeConduzir: true, enviando: false }),
         porQueNaoConduz: () => mocks.motivo,
-        pedirAoSirvo: async (funcao: string, args: any) => {
-            mocks.chamadas.push({ funcao, args })
-            return mocks.resposta
+        pedirAoSirvo: async () => {
+            throw new Error("a mensagem pro palco nao passa mais pela fila do roteiro")
         }
     }
 })
+vi.mock("../IPC/main", () => ({
+    requestMain: async (_canal: string, { funcao, args }: any) => {
+        mocks.chamadas.push({ funcao, args })
+        const r = mocks.respostas.length ? mocks.respostas.shift() : mocks.resposta
+        return r
+    }
+}))
 
 describe("prepararMensagem", () => {
     it("recusa vazio e so espacos", () => {
@@ -45,8 +51,12 @@ describe("mensagemViva", () => {
     })
 })
 
+const estadoBom = { status: "conectado", cultoId: "evt-1", podeConduzir: true, enviando: false }
+
 describe("enviarMensagemPalco / limparMensagemPalco", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).set({ ...estadoBom })
         mocks.motivo = ""
         mocks.chamadas.length = 0
         mocks.resposta = { ok: true, dados: {} }
@@ -55,9 +65,12 @@ describe("enviarMensagemPalco / limparMensagemPalco", () => {
         const { falhas } = await import("./aliancaFalha")
         falhas.set([])
         mocks.motivo = "Esta chave só lê o roteiro."
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).update((e: any) => ({ ...e, podeConduzir: false }))
         const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
         const r = await enviarMensagemPalco("oi")
-        expect(r).toEqual({ ok: false, mensagem: "Esta chave só lê o roteiro." })
+        expect(r.ok).toBe(false)
+        expect((r as any).mensagem).toContain("só lê o roteiro")
         expect(mocks.chamadas).toEqual([])
         const f = get(falhas)
         expect(f.length).toBe(1)
@@ -90,6 +103,48 @@ describe("enviarMensagemPalco / limparMensagemPalco", () => {
     })
 })
 
+describe("duracao, contagem e erros em portugues", () => {
+    beforeEach(() => {
+        mocks.motivo = ""
+        mocks.chamadas.length = 0
+        mocks.resposta = { ok: true, dados: {} }
+    })
+    it("as validades do operador: 1, 3, 5 e 10; a 3 e a padrao", () => {
+        expect([...DURACOES_MINUTOS]).toEqual([1, 3, 5, 10])
+        expect(DURACOES_MINUTOS).toContain(MINUTOS_PADRAO)
+    })
+    it("a duracao escolhida vai como p_minutos; fora de 1..60 nem chega ao Sirvo", async () => {
+        const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
+        await enviarMensagemPalco("oi", 10)
+        expect(mocks.chamadas[0].args.p_minutos).toBe(10)
+        mocks.chamadas.length = 0
+        expect((await enviarMensagemPalco("oi", 0)).ok).toBe(false)
+        expect((await enviarMensagemPalco("oi", 61)).ok).toBe(false)
+        expect(mocks.chamadas).toEqual([])
+    })
+    it("restanteTexto: m:ss, arredonda para cima, nunca negativo", () => {
+        expect(restanteTexto(180000, 0)).toBe("3:00")
+        expect(restanteTexto(61000, 1500)).toBe("1:00")
+        expect(restanteTexto(5000, 4500)).toBe("0:01")
+        expect(restanteTexto(0, 9000)).toBe("0:00")
+    })
+    it("o que o main ja classifica ganha frase propria; o resto passa com a frase do proprio Sirvo", () => {
+        expect(mensagemDeErro("culto_inexistente", "x")).toContain("não existe mais")
+        expect(mensagemDeErro("chave_invalida", "x")).toContain("recusou a chave")
+        expect(mensagemDeErro("ocupado", "x")).toContain("um pedido de cada vez")
+        expect(mensagemDeErro("erro", "Pedidos demais desta chave em um minuto. Espere um pouco.")).toBe("Pedidos demais desta chave em um minuto. Espere um pouco.")
+        expect(mensagemDeErro("erro", 'Esta chave só lê o roteiro. Peça a um admin para ligar "conduz" em Perfil → chaves do AliançaShow.')).toContain("só lê o roteiro")
+        expect(mensagemDeErro(undefined, "")).toBe("O Sirvo não aceitou.")
+    })
+    it("a recusa chega ao operador (envio e limpar), com a frase do Sirvo ou a nossa", async () => {
+        const { enviarMensagemPalco, limparMensagemPalco } = await import("./aliancaMensagemPalco")
+        mocks.resposta = { ok: false, mensagem: "Pedidos demais desta chave em um minuto. Espere um pouco.", codigo: "erro" }
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: false, mensagem: "Pedidos demais desta chave em um minuto. Espere um pouco.", codigo: "erro" })
+        mocks.resposta = { ok: false, mensagem: "Culto não encontrado no Sirvo.", codigo: "culto_inexistente" }
+        expect(await limparMensagemPalco()).toEqual({ ok: false, mensagem: mensagemDeErro("culto_inexistente", ""), codigo: "culto_inexistente" })
+    })
+})
+
 describe("as duas funcoes estao na lista de escrita do main e no tipo", () => {
     const raiz = join(__dirname, "..", "..")
     it("electron/sirvo/sirvo.ts (ESCRITA) e FuncaoDeEscrita", () => {
@@ -100,5 +155,69 @@ describe("as duas funcoes estao na lista de escrita do main e no tipo", () => {
             expect(linha, f).toContain(`"${f}"`)
             expect(tipo, f).toContain(`"${f}"`)
         }
+    })
+})
+
+describe("M2: so a promessa quebrada acende a faixa de falha; o passageiro so fala na caixa", () => {
+    const casos: [string, any, RegExp][] = [
+        ["Sirvo fora do ar", { status: "caido" }, /não está respondendo/],
+        ["sem culto seguido", { cultoId: null }, /Nenhum culto/],
+        ["sem chave", { status: "sem_chave" }, /Sem chave/]
+    ]
+    for (const [nome, parcial, texto] of casos) {
+        it(`${nome}: recusa com texto verdadeiro e NAO acende a falha`, async () => {
+            const { falhas } = await import("./aliancaFalha")
+            const { sirvo } = await import("./aliancaSirvo")
+            falhas.set([])
+            ;(sirvo as any).set({ ...estadoBom, ...parcial })
+            mocks.motivo = "Esperando o Sirvo responder…"
+            mocks.chamadas.length = 0
+            const { enviarMensagemPalco, limparMensagemPalco } = await import("./aliancaMensagemPalco")
+            const r: any = await enviarMensagemPalco("oi")
+            expect(r.ok).toBe(false)
+            expect(r.mensagem).toMatch(texto)
+            expect(r.mensagem).not.toMatch(/ainda não ligada/)
+            expect(((await limparMensagemPalco()) as any).mensagem).toMatch(texto)
+            expect(get(falhas)).toEqual([])
+            expect(mocks.chamadas).toEqual([])
+        })
+    }
+})
+
+describe("M4: a mensagem tem fila propria, nao espera a trava do roteiro", () => {
+    beforeEach(async () => {
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).set({ ...estadoBom })
+        mocks.chamadas.length = 0
+        mocks.respostas.length = 0
+        mocks.resposta = { ok: true, dados: {} }
+    })
+    it("com outra escrita do roteiro em voo (enviando) a mensagem ainda sai, e nao liga a trava global", async () => {
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).update((e: any) => ({ ...e, enviando: true }))
+        const { enviarMensagemPalco, limparMensagemPalco } = await import("./aliancaMensagemPalco")
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: true })
+        expect(await limparMensagemPalco()).toEqual({ ok: true })
+        expect(mocks.chamadas.map((c) => c.funcao)).toEqual(["show_enviar_mensagem_palco", "show_limpar_mensagem_palco"])
+        expect(get(sirvo as any).enviando).toBe(true) // so a do roteiro; a nossa nunca mexeu
+    })
+    it("o 'Calma' do main (500 ms entre escritas) e tentado de novo uma vez, sem o operador ver", async () => {
+        mocks.respostas.push({ ok: false, codigo: "ocupado", mensagem: "Calma: um pedido de cada vez." }, { ok: true, dados: {} })
+        const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: true })
+        expect(mocks.chamadas.length).toBe(2)
+    })
+    it("duas vezes ocupado: devolve a frase, sem laco", async () => {
+        mocks.respostas.push({ ok: false, codigo: "ocupado", mensagem: "x" }, { ok: false, codigo: "ocupado", mensagem: "x" })
+        const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
+        const r: any = await enviarMensagemPalco("oi")
+        expect(r.ok).toBe(false)
+        expect(r.codigo).toBe("ocupado")
+        expect(mocks.chamadas.length).toBe(2)
+    })
+    it("o codigo do main segue junto (rede = nao sei se chegou)", async () => {
+        mocks.respostas.push({ ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" })
+        const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: false, mensagem: "Não sei se o Sirvo recebeu — conferindo…", codigo: "rede" })
     })
 })
