@@ -321,6 +321,8 @@ body[data-tema="luz"] {
     --luz-raio-botao: 6px;
     --luz-raio-thumb: 5px;
     --luz-raio-selo: 4px;
+    --luz-raio-menu: 12px;
+    --luz-raio-item: 7px;
     /* transporte (C2): contraste baixo de proposito, o telao continua a coisa mais forte da coluna */
     --luz-texto-60: rgba(248, 248, 240, 0.6);
     --luz-texto-80: rgba(248, 248, 240, 0.8);

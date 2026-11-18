@@ -3,7 +3,7 @@
 //   C1 cartao de midia: thumb = ao ar; faixa do nome so seleciona; ＋ com alvo de 38 px; duracao; no ar = cartao vermelho; clique no que ja esta no ar REINICIA (2o clique < 700 ms ignorado)
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar, mover } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, mover, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-cabine2"
 mkdirSync(saida, { recursive: true })
@@ -170,6 +170,51 @@ try {
     ok("C6 Entradas e UMA linha so (filtro de tipo na lista: cameras/telas/NDI)", (await aba()) === "media:inputs" && (await dom(`document.querySelectorAll('[data-regiao=biblioteca] [aria-label],[data-regiao=biblioteca] button').length>0`)) === true)
     await clicarNo("[data-no=shows]")
     await esperar(300)
+
+    // ---------- C5: menu "＋ Adicionar item ▾" ancorado na barra do Editar
+    await j.ev(`S.activePopup.set(null); T.trocarTela("show","segmentado"); S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a})
+const p=get(S.projects); const alvo=Object.entries(p).find(([k,v])=>(v.shows||[]).some(s=>(s.type===undefined||s.type==="show")))
+S.activeProject.set(alvo[0]); const i=alvo[1].shows.findIndex(s=>(s.type===undefined||s.type==="show"))
+const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([alvo[1].shows[i].id])
+S.activeShow.set({id:alvo[1].shows[i].id,index:i,type:"show"}); S.activeDrawerTab.set("shows"); await esp(1200); return 1`)
+    { const t = await localizar(j, `[...document.querySelectorAll('[role=tab]')].find(b=>b.innerText.trim()==="Editar")`); await clicarEm(j, t.x, t.y) }
+    await esperar(1500)
+    await j.ev(`S.activeEdit.set({type:"show",slide:0,items:[],showId:get(S.activeShow).id}); await esp(700); return 1`)
+    const g = await caixa(`document.querySelector('[data-acao=adicionar-item]')`)
+    const zoomB = await caixa(`document.querySelector('[data-acao=editar-zoom]')`)
+    ok("C5 o gatilho \"＋ Adicionar item ▾\" mora na barra do Editar, ao lado do zoom (botao com nome, 30 px)", !!g && !!zoomB && g.x < zoomB.x && Math.abs(g.h - 30) <= 1 && /Adicionar item/.test(await dom(`document.querySelector('[data-acao=adicionar-item]').innerText`)), JSON.stringify({ g, zoomB }))
+    await print("c5-fechado")
+    await clicarEm(j, g.x + g.w / 2, g.y + g.h / 2)
+    await esperar(400)
+    const m = await caixa(`document.querySelector('.addMenu')`)
+    ok("C5 o menu abre PARA BAIXO, colado no botao (6 px), alinhado pela direita, 252 px", !!m && Math.abs(m.y - (g.y + g.h + 6)) <= 1.5 && Math.abs(m.x + m.w - (g.x + g.w)) <= 1.5 && Math.abs(m.w - 252) <= 1, JSON.stringify({ g, m }))
+    ok("C5 menu Luz: fundo #1c1c1f, raio 12, sem vidro, linhas de 38 px", (await dom(`(()=>{const e=document.querySelector('.addMenu'); const s=getComputedStyle(e); const mi=[...e.querySelectorAll('.mi')]; return s.backgroundColor==='rgb(28, 28, 31)' && s.borderRadius==='12px' && (s.backdropFilter==='none'||!s.backdropFilter) && mi.length===6 && mi.every(x=>Math.round(x.getBoundingClientRect().height)===38)})()`)) === true)
+    ok("C5 o primeiro item (Caixa de texto) nasce marcado", (await dom(`document.querySelector('.addMenu .mi.foco')?.innerText.trim()`)).length > 0 && (await dom(`document.querySelector('.addMenu .mi.foco')?.dataset.itemId`)) === "text")
+    await print("c5-aberto")
+    await tecla(j, "ArrowDown"); await esperar(150)
+    ok("C5 ↓ anda para o item seguinte", (await dom(`document.querySelector('.addMenu .mi.foco')?.dataset.itemId`)) === "media")
+    await tecla(j, "ArrowUp"); await esperar(150)
+    ok("C5 ↑ volta", (await dom(`document.querySelector('.addMenu .mi.foco')?.dataset.itemId`)) === "text")
+    for (let i = 0; i < 5; i++) await tecla(j, "ArrowDown")
+    await esperar(150)
+    ok("C5 o ultimo item e \"Mais\"", (await dom(`document.querySelector('.addMenu .mi.foco')?.dataset.itemId`)) === "more")
+    await tecla(j, "Enter"); await esperar(300)
+    const m2 = await caixa(`document.querySelector('.addMenu')`)
+    ok("C5 \"Mais\" TROCA o conteudo na mesma caixa (mesmo lugar, \"‹ Mais itens\", nenhum segundo menu)", (await dom(`document.querySelectorAll('.addMenu').length`)) === 1 && (await dom(`document.querySelector('.addMenu').dataset.vista`)) === "mais" && Math.abs(m2.x - m.x) <= 1 && Math.abs(m2.y - m.y) <= 1 && /Mais itens/.test(await dom(`document.querySelector('.addMenu .voltar').innerText`)), JSON.stringify({ m, m2 }))
+    ok("C5 em Mais estao os itens do FreeShow (tabela, grafico, icone, web, eventos...) - nenhum sumiu", await dom(`['table','chart','icon','web','slide_tracker','events','weather','visualizer','captions'].every(id=>!!document.querySelector('.addMenu [data-item-id='+id+']'))`))
+    await print("c5-mais")
+    await tecla(j, "ArrowLeft"); await esperar(250)
+    ok("C5 ← volta do Mais para a raiz do menu", (await dom(`document.querySelector('.addMenu').dataset.vista`)) === "raiz")
+    await tecla(j, "Escape"); await esperar(300)
+    ok("C5 Esc fecha o menu", (await dom(`!document.querySelector('.addMenu')`)) === true)
+    await clicarEm(j, g.x + g.w / 2, g.y + g.h / 2); await esperar(300)
+    await clicarEm(j, 700, 700); await esperar(300)
+    ok("C5 clique fora fecha", (await dom(`!document.querySelector('.addMenu')`)) === true)
+    const itens0 = await dom(`(()=>{const sh=get(S.showsCache)[get(S.activeShow).id]; return Object.values(sh.slides||{}).reduce((n,x)=>n+(x.items||[]).length,0)})()`)
+    await clicarEm(j, g.x + g.w / 2, g.y + g.h / 2); await esperar(300)
+    await tecla(j, "Enter"); await esperar(900)
+    ok("C5 Enter no 1o item adiciona a caixa de texto ao slide (o menu fecha)", (await dom(`!document.querySelector('.addMenu')`)) === true && (await dom(`(()=>{const sh=get(S.showsCache)[get(S.activeShow).id]; return Object.values(sh.slides||{}).reduce((n,x)=>n+(x.items||[]).length,0)})()`)) === itens0 + 1, `${itens0} -> ${await dom(`(()=>{const sh=get(S.showsCache)[get(S.activeShow).id]; return Object.values(sh.slides||{}).reduce((n,x)=>n+(x.items||[]).length,0)})()`)}`)
+    await j.ev(`S.activeEdit.set({type:"show",slide:0,items:[],showId:get(S.activeShow).id}); T.trocarTela("show","segmentado"); await esp(500); return 1`)
 } catch (e) {
     console.log("ERRO", e && e.stack ? e.stack : e)
     falhas.push("erro")
