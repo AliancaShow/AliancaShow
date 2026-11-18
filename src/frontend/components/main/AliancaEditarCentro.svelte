@@ -223,6 +223,7 @@
         right: auto;
         width: 32px !important;
         height: 32px !important;
+        max-width: none;
     }
     .addCab :global(.row button) {
         width: 30px !important;
