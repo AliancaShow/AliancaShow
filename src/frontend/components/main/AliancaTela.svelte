@@ -14,6 +14,7 @@
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
+    import AliancaBibliotecaPainel from "./AliancaBibliotecaPainel.svelte"
     import AliancaCorpoPagina from "./AliancaCorpoPagina.svelte"
     import AliancaDivisoria from "./AliancaDivisoria.svelte"
     import AliancaNoAr from "./AliancaNoAr.svelte"
@@ -107,7 +108,7 @@
                 </div>
                 <AliancaDivisoria eixo="h" on:pegar={pegar("bib")} />
                 <section class="painel bib" data-regiao="biblioteca" style="height: {valores.bib}px">
-                    <!-- AQUI:biblioteca -->
+                    <AliancaBibliotecaPainel esq={valores.esq} />
                 </section>
             </div>
             <AliancaDivisoria eixo="v" on:pegar={pegar("dir")} />
