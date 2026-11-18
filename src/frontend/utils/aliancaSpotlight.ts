@@ -128,15 +128,29 @@ function buscarSoLivro(consulta: string): Resultado[] {
     return [{ chave: "versiculo:livro:" + l.livro, tipo: "versiculo", titulo: l.nome, icone: "scripture", id: l.nome, detalhe: motivo, versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo } }]
 }
 
-/** "Rm 8:28": o resultado de versiculo, com o texto lido da Biblia aberta. Sem Biblia, sem livro ou sem esse versiculo: o resultado diz o motivo (Enter avisa, nunca cai calado). */
-export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
-    const ref = lerReferencia(consulta)
-    if (!ref) return buscarSoLivro(consulta)
+/**
+ * D1 (cabine 18/nov): TODAS as Biblias instaladas, com a Biblia em uso (a aba aberta na pasta Biblia) em PRIMEIRO: o Enter direto continua igual (abre a em uso);
+ * ↓ ou clique escolhe outra. Uma entrada de `scriptures` que e colecao (varias versoes juntas) conta pela versao de pre-visualizacao, como em `bibliaEmUso`.
+ */
+export function bibliasInstaladas(): { aba: string; id: string; nome: string }[] {
+    const todas = get(scriptures)
+    const emUso = bibliaEmUso()
+    if (!emUso) return []
+    const lista = [emUso]
+    for (const aba of Object.keys(todas)) {
+        if (aba === emUso.aba || !todas[aba]) continue
+        const versoes = todas[aba]?.collection?.versions
+        const id = versoes?.[todas[aba]?.collection?.previewIndex || 0] || versoes?.[0] || aba
+        lista.push({ aba, id, nome: todas[aba]?.customName || todas[aba]?.name || id })
+    }
+    return lista
+}
+
+/** "Rm 8:28" numa Biblia: o resultado de versiculo, com o texto lido dela. Sem esse livro/capitulo/versiculo: o resultado diz o motivo (Enter avisa, nunca cai calado). */
+async function versiculoNaBiblia(ref: ReferenciaBiblica, biblia: { aba: string; id: string; nome: string }): Promise<Resultado> {
     const rotulo = rotuloDaReferencia(ref)
-    const base = { chave: "versiculo:" + rotulo, tipo: "versiculo" as const, titulo: rotulo, icone: "scripture", id: rotulo }
-    const biblia = bibliaEmUso()
-    if (!biblia) return [{ ...base, detalhe: MOTIVO_SEM_BIBLIA, versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo: MOTIVO_SEM_BIBLIA } }]
-    const sem = (motivo: string): Resultado[] => [{ ...base, detalhe: motivo, versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto: "", motivo } }]
+    const base = { chave: "versiculo:" + rotulo + ":" + biblia.aba, tipo: "versiculo" as const, titulo: rotulo, icone: "scripture", id: rotulo }
+    const sem = (motivo: string): Resultado => ({ ...base, titulo: `${rotulo} · ${biblia.nome}`, detalhe: motivo, versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto: "", motivo } })
     try {
         const bible = await loadJsonBible(biblia.id)
         if (!bible) return sem(`Não consegui abrir a Bíblia ${biblia.nome}`)
@@ -166,11 +180,23 @@ export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
             }
             texto = partes.join(" ")
         }
-        return [{ ...base, titulo: `${rotulo} · ${biblia.nome}`, detalhe: texto || "Abre o capítulo na pasta Bíblia", versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto, motivo: null } }]
+        return { ...base, titulo: `${rotulo} · ${biblia.nome}`, detalhe: texto || "Abre o capítulo na pasta Bíblia", versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto, motivo: null } }
     } catch (erro) {
         falhaAlta("spotlight-versiculo", erro)
         return sem("Não consegui ler esse versículo")
     }
+}
+
+/** "Rm 8:28": UM resultado por Biblia instalada (a em uso primeiro, cada um com o trecho do texto dela). Sem nenhuma Biblia: diz isso, alto. */
+export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
+    const ref = lerReferencia(consulta)
+    if (!ref) return buscarSoLivro(consulta)
+    const biblias = bibliasInstaladas()
+    if (!biblias.length) {
+        const rotulo = rotuloDaReferencia(ref)
+        return [{ chave: "versiculo:" + rotulo, tipo: "versiculo", titulo: rotulo, icone: "scripture", id: rotulo, detalhe: MOTIVO_SEM_BIBLIA, versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo: MOTIVO_SEM_BIBLIA } }]
+    }
+    return Promise.all(biblias.map((b) => versiculoNaBiblia(ref, b)))
 }
 
 // ---------------------------------------------------------------- executar

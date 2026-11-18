@@ -2,6 +2,7 @@
 //   node scripts/prova-culto/t12-cabine2.mjs <pasta-de-prints>
 //   C1 cartao de midia: thumb = ao ar; faixa do nome so seleciona; ＋ com alvo de 38 px; duracao; no ar = cartao vermelho; clique no que ja esta no ar REINICIA (2o clique < 700 ms ignorado)
 import { mkdirSync, writeFileSync } from "node:fs"
+import { join as juntar } from "node:path"
 import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, mover, tecla } from "./lib.mjs"
 
@@ -215,6 +216,40 @@ S.activeShow.set({id:alvo[1].shows[i].id,index:i,type:"show"}); S.activeDrawerTa
     await tecla(j, "Enter"); await esperar(900)
     ok("C5 Enter no 1o item adiciona a caixa de texto ao slide (o menu fecha)", (await dom(`!document.querySelector('.addMenu')`)) === true && (await dom(`(()=>{const sh=get(S.showsCache)[get(S.activeShow).id]; return Object.values(sh.slides||{}).reduce((n,x)=>n+(x.items||[]).length,0)})()`)) === itens0 + 1, `${itens0} -> ${await dom(`(()=>{const sh=get(S.showsCache)[get(S.activeShow).id]; return Object.values(sh.slides||{}).reduce((n,x)=>n+(x.items||[]).length,0)})()`)}`)
     await j.ev(`S.activeEdit.set({type:"show",slide:0,items:[],showId:get(S.activeShow).id}); T.trocarTela("show","segmentado"); await esp(500); return 1`)
+
+    // ---------- D1: Ctrl+K, versiculo: um resultado POR Biblia instalada (a em uso primeiro)
+    // o perfil de teste tem so a NVI de 564 bytes: a 2a Biblia (ARA) e gerada AQUI, no perfil da prova (nunca vai para o repo)
+    const PERFIL_DIR = (process.env.FS_PERFIL_DIR || "C:/Users/andre.zagato/Documents/ProjetosPessoais/aliancashow/bancada/prova-perfil-9223").split("\\").join("/")
+    writeFileSync(juntar(PERFIL_DIR, "data", "Bibles", "ARA.fsb"), JSON.stringify(["ara", { name: "ARA", metadata: {}, books: [{ number: 43, name: "João", chapters: [{ number: 3, verses: [{ number: 16, text: "Porque Deus amou de tal maneira o mundo que deu o seu Filho unigênito." }] }] }] }]))
+    await j.ev(`S.activePopup.set(null); S.quickSearchActive.set(false); T.trocarTela("show","segmentado"); S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a}); S.scriptures.update(a=>({...a, ara:{name:"ARA",id:"ara",copyright:"fixture da prova"}})); S.drawerTabsData.update(a=>{a.scripture={...(a.scripture||{}),activeSubTab:"nvi",enabled:true};return a}); await esp(500); return 1`)
+    const versiculos = async (q) => {
+        await j.ev(`S.quickSearchActive.set(false); return 1`)
+        await esperar(300)
+        await tecla(j, "k", { ctrl: true })
+        await esperar(400)
+        await j.ev(`document.querySelector('[data-acao=spotlight-campo]').select(); return 1`)
+        await j.enviar("Input.insertText", { text: q })
+        await esperar(1800)
+        return JSON.parse(await dom(`JSON.stringify([...document.querySelectorAll('[data-acao=spotlight] .linha[data-tipo=versiculo]')].map(l=>({sel:l.classList.contains('sel'), aviso:l.classList.contains('aviso'), x:l.innerText.split(String.fromCharCode(10)).join(' | ')})))`))
+    }
+    let v = await versiculos("Jo 3:16")
+    ok("D1 \"Jo 3:16\" lista UM resultado por Biblia instalada (2), cada um com o trecho dela", v.length === 2 && /NVI/.test(v[0].x) && /Porque Deus tanto amou/.test(v[0].x) && /ARA/.test(v[1].x) && /de tal maneira/.test(v[1].x), JSON.stringify(v))
+    ok("D1 o 1o resultado e a Biblia em uso (NVI) e ja nasce selecionado", v[0].sel === true && v[1].sel === false)
+    await print("d1-duas-biblias")
+    await tecla(j, "ArrowDown"); await esperar(200)
+    ok("D1 ↓ escolhe a outra Biblia (ARA)", (await dom(`document.querySelector('[data-acao=spotlight] .linha.sel')?.innerText.includes('ARA')`)) === true)
+    await tecla(j, "Enter"); await esperar(1200)
+    ok("D1 Enter na 2a abre/toca o versiculo da ARA (a pasta Biblia passa para a ARA)", (await dom(`get(S.drawerTabsData).scripture?.activeSubTab`)) === "ara", await dom(`get(S.drawerTabsData).scripture?.activeSubTab`))
+    await j.ev(`S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a}); S.drawerTabsData.update(a=>{a.scripture={...(a.scripture||{}),activeSubTab:"nvi"};return a}); await esp(400); return 1`)
+    v = await versiculos("Jo 3:16")
+    await tecla(j, "Enter"); await esperar(1200)
+    ok("D1 Enter direto (sem ↓) continua abrindo a Biblia em uso (NVI)", (await dom(`get(S.drawerTabsData).scripture?.activeSubTab`)) === "nvi" && (await dom(`get(S.outputs).default?.out?.slide?.id ?? null`)) !== null, await dom(`get(S.drawerTabsData).scripture?.activeSubTab`))
+    await j.ev(`S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a}); S.quickSearchActive.set(false); S.scriptures.update(a=>{delete a.ara; return a}); return 1`)
+    // com a ARA como Biblia em uso, ela vem primeiro
+    await j.ev(`S.scriptures.update(a=>({...a, ara:{name:"ARA",id:"ara"}})); S.drawerTabsData.update(a=>{a.scripture={...(a.scripture||{}),activeSubTab:"ara"};return a}); await esp(300); return 1`)
+    v = await versiculos("Jo 3:16")
+    ok("D1 a Biblia em uso e sempre a 1a (com a ARA aberta, a ARA vem antes da NVI)", v.length === 2 && /ARA/.test(v[0].x) && /NVI/.test(v[1].x), JSON.stringify(v))
+    await j.ev(`S.quickSearchActive.set(false); S.scriptures.update(a=>{delete a.ara; return a}); S.drawerTabsData.update(a=>{a.scripture={...(a.scripture||{}),activeSubTab:"nvi"};return a}); return 1`)
 } catch (e) {
     console.log("ERRO", e && e.stack ? e.stack : e)
     falhas.push("erro")
