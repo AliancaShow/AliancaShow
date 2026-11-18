@@ -1,7 +1,7 @@
 // Fatia 2: as duas travas de gesto ligadas na janela principal (a conta e de aliancaToqueLogica.ts). Chamada uma vez por `AliancaTela`.
 // Nada aqui escreve em `outputs`. Fora da janela principal nao e chamada (a janela de saida nao monta `AliancaTela`).
 import { get } from "svelte/store"
-import { activePopup, contextActive, quickSearchActive, selected, topContextActive } from "../stores"
+import { activeEdit, activePopup, contextActive, quickSearchActive, selected, topContextActive } from "../stores"
 import { dividirAberto } from "./aliancaDividir"
 import { falhaAlta } from "./aliancaFalha"
 import { listaAberta } from "./aliancaGavetaEstado"
@@ -25,7 +25,8 @@ function campoComFoco(): boolean {
 
 /** algo que ESTE Esc vai fechar ou desselecionar (olhado ANTES dos outros ouvintes) */
 function algoParaFechar(): boolean {
-    return !!(get(activePopup) || get(quickSearchActive) || get(contextActive) || get(topContextActive) || get(selected)?.id || campoComFoco())
+    // em Editar o Esc tambem desseleciona a caixa do slide (imagem, forma, caixa arrastada): `clearAll` o sabe, a trava tambem tem de saber
+    return !!(get(activePopup) || get(quickSearchActive) || get(contextActive) || get(topContextActive) || get(selected)?.id || campoComFoco() || (emEditar() && get(activeEdit)?.items?.length))
 }
 
 /**

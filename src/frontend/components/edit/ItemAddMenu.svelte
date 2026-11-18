@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { escFechou } from "../../utils/aliancaToque"
     import { fade } from "svelte/transition"
     import { uid } from "uid"
     import type { StageItem } from "../../../types/Stage"
@@ -160,6 +161,7 @@
     function handleKeydown(e: KeyboardEvent) {
         if (isOpen && e.key === "Escape") {
             isOpen = false
+            escFechou()
             e.preventDefault()
             e.stopPropagation()
         }

@@ -85,3 +85,19 @@ describe("Esc em Editar: um Esc = uma coisa (achado 4)", () => {
     })
 })
 
+describe("Esc que desseleciona caixa arma os 700 ms (achado 5)", () => {
+    it("caixa selecionada: o 1o Esc passa (desseleciona), o 2o dentro de 700 ms e engolido", () => {
+        activeEdit.set({ items: [0] } as any)
+        expect(esc()).toBe(true)
+        activeEdit.set({ items: [] } as any)
+        passar(300)
+        expect(esc()).toBe(false)
+        passar(800)
+        expect(esc()).toBe(true)
+    })
+    it("nada selecionado: o Esc passa e nao arma nada", () => {
+        expect(esc()).toBe(true)
+        passar(10)
+        expect(esc()).toBe(true)
+    })
+})
