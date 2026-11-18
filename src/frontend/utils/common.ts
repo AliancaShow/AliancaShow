@@ -187,27 +187,6 @@ export function startDevMode() {
     document.body.appendChild(script)
 }
 
-// toggle drawer & left/right panels
-const minDrawerHeight = 40
-const minPanelWidth = 4
-export function togglePanels() {
-    const drawerIsOpened = get(drawer).height > minDrawerHeight
-    const leftPanelIsOpened = get(resized).leftPanel > minPanelWidth
-    const rightPanelIsOpened = get(resized).rightPanel > minPanelWidth
-
-    // close all
-    if (drawerIsOpened || leftPanelIsOpened || rightPanelIsOpened) {
-        drawer.set({ height: minDrawerHeight, stored: get(drawer).height })
-        resized.set({ ...get(resized), leftPanel: minPanelWidth, rightPanel: minPanelWidth })
-        fecharTudoManual.gravar(!leftPanelIsOpened && !rightPanelIsOpened)
-        return
-    }
-
-    // open all
-    if (!drawerIsOpened) drawer.set({ height: get(drawer).stored || DEFAULT_DRAWER_HEIGHT, stored: null })
-    if (!fecharTudoManual.ler()) resized.set({ ...get(resized), leftPanel: leftPanelIsOpened ? get(resized).leftPanel : DEFAULT_WIDTH, rightPanel: rightPanelIsOpened ? get(resized).rightPanel : DEFAULT_WIDTH })
-}
-
 // trigger functions in .svelte files (used to trigger big and old functions still in .svelte files)
 let triggerTimeout: NodeJS.Timeout | null = null
 export function triggerFunction(id: string) {

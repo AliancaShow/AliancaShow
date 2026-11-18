@@ -12,7 +12,7 @@ const FRONT = join(__dirname, "..")
 const ler = (rel: string) => readFileSync(join(FRONT, rel), "utf8").replace(/\r\n/g, "\n")
 
 const MODULOS = ["utils/aliancaBiblioteca.ts", "utils/aliancaBibliotecaEstado.ts", "utils/aliancaBibliotecaLogica.ts"]
-const SVELTES = ["components/main/AliancaAbasLaterais.svelte", "components/main/AliancaBiblioteca.svelte", "components/main/AliancaNovo.svelte"]
+const SVELTES = ["components/main/AliancaNovo.svelte"]
 
 function arquivos(dir: string): string[] {
     const saida: string[] = []

@@ -81,10 +81,4 @@ describe("escrita atrasada nos stores por modo", () => {
         expect(sujos).toEqual([])
         for (const [f, j] of Object.entries(JUSTIFICADOS)) expect(contagem[f] ?? 0, f).toBe(j.quantas)
     })
-
-    it("Drawer.svelte agenda pelo helper com o lado da hora (doModo) e nao tem timeout escrevendo pela fachada", () => {
-        const src = readFileSync(join(RAIZ, "src/frontend/components/drawer/Drawer.svelte"), "utf8")
-        expect(src).toMatch(/agendarReaberturaDaGaveta\(drawer\.doModo\(get\(modoAlianca\)\)/)
-        expect(escritasAtrasadasPelaFachada(src.replace(/\r\n/g, "\n"))).toEqual([])
-    })
 })

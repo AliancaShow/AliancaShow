@@ -77,7 +77,7 @@ describe("montagem unica (D2): o motor e a biblioteca sobem em UM ponto, a tela 
     })
     it("nenhum outro arquivo importa o Preview antigo", () => {
         const reais = listar("src/frontend")
-            .filter((r) => r !== "src/frontend/components/main/AliancaTela.svelte" && r !== "src/frontend/MainLayout.svelte") // MainLayout: apagado no commit 12
+            .filter((r) => r !== "src/frontend/components/main/AliancaTela.svelte")
             .filter((r) => importa(ler(r)).some((i) => /output\/preview\/Preview\.svelte$/.test(i)))
         expect(reais).toEqual([])
     })

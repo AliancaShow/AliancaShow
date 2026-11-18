@@ -14,10 +14,10 @@ const sem = (src: string) =>
         .map((l) => (/^\s*(\/\/|\*|\/\*)/.test(l) ? "" : l))
         .join("\n")
 
-const BARRA = ["src/frontend/components/main/PrepararBarra.svelte", "src/frontend/components/main/PrepararPilula.svelte", "src/frontend/components/main/AnteparoDeModo.svelte", "src/frontend/utils/aliancaPilula.ts"]
+const BARRA = ["src/frontend/components/main/AliancaTopo.svelte", "src/frontend/components/main/AliancaMenuApp.svelte", "src/frontend/components/main/AliancaSirvoPilula.svelte", "src/frontend/components/main/AnteparoDeModo.svelte", "src/frontend/utils/aliancaPilula.ts"]
 const PROIBIDO_NA_BARRA = [/\bsetOutput\b/, /\bclear(?!Timeout|Interval)\w*\s*\(/, /\boutputs\.update\(/, /\boutputs\.set\(/, /\btoggleOutputs\b/, /\bsend\(\s*OUTPUT/, /\bsendMain\(/]
 const NOVOS_TS = ["src/frontend/utils/aliancaPilula.ts", "src/frontend/utils/aliancaPilulaLogica.ts", "src/frontend/utils/aliancaSaidaMenuLogica.ts"]
-const COMPONENTES = [...BARRA.filter((f) => f.endsWith(".svelte")), "src/frontend/components/main/PrepararMenu.svelte"]
+const COMPONENTES = [...BARRA.filter((f) => f.endsWith(".svelte")), "src/frontend/components/main/AliancaTelaoPilula.svelte"]
 
 export function citacoesProibidas(src: string, padroes: RegExp[]): string[] {
     const s = sem(src)
@@ -28,16 +28,12 @@ describe("barra do Preparar: nada vai ao ar (1a)", () => {
     it("a barra, a pilula, o anteparo e aliancaPilula.ts nao citam escrita em outputs nem o telao", () => {
         for (const rel of BARRA) expect(citacoesProibidas(ler(rel), PROIBIDO_NA_BARRA), rel).toEqual([])
     })
-    it("so PrepararMenu.svelte cita toggleOutputs, e so com state:", () => {
-        const menu = sem(ler("src/frontend/components/main/PrepararMenu.svelte"))
+    it("so AliancaTelaoPilula.svelte cita toggleOutputs, e so com state:", () => {
+        const menu = sem(ler("src/frontend/components/main/AliancaTelaoPilula.svelte"))
         const usos = [...menu.matchAll(/toggleOutputs\(([^)]*)\)/g)].map((m) => m[1])
         expect(usos.length).toBe(2)
         for (const u of usos) expect(u).toMatch(/\{\s*state:\s*(true|false)\s*\}/)
         for (const rel of [...BARRA, "src/frontend/utils/aliancaPilulaLogica.ts", "src/frontend/utils/aliancaSaidaMenuLogica.ts"]) expect(sem(ler(rel)), rel).not.toMatch(/toggleOutputs/)
-    })
-    it("a pilula so e renderizada quando pilulaVisivel deixa (tudo pronto some com chip pendente)", () => {
-        const src = sem(ler("src/frontend/components/main/PrepararPilula.svelte"))
-        expect(src.replace(/\s+/g, " ")).toContain('{:else if pilulaVisivel($pilula.pronto, $chips)} <button class="pilula"')
     })
     it("nenhum {@html}", () => {
         for (const rel of COMPONENTES) expect(sem(ler(rel)), rel).not.toContain("{@html")
@@ -60,8 +56,9 @@ describe("barra do Preparar: nada vai ao ar (1a)", () => {
         expect(fora).toBe("")
         expect(sem(src)).not.toMatch(/setTimeout|setInterval|requestAnimationFrame/)
     })
-    it("MainLayout.svelte nao importa AliancaFaixa e o arquivo nao existe", () => {
-        expect(ler("src/frontend/MainLayout.svelte")).not.toContain("AliancaFaixa")
+    it("AliancaTela.svelte nao importa AliancaFaixa e o arquivo nao existe; MainLayout.svelte nao existe mais", () => {
+        expect(ler("src/frontend/components/main/AliancaTela.svelte")).not.toContain("AliancaFaixa")
+        expect(existsSync(join(RAIZ, "src/frontend/MainLayout.svelte"))).toBe(false)
         expect(existsSync(join(RAIZ, "src/frontend/components/main/AliancaFaixa.svelte"))).toBe(false)
     })
     it("a guarda morde: outputs.update, setOutput, clearAll e toggleOutputs sem state reprovam", () => {

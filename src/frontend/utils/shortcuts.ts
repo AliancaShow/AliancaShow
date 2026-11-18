@@ -29,7 +29,7 @@ import { abaEscondidaNoEditor } from "./aliancaAbasEditor"
 import { dividirAberto } from "./aliancaDividir"
 import { listaAberta } from "./aliancaGavetaEstado"
 import { teclaIgnorada, timelineAtiva } from "./aliancaModo"
-import { isOutputWindow, togglePanels, triggerFunction } from "./common"
+import { isOutputWindow, triggerFunction } from "./common"
 import { send } from "./request"
 import { save } from "./save"
 

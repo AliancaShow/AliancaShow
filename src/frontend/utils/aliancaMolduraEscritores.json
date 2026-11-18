@@ -37,21 +37,11 @@
         "\"edit\"",
         "\"edit\""
     ],
-    "components/guide/guideSteps.ts": [
-        "\"show\"",
-        "\"show\"",
-        "\"show\"",
-        "\"edit\"",
-        "\"show\""
-    ],
     "components/helpers/history.ts": [
         "obj.location!.page"
     ],
     "components/inputs/HiddenInput.svelte": [
         "\"edit\""
-    ],
-    "components/inputs/TopButton.svelte": [
-        "id"
     ],
     "components/main/AliancaMenuApp.svelte": [
         "p"
@@ -65,19 +55,8 @@
     "components/main/AliancaTopo.svelte": [
         "\"edit\""
     ],
-    "components/main/PrepararMenu.svelte": [
-        "\"settings\"",
-        "\"settings\""
-    ],
-    "components/main/SirvoIndicador.svelte": [
-        "\"settings\""
-    ],
     "components/main/StatusIndicator.svelte": [
         "\"settings\""
-    ],
-    "components/main/Top.svelte": [
-        "\"settings\"",
-        "user.activePage as any"
     ],
     "components/main/popups/CleaningUtility.svelte": [
         "\"show\""
@@ -151,11 +130,6 @@
     ],
     "utils/aliancaBiblioteca.ts": [
         "\"edit\""
-    ],
-    "utils/aliancaMoldura.ts": [
-        "alvoSeguro()",
-        "alvo",
-        "\"show\""
     ],
     "utils/aliancaPilula.ts": [
         "\"show\""

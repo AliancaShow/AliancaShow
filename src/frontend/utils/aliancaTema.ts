@@ -5,7 +5,7 @@ import { currentWindow } from "../stores"
 //
 // O CSS do tema Luz de Projeção (public/global.css, bloco LUZ) só casa sob `body[data-tema="luz"]`. Só a janela PRINCIPAL escreve o atributo:
 // saída, miniatura e exportação nunca rodam startupMain, então ficam exatamente como eram. Uma aparência só (escuro): não há tema claro,
-// interruptor de desfoque nem flag; o tema do FreeShow e `special.aliancaVisual` deixaram de valer.
+// interruptor de desfoque nem flag; o tema do FreeShow deixou de valer.
 
 let iniciado = false
 
