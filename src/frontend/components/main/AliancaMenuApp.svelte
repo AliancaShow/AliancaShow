@@ -1,9 +1,12 @@
 <script lang="ts">
-    // Leiaute v2, topo: marca + menu do app. Cinco itens: Configuracoes, Telas e monitor de retorno, Ferramentas da saida (escrevem a
-    // pagina), Importar e "Atalhos · Ajuda · Sobre" (abrem popup). Aberto por clique, fecha ao escolher, ao clicar fora e com Esc
-    // (o Esc e SO do menu enquanto aberto: capturado antes de chegar aos atalhos do telao).
+    // Leiaute v2, topo: marca + menu do app. Fatia 4: o menu herda tudo o que a barra de menus do Windows (Arquivo, Editar, Visualizar,
+    // Ajuda) oferecia e que continua existindo. Paginas (Configuracoes, Telas e monitor de retorno, Ferramentas da saida) escrevem a pagina;
+    // Importar, Exportar, Historico, Atalhos e Sobre abrem popup; Tela cheia alterna a janela; Recarregar e Ferramentas de desenvolvedor
+    // so aparecem em dev (`isDev`). Aberto por clique, fecha ao escolher, ao clicar fora e com Esc (o Esc e SO do menu enquanto aberto:
+    // capturado antes de chegar aos atalhos do telao).
     import { onDestroy } from "svelte"
-    import { activePopup, activeProfile, profiles } from "../../stores"
+    import { activePopup, activeProfile, isDev, profiles } from "../../stores"
+    import { alternarFerramentasDeDev, alternarTelaCheia, recarregarJanela } from "../../utils/aliancaJanela"
     import { trocarTela } from "../../utils/aliancaTela"
     import { desenhoBloqueado } from "../../utils/aliancaDesenho"
     import { falhaAlta } from "../../utils/aliancaFalha"
@@ -14,14 +17,32 @@
     $: profile = $profiles[$activeProfile || ""]
     $: settingsDisabled = Object.keys(profile?.access.settings || {}).length > 7
 
-    type Item = { id: string; nome: string; agir: () => void }
-    $: itens = [
-        ...(settingsDisabled ? [] : [{ id: "settings", nome: "Configurações", agir: () => ir("settings") }]),
-        { id: "stage", nome: "Telas e monitor de retorno", agir: () => ir("stage") },
-        { id: "draw", nome: "Ferramentas da saída", agir: () => ir("draw") },
-        { id: "import", nome: "Importar", agir: () => activePopup.set("import") },
-        { id: "shortcuts", nome: "Atalhos · Ajuda · Sobre", agir: () => activePopup.set("shortcuts") }
-    ] as Item[]
+    // perfis de acesso: o seletor e o perfil moram em Configurações (aba Perfis); aqui só o nome do perfil ativo, quando há mais de um
+    $: perfilAtivo = $activeProfile && Object.keys($profiles).filter((a) => a !== "admin").length > 1 ? $profiles[$activeProfile]?.name || "" : ""
+
+    type Item = { id: string; nome: string; agir: () => void; mudo?: boolean }
+    type Grupo = Item[]
+    $: grupos = [
+        [...(settingsDisabled ? [] : [{ id: "settings", nome: "Configurações…", agir: () => ir("settings") }]), { id: "stage", nome: "Telas e monitor de retorno…", agir: () => ir("stage") }, { id: "draw", nome: "Ferramentas da saída (desenhar, zoom)", agir: () => ir("draw") }],
+        [
+            { id: "import", nome: "Importar…", agir: () => activePopup.set("import") },
+            { id: "export", nome: "Exportar…", agir: () => activePopup.set("export") },
+            { id: "history", nome: "Histórico…", agir: () => activePopup.set("history") }
+        ],
+        [
+            { id: "fullscreen", nome: "Tela cheia", agir: alternarTelaCheia },
+            { id: "shortcuts", nome: "Atalhos e ajuda…", agir: () => activePopup.set("shortcuts"), mudo: true },
+            { id: "about", nome: "Sobre o AliançaShow…", agir: () => activePopup.set("about"), mudo: true }
+        ],
+        ...($isDev
+            ? [
+                  [
+                      { id: "reload", nome: "Recarregar (só em dev)", agir: recarregarJanela, mudo: true },
+                      { id: "devtools", nome: "Ferramentas de desenvolvedor (só em dev)", agir: alternarFerramentasDeDev, mudo: true }
+                  ]
+              ]
+            : [])
+    ] as Grupo[]
 
     // a pagina chega por argumento (a guarda de escritores nao aceita o literal "draw"): a lista nomeada de dinamicos conhece `p`
     function ir(p: "settings" | "stage" | "draw") {
@@ -69,8 +90,12 @@
     </button>
     {#if aberto}
         <div class="menu" role="menu">
-            {#each itens as i (i.id)}
-                <button class="item" role="menuitem" data-item={i.id} tabindex="-1" on:mousedown|preventDefault on:click={() => escolher(i)}>{i.nome}</button>
+            {#if perfilAtivo}<div class="perfil" data-acao="menu-perfil">Perfil: {perfilAtivo}</div>{/if}
+            {#each grupos as g, n}
+                {#if n > 0}<div class="sep" role="separator" />{/if}
+                {#each g as i (i.id)}
+                    <button class="item" class:mudo={i.mudo} role="menuitem" data-item={i.id} tabindex="-1" on:mousedown|preventDefault on:click={() => escolher(i)}>{i.nome}</button>
+                {/each}
             {/each}
         </div>
     {/if}
@@ -114,7 +139,7 @@
         z-index: 40;
         top: 46px;
         left: 0;
-        width: 260px;
+        width: 300px;
         display: flex;
         flex-direction: column;
         gap: 2px;
@@ -122,7 +147,9 @@
         background: var(--luz-pop);
         border: 1px solid var(--luz-borda);
         border-radius: 10px;
-        box-shadow: inset 0 0 0 1px var(--luz-borda), 0 18px 40px rgba(0, 0, 0, 0.5);
+        box-shadow:
+            inset 0 0 0 1px var(--luz-borda),
+            0 18px 40px rgba(0, 0, 0, 0.5);
         transform-origin: top left;
         animation: luz-surgir 120ms ease-out;
     }
@@ -142,5 +169,22 @@
     }
     .item:hover {
         background: var(--luz-hover);
+    }
+    .item.mudo {
+        color: var(--luz-mudo);
+    }
+    .item.mudo:hover {
+        color: var(--luz-texto);
+    }
+    .sep {
+        height: 1px;
+        margin: 4px 0;
+        background: var(--luz-linha);
+    }
+    .perfil {
+        padding: 6px 10px 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--luz-mudo);
     }
 </style>
