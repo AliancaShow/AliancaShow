@@ -37,16 +37,16 @@ export const EXCECOES = {
         "sha": "6d7a2b68f8890bfe94a7e2903d97638d37d3cf5f3bf0297f93564ef6973ab60b"
     },
     "src/frontend/utils/common.ts": {
-        "motivo": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes",
-        "sha": "8a1ee669826a69871d531a8afb1c3165bae135c6a150e629559acb5aed23c51c"
+        "motivo": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes | leiaute v2 (commit 12): sai togglePanels (Ctrl+T) e o import de fecharTudoManual; so a janela principal o chamava",
+        "sha": "c4b4f3a3a962bf36b7355c84e5aa8bc817321b9cbf01a637fa36cd8d8dd5c1a9"
     },
     "src/frontend/utils/startup.ts": {
         "motivo": "1b: iniciarLayoutAlianca(), iniciarMolduraAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca e iniciarMolduraAlianca ainda tem guarda de currentWindow | leiaute v2 (commit 10): iniciarMolduraAlianca sai de startupMain (so a janela principal rodava)",
         "sha": "91088ae04bd4cb6b529e47d2026b953d2d4ff7c4fd4420fb562571912c001b84"
     },
     "src/frontend/utils/shortcuts.ts": {
-        "motivo": "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal | leiaute v2 (commit 10): saem voltarDaPagina, tres ramos do Esc do Preparar, a abertura da gaveta no Ctrl+1..8 e projectTimelineActive de isTimelineActive; atalho so roda na janela principal",
-        "sha": "82fe3f34d077bdc61193c47fd9b49cea0e27c807baf78d8c4f47fb02c361d522"
+        "motivo": "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal | leiaute v2 (commit 10): saem voltarDaPagina, tres ramos do Esc do Preparar, a abertura da gaveta no Ctrl+1..8 e projectTimelineActive de isTimelineActive; atalho so roda na janela principal | leiaute v2 (commit 12): sai o atalho `t` (Ctrl+T); atalho so roda na janela principal",
+        "sha": "60093a718fd3ec553b35fd7bb8255325f08954ac7e0d2b4d8e9dcd7e40ebf575"
     },
     "src/frontend/components/context/contextMenus.ts": {
         "motivo": "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
@@ -69,8 +69,8 @@ export const EXCECOES = {
         "sha": "0a03f8e05766304764ee54ac3d9122cafa6761a2710c4dc32619ba6d24a1c98b"
     },
     "src/frontend/utils/aliancaTema.ts": {
-        "motivo": "leiaute v2 (fatia 1, commits 3 e 10): so escreve data-tema=\"luz\" no body da janela principal e sai cedo em qualquer outra janela (currentWindow); nenhum import de store alem de currentWindow; nada assina store",
-        "sha": "ac71363d6cb09c612264872e4f877f99dae8aec6f3a8325be07e884b74330da3"
+        "motivo": "leiaute v2 (fatia 1, commits 3 e 10): so escreve data-tema=\"luz\" no body da janela principal e sai cedo em qualquer outra janela (currentWindow); nenhum import de store alem de currentWindow; nada assina store | leiaute v2 (commit 12): so o comentario deixa de citar aliancaVisual",
+        "sha": "fbe25fc709b9f3857f714f66cf97dbdd4d16b859ff3aaea27a5716e60b06faf3"
     },
     "src/frontend/utils/aliancaTemaLogica.ts": {
         "motivo": "leiaute v2 (commit 10): arquivo APAGADO (a escolha de tema/fonte do FreeShow e do Preparar morreu: uma aparencia so); a saida nunca o usou de fato",
@@ -96,8 +96,8 @@ export const NOVOS_NO_FECHO = {
         "sha": "e3d4679aab7de56d98b21c5404c268b4ed32e6070a726ab6799acef4464c03e3"
     },
     "src/frontend/utils/aliancaLayoutEstado.ts": {
-        "motivo": "0b: `iniciarLayoutAlianca` sai cedo fora da janela principal; `valorPorModo` sem assinatura",
-        "sha": "cbc1ae8dc6893f1e8df0975d0ef3eb4b772a923b94b5d6cc7c77fd338f2695b7"
+        "motivo": "0b: `iniciarLayoutAlianca` sai cedo fora da janela principal; `valorPorModo` sem assinatura | leiaute v2 (commit 12): sai o export `fecharTudoManual` (so a janela principal o usava)",
+        "sha": "e84517f7319d4dc13062e0984935c4351cd81a91da25c657f4b688a8fce03867"
     },
     "src/frontend/utils/aliancaFalha.ts": {
         "motivo": "R2: so cria um writable e escreve nele; nada monta FaixaDeFalha na janela de saida; na saida a falha vira so console.error; o registro em disco so e configurado em startupMain",
@@ -113,8 +113,8 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "944190891857190bfd98f25fbc9b8d051df8efa18ee5457f71b00078e3f0451d"
-export const SHA_NOVOS = "c89f7f57d251144c89e109e5adda22d8005f0db2a416603a06da145dbf0fb254"
+export const SHA_EXCECOES = "4d7d28ee6c5d9afa5de0323d2832ab32f72eca87a96a9f183d30e7f82cfc2eb1"
+export const SHA_NOVOS = "3003f60b347bb4d80804c926fcedf1c48be2909a4e908d9a2e395840cff3f2a0"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
