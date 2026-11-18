@@ -32,13 +32,13 @@ describe("tela (derivada de activePage)", () => {
             expect(get(tela)).toBe(t)
         }
     })
-    it("o teclado so e livre em Mostrar; gaveta nao toca fora de Mostrar", () => {
+    it("o teclado e livre em Mostrar e nas paginas, morto so em Editar; gaveta nao toca fora de Mostrar", () => {
         trocarTela("show", "segmentado")
         expect([tecladoLivre(), naoEMostrar(), emEditar()]).toEqual([true, false, false])
         trocarTela("edit", "segmentado")
         expect([tecladoLivre(), naoEMostrar(), emEditar()]).toEqual([false, true, true])
         trocarTela("settings", "menu-app")
-        expect([tecladoLivre(), naoEMostrar(), emEditar()]).toEqual([false, true, false])
+        expect([tecladoLivre(), naoEMostrar(), emEditar()]).toEqual([true, true, false])
     })
     it("saida cega: fora da janela principal a tela e sempre mostrar, mesmo com activePage diferente", () => {
         trocarTela("edit", "segmentado")

@@ -44,8 +44,8 @@ export const tela: Readable<Tela> = derived([activePage, currentWindow], ([$p, $
 export function telaAtual(): Tela {
     return get(tela)
 }
-/** o teclado so mexe na saida em Mostrar */
-export const tecladoLivre = (): boolean => telaAtual() === "mostrar"
+/** o teclado da saida vive em Mostrar e nas paginas do menu; so em Editar morre (decisao provisoria, aliancaTecladoLogica.ts) */
+export const tecladoLivre = (): boolean => telaAtual() !== "editar"
 /** a regra A e D do plano: protege a saida / gesto da biblioteca que nao pode ir ao ar */
 export const naoEMostrar = (): boolean => telaAtual() !== "mostrar"
 export const emEditar = (): boolean => telaAtual() === "editar"

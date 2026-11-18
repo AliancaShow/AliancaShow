@@ -1,15 +1,16 @@
 import { derived, get, writable } from "svelte/store"
 import { activeEdit, activeStage, outputs, slideNotesActive, special } from "../stores"
 import { modoDaTela, notasLigadas, timelineLigada } from "./aliancaEditorLogica"
-import { naoEMostrar, tecladoLivre, tela } from "./aliancaTela"
+import { naoEMostrar, telaAtual, tela } from "./aliancaTela"
+import { tecladoVivo } from "./aliancaTecladoLogica"
 
 // Regra unica da TELA (fatia 2; antes Modo Culto | Preparar).
-// Fora de Mostrar (Editar e paginas do menu) nenhuma TECLA mexe no telao: limpar/avancar so em Mostrar.
+// Em Editar nenhuma TECLA mexe no telao. Em Mostrar e nas paginas do menu o teclado da saida vive (decisao provisoria, aliancaTecladoLogica.ts).
 // Clique na tela, celular, MIDI e API nao passam por aqui (sao gestos deliberados de quem/onde manda).
 
 /** Uma unica regra: o teclado so mexe na saida em Mostrar (regra A do plano). */
-export function tecladoPodeMexerNaSaida(): boolean {
-    return tecladoLivre()
+export function tecladoPodeMexerNaSaida(alvo?: any): boolean {
+    return tecladoVivo(telaAtual(), ehCampoDeTexto(alvo))
 }
 
 /**
@@ -37,7 +38,7 @@ export const avisoTecla = writable(0)
  * Ctrl+C etc. passam em silencio. Sem `e` (origem sem evento): avisa sempre.
  */
 export function teclaIgnorada(e?: { key: string; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean; target?: any }): boolean {
-    if (tecladoPodeMexerNaSaida()) return false
+    if (tecladoPodeMexerNaSaida(e?.target)) return false
     if (!e || teclaMexeriaNaSaida(e)) avisoTecla.update((n) => n + 1)
     return true
 }
