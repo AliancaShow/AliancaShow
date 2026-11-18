@@ -261,6 +261,12 @@ export function destinoDaTecla(e: { key: string; ctrl: boolean; alt: boolean }, 
     return "engolir"
 }
 
+/** quanto tempo depois de executar um resultado o Enter que sobrar (auto-repeat, segundo toque nervoso) e engolido: o foco ja caiu no body e ele iria ao `Scripture.svelte` */
+export const ESPERA_POS_FECHAR_MS = 600
+export function enterDepoisDeFechar(ultimaExecucaoEm: number | null, agora: number, aberta: boolean, esperaMs = ESPERA_POS_FECHAR_MS): boolean {
+    return !aberta && ultimaExecucaoEm !== null && agora - ultimaExecucaoEm < esperaMs
+}
+
 /** a seta anda sem dar a volta (parar no fim e a regra da lista do app); lista vazia = -1 */
 export function andar(atual: number, passo: number, total: number): number {
     if (total <= 0) return -1

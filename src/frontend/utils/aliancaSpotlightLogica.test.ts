@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, destinoDaTecla, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, destinoDaTecla, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -135,6 +135,18 @@ describe("spotlight: o teclado do telao fica de fora mesmo com o foco fora do ca
     })
     it("so modificador e Tab nao fazem nada por si", () => {
         for (const k of ["Control", "Shift", "Alt", "Meta", "Tab"]) expect(t(k)).toBe("deixar")
+    })
+})
+
+describe("spotlight: o Enter que sobra depois de fechar", () => {
+    it("logo depois de executar, com a busca fechada, o Enter e engolido (nao chega ao Scripture.svelte)", () => {
+        expect(ESPERA_POS_FECHAR_MS).toBeGreaterThanOrEqual(400)
+        expect(enterDepoisDeFechar(1000, 1000 + ESPERA_POS_FECHAR_MS - 1, false)).toBe(true)
+        expect(enterDepoisDeFechar(1000, 1000 + ESPERA_POS_FECHAR_MS, false)).toBe(false)
+    })
+    it("nunca engole com a busca aberta nem sem ter executado nada", () => {
+        expect(enterDepoisDeFechar(1000, 1100, true)).toBe(false)
+        expect(enterDepoisDeFechar(null, 1100, false)).toBe(false)
     })
 })
 

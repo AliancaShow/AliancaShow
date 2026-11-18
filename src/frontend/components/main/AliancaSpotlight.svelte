@@ -15,7 +15,7 @@
     import { quickSearchActive, activePopup } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { acaoDoResultado, buscarAcoes, buscarAudio, buscarMidia, buscarShows, buscarVersiculo, executarResultado, type Resultado } from "../../utils/aliancaSpotlight"
-    import { andar, destinoDaTecla, enterRepetido, indiceDaChave, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
+    import { andar, destinoDaTecla, enterDepoisDeFechar, enterRepetido, indiceDaChave, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
     import { tela } from "../../utils/aliancaTela"
     import { escFechou } from "../../utils/aliancaToque"
     import { highlightText } from "../quicksearch/searchHighlight"
@@ -175,10 +175,20 @@
         if ((ctrl && (k === "k" || k === "g")) || e.key === "F8") {
             if ($activePopup) return
             e.preventDefault()
+            // Ctrl+K segurado repete o keydown: sem isto abriria e fecharia a cada repeticao
+            if (e.repeat) return
             quickSearchActive.set(!$quickSearchActive)
             return
         }
+        // depois de executar, o Enter que sobrar (tecla segurada, segundo toque) nao pode chegar ao Scripture.svelte, que manda ao ar com Ctrl+Enter
+        if (e.key === "Enter" && enterDepoisDeFechar(ultimo?.em ?? null, performance.now(), $quickSearchActive)) {
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            return
+        }
         if (!$quickSearchActive) return
+        // a tecla que ainda compoe texto (IME, teclado de emoji) e do campo
+        if (e.isComposing || e.keyCode === 229) return
         // o foco escapou do campo: o teclado do telao nao pode agir (Esc limparia o telao, seta e espaco avancariam o slide no ar)
         const destino = destinoDaTecla({ key: e.key, ctrl, alt: e.altKey }, document.activeElement === campo)
         if (destino !== "deixar" && e.key !== "Enter" && e.key !== "ArrowDown" && e.key !== "ArrowUp") {
@@ -198,7 +208,8 @@
         } else if (e.key === "Enter") {
             e.preventDefault()
             e.stopPropagation()
-            if (!consulta.trim()) return
+            // Enter segurado nao executa de novo (nem empilha avisos)
+            if (e.repeat || !consulta.trim()) return
             if (!listaEmDia(consulta, consultaDaLista, pendente)) {
                 // a lista ainda e da consulta anterior: o Enter espera por ela (e adianta a busca, sem esperar o debounce)
                 fila = { ctrl }
