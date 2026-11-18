@@ -33,3 +33,13 @@ describe("aliancaToque usa a chave do clicavel mais interno com o ponto do ponte
         expect(t).not.toMatch(/closest\(ITEM\)/)
     })
 })
+
+describe("AO VIVO deriva de outputState por saida, nao de outputDisplay (achado 5)", () => {
+    for (const arq of ["components/main/AliancaRoteiro.svelte", "components/main/AliancaCentroCabecalho.svelte"]) {
+        it(arq, () => {
+            const t = ler(arq)
+            expect(t).not.toMatch(/outputDisplay/)
+            expect(t).toMatch(/telaoLigadoEm\(\$outputs, \$outputState\)/)
+        })
+    }
+})

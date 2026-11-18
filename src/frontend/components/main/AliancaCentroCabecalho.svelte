@@ -1,7 +1,8 @@
 <script lang="ts">
     // Leiaute v2, centro de Mostrar: o cabecalho de 48 px (item aberto, "depois: ...", "AO VIVO · a igreja ve este item" e a dica).
-    import { activeProject, activeShow, outputDisplay, outputs, projects, shows } from "../../stores"
+    import { activeProject, activeShow, outputState, outputs, projects, shows } from "../../stores"
     import { noAr } from "../../utils/aliancaModo"
+    import { telaoLigadoEm } from "../../utils/aliancaAoVivoLogica"
     import { getFileName, removeExtension } from "../helpers/media"
     import AliancaCentroMais from "./AliancaCentroMais.svelte"
 
@@ -17,7 +18,7 @@
     $: proximo = nomeDe(lista.slice(indice + 1).find((a) => a.type !== "section") as any, $shows)
     const lerNoAr = (_saidas: unknown) => noAr().ids
     $: noArIds = lerNoAr($outputs)
-    $: aoVivo = !!$outputDisplay && !!$activeShow?.id && ($activeShow.type || "show") === "show" && noArIds.has($activeShow.id)
+    $: aoVivo = telaoLigadoEm($outputs, $outputState) && !!$activeShow?.id && ($activeShow.type || "show") === "show" && noArIds.has($activeShow.id)
 </script>
 
 <div class="cab" data-acao="centro-cabecalho">
