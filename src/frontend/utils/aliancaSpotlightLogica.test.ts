@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, LIVROS, lerReferencia, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, LIVROS, lerReferencia, listaEmDia, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -86,6 +86,21 @@ describe("spotlight: o que cada tecla faz", () => {
         for (const tipo of ["show", "midia", "audio", "versiculo", "acao"] as const)
             for (const tela of ["editar", "pagina"] as const)
                 for (const alt of [false, true]) expect(["tocar", "ao-ar"], `${tipo}/${tela}/${alt}`).not.toContain(acaoDaTecla(tipo, tela, alt))
+    })
+})
+
+describe("spotlight: Enter so age sobre a lista da consulta escrita", () => {
+    it("lista da consulta atual e sem busca pendente: libera", () => {
+        expect(listaEmDia("jo 3 16", "jo 3 16", false)).toBe(true)
+        expect(listaEmDia("  jo 3 16 ", "jo 3 16", false)).toBe(true)
+    })
+    it("lista de outra consulta (o Enter chegou dentro do debounce): nao libera", () => {
+        expect(listaEmDia("jo 3 16", "jo 3 1", false)).toBe(false)
+        expect(listaEmDia("jo 3 16", "jo 3 16", true)).toBe(false)
+    })
+    it("campo vazio nunca libera (lista de uma busca anterior e invisivel)", () => {
+        expect(listaEmDia("", "", false)).toBe(false)
+        expect(listaEmDia("   ", "jo 3 16", false)).toBe(false)
     })
 })
 

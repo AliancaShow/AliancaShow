@@ -233,6 +233,15 @@ export function enterRepetido(ultimo: { chave: string; em: number } | null | und
     return !!ultimo && ultimo.chave === chave && agora - ultimo.em < esperaMs
 }
 
+/**
+ * A lista na tela e a da consulta que esta ESCRITA? Enter so executa se sim: a busca espera 90 ms depois da ultima tecla, e o Enter que chega
+ * antes disso pegaria o resultado da consulta anterior ("jo 3 1" no lugar de "jo 3 16"). Campo vazio nunca libera.
+ */
+export function listaEmDia(consulta: string, consultaDaLista: string, pendente: boolean): boolean {
+    const q = consulta.trim()
+    return !!q && !pendente && q === consultaDaLista.trim()
+}
+
 /** a seta anda sem dar a volta (parar no fim e a regra da lista do app); lista vazia = -1 */
 export function andar(atual: number, passo: number, total: number): number {
     if (total <= 0) return -1

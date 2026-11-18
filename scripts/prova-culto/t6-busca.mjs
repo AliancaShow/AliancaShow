@@ -6,6 +6,7 @@
 //   D. saida travada: Ctrl+Enter e Enter de versiculo recusam, a busca fica aberta e nada escreve em outputs
 //   E. versiculo: "Rm 8:28", "Romanos 8 28" e "Jo 3.16"; Enter manda ao ar (uma escrita no tempo da trava de 400 ms, mesmo com Enter repetido); Ctrl+Enter so abre na Biblia
 //   F. Editar: Enter num show abre no editor ("Aberto da biblioteca") e Ctrl+Enter poe no roteiro, sem nenhuma escrita em outputs; Enter de versiculo so abre; ainda em Editar
+//   H. correcoes da revisao (T6_SO=H roda so esta secao): Enter no debounce, selecao estavel, foco, repeticao, livro, Biblia carregando
 //   G. acoes: "config" abre Configuracoes, "telas" abre a aba Telas; de uma pagina, Enter num show abre em Mostrar e nao manda ao ar
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
@@ -45,6 +46,7 @@ const {loadShows}=await import(U("components/helpers/setShow")); await loadShows
 S.activeShow.set({id:alvo[1].shows[i].id,index:i,type:"show"}); S.activeDrawerTab.set("shows")
 window.__n=0; S.outputs.subscribe(()=>window.__n++); await esp(1200); return 1`)
 
+    if (process.env.T6_SO !== "H") {
     // ---------- A
     ok("A0 a busca nao esta aberta de inicio", !(await aberta()))
     await ctrlK()
@@ -262,6 +264,25 @@ for (const id of ids.slice(0,6)) { const t=(get(S.textCache)[id]||""); const nom
     ok("G5 'tela cheia' acha a acao com o atalho F11", l.some((x) => x.t === "acao" && /Tela cheia/.test(x.n)))
     await tecla(j, "Escape")
     await esperar(900)
+    }
+
+    // ---------- H (correcoes da revisao da fatia 5)
+    await j.ev(`window.__os=[]; S.openScripture.subscribe(v=>{ if(v) window.__os.push(JSON.stringify(v)) }); return 1`)
+    const aberturas = () => j.ev(`return window.__os.slice()`)
+    await limpar()
+    await j.ev(`T.trocarTela("show","segmentado"); S.activeDrawerTab.set("shows"); return 1`)
+    // H1 (achado 1): o Enter logo depois da ultima tecla (dentro do debounce) age sobre a consulta ESCRITA, nunca sobre a lista da consulta anterior
+    await ctrlK()
+    await digitar("Jo 3.16")
+    const h1a = (await aberturas()).length
+    await j.ev(`document.querySelector('[data-acao=spotlight-campo]').select(); return 1`)
+    await j.enviar("Input.insertText", { text: "config" })
+    await tecla(j, "Enter")
+    await esperar(2500)
+    const h1 = (await aberturas()).slice(h1a)
+    ok("H1 trocar a consulta e dar Enter no mesmo instante age sobre a NOVA consulta (Configuracoes), nao manda o versiculo velho ao ar", h1.length === 0 && (await noAr()) === null && (await dom(`get(S.activePage)==="settings"`)), `${JSON.stringify(h1)} ${await noAr()} ${await dom("get(S.activePage)")}`)
+    await j.ev(`S.activePage.set("show"); return 1`)
+    await limpar()
 } catch (erro) {
     console.error("ERRO", erro)
     falhas.push("erro: " + erro.message)

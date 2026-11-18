@@ -15,7 +15,7 @@
     import { quickSearchActive, activePopup } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { acaoDoResultado, buscarAcoes, buscarAudio, buscarMidia, buscarShows, buscarVersiculo, executarResultado, type Resultado } from "../../utils/aliancaSpotlight"
-    import { andar, enterRepetido, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
+    import { andar, enterRepetido, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
     import { tela } from "../../utils/aliancaTela"
     import { highlightText } from "../quicksearch/searchHighlight"
     import Icon from "../helpers/Icon.svelte"
@@ -25,6 +25,11 @@
     let marcado = 0
     let campo: HTMLInputElement
     let buscando = false
+    // a consulta que gerou a lista na tela, e se ha busca por fazer (debounce pendente ou rodando): o Enter so age sobre a lista da consulta escrita
+    let consultaDaLista = ""
+    let pendente = false
+    // o Enter que chegou antes da lista alcançar o campo: executa assim que a lista da consulta pintar
+    let fila: { ctrl: boolean } | null = null
 
     // a lista plana, na ordem das secoes (a seta anda por ela)
     $: lista = SECOES.flatMap((s) => porSecao[s.id] || [])
@@ -65,14 +70,32 @@
     let adiar: ReturnType<typeof setTimeout> | undefined
     function digitou() {
         clearTimeout(adiar)
+        fila = null
         const q = consulta
         if (!q.trim()) {
             busca++
             porSecao = {}
             buscando = false
+            pendente = false
+            consultaDaLista = ""
             return
         }
-        adiar = setTimeout(() => rodar(q), 90)
+        pendente = true
+        adiar = setTimeout(() => {
+            adiar = undefined
+            void rodar(q)
+        }, 90)
+    }
+    // a lista da consulta pintou: libera e executa o Enter que esperava por ela
+    async function listaPintou(q: string) {
+        if (consulta.trim() !== q.trim()) return
+        consultaDaLista = q.trim()
+        pendente = false
+        if (!fila) return
+        const f = fila
+        fila = null
+        await tick()
+        if (atual) void escolher(atual, acaoDoResultado(atual, f.ctrl))
     }
     async function rodar(q: string) {
         const minha = ++busca
@@ -85,6 +108,7 @@
             if (minha !== busca) return
             porSecao = { ...porSecao, versiculo, midia, audio }
             marcado = 0
+            void listaPintou(q)
         } catch (erro) {
             falhaAlta("spotlight-buscar", erro)
         } finally {
@@ -123,6 +147,17 @@
         } else if (e.key === "Enter") {
             e.preventDefault()
             e.stopPropagation()
+            if (!consulta.trim()) return
+            if (!listaEmDia(consulta, consultaDaLista, pendente)) {
+                // a lista ainda e da consulta anterior: o Enter espera por ela (e adianta a busca, sem esperar o debounce)
+                fila = { ctrl }
+                if (adiar) {
+                    clearTimeout(adiar)
+                    adiar = undefined
+                    void rodar(consulta)
+                }
+                return
+            }
             if (atual) void escolher(atual, ctrl ? ctrlEnter : enter)
         }
     }
