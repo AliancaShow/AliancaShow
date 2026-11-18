@@ -20,7 +20,7 @@
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import MediaPicker from "../inputs/MediaPicker.svelte"
     import { SoftLoopSync } from "../media/video/softLoop"
-    import { syncVideoToAudio, videoSync } from "../media/video/videoSync"
+    import { videoSync } from "../media/video/videoSync"
     import VideoSlider from "../output/VideoSlider.svelte"
     import { clearSlide } from "../output/clear"
     import MediaControls from "../output/tools/MediaControls.svelte"
@@ -59,25 +59,12 @@
 
         if (!path || type !== "video") return
 
-        videoData = { paused: false, muted: true, duration: 0, loop: false, softLoop: 0 }
+        videoData = { paused: true, muted: true, duration: 0, loop: false, softLoop: 0 }
 
-        let firstLoad = true
-        let lastSyncedTime: number | null = null
+        // cabine 18/nov (A7): o centro NUNCA toca video: e um quadro parado. Quem toca e a saida. A previa nao segue o relogio dela (antes seguia e,
+        // com o video parado no ar, o do centro continuava rodando): so duracao, repeticao e soft loop vem do estado da saida, para os controles.
         unsubscriber = videoSync(path, outputId, (data) => {
-            if (firstLoad) {
-                firstLoad = false
-                setTimeout(() => {
-                    videoTime = data.currentTime || 0
-                }, 50)
-            } else {
-                const isSoftLoop = !!(data.softLoop && data.softLoop > 0)
-                const rate = Number(mediaStyle.speed) || 1
-                syncVideoToAudio(video || null, data.currentTime, lastSyncedTime, isSoftLoop, rate, data.isFadingOut)
-                if (data.currentTime !== undefined) lastSyncedTime = data.currentTime
-            }
-
             if (data.duration) videoData.duration = data.duration
-            if (playingInOutput) videoData.paused = data.paused
             videoData.loop = playingInOutput ? data.loop : false
             if (data.softLoop !== undefined) videoData.softLoop = data.softLoop
             if (data.softLoopOpacity !== undefined) softLoopOpacity = data.softLoopOpacity
@@ -90,9 +77,10 @@
     })
 
     let videoTime = 0
-    let videoData = { paused: false, muted: true, duration: 0, loop: false, softLoop: 0 }
-    $: if (showId) videoData.paused = false
-    $: if (!videoData) videoData = { paused: false, muted: true, duration: 0, loop: false, softLoop: 0 }
+    let videoData = { paused: true, muted: true, duration: 0, loop: false, softLoop: 0 }
+    // (A7) o video do centro nasce parado e nunca sai do pause: nem pelo elemento, nem pela saida, nem por um estado velho
+    $: if (!videoData) videoData = { paused: true, muted: true, duration: 0, loop: false, softLoop: 0 }
+    $: if (type !== "player" && videoData && !videoData.paused) videoData.paused = true
 
     let prevId: string | undefined = undefined
     $: if (mediaPath !== prevId) {
@@ -124,9 +112,6 @@
         autoPause = true
         // videoData.paused = true
         playingInOutput = true
-
-        // trigger time update
-        setTimeout(() => (videoTime = 0), 50)
     }
 
     // WIP player video output time
@@ -137,21 +122,12 @@
     let manageSubtitles = false
     let timeMarkersEnabled = false
 
+    // (A7) o quadro parado do centro: um instante perto do comeco (o primeiro quadro costuma ser preto), nunca reproduzindo
+    const quadroParado = (duracao: number) => (duracao > 0 ? Math.min(1, duracao / 10) : 0)
     function onLoad() {
         hasLoaded = true
-        if (videoData.paused) return
-
-        if ($focusMode) {
-            // set right after loaded
-            setTimeout(() => {
-                videoData.paused = true
-                videoTime = videoData.duration ? videoData.duration / 2 : 0
-            })
-            return
-        }
-
-        if (autoPause) videoData.paused = false
-        else videoTime = 0
+        videoData.paused = true
+        if (type !== "player") videoTime = quadroParado(videoData.duration)
 
         if (subtitle && video) enableSubtitle(video, subtitle)
     }
@@ -490,21 +466,8 @@
     {:else}
         <FloatingInputs arrow={type === "video"} let:open>
             <div slot="menu" data-sem-trava style="display: flex;min-width: 500px;">
-                <MaterialButton
-                    title={videoData.paused ? "media.play" : "media.pause"}
-                    on:click={() => {
-                        autoPause = false
-                        videoData.paused = !videoData.paused
-                    }}
-                >
-                    <Icon id={videoData.paused ? "play" : "pause"} white={videoData.paused} />
-                </MaterialButton>
-
+                <!-- (A7) sem tocar/pausar/mudo da previa: o centro e um quadro parado; a barra so escolhe o quadro (e o ponto de partida do Ctrl+clique) -->
                 <VideoSlider {outputId} path={mediaPath} bind:videoData bind:videoTime />
-
-                <MaterialButton title={videoData.muted ? "actions.unmute" : "actions.mute"} on:click={() => (videoData.muted = !videoData.muted)}>
-                    <Icon id={videoData.muted ? "muted" : "volume"} white={videoData.muted} />
-                </MaterialButton>
 
                 <div class="divider"></div>
             </div>
