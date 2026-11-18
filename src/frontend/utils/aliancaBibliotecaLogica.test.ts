@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { abasEscondidasNaBiblioteca, edicaoDoShow, idsNoCulto, inserirShowNoFim, itemParaVoltar, itensDoMenuNovo, listarBiblioteca, motivoSemEditar, resumoDaBiblioteca, textoVazio, toqueRepetido } from "./aliancaBibliotecaLogica"
+import { abasEscondidasNaBiblioteca, chegadaZeraBiblioteca, edicaoDoShow, idsNoCulto, inserirShowNoFim, itemParaVoltar, itensDoMenuNovo, listarBiblioteca, motivoSemEditar, resumoDaBiblioteca, textoVazio, toqueRepetido } from "./aliancaBibliotecaLogica"
 import { ABAS_DO_EDITOR, abasEscondidasNoEditor } from "./aliancaGavetaLogica"
 
 const categorias = { song: { icon: "song" }, impulso: { icon: "song" }, presentation: { icon: "slide" }, scripture: { icon: "scripture", isArchive: true }, privada: { icon: "slide" } }
@@ -190,5 +190,17 @@ describe("itemParaVoltar", () => {
         expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens: [], ultimo: null })).toBeNull()
         expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens: [{ id: "m", type: "image" }], ultimo: null })).toBeNull()
         expect(itemParaVoltar({ aberto: { id: "z", type: "show" }, itens: null, ultimo: null })).toBeNull()
+    })
+})
+
+describe("chegadaZeraBiblioteca (revisao da fatia 2, achado 2.1)", () => {
+    it("chegar em Mostrar vindo de Editar zera", () => expect(chegadaZeraBiblioteca("editar", "mostrar")).toBe(true))
+    it("a primeira chegada zera (valores iniciais)", () => expect(chegadaZeraBiblioteca(null, "mostrar")).toBe(true))
+    it("voltar de uma pagina do menu a Mostrar NAO zera (a ultima tela nao-pagina era Mostrar)", () => {
+        expect(chegadaZeraBiblioteca("mostrar", "mostrar")).toBe(false)
+    })
+    it("ir para pagina ou Editar nao zera", () => {
+        expect(chegadaZeraBiblioteca("mostrar", "pagina")).toBe(false)
+        expect(chegadaZeraBiblioteca("mostrar", "editar")).toBe(false)
     })
 })

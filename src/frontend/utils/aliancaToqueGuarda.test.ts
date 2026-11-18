@@ -43,3 +43,12 @@ describe("AO VIVO deriva de outputState por saida, nao de outputDisplay (achado 
         })
     }
 })
+
+describe("o aviso de notas do slide em Mostrar nao e controle morto (achado 2.2)", () => {
+    const t = ler("components/slide/Slide.svelte")
+    it("nao e botao e nao ha mais openNotes", () => {
+        expect(t).toMatch(/<div class="notes" data-title=\{slide\.notes\}>/)
+        expect(t).not.toMatch(/openNotes/)
+        expect(t).not.toMatch(/<button class="notes"/)
+    })
+})
