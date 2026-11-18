@@ -15,16 +15,38 @@ import { fileURLToPath } from "node:url"
 const ENTRADA = "src/frontend/MainOutput.svelte"
 
 /** excecoes: arquivo do fecho que a pilha de layout PODE mudar, e por que a saida continua igual */
-export const EXCECOES = {}
+export const EXCECOES = {
+    "src/frontend/utils/aliancaTela.ts": {
+        "motivo": "revisao da fatia 2 (achado 2): `tecladoLivre` passa de `tela === mostrar` para `tela !== editar` (o teclado da saida vive nas paginas do menu). Na saida `tela` e sempre `mostrar` (derivada com currentWindow !== null), entao o resultado e o mesmo de antes",
+        "sha": "fd746e6f21ff4c7fc67a9ab5e9dd1e0bfb405bf5aa9867e9fd2f7a6fa70bdd47"
+    },
+    "src/frontend/utils/aliancaModo.ts": {
+        "motivo": "revisao da fatia 2 (achado 2): `tecladoPodeMexerNaSaida(alvo)` consulta `tecladoVivo(tela, campoDeTexto)`; na saida a tela e `mostrar` e a funcao devolve true como antes",
+        "sha": "0a77c5f35b4b8dc7ccb3b713e5319fad21a1de09df13c7412f161eaa1816e590"
+    },
+    "src/frontend/utils/aliancaBibliotecaEstado.ts": {
+        "motivo": "revisao da fatia 2 (achado 2.1): so zera a biblioteca ao chegar em Mostrar vindo de Editar; assinante da `tela` so montado pela janela principal (iniciarEstadoDaBiblioteca nao roda na saida)",
+        "sha": "cd5ff071b766caf8aa58acb27731a66a6ff64d3fe5860e7eb422816363d0f116"
+    },
+    "src/frontend/utils/aliancaBibliotecaLogica.ts": {
+        "motivo": "revisao da fatia 2 (achado 2.1): acrescenta a funcao pura `chegadaZeraBiblioteca`; nada existente muda",
+        "sha": "10ec435d1bdc5038f1ea231691ed4210e0d1551528d59f6cb85e6f97a69f2dbd"
+    }
+}
 
 /**
  * arquivos que ENTRARAM no fecho de imports da saida depois da ancora (arquivo novo, ou um que ja existia e passou a ser importado por alguem do fecho).
  * Todo arquivo de fecho(HEAD) menos fecho(ancora) tem de estar aqui. `sha` = SHA-256 do conteudo no HEAD com CRLF trocado por LF.
  */
-export const NOVOS_NO_FECHO = {}
+export const NOVOS_NO_FECHO = {
+    "src/frontend/utils/aliancaTecladoLogica.ts": {
+        "motivo": "revisao da fatia 2 (achado 2): funcao pura `tecladoVivo(tela, campo)`, importada por aliancaModo.ts; em `mostrar` devolve true",
+        "sha": "3f3ab70796196fa1561ae9206f95cd0ba1ba2de10d3a01ec05d551b47d7eef5b"
+    }
+}
 
-export const SHA_EXCECOES = "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
-export const SHA_NOVOS = "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+export const SHA_EXCECOES = "b05feb122fd5d412d341f94a9b4668c13e82c70535c0641ffe832233aa195f0a"
+export const SHA_NOVOS = "141a39ed1c90c9e9a84a09c5fc575b45d070255cc4cdcd35cbba9cbd974ce98c"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
