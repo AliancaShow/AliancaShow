@@ -129,7 +129,7 @@
         <span>{rotulo}</span>
     </button>
     <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}
-        >▾{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button
+        ><svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button
     >
     {#if menuAberto || pergunta}
         <AliancaCortina
@@ -161,18 +161,18 @@
         gap: 4px;
     }
     .seta {
-        width: 28px;
-        height: 40px;
-        border: 0;
-        border-radius: 14px;
-        background: transparent;
-        color: var(--luz-mudo);
-        font: inherit;
-        font-size: 12px;
-        cursor: pointer;
-    }
-    .seta {
         position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid var(--luz-borda);
+        border-radius: 14px;
+        background: var(--luz-campo);
+        color: rgba(248, 248, 240, 0.78);
+        cursor: pointer;
     }
     .seta .aviso {
         position: absolute;
@@ -185,8 +185,15 @@
     }
     .seta:hover,
     .seta.aberto {
-        background: var(--luz-campo);
+        background: var(--luz-hover);
+        border-color: var(--luz-borda-forte);
         color: var(--luz-texto);
+    }
+    .seta .chev {
+        transition: transform 140ms ease;
+    }
+    .seta.aberto .chev {
+        transform: rotate(180deg);
     }
     .pop.menu {
         width: 260px;
