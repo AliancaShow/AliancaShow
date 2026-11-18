@@ -21,7 +21,7 @@ const SLIDE = (i) => `document.querySelectorAll("#showArea .slide")[${i}]`
 export const BOTAO_MODO = (nome) => `document.querySelector('[data-acao="segmentado"] [data-aba="${nome === "Preparar" ? "editar" : "mostrar"}"]')`
 // os botoes da `.clear` mudam de posicao conforme o estado (o de restaurar so aparece depois de limpar): acha-se pelo marcador do titulo
 // leiaute v2: os icones da faixa de camadas da coluna No ar (F1 fundo, F2 texto, F3 sobreposicao, [esc] limpar tudo = um clique)
-// Restaurar saida mora no menu da pilula do telao (decisao 16): o passo B08 abre o menu no `antes` (preparo) e o clique REAL e no item
+// "Voltar o que foi limpo" (antes Restaurar saida) mora no menu da pilula do telao (decisao 16): o passo B08 abre o menu no `antes` (preparo) e o clique REAL e no item
 const LIMPA = (m) => m === "Restaurar" ? `document.querySelector('[data-acao="telao-menu-pop"] [data-item="restaurar"]')` : `document.querySelector('[data-acao="camadas"] [data-camada="${m === "[F1]" ? "fundo" : m === "[F2]" ? "texto" : m === "[F3]" ? "sobre" : m === "[esc]" ? "tudo" : "restaurar"}"]')`
 
 export const SECOES = [

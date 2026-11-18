@@ -8,7 +8,7 @@
     import { tela, trocarTela } from "../../utils/aliancaTela"
     import { escFechou } from "../../utils/aliancaToque"
     import { algoNoAr } from "../../utils/aliancaModo"
-    import { desenhoAtivo } from "../../utils/aliancaPilulaLogica"
+    import { desenhoAtivo, motivoVoltarLimpo } from "../../utils/aliancaPilulaLogica"
     import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
     import { toggleOutputs } from "../helpers/output"
     import { restoreOutput } from "../output/clear"
@@ -70,7 +70,7 @@
     $: dica = estado === "desligadoNoAr" || estado === "desligadoDesenho" ? ROTULOS[estado].replace("pelo Culto", "em Mostrar") : estado === "semResposta" ? ROTULOS[estado].replace("o botão do Culto", "o botão de Mostrar").replace("Use o botão do Culto.", "Tente de novo em Mostrar.") : ROTULOS[estado]
     $: desabilitada = itemDesabilitado(estado) && estado !== "semResposta"
 
-    // menu do telao (decisao 16): Travar saida e Restaurar saida. Abre so por clique no ▾; nada aqui toca em `outputs` sem um clique no item.
+    // menu do telao (decisao 16): Travar saida e Voltar o que foi limpo. Abre so por clique no ▾; nada aqui toca em `outputs` sem um clique no item.
     let menuAberto = false
     // Restaurar so vale 1 s depois de limpar (a mesma carencia do botao antigo de ClearButtons: o clique que limpou nao restaura)
     let restauraPronto = false
@@ -87,7 +87,7 @@
     const lerDesenho = (_a: unknown, _b: unknown, _c: unknown) => desenhoAtivo(get(drawTool), get(drawSettings), get(paintCache) as any)
     $: desenho = lerDesenho($drawTool, $drawSettings, $paintCache)
     $: podeRestaurar = !$outLocked && !!$outputCache && restauraPronto
-    $: motivoRestaurar = $outLocked ? "A saída está travada." : !$outputCache ? "Não há nada limpo para restaurar." : !restauraPronto ? "Espere um instante." : ""
+    $: motivoRestaurar = motivoVoltarLimpo({ travada: $outLocked, haCache: !!$outputCache, pronto: restauraPronto })
     $: if (pergunta) menuAberto = false
     function travar() {
         outLocked.set(!$outLocked)
@@ -142,7 +142,7 @@
     {#if menuAberto}
         <div class="pop menu" role="menu" data-acao="telao-menu-pop">
             <button role="menuitem" class="item" data-item="travar" class:ativo={$outLocked} tabindex="-1" on:mousedown|preventDefault on:click={travar}><span class="it">{$outLocked ? "Destravar saída" : "Travar saída"}</span><span class="sub">{$outLocked ? "libera o telão para mudar" : "nada muda no telão até destravar"}</span></button>
-            <button role="menuitem" class="item" data-item="restaurar" aria-disabled={!podeRestaurar} class:inerte={!podeRestaurar} title={motivoRestaurar} tabindex="-1" on:mousedown|preventDefault on:click={restaurar}><span class="it">Restaurar saída</span><span class="sub">{podeRestaurar ? "volta o que foi limpo por último" : motivoRestaurar}</span></button>
+            <button role="menuitem" class="item" data-item="restaurar" aria-disabled={!podeRestaurar} class:inerte={!podeRestaurar} title={motivoRestaurar} tabindex="-1" on:mousedown|preventDefault on:click={restaurar}><span class="it">Voltar o que foi limpo</span><span class="sub" class:motivo={!podeRestaurar}>{podeRestaurar ? "traz de volta o último conteúdo limpo" : motivoRestaurar}</span></button>
         </div>
     {/if}
     {#if pergunta}
@@ -221,8 +221,13 @@
         color: var(--luz-laranja);
     }
     .item.inerte {
-        opacity: 0.45;
         cursor: not-allowed;
+    }
+    .item.inerte .it {
+        opacity: 0.5;
+    }
+    .item .sub.motivo {
+        color: var(--luz-ambar);
     }
     .item .it {
         font-size: 13px;

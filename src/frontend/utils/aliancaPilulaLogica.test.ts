@@ -1,7 +1,7 @@
 import { readFileSync } from "fs"
 import { join } from "path"
 import { describe, expect, it } from "vitest"
-import { ANTEPARO_MS, chipChat, chipDesenho, chipRoteiro, criarDecisorDeGesto, desenhoAtivo, deveEngolir, dicaDaPilula, naoChegou, pilulaClicavel, pilulaVisivel, primeiroPendente, textoDaPilula } from "./aliancaPilulaLogica"
+import { ANTEPARO_MS, motivoVoltarLimpo, chipChat, chipDesenho, chipRoteiro, criarDecisorDeGesto, desenhoAtivo, deveEngolir, dicaDaPilula, naoChegou, pilulaClicavel, pilulaVisivel, primeiroPendente, textoDaPilula } from "./aliancaPilulaLogica"
 
 const mat = (o: Partial<{ habilitado: boolean | null; naFila: number; falhas: { nome: string }[] }> = {}) => ({ habilitado: true as boolean | null, naFila: 0, falhas: [] as { nome: string }[], ...o })
 
@@ -195,5 +195,14 @@ describe("decisor de gesto", () => {
         d.aoEvento("mousedown", na(100))
         d.aoEvento("click", na(100))
         expect(d.aoEvento("pointerdown", na(800))).toBe(false)
+    })
+})
+
+describe("menu do telao: voltar o que foi limpo", () => {
+    it("explica por que esta indisponivel", () => {
+        expect(motivoVoltarLimpo({ travada: true, haCache: true, pronto: true })).toContain("travada")
+        expect(motivoVoltarLimpo({ travada: false, haCache: false, pronto: false })).toBe("Nada foi limpo ainda.")
+        expect(motivoVoltarLimpo({ travada: false, haCache: true, pronto: false })).toBe("Espere um instante.")
+        expect(motivoVoltarLimpo({ travada: false, haCache: true, pronto: true })).toBe("")
     })
 })
