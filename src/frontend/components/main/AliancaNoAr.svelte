@@ -6,7 +6,7 @@
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
     import { desligarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { ROTULO_FAIXA, SUBTITULO_FAIXA, descreverRetorno } from "../../utils/aliancaSoRetornoLogica"
-    import { saidasHabilitadas } from "../../utils/aliancaTransporteLogica"
+    import { saidasDasAbas } from "../../utils/aliancaTransporteLogica"
     import { getResolution } from "../helpers/output"
     import PreviewOutput from "../output/preview/PreviewOutput.svelte"
     import AliancaCamadas from "./AliancaCamadas.svelte"
@@ -15,11 +15,11 @@
     import AliancaOutrasTelas from "./AliancaOutrasTelas.svelte"
     import AliancaTransporte from "./AliancaTransporte.svelte"
 
-    // saidas habilitadas e visiveis; a primeira e a principal ("Telao"), as demais viram abas
-    // (a mesma conta da faixa de transporte logo abaixo: `saidasHabilitadas`)
-    $: habilitadas = saidasHabilitadas($outputs)
-    $: principal = habilitadas[0] || ""
-    $: outras = habilitadas.slice(1)
+    // saidas habilitadas; a primeira com janela e a principal ("Telao") e a que a faixa de transporte controla (`saidasHabilitadas`), as demais viram abas
+    // (A1, cabine 18/nov: a saida de rede, NDI, tambem vira aba: `saidasDasAbas`)
+    $: abas = saidasDasAbas($outputs)
+    $: principal = abas.principal
+    $: outras = abas.outras
     $: resolucao = principal ? getResolution(null, [$outputs, $styles], false, principal) : { width: 1920, height: 1080 }
     $: proporcao = proporcaoDaSaida(resolucao.width, resolucao.height)
     $: noRetorno = $soRetorno ? descreverRetorno($outputs as any, (id) => $showsCache[id]?.name || "") : ""

@@ -95,6 +95,19 @@ export function saidasHabilitadas(outputs: Record<string, { enabled?: boolean; i
         .map(([id]) => id)
 }
 
+/**
+ * Cabine 18/nov (A1): a tela principal e as ABAS da coluna No ar. Toda saida habilitada vira aba, inclusive a de rede (NDI, `invisible`: sem janela), que
+ * `saidasHabilitadas` esconde de proposito (a faixa de transporte e a tela principal so falam de saida com janela). A principal e a primeira com janela;
+ * so se TODAS forem de rede a primeira delas assume. As demais, na ordem do objeto, sao as abas.
+ */
+export function saidasDasAbas(outputs: Record<string, { enabled?: boolean; invisible?: boolean } | undefined> | null | undefined): { principal: string; outras: string[] } {
+    const todas = Object.entries(outputs || {})
+        .filter(([, o]) => o?.enabled)
+        .map(([id]) => id)
+    const principal = saidasHabilitadas(outputs)[0] || todas[0] || ""
+    return { principal, outras: todas.filter((id) => id !== principal) }
+}
+
 /** Quantas OUTRAS saidas tem um video diferente do que a faixa controla (o mesmo arquivo nas duas e controlado junto, nao conta). */
 export function outrasSaidasComVideo(outras: { caminho: string; video: boolean }[], caminhoPrincipal: string): number {
     return outras.filter((o) => o.video && !!o.caminho && o.caminho !== caminhoPrincipal).length

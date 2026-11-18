@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { arrastoVale, criarLimitador, prenderVolume, VOLUME_MAXIMO, outrasSaidasComVideo, saidasHabilitadas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { arrastoVale, criarLimitador, prenderVolume, VOLUME_MAXIMO, outrasSaidasComVideo, saidasHabilitadas, saidasDasAbas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -142,7 +142,9 @@ describe("faixa de transporte (guarda de texto)", () => {
         expect(caixa).not.toMatch(/position:\s*(absolute|fixed)/)
     })
     it("a faixa e a tela No ar escolhem a saida pela MESMA funcao (achado 4)", () => {
-        expect(ler("components/main/AliancaNoAr.svelte")).toContain("saidasHabilitadas($outputs)")
+        // a tela No ar usa `saidasDasAbas` (A1, cabine 18/nov), cuja principal e a PRIMEIRA de `saidasHabilitadas`: a mesma que a faixa controla
+        expect(ler("components/main/AliancaNoAr.svelte")).toContain("saidasDasAbas($outputs)")
+        expect(ler("utils/aliancaTransporteLogica.ts")).toContain("const principal = saidasHabilitadas(outputs)[0]")
         expect(ler("components/main/AliancaTransporte.svelte")).toContain("saidasHabilitadas($outputs)")
         expect(ler("components/main/AliancaTransporte.svelte")).not.toContain("getFirstOutputIdWithBackground")
     })
@@ -193,5 +195,22 @@ describe("arrasto preso ao arquivo em que comecou (revisao da fatia 7, achado 2)
     })
     it("sem arrasto nao vale nada", () => {
         expect(arrastoVale(null, "/v/a.mp4", "default")).toBe(false)
+    })
+})
+
+describe("cabine 18/nov, A1: toda saida habilitada vira aba (a de rede, NDI, tambem)", () => {
+    it("a saida NDI (invisible) entra nas abas, depois da principal; a principal e a primeira COM janela", () => {
+        const o = { telao: { enabled: true }, ndi: { enabled: true, invisible: true }, retorno: { enabled: true }, off: { enabled: false } }
+        expect(saidasDasAbas(o)).toEqual({ principal: "telao", outras: ["ndi", "retorno"] })
+        // a faixa de transporte continua sem a de rede
+        expect(saidasHabilitadas(o)).toEqual(["telao", "retorno"])
+    })
+    it("a NDI listada primeiro no objeto nao rouba o lugar da principal", () => {
+        expect(saidasDasAbas({ ndi: { enabled: true, invisible: true }, telao: { enabled: true } })).toEqual({ principal: "telao", outras: ["ndi"] })
+    })
+    it("so saidas de rede: a primeira e a principal e as outras viram abas; nada habilitado ou nulo = vazio", () => {
+        expect(saidasDasAbas({ a: { enabled: true, invisible: true }, b: { enabled: true, invisible: true } })).toEqual({ principal: "a", outras: ["b"] })
+        expect(saidasDasAbas({ a: { enabled: false } })).toEqual({ principal: "", outras: [] })
+        expect(saidasDasAbas(null)).toEqual({ principal: "", outras: [] })
     })
 })
