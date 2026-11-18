@@ -11,7 +11,7 @@
     $: temModelo = !!(modeloId && $templates[modeloId])
 
     // a linha de metadados que a linha de titulo antiga mostrava (artista, autor, direitos...): so leitura, no alto do menu
-    const ROTULOS: { [k: string]: string } = { artist: "Artista", author: "Autor", composer: "Compositor", copyright: "Direitos", number: "Número", key: "Tom", CCLI: "CCLI", ccli: "CCLI", title: "Título" }
+    const ROTULOS: { [k: string]: string } = { artist: "Artista", author: "Autor", composer: "Compositor", copyright: "Direitos", number: "Número", key: "Tom", CCLI: "CCLI", ccli: "CCLI", title: "Título", publisher: "Editora", year: "Ano" }
     $: metadados = Object.entries((atual?.meta || {}) as { [k: string]: unknown })
         .filter(([, v]) => typeof v === "string" && v.trim() && v.trim() !== atual?.name)
         .map(([k, v]) => ({ k, rotulo: ROTULOS[k] || k.charAt(0).toUpperCase() + k.slice(1), valor: (v as string).trim() }))
@@ -49,7 +49,8 @@
             <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
             <div class="menu" role="menu" tabindex="-1" on:click={() => (aberto = false)}>
                 {#if metadados.length}
-                    <div class="metas" data-acao="centro-metadados">
+                    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
+                    <div class="metas" data-acao="centro-metadados" on:click|stopPropagation>
                         {#each metadados as m (m.k)}<div class="meta"><span class="mk">{m.rotulo}</span><span class="mv">{m.valor}</span></div>{/each}
                     </div>
                     <div class="sep"></div>
@@ -136,6 +137,9 @@
         flex-direction: column;
         gap: 2px;
         padding: 4px 10px 2px;
+        max-height: 40vh;
+        overflow-y: auto;
+        user-select: text;
     }
     .meta {
         display: flex;

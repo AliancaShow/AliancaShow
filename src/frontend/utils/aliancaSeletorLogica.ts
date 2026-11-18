@@ -68,7 +68,7 @@ export function eventoDoNome(nome: string): string {
 
 /** "08 · 10h" -> "10h", "08 · 19h30" -> "19h30"; "" quando o nome nao leva hora (so os dias com mais de um culto levam, utils/aliancaPastas.ts) */
 export function horaDoNomeDoProjeto(nome: string): string {
-    return /·\s*(\d{1,2}h(?:\d{2})?)\s*$/.exec((nome || "").trim())?.[1] || ""
+    return /^\d{1,2}\s*·\s*(([01]?\d|2[0-3])h([0-5]\d)?)$/.exec((nome || "").trim())?.[1] || ""
 }
 
 export function rotuloDoDia({ cultoId, nomeProjeto, anoAtual }: { cultoId: string | null | undefined; nomeProjeto?: string; anoAtual: number }): RotuloDoDia {

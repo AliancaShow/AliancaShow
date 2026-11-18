@@ -418,5 +418,8 @@ describe("hora no cartao do dia (fatia 9)", () => {
         expect(horaDoNomeDoProjeto("08")).toBe("")
         expect(horaDoNomeDoProjeto("07 - Rede de Mulheres")).toBe("")
         expect(horaDoNomeDoProjeto("")).toBe("")
+        expect(horaDoNomeDoProjeto("07 - Vigília · 12h")).toBe("")
+        expect(horaDoNomeDoProjeto("08 · 99h99")).toBe("")
+        expect(horaDoNomeDoProjeto("08 · 24h")).toBe("")
     })
 })
