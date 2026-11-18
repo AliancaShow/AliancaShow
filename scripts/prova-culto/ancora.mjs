@@ -59,6 +59,46 @@ export const EXCECOES = {
     "src/frontend/components/main/popups/Initialize.svelte": {
         "motivo": "fatia 4 (aprovada 18/nov): tira o paragrafo de dicas do FreeShow do primeiro uso; o popup so abre na janela principal",
         "sha": "d8ea6859563eb19ea94aa9c71de9cf7fc102fd02aa84e1eadf98cdd815b3c31c"
+    },
+    "src/frontend/components/helpers/output.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): ponto unico do desvio em setOutput; recusa o que nao e letra; expiracao de sobreposicao em semDesvio. Modo desligado: identico",
+        "sha": "fb2140b8a4aa083b61f946213fe8eea9eb15714d106f0842b90618ac60a9bf50"
+    },
+    "src/frontend/components/helpers/OutputHelper.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): setas leem a posicao do retorno no modo; automacao roda na janela propria. Modo desligado: identico",
+        "sha": "fd6a3a23df26a58c5975b013524df739cc31fce0c5d0fc6a803c1877dedc3d4b"
+    },
+    "src/frontend/components/helpers/showActions.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): updateOut/checkActionTrigger retornam cedo no modo; playPdf recusa antes de limpar o fundo. Modo desligado: identico",
+        "sha": "5b4be1ecb0288b49fb356bb8f17c69cb80397a95c1cd40b0b07e372c365d7585"
+    },
+    "src/frontend/components/output/clear.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): limpezas parciais de sobreposicao/efeito fora do desvio. Modo desligado: identico",
+        "sha": "ff53361a099d57d8b6bd20c5b0c9bbabc41e4e72669940efe991b4b96bd18855"
+    },
+    "src/frontend/components/actions/apiHelper.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): API/celular nao limpa o telao antes de enviar no modo; repetir/mudo em semDesvio; audio recusado no modo. Modo desligado: identico",
+        "sha": "ee4ba33f1e44e552cc1dddc3ad87a26ff35796ef6ab5395cedebf86f4a54fb78"
+    },
+    "src/frontend/components/context/menuClick.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): midia nao limpa o telao antes de enviar no modo. Modo desligado: identico",
+        "sha": "dcdd1aadf3852a18ea71a23329a020bb37c4ceb1a870d17aa0f291dcbd86c877"
+    },
+    "src/frontend/utils/shortcuts.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): togglePlayingMedia recusa no modo (Espaco/seta nao mexem no video do telao); playFolder herda a janela de automacao. Modo desligado: identico",
+        "sha": "15c2507c81735c878439449294e47379f903e6455988fa3f04a876c8fd9f3de5"
+    },
+    "src/frontend/components/media/video/videoPlayer.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): fim de video de pasta abre iniciarAutomacao() em try/finally; com o modo desligado devolve null e nada muda",
+        "sha": "fbce2acdc357ef958d2d3b003ca5c9f3a1fb28091b7fc8c4d28cce0ece3ce036"
+    },
+    "src/frontend/components/timeline/ShowTimeline.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): linha do tempo move o telao como automacao (iniciarAutomacao em try/finally); modo desligado: identico",
+        "sha": "3025cd53ccf5f3b4e5d5c230214fc6862a3af1fe4b124ca19573fefb3e367b9c"
+    },
+    "src/frontend/components/timeline/TimelinePlayback.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): video da linha do tempo move o telao como automacao (iniciarAutomacao em try/finally); modo desligado: identico",
+        "sha": "fb5b607e4f98f7623a7b710cc3199d22477e8dcd29933acdbec6544c2401b3c2"
     }
 }
 
@@ -70,11 +110,19 @@ export const NOVOS_NO_FECHO = {
     "src/frontend/utils/aliancaTecladoLogica.ts": {
         "motivo": "revisao da fatia 2 (achado 2) + fatia 3: funcao pura `tecladoVivo(tela, campo, tecla)`, importada por aliancaModo.ts; em `mostrar` devolve true (o terceiro argumento so muda o ramo `editar`, que a saida nunca tem)",
         "sha": "ef3200817fe6961538c62f2b685672b5395f8ce47575c20731a9d2e2f27fb057"
+    },
+    "src/frontend/utils/aliancaSoRetorno.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): arquivo novo: estado do modo, ponto de desvio, janela de automacao, recusarNoModo; output.ts o importa",
+        "sha": "277556209cdaed9a0daf779564f94d3dec590e84ee305558b9b04d7c857f7221"
+    },
+    "src/frontend/utils/aliancaSoRetornoLogica.ts": {
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): arquivo novo: parte pura (aceitaNoModo, oQueRecusou, motivoDaRecusa)",
+        "sha": "cbf854f6e38498cb2214baae2898e72394de0ee07d1ad1b5974780c49fd5274d"
     }
 }
 
-export const SHA_EXCECOES = "8d4b5d265082cb60225838543e560505b051cef9f3b95cea0eaba187c5ccd434"
-export const SHA_NOVOS = "47371adb3acda4baf4b8989f09b8bb9ec7a54702963059d250f45ff69a958c92"
+export const SHA_EXCECOES = "beb5312889d57c7333b7f23596dd301cef27fa6a9c7be21f11be78a7699ba103"
+export const SHA_NOVOS = "ed7662101256d7f316c003d314dc25396bce5032913ea3e844943f0184ac93f3"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
