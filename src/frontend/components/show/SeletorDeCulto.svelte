@@ -19,7 +19,8 @@
     import { algoNoAr } from "../../utils/aliancaModo"
     import { abaLateral } from "../../utils/aliancaBibliotecaEstado"
     import { quantosDoOperador } from "../../utils/aliancaSirvoProjeto"
-    import { CARENCIA_ABERTURA_MS, CARENCIA_MUDANCA_MS, OCIOSO_MS, POPOVER_SEM_CONTAGEM, TETO_TECLA_MS, assinaturaDasOpcoes, camadaPodeSair, decidirTecla, dentroDaCarencia, estadoDoBotaoDia, hojeLocalISO, indiceInicial, larguraDoLayout, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, posicaoDoPopover } from "../../utils/aliancaSeletorLogica"
+    import { CARENCIA_ABERTURA_MS, CARENCIA_MUDANCA_MS, OCIOSO_MS, TETO_TECLA_MS, assinaturaDasOpcoes, camadaPodeSair, corDaAgenda, decidirTecla, dentroDaCarencia, ehHoje, estadoDoBotaoDia, hojeLocalISO, indiceInicial, larguraDoLayout, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, partesDoDia, posicaoDoPopover, subDaAgenda } from "../../utils/aliancaSeletorLogica"
+    import { history } from "../helpers/history"
     import { openProject } from "./project"
 
     export let tree: Tree[] = []
@@ -43,6 +44,7 @@
     $: layout = larguraDoLayout(larguraLinha)
     $: nomeAgenda = nomeDaAgenda(abas, agendaAtiva)
     $: emTodos = agendaAtiva === "todos"
+    $: corAgenda = corDaAgenda(agendaAtiva)
 
     // ---------------------------------------------------------------- estado fechado
 
@@ -59,6 +61,10 @@
         anoAtual: new Date().getFullYear(),
         agendaDoAtivo: cultoAberto?.agenda.nome
     })
+
+    // o selo HOJE do botao fechado: o culto aberto e o de hoje (o relogio e lido quando o culto aberto muda)
+    const hojeAgora = (_aberto: unknown) => hojeLocalISO()
+    $: diaEhHoje = ehHoje(cultoAberto?.cultoId, hojeAgora($activeProject))
 
     // ---------------------------------------------------------------- opcoes (so calculadas com o popover de dia aberto)
 
@@ -80,7 +86,6 @@
 
     let destaqueId: string | null = null
     $: if (fase === "aberto" && destaqueId !== null && !planas.some((o) => o.id === destaqueId)) destaqueId = planas[indiceInicial(planas, idAtivo, hojeISO)]?.id ?? null
-    $: semContagem = pos.width < POPOVER_SEM_CONTAGEM
 
     // a lista pode mudar sob o cursor (sincronizacao, ordenacao por modificado): a carencia rearma
     let ateCarencia = 0
@@ -104,7 +109,9 @@
         if (!linhaElem || !btnAgenda || !btnDia) return
         const r = linhaElem.getBoundingClientRect()
         const bt = (qual === "agenda" ? btnAgenda : btnDia).getBoundingClientRect()
-        pos = posicaoDoPopover({ linha: { left: r.left + 10, width: r.width - 20 }, base: bt.bottom, janelaAltura: window.innerHeight })
+        const p = posicaoDoPopover({ linha: { left: r.left + 12, width: r.width - 24 }, base: bt.bottom, janelaAltura: window.innerHeight })
+        // local: lista curta de 240 px; dia: a largura da coluna (grade de 3). Ate 380 de altura, como o prototipo.
+        pos = { ...p, width: qual === "agenda" ? Math.min(240, p.width) : p.width, maxHeight: Math.max(120, Math.min(380, window.innerHeight - p.top - 12)) }
         hojeISO = hojeLocalISO()
         noAr = algoNoAr()
         ultimaAssinatura = ""
@@ -294,6 +301,14 @@
         else if (aberto === "agenda") dispatch("agenda", id)
     }
 
+    function criarAvulso() {
+        if (fase !== "aberto" || dentroDaCarencia(performance.now(), ateCarencia)) return
+        const pasta = (abas as { id: string; nome: string; pasta?: string }[]).find((a) => a.id === agendaAtiva)?.pasta
+        const pai = pasta ? Object.entries(pastasVivas).find(([, f]) => f.parent === "/" && f.name === pasta)?.[0] : undefined
+        history({ id: "UPDATE", newData: { replace: { parent: pai || "/" } }, location: { page: "show", id: "project" } })
+        irParaInerte()
+    }
+
     function clicarOpcao(id: string) {
         if (fase !== "aberto" || dentroDaCarencia(performance.now(), ateCarencia)) return
         escolher(id)
@@ -344,13 +359,15 @@
 </script>
 
 <div class="seletor" class:estreito={layout.semSemana} bind:this={linhaElem} bind:clientWidth={larguraLinha}>
-    <button type="button" class="bt agenda" class:aberto={aberto === "agenda"} style="flex: 0 1 {layout.agendaPct}%" bind:this={btnAgenda} aria-haspopup="listbox" aria-expanded={aberto === "agenda"} aria-label="Agenda: {nomeAgenda}" data-title="Agenda: {nomeAgenda}" tabindex="-1" on:mousedown|preventDefault on:click={() => abrir("agenda")}>
+    <button type="button" class="bt agenda" class:aberto={aberto === "agenda"} bind:this={btnAgenda} aria-haspopup="listbox" aria-expanded={aberto === "agenda"} aria-label="Agenda: {nomeAgenda}" data-title="Agenda: {nomeAgenda}" tabindex="-1" on:mousedown|preventDefault on:click={() => abrir("agenda")}>
+        <span class="ponto" style="background: {corAgenda}"></span>
         <span class="txt">{nomeAgenda}</span>
-        <svg class="seta" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <span class="seta" aria-hidden="true">▾</span>
     </button>
     <button type="button" class="bt dia" class:aberto={aberto === "dia"} class:fora={estadoDia.foraDoFiltro} class:desabilitado={estadoDia.desabilitado} bind:this={btnDia} aria-haspopup="listbox" aria-expanded={aberto === "dia"} aria-disabled={estadoDia.desabilitado} aria-label="Culto: {estadoDia.dica}" data-title={estadoDia.dica} tabindex="-1" on:mousedown|preventDefault on:click={() => abrir("dia")}>
         <span class="txt">{layout.semSemana ? estadoDia.textoCurto : estadoDia.texto}</span>
-        <svg class="seta" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        {#if diaEhHoje}<span class="hoje">HOJE</span>{/if}
+        <span class="seta" aria-hidden="true">▾</span>
     </button>
 </div>
 
@@ -365,35 +382,38 @@
                     {#if aberto === "agenda"}
                         {#each abas as aba (aba.id)}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div class="op" role="option" tabindex="-1" aria-selected={agendaAtiva === aba.id} data-opcao={aba.id} class:ativa={agendaAtiva === aba.id} class:destaque={destaqueId === aba.id} on:click={() => clicarOpcao(aba.id)} on:mousemove={() => moverMouse(aba.id)}>
-                                <span class="rot"
-                                    >{aba.nome}{#if aba.id === "todos"}<span class="sub">todas as agendas</span>{/if}</span
-                                >
+                            <div class="op local" role="option" tabindex="-1" aria-selected={agendaAtiva === aba.id} data-opcao={aba.id} class:ativa={agendaAtiva === aba.id} class:destaque={destaqueId === aba.id} on:click={() => clicarOpcao(aba.id)} on:mousemove={() => moverMouse(aba.id)}>
+                                <span class="ponto grande" style="background: {corDaAgenda(aba.id)}"></span>
+                                <span class="rot dupla"><b>{aba.nome}</b><span class="sub">{subDaAgenda(aba.id)}</span></span>
                                 {#if agendaAtiva === aba.id}<svg class="ok" viewBox="0 0 10 10" width="11" height="11" aria-hidden="true"><path d="M1.8 5.3 4 7.5 8.3 2.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>{/if}
                             </div>
                         {/each}
                     {:else}
                         {#each grupos as g (g.chave)}
                             <div class="grupo" role="presentation">
-                                <div class="cab" role="presentation"><span>{g.titulo}</span></div>
-                                {#each g.opcoes as o (o.id)}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <div class="op" role="option" tabindex="-1" aria-selected={$activeProject === o.id} data-opcao={o.id} data-title={dicaDaOpcao(o)} class:ativa={$activeProject === o.id} class:destaque={destaqueId === o.id} class:passado={o.passado} class:arquivado={o.arquivado} on:click={() => clicarOpcao(o.id)} on:mousemove={() => moverMouse(o.id)}>
-                                        <span class="rot">
-                                            <span class="data">{semContagem ? o.semSemana : o.curto}</span>
-                                            {#if o.evento}<span class="ev">· {o.evento}</span>{/if}
-                                            {#if o.hoje}<span class="selo">hoje</span>{/if}
-                                            {#if o.arquivado}<span class="selo arq">arquivado</span>{/if}
-                                        </span>
-                                        <span class="info" class:cheio={!o.vazio} aria-label={o.vazio ? "sem material" : `${o.itens} itens`}>
-                                            <i class="pip" class:cheio={!o.vazio}></i>
-                                            {#if !semContagem}<span class="n">{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>{/if}
-                                        </span>
-                                        {#if $activeProject === o.id}<svg class="ok" viewBox="0 0 10 10" width="11" height="11" aria-hidden="true"><path d="M1.8 5.3 4 7.5 8.3 2.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>{/if}
-                                    </div>
-                                {/each}
+                                <div class="cab" role="presentation"><span>{g.titulo}</span><span class="dica">próximos cultos</span></div>
+                                <div class="grade" role="presentation">
+                                    {#each g.opcoes as o (o.id)}
+                                        {@const partes = partesDoDia(o.cultoId)}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <div class="op cartao" class:larga={!partes} role="option" tabindex="-1" aria-selected={$activeProject === o.id} data-opcao={o.id} data-title={dicaDaOpcao(o)} class:ativa={$activeProject === o.id} class:destaque={destaqueId === o.id} class:passado={o.passado} class:arquivado={o.arquivado} on:click={() => clicarOpcao(o.id)} on:mousemove={() => moverMouse(o.id)}>
+                                            {#if partes}
+                                                <span class="sem">{partes.semana}</span>
+                                                <span class="num">{partes.num}</span>
+                                                <span class="qtd" aria-label={o.vazio ? "sem material" : `${o.itens} itens`}>{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>
+                                                <span class="tag" class:hojeTag={o.hoje}>{o.hoje ? "hoje" : o.arquivado ? "arquivado" : o.evento}</span>
+                                            {:else}
+                                                <span class="nomeCartao">{o.curto}</span>
+                                                <span class="qtd">{o.vazio ? "vazio" : `${o.itens} ${o.itens === 1 ? "item" : "itens"}`}</span>
+                                            {/if}
+                                        </div>
+                                    {/each}
+                                </div>
                             </div>
                         {/each}
+                        <!-- leiaute v2: culto avulso (o `newProject` de menuClick). Cria na pasta da agenda escolhida, ou na raiz em Todos. -->
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div class="op avulso" role="option" tabindex="-1" aria-selected="false" data-opcao="culto-avulso" on:click={criarAvulso}>＋ Culto avulso</div>
                     {/if}
                 </div>
             </div>
@@ -402,68 +422,84 @@
 {/if}
 
 <style>
-    /* o cabecalho do painel e absoluto, 30px, e flutua por cima: o seletor comeca abaixo dele */
+    /* leiaute v2: o seletor logo abaixo do cabecalho ROTEIRO (12 px de lado, 8 de baixo), botoes de 36 px como o prototipo */
     .seletor {
         display: flex;
         flex: none;
         gap: 6px;
-        margin-top: 30px;
-        padding: 6px 10px 8px;
+        padding: 0 12px 8px;
     }
     .bt {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         gap: 6px;
         min-width: 0;
-        height: 30px;
+        height: 36px;
+        box-sizing: border-box;
         padding: 0 10px;
-        border: none;
+        border: 1px solid var(--luz-borda, rgb(248 248 240 / 0.13));
         border-radius: 8px;
-        background: rgb(255 255 255 / 0.06);
-        color: var(--text, #c2c3c9);
+        background: var(--luz-campo, rgb(248 248 240 / 0.06));
+        color: var(--luz-texto, #f8f8f0);
         font-family: inherit;
-        font-size: 12.5px;
-        font-weight: 500;
+        font-size: 13px;
+        font-weight: 600;
         white-space: nowrap;
         cursor: pointer;
-        transition: background-color 120ms ease;
+    }
+    .bt.agenda {
+        flex: 0 0 auto;
     }
     .bt.dia {
         flex: 1 1 0;
     }
-    /* painel estreito: o botao aperta o respiro para o nome da agenda caber */
-    .seletor.estreito .bt {
-        gap: 4px;
-        padding: 0 7px;
-    }
     .bt:hover {
-        background: rgb(255 255 255 / 0.1);
+        background: var(--luz-hover, rgb(248 248 240 / 0.1));
     }
     .bt:focus-visible {
         outline: 2px solid var(--focus-ring, var(--secondary));
         outline-offset: 2px;
     }
+    .bt.aberto {
+        border-color: var(--luz-texto, #f8f8f0);
+        box-shadow: 0 0 0 3px rgb(248 248 240 / 0.14);
+    }
     .bt .txt {
-        opacity: 0.82;
         min-width: 0;
+        flex: 1 1 auto;
+        text-align: left;
         overflow: hidden;
         text-overflow: ellipsis;
     }
     .bt .seta {
         flex: none;
-        transition: transform 120ms ease;
-    }
-    .bt.aberto {
-        background: var(--sel-wash, rgb(242 26 39 / 0.16));
-        box-shadow: inset 0 0 0 1px var(--sel-line, rgb(242 26 39 / 0.3));
-        color: var(--text, #ffffff);
-    }
-    .bt.aberto .txt {
-        opacity: 1;
+        color: var(--luz-mudo, rgb(248 248 240 / 0.5));
+        font-weight: 400;
+        display: inline-block;
+        transition: transform 160ms ease;
     }
     .bt.aberto .seta {
         transform: rotate(180deg);
+    }
+    .ponto {
+        flex: none;
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+    }
+    .ponto.grande {
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+    }
+    .hoje {
+        flex: none;
+        padding: 2px 5px;
+        border-radius: 4px;
+        background: rgb(94 196 141 / 0.14);
+        color: var(--luz-verde, #5ec48d);
+        font-size: 10px;
+        font-weight: 700;
     }
     /* o culto aberto esta fora do filtro: o texto fica atenuado (a dica diz o porque) */
     .bt.fora .txt {
@@ -477,8 +513,8 @@
         .bt .seta {
             transition: none;
         }
-        .bt.aberto .seta {
-            transform: none;
+        .seletor-pop {
+            animation: none !important;
         }
     }
 
@@ -498,13 +534,18 @@
         flex-direction: column;
         box-sizing: border-box;
         overflow: hidden;
-        background: var(--primary-darker);
-        border: 1px solid var(--glass-line, rgb(255 255 255 / 0.1));
-        border-radius: 10px;
-        box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+        background: var(--luz-pop, rgb(28 28 31 / 0.82));
+        border: 1px solid var(--luz-borda, rgb(248 248 240 / 0.13));
+        border-radius: 12px;
+        box-shadow:
+            inset 0 0 0 1px var(--luz-borda, rgb(248 248 240 / 0.13)),
+            0 18px 40px rgb(0 0 0 / 0.5);
+        backdrop-filter: var(--luz-vidro, none);
+        transform-origin: top left;
+        animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
         font-family: inherit;
-        font-size: 12.5px;
-        color: var(--text, #c2c3c9);
+        font-size: 13px;
+        color: var(--luz-texto, #f8f8f0);
     }
     .aviso {
         flex: none;
@@ -520,101 +561,161 @@
         min-height: 0;
         overflow-y: auto;
         overscroll-behavior: contain;
-        padding: 4px;
+        padding: 8px;
         outline: none;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
     }
+    /* "Novembro 2026 · proximos cultos" ocupa a linha inteira da grade */
     .cab {
-        position: sticky;
-        top: -4px;
-        z-index: 1;
-        padding: 6px 8px 4px;
-        font-size: 11px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2px 4px 4px;
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: 0.02em;
-        color: var(--text, #c2c3c9);
-        background: var(--primary-darker);
+        color: var(--luz-mudo, rgb(248 248 240 / 0.5));
     }
-    .cab span {
-        opacity: 0.72;
+    .cab .dica {
+        font-weight: 400;
+    }
+    .grupo + .grupo {
+        margin-top: 6px;
+    }
+    .grade {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
     }
     .op {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 32px;
-        padding: 0 8px;
-        border-radius: 6px;
         cursor: pointer;
         font-variant-numeric: tabular-nums;
     }
-    .op.destaque {
-        background: rgb(128 128 128 / 0.2);
+    /* local: bolinha, nome e a segunda linha */
+    .op.local {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 0 8px;
+        border-radius: 6px;
     }
-    .op.ativa {
-        background: var(--sel-wash, rgb(242 26 39 / 0.16));
-        color: var(--text, #ffffff);
+    .op.local.destaque {
+        background: rgb(248 248 240 / 0.06);
+    }
+    .op.local.ativa {
+        background: var(--luz-hover, rgb(248 248 240 / 0.1));
+        box-shadow: inset 2px 0 0 var(--luz-texto, #f8f8f0);
+        font-weight: 600;
     }
     .rot {
         display: flex;
-        align-items: baseline;
         flex: 1 1 auto;
         min-width: 0;
         gap: 6px;
         white-space: nowrap;
     }
-    .data {
-        flex: none;
+    .rot.dupla {
+        flex-direction: column;
+        gap: 1px;
     }
-    .ev {
+    .rot b {
+        font-weight: 600;
+    }
+    .sub {
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--luz-mudo, rgb(248 248 240 / 0.5));
+    }
+    /* dia: cartao de grade (semana, numero, quantos itens, selo) */
+    .op.cartao {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        min-width: 0;
+        padding: 8px 4px 6px;
+        border: 1px solid var(--luz-linha, rgb(248 248 240 / 0.075));
+        border-radius: 10px;
+        background: var(--luz-campo, rgb(248 248 240 / 0.06));
+        color: var(--luz-texto, #f8f8f0);
+        transition:
+            background 120ms,
+            transform 120ms;
+    }
+    .op.cartao.larga {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 10px;
+    }
+    .op.cartao.destaque {
+        background: var(--luz-hover, rgb(248 248 240 / 0.1));
+    }
+    .op.cartao.ativa {
+        border-color: var(--luz-texto, #f8f8f0);
+        background: var(--luz-texto, #f8f8f0);
+        color: var(--luz-tinta, #161616);
+    }
+    .sem {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        opacity: 0.75;
+    }
+    .num {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+    .qtd {
+        font-size: 11px;
+        opacity: 0.85;
+    }
+    .tag {
+        height: 14px;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--luz-mudo, rgb(248 248 240 / 0.5));
+    }
+    .tag.hojeTag {
+        color: var(--luz-verde, #5ec48d);
+    }
+    .op.cartao.ativa .tag:not(.hojeTag) {
+        color: rgb(22 22 22 / 0.6);
+    }
+    .nomeCartao {
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
-        opacity: 0.8;
+        white-space: nowrap;
+        font-weight: 600;
     }
-    .sub {
-        margin-left: 8px;
-        font-size: 11px;
-        opacity: 0.68;
-    }
-    .op.passado .data {
+    .op.cartao.passado .num {
         opacity: 0.78;
     }
     .op.arquivado {
         opacity: 0.7;
     }
-    .selo {
-        flex: none;
-        padding: 1px 6px;
-        border-radius: 999px;
-        font-size: 10.5px;
-        color: var(--text, #ffffff);
-        box-shadow: inset 0 0 0 1px var(--sel-line, rgb(242 26 39 / 0.3));
+    .op.avulso {
+        margin-top: 6px;
+        padding: 8px 10px;
+        border: 1px dashed var(--luz-borda-forte, rgb(248 248 240 / 0.3));
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
     }
-    .info {
-        display: flex;
-        flex: none;
-        align-items: center;
-        gap: 6px;
-        font-size: 11.5px;
-        opacity: 0.78;
-    }
-    .info.cheio {
-        opacity: 0.95;
-    }
-    .pip {
-        flex: none;
-        box-sizing: border-box;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        border: 1.5px solid currentColor;
-    }
-    .pip.cheio {
-        border-color: #4ade80;
-        background: #4ade80;
+    .op.avulso:hover {
+        background: var(--luz-hover, rgb(248 248 240 / 0.1));
     }
     .ok {
         flex: none;
-        color: var(--text, #ffffff);
+        color: var(--luz-texto, #f8f8f0);
     }
 </style>

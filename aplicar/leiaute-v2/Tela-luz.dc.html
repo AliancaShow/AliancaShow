@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>AliançaShow — Luz de Projeção</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&amp;family=Montserrat:wght@800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#f8f8f0}a:hover{color:#f8f8f0}
+button{font-family:inherit}
+input{font-family:inherit}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background-color:rgba(248,248,240,0.12);border-radius:10px;border:3px solid transparent;background-clip:padding-box;min-height:32px}
+:hover::-webkit-scrollbar-thumb{background-color:rgba(248,248,240,0.22)}
+::-webkit-scrollbar-thumb:hover{background-color:rgba(248,248,240,0.4)}
+::-webkit-scrollbar-thumb:active{background-color:rgba(248,248,240,0.55)}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:rgba(248,248,240,0.22) transparent}}
+@keyframes surgir{from{opacity:0;transform:translateY(-6px) scale(0.97)}to{opacity:1;transform:none}}
+@keyframes descer{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes subir{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</helmet>
+<div data-raiz="1" onMouseMove="{{ mover }}" onMouseUp="{{ soltar }}" onMouseLeave="{{ soltar }}" onClick="{{ fecharCtx }}" style="{{ raiz }}">
+  <div aria-hidden="true" style="{{ ambiente }}"></div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(130% 100% at 60% 40%, transparent 30%, #0d0d0f 95%)"></div>
+
+  <!-- ================= BARRA DO TOPO ================= -->
+  <div data-regiao="topo" style="position: relative; z-index: 1; height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 4px">
+    <button onClick="{{ abrirApp }}" aria-label="Menu do AliançaShow" style="height: 40px; display: flex; align-items: center; gap: 9px; padding: 0 10px 0 6px; border: none; border-radius: 10px; background: transparent; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; font-variation-settings: 'wdth' 118; cursor: pointer; color: #f8f8f0">
+      <svg width="17" height="20" viewBox="0 0 32.296 38.868" aria-hidden="true"><path fill="#F21A27" d="M16.982 0L16.982 2.802C25.57 3.588 32.296 10.808 32.296 19.606L32.296 23.041C29.245 16.618 22.796 12.124 15.295 11.911C16.222 15.138 15.769 18.803 13.397 20.807C10.225 23.489 8.164 27.017 8.151 31.178C8.142 33.996 8.943 36.656 10.528 38.867L2.208 38.867C0.988 38.867 0 37.879 0 36.661L0 16.782C0 7.515 7.512 0 16.78 0L16.982 0Z M28.732 38.868L18.318 38.868C17.64 37.953 17.238 36.824 17.208 35.634C17.163 33.865 17.958 32.463 19.242 31.327L20.722 30.014C21.964 28.913 23.25 27.94 22.991 26.223C25.891 27.69 26.954 31.065 25.567 34.003C26.806 33.405 27.683 32.32 28.315 30.943C29.105 31.701 29.438 32.72 29.603 33.804C29.87 35.562 29.538 37.328 28.732 38.868Z"></path></svg>
+      <span>aliança <span style="color: rgba(248,248,240,0.42); font-weight: 500">show</span></span>
+      <span style="color: rgba(248,248,240,0.42); font-weight: 400; font-size: 12px">▾</span>
+    </button>
+    <button onClick="{{ abrirSirvo }}" aria-label="Sirvo conectado — detalhes" title="Sirvo conectado" style="height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 10px; border: none; border-radius: 16px; background: rgba(94,196,141,0.14); font-size: 12px; font-weight: 600; cursor: pointer; color: #5ec48d">
+      <span style="width: 7px; height: 7px; border-radius: 4px; background: #5ec48d; box-shadow: 0 0 0 3px rgba(94,196,141,0.28)"></span>
+      Sirvo
+    </button>
+
+    <div style="flex-grow: 1; display: flex; justify-content: center">
+      <div role="tablist" aria-label="O que o centro mostra" style="display: flex; gap: 2px; padding: 3px; background: rgba(0,0,0,0.28); box-shadow: inset 0 0 0 1px rgba(248,248,240,0.075); border-radius: 10px">
+        <button role="tab" onClick="{{ irMostrar }}" style="{{ tabMostrar }}">Mostrar</button>
+        <button role="tab" onClick="{{ irEditar }}" style="{{ tabEditar }}">Editar</button>
+      </div>
+    </div>
+
+    <div style="font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; color: #f8f8f0">18:42</div>
+    <button onClick="{{ alternarTelao }}" style="{{ telaoEstilo }}">
+      <span style="{{ telaoPonto }}"></span>
+      <span>{{ telaoTexto }}</span>
+    </button>
+  </div>
+
+  <!-- ================= CORPO ================= -->
+  <!-- [ (esquerda | centro) em cima + biblioteca embaixo, de ponta a ponta ] | direita -->
+  <div style="position: relative; z-index: 1; flex-grow: 1; display: flex; min-height: 0">
+
+    <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+      <div style="flex-grow: 1; min-height: 0; display: flex">
+
+        <!-- ESQUERDA: roteiro (Mostrar) ou slides (Editar), no mesmo lugar -->
+        <div data-regiao="roteiro" style="{{ colEsq }}">
+          <sc-if value="{{ aoVivo }}" hint-placeholder-val="{{ true }}">
+            <div style="height: 30px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 14px 14px 0 0; background: #f21a27; color: #FFFFFF; font-size: 12px; font-weight: 700; letter-spacing: 0.04em">
+              <span style="width: 8px; height: 8px; border-radius: 4px; background: rgba(248,248,240,0.06)"></span>
+              AO VIVO
+              <span style="font-weight: 400; letter-spacing: 0; opacity: 0.9">· {{ motivoVivo }}</span>
+            </div>
+          </sc-if>
+
+          <!-- MOSTRAR: roteiro -->
+          <sc-if value="{{ isMostrar }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 6px">
+              <span style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em">ROTEIRO</span>
+              <span style="font-size: 12px; color: rgba(248,248,240,0.5)">{{ totalItens }} itens</span>
+            </div>
+            <div style="display: flex; gap: 6px; padding: 0 12px 8px">
+              <button onClick="{{ abrirLocal }}" aria-haspopup="listbox" style="{{ selLocalEstilo }}">
+                <span style="{{ localPonto }}"></span>
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ local }}</span>
+                <span style="{{ chevLocal }}">▾</span>
+              </button>
+              <button onClick="{{ abrirDia }}" aria-haspopup="listbox" style="{{ selDiaEstilo }}">
+                <span style="flex-grow: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ dia }}</span>
+                <sc-if value="{{ diaEhHoje }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-size: 10px; font-weight: 700; color: #5ec48d; background: rgba(94,196,141,0.14); border-radius: 4px; padding: 2px 5px">HOJE</span>
+                </sc-if>
+                <span style="{{ chevDia }}">▾</span>
+              </button>
+            </div>
+            <div style="flex-grow: 1; overflow: auto; padding: 0 8px">
+              <sc-for list="{{ blocos }}" as="b" hint-placeholder-count="4">
+                <sc-if value="{{ b.vivo }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top: 4px; height: 32px; display: flex; align-items: center; gap: 6px; padding: 0 0 0 8px">
+                    <span style="width: 6px; height: 6px; border-radius: 3px; background: #f21a27; flex-shrink: 0"></span>
+                    <span style="font-size: 12px; font-weight: 600; color: #f8f8f0">{{ b.nome }}</span>
+                    <span style="margin-left: auto; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: #f21a27">{{ b.restante }}</span>
+                    <button onClick="{{ b.abrir }}" aria-label="Tempo do bloco: mais, menos ou encerrar" title="Tempo do bloco" style="{{ b.botao }}">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8.5" r="5.5"></circle><path d="M8 5.5v3l2 1.5"></path><path d="M6.5 1.5h3"></path></svg>
+                    </button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ b.normal }}" hint-placeholder-val="{{ true }}">
+                  <div style="padding: 10px 8px 4px; display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #f8f8f0">
+                    <span>{{ b.nome }}</span><span style="color: rgba(248,248,240,0.5); font-weight: 400">{{ b.tempo }}</span>
+                  </div>
+                </sc-if>
+                <sc-for list="{{ b.itens }}" as="it" hint-placeholder-count="2">
+                  <button onClick="{{ it.pick }}" style="{{ it.estilo }}">
+                    <span style="width: 22px; color: rgba(248,248,240,0.5); font-size: 12px">{{ it.tipo }}</span>
+                    <span style="flex-grow: 1">{{ it.nome }}</span>
+                    <sc-if value="{{ it.noAr }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size: 10px; font-weight: 700; color: #FFFFFF; background: #f21a27; border-radius: 4px; padding: 2px 6px">NO AR</span>
+                    </sc-if>
+                    <sc-if value="{{ it.novo }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size: 10px; font-weight: 700; color: #161616; background: #f1d278; border-radius: 4px; padding: 2px 6px">NOVO</span>
+                    </sc-if>
+                  </button>
+                </sc-for>
+              </sc-for>
+            </div>
+            <button onClick="{{ abrirTrazer }}" style="margin: 8px; flex-shrink: 0; height: 44px; border: 1px dashed rgba(248,248,240,0.3); border-radius: 8px; background: rgba(248,248,240,0.06); font-size: 13px; color: #f8f8f0; cursor: pointer">＋ Adicionar ao roteiro <span style="color: rgba(248,248,240,0.5)">· Ctrl+K</span></button>
+          </sc-if>
+
+          <!-- EDITAR: slides do item -->
+          <sc-if value="{{ isEditar }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 6px">
+              <span style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em">EDITANDO</span>
+              <span style="font-size: 12px; color: rgba(248,248,240,0.5)">{{ totalSlides }} slides</span>
+            </div>
+            <div style="padding: 0 12px 8px">
+              <button onClick="{{ abrirItemEd }}" aria-haspopup="listbox" style="{{ selItemEstilo }}">
+                <span style="flex-grow: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ itemAtual }}</span>
+                <sc-if value="{{ foraRoteiro }}" hint-placeholder-val="{{ false }}">
+                  <span style="flex-shrink: 0; font-size: 10px; font-weight: 700; color: rgba(248,248,240,0.5); background: rgba(0,0,0,0.28); border-radius: 4px; padding: 2px 5px">BIBLIOTECA</span>
+                </sc-if>
+                <span style="{{ chevItem }}">▾</span>
+              </button>
+            </div>
+            <div style="flex-grow: 1; overflow: auto; padding: 0 12px; display: flex; flex-direction: column; gap: 8px">
+              <sc-for list="{{ slides }}" as="s" hint-placeholder-count="6">
+                <button onClick="{{ s.pickEd }}" onContextMenu="{{ s.ctx }}" style="{{ s.miniEstilo }}">
+                  <span style="flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1.15; padding: 6px; text-align: center; font-family: Montserrat, Arial Black, sans-serif; font-weight: 900; color: #FFFFFF; text-shadow: 0 2px 10px rgba(0,0,0,0.45)">{{ s.textoAtual }}</span>
+                  <span style="{{ s.faixaEstilo }}">
+                    <span style="flex-grow: 1">{{ s.rotulo }}</span>
+                    <sc-if value="{{ s.editado }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.22); border-radius: 3px; padding: 1px 5px">EDITADO</span>
+                    </sc-if>
+                    <sc-if value="{{ s.noAr }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size: 10px; font-weight: 700; background: #f21a27; border-radius: 3px; padding: 1px 5px">NO AR</span>
+                    </sc-if>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="padding: 6px 12px 0; font-size: 11px; color: rgba(248,248,240,0.5)">Botão direito num slide: mandar pro ar</div>
+            <button style="margin: 8px; flex-shrink: 0; height: 40px; border: 1px dashed rgba(248,248,240,0.3); border-radius: 8px; background: rgba(248,248,240,0.06); font-size: 13px; color: #f8f8f0; cursor: pointer">＋ Slide</button>
+          </sc-if>
+
+          <!-- seletores: abrem por cima, fecham ao escolher -->
+          <sc-if value="{{ menuLocal }}" hint-placeholder-val="{{ false }}">
+            <div role="listbox" style="{{ popLocal }}">
+              <sc-for list="{{ locais }}" as="o" hint-placeholder-count="2">
+                <button role="option" onClick="{{ o.pick }}" style="{{ o.estilo }}">
+                  <span style="{{ o.ponto }}"></span>
+                  <span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px">
+                    <span style="font-weight: 600">{{ o.nome }}</span>
+                    <span style="font-size: 11px; color: rgba(248,248,240,0.5); font-weight: 400">{{ o.sub }}</span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ menuDia }}" hint-placeholder-val="{{ false }}">
+            <div role="listbox" style="{{ popDia }}">
+              <div style="grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 2px 4px 4px; font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5)">
+                <span>Novembro</span><span style="font-weight: 400">próximos cultos</span>
+              </div>
+              <sc-for list="{{ diasLista }}" as="o" hint-placeholder-count="5">
+                <button role="option" onClick="{{ o.pick }}" style="{{ o.estilo }}">
+                  <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.06em; opacity: 0.75">{{ o.semana }}</span>
+                  <span style="font-size: 22px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums">{{ o.num }}</span>
+                  <span style="font-size: 11px; opacity: 0.85">{{ o.hora }}</span>
+                  <span style="{{ o.tagEstilo }}">{{ o.sub }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ menuItemEd }}" hint-placeholder-val="{{ false }}">
+            <div role="listbox" style="{{ popItem }}">
+              <sc-for list="{{ itensLista }}" as="o" hint-placeholder-count="6">
+                <sc-if value="{{ o.secao }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding: 6px 10px 2px; font-size: 11px; font-weight: 600; color: rgba(248,248,240,0.5)">{{ o.secao }}</div>
+                </sc-if>
+                <button role="option" onClick="{{ o.pick }}" style="{{ o.estilo }}">
+                  <span style="width: 20px; color: rgba(248,248,240,0.5); font-size: 12px">{{ o.tipo }}</span>
+                  <span style="flex-grow: 1">{{ o.nome }}</span>
+                  <span style="width: 14px; color: #f8f8f0; font-weight: 700">{{ o.check }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- divisória arrastável -->
+        <div onMouseDown="{{ pegarEsq }}" aria-label="Arraste para redimensionar" style="{{ divV }}"><span style="width: 2px; height: 32px; border-radius: 1px; background: rgba(248,248,240,0.3)"></span></div>
+
+        <!-- CENTRO -->
+        <div data-regiao="centro" style="flex-grow: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: rgba(19,19,21,0.62); border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.075); overflow: hidden">
+          <div style="height: 48px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid rgba(248,248,240,0.075)">
+            <span style="font-size: 17px; font-weight: 600">{{ itemAtual }}</span>
+            <sc-if value="{{ isMostrar }}" hint-placeholder-val="{{ true }}">
+              <span style="color: rgba(248,248,240,0.5); font-size: 13px">depois: {{ itemProximo }}</span>
+            </sc-if>
+            <sc-if value="{{ itemNoArVivo }}" hint-placeholder-val="{{ true }}">
+              <span style="font-size: 11px; font-weight: 700; color: #f21a27; border: 1px solid #f21a27; border-radius: 4px; padding: 2px 6px">AO VIVO · a igreja vê este item</span>
+            </sc-if>
+            <span style="margin-left: auto; font-size: 12px; color: rgba(248,248,240,0.5)">{{ dicaCentro }}</span>
+          </div>
+
+          <!-- MOSTRAR -->
+          <sc-if value="{{ isMostrar }}" hint-placeholder-val="{{ true }}">
+            <div style="flex-grow: 1; overflow: auto; padding: 16px">
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px">
+                <sc-for list="{{ slides }}" as="s" hint-placeholder-count="8">
+                  <button onClick="{{ s.pick }}" style="{{ s.estilo }}">
+                    <span style="flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1.15; padding: 8px 10px; text-align: center; font-family: Montserrat, Arial Black, sans-serif; font-weight: 900; color: #FFFFFF; text-shadow: 0 2px 10px rgba(0,0,0,0.45)">{{ s.texto }}</span>
+                    <span style="{{ s.faixaEstilo }}">{{ s.rotulo }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- EDITAR: a tela inteira do centro é o slide -->
+          <sc-if value="{{ isEditar }}" hint-placeholder-val="{{ false }}">
+            <div style="flex-grow: 1; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+              <div style="flex-grow: 1; min-height: 0; display: flex; align-items: center; justify-content: center">
+                <button onClick="{{ tocarTexto }}" onContextMenu="{{ ctxCanvas }}" style="{{ telaEdicao }}">
+                  <sc-if value="{{ edNoAr }}" hint-placeholder-val="{{ true }}">
+                    <span style="position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; color: #FFFFFF; background: #f21a27; border-radius: 4px; padding: 3px 8px">NO AR</span>
+                  </sc-if>
+                  <span>{{ textoEdicao }}</span>
+                </button>
+              </div>
+              <sc-if value="{{ pendenteNoAr }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 12px; border: 1px solid rgba(242,26,39,0.45); border-radius: 8px; background: rgba(242,26,39,0.12); animation: descer 160ms ease-out">
+                  <span style="font-size: 13px; color: #f8f8f0; flex-grow: 1">O telão ainda mostra a versão anterior. Ela só troca quando você mandar pro ar de novo.</span>
+                  <button onClick="{{ mandarEsteAr }}" style="height: 36px; padding: 0 14px; border: 1px solid #f21a27; border-radius: 8px; background: #f21a27; color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer">Mandar pro ar</button>
+                </div>
+              </sc-if>
+              <div style="font-size: 12px; color: rgba(248,248,240,0.5); text-align: center">{{ notaEdicao }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- divisória arrastável -->
+      <div onMouseDown="{{ pegarBib }}" aria-label="Arraste para redimensionar" style="{{ divH }}"><span style="width: 32px; height: 2px; border-radius: 1px; background: rgba(248,248,240,0.3)"></span></div>
+
+      <!-- BIBLIOTECA: de ponta a ponta, por baixo do roteiro e do centro -->
+      <div data-regiao="biblioteca" style="{{ caixaBib }}">
+        <div style="height: 44px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid rgba(248,248,240,0.075)">
+          <span style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em; margin-right: 4px">BIBLIOTECA</span>
+          <sc-for list="{{ filtros }}" as="f" hint-placeholder-count="3">
+            <button onClick="{{ f.pick }}" style="{{ f.estilo }}">{{ f.nome }}</button>
+          </sc-for>
+          <div style="margin-left: auto; height: 32px; width: 300px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; display: flex; align-items: center; padding: 0 10px; color: rgba(248,248,240,0.5); font-size: 12px; box-sizing: border-box">Buscar música, trecho da letra ou versículo</div>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; display: flex">
+          <div style="{{ arvoreCol }}">
+            <sc-for list="{{ arvore }}" as="n" hint-placeholder-count="6">
+              <button onClick="{{ n.pick }}" style="{{ n.estilo }}">
+                <span style="width: 14px; color: rgba(248,248,240,0.5); font-size: 11px">{{ n.seta }}</span>
+                <span style="flex-grow: 1">{{ n.nome }}</span>
+                <span style="color: rgba(248,248,240,0.5); font-size: 11px; font-weight: 400">{{ n.conta }}</span>
+              </button>
+              <sc-if value="{{ n.aberto }}" hint-placeholder-val="{{ false }}">
+                <div style="margin: 0 0 4px 13px; padding-left: 6px; border-left: 1px solid rgba(248,248,240,0.075); animation: descer 140ms ease-out">
+                  <sc-for list="{{ n.filhos }}" as="c" hint-placeholder-count="3">
+                    <button onClick="{{ c.pick }}" style="{{ c.estilo }}">
+                      <span style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ c.nome }}</span>
+                      <span style="color: rgba(248,248,240,0.5); font-size: 11px">{{ c.conta }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </sc-for>
+          </div>
+          <div style="width: 1px; flex-shrink: 0; margin: 0 4px 0 3px; background: rgba(248,248,240,0.075)"></div>
+          <div style="flex-grow: 1; min-width: 0; overflow: auto; padding: 6px 8px">
+            <sc-if value="{{ listaLinhas }}" hint-placeholder-val="{{ true }}">
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); column-gap: 16px">
+                <sc-for list="{{ conteudo }}" as="r" hint-placeholder-count="6">
+                  <div onContextMenu="{{ r.ctx }}" title="Botão direito: editar, mostrar agora…" style="min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 8px; border-bottom: 1px solid rgba(248,248,240,0.075); cursor: context-menu">
+                    <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+                      <span style="font-size: 13px; font-weight: 500">{{ r.nome }}</span>
+                      <span style="font-size: 11px; color: rgba(248,248,240,0.5)">{{ r.sub }}</span>
+                    </div>
+                    <button onClick="{{ r.add }}" aria-label="Adicionar ao roteiro" style="height: 32px; padding: 0 10px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; background: rgba(248,248,240,0.06); font-size: 12px; cursor: pointer; color: #f8f8f0">＋ roteiro</button>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ listaGrade }}" hint-placeholder-val="{{ false }}">
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; padding-top: 4px">
+                <sc-for list="{{ conteudo }}" as="r" hint-placeholder-count="5">
+                  <div onContextMenu="{{ r.ctx }}" style="display: flex; flex-direction: column; gap: 4px">
+                    <div style="{{ r.thumb }}"></div>
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span style="flex-grow: 1; font-size: 12px">{{ r.nome }}</span>
+                      <button onClick="{{ r.add }}" aria-label="Adicionar ao roteiro" style="width: 28px; height: 28px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; background: rgba(248,248,240,0.06); cursor: pointer">＋</button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- divisória arrastável -->
+    <div onMouseDown="{{ pegarDir }}" aria-label="Arraste para redimensionar" style="{{ divV }}"><span style="width: 2px; height: 32px; border-radius: 1px; background: rgba(248,248,240,0.3)"></span></div>
+
+    <!-- DIREITA: o que a igreja vê (Mostrar) ou propriedades (Editar), no mesmo lugar -->
+    <div data-regiao="no-ar" style="{{ colDir }}">
+      <sc-if value="{{ isMostrar }}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; align-items: baseline; justify-content: space-between">
+          <span style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em">NO AR</span>
+          <span style="font-size: 11px; color: rgba(248,248,240,0.5)">Telão · {{ proporcao }}</span>
+        </div>
+
+        <!-- tela + faixa de ícones colada (camadas de cima pra baixo, depois áudio e tudo) -->
+        <div style="display: flex; flex-shrink: 0; align-items: stretch; gap: 4px">
+          <div style="{{ programa }}">
+            <div style="{{ telaoPreview }}">
+              <div style="{{ telaoTextoEstilo }}">{{ noArTexto }}</div>
+            </div>
+          </div>
+          <div style="width: 30px; flex-shrink: 0; display: flex; flex-direction: column; gap: 3px">
+            <sc-for list="{{ camadas }}" as="k" hint-placeholder-count="5">
+              <button onClick="{{ k.limpar }}" aria-label="{{ k.aria }}" title="{{ k.aria }}" style="{{ k.estilo }}">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{ k.d }}"></path></svg>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- outra tela: mesmo tamanho da principal, abas pra trocar -->
+        <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; align-items: center; gap: 6px">
+            <button onClick="{{ alternarOutras }}" aria-expanded="{{ outrasAbertas }}" aria-label="Mostrar ou esconder as outras telas" style="width: 24px; height: 28px; border: none; background: transparent; cursor: pointer; padding: 0; color: rgba(248,248,240,0.5)"><span style="{{ chevOutras }}">▸</span></button>
+            <div role="tablist" aria-label="Outras telas" style="flex-grow: 1; display: flex; gap: 2px; padding: 2px; background: rgba(0,0,0,0.28); border-radius: 7px">
+              <sc-for list="{{ outras }}" as="t" hint-placeholder-count="3">
+                <button role="tab" onClick="{{ t.pick }}" style="{{ t.aba }}">{{ t.curto }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ outrasAbertas }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; gap: 4px; animation: descer 140ms ease-out">
+              <div style="flex-grow: 1; min-width: 0; min-height: 168px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0B0B0A; border-radius: 6px; overflow: hidden; position: relative">
+                <div style="{{ outraPreview }}">
+                  <div style="{{ outraTextoEstilo }}">{{ outraTexto }}</div>
+                </div>
+                <span style="position: absolute; left: 8px; bottom: 6px; font-size: 10px; color: rgba(248,248,240,0.3)">{{ outraEstado }}</span>
+              </div>
+              <div style="width: 30px; flex-shrink: 0"></div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- mensagem pro palco -->
+        <div style="flex-shrink: 0; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em">MENSAGEM PRO PALCO</div>
+          <div style="display: flex; gap: 6px">
+            <div style="flex-grow: 1; height: 40px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: rgba(248,248,240,0.5)">{{ msgPalco }}</div>
+            <button onClick="{{ enviarPalco }}" style="height: 40px; padding: 0 12px; border: 1px solid #f8f8f0; border-radius: 8px; background: #f8f8f0; color: #161616; font-weight: 650; font-size: 13px; cursor: pointer">Enviar</button>
+          </div>
+        </div>
+
+        <!-- chat ocupa o resto -->
+        <div style="flex-grow: 1; min-height: 140px; display: flex; flex-direction: column; border-top: 1px solid rgba(248,248,240,0.075); padding-top: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 6px">
+            <span style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em">CHAT DO CULTO</span>
+            <span style="font-size: 11px; font-weight: 600; color: #eba640">2 novas</span>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 8px">
+            <sc-for list="{{ chat }}" as="m" hint-placeholder-count="4">
+              <div style="display: flex; flex-direction: column; gap: 1px">
+                <span style="font-size: 11px; color: rgba(248,248,240,0.5)"><b style="color: #f8f8f0">{{ m.quem }}</b> · {{ m.hora }}</span>
+                <span style="{{ m.estilo }}">{{ m.texto }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top: 8px; height: 40px; flex-shrink: 0; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: rgba(248,248,240,0.35)">Escrever pra equipe…</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isEditar }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em">TEXTO</div>
+        <div style="display: flex; gap: 8px">
+          <div style="flex-grow: 1; height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px">Montserrat</div>
+          <div style="width: 64px; height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px; box-sizing: border-box">64</div>
+        </div>
+        <div style="display: flex; gap: 4px; padding: 3px; background: rgba(0,0,0,0.28); border-radius: 8px">
+          <button style="flex-grow: 1; height: 30px; border: none; border-radius: 6px; background: transparent; font-size: 12px; cursor: pointer; color: rgba(248,248,240,0.5)">Esq.</button>
+          <button style="flex-grow: 1; height: 30px; border: none; border-radius: 6px; background: #f8f8f0; color: #161616; box-shadow: none; font-size: 12px; font-weight: 600; cursor: pointer">Centro</button>
+          <button style="flex-grow: 1; height: 30px; border: none; border-radius: 6px; background: transparent; font-size: 12px; cursor: pointer; color: rgba(248,248,240,0.5)">Dir.</button>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <div style="flex-grow: 1; height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; gap: 8px; font-size: 12px"><span style="width: 16px; height: 16px; border-radius: 3px; background: rgba(248,248,240,0.06); border: 1px solid rgba(248,248,240,0.3)"></span>Branco</div>
+          <div style="flex-grow: 1; height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px">Sombra leve</div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em; margin-top: 6px">CAIXA</div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <div style="height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px"><span style="color: rgba(248,248,240,0.5); width: 16px">X</span>160</div>
+          <div style="height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px"><span style="color: rgba(248,248,240,0.5); width: 16px">Y</span>720</div>
+          <div style="height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px"><span style="color: rgba(248,248,240,0.5); width: 16px">L</span>1600</div>
+          <div style="height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px"><span style="color: rgba(248,248,240,0.5); width: 16px">A</span>280</div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em; margin-top: 6px">FUNDO</div>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <div style="width: 64px; height: 36px; border-radius: 4px; background: #f8f8f0; flex-shrink: 0"></div>
+          <div style="flex-grow: 1; height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px">Vídeo · loop azul</div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); letter-spacing: 0.04em; margin-top: 6px">TRANSIÇÃO</div>
+        <div style="height: 36px; border: 1px solid rgba(248,248,240,0.13); border-radius: 6px; padding: 0 10px; display: flex; align-items: center; font-size: 12px">Esmaecer · 0,5 s</div>
+
+        <div style="margin-top: auto; border-top: 1px solid rgba(248,248,240,0.075); padding-top: 12px; display: flex; flex-direction: column; gap: 8px">
+          <button style="height: 40px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; background: rgba(248,248,240,0.06); cursor: pointer; font-size: 13px">Aplicar este estilo em todos os slides</button>
+          <button style="height: 40px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; background: rgba(248,248,240,0.06); cursor: pointer; font-size: 13px">Salvar como modelo…</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+
+  <!-- ================= POPOVERS ================= -->
+  <sc-if value="{{ menuApp }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 60px; left: 16px; width: 300px; background: rgba(28,28,31,0.82); border: 1px solid rgba(248,248,240,0.13); border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.13), 0 18px 40px rgba(0,0,0,0.5); backdrop-filter: blur(22px) saturate(150%); padding: 6px; display: flex; flex-direction: column">
+      <button onClick="{{ fechar }}" style="height: 40px; text-align: left; padding: 0 12px; border: none; background: transparent; border-radius: 6px; cursor: pointer">Configurações…</button>
+      <button onClick="{{ fechar }}" style="height: 40px; text-align: left; padding: 0 12px; border: none; background: transparent; border-radius: 6px; cursor: pointer">Telas e monitor de retorno…</button>
+      <button onClick="{{ fechar }}" style="height: 40px; text-align: left; padding: 0 12px; border: none; background: transparent; border-radius: 6px; cursor: pointer">Ferramentas da saída (desenhar, zoom)</button>
+      <button onClick="{{ fechar }}" style="height: 40px; text-align: left; padding: 0 12px; border: none; background: transparent; border-radius: 6px; cursor: pointer">Importar…</button>
+      <div style="height: 1px; background: rgba(248,248,240,0.075); margin: 4px 0"></div>
+      <button onClick="{{ fechar }}" style="height: 40px; text-align: left; padding: 0 12px; border: none; background: transparent; border-radius: 6px; cursor: pointer; color: rgba(248,248,240,0.5)">Atalhos · Ajuda · Sobre</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ menuSirvo }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 60px; left: 170px; width: 340px; background: rgba(28,28,31,0.82); border: 1px solid rgba(248,248,240,0.13); border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.13), 0 18px 40px rgba(0,0,0,0.5); backdrop-filter: blur(22px) saturate(150%); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5)">CULTO DO SIRVO</div>
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <span style="font-size: 13px">Conduz o culto</span><span style="width: 40px; height: 24px; border-radius: 12px; background: #5ec48d"></span>
+      </div>
+      <div style="font-size: 12px; color: rgba(248,248,240,0.5)">Material: 5 de 5 baixados · chat ligado</div>
+      <div style="height: 1px; background: rgba(248,248,240,0.075)"></div>
+      <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5)">SÓ NO PROTÓTIPO</div>
+      <button onClick="{{ alternarHorario }}" style="height: 40px; text-align: left; padding: 0 12px; border: 1px solid rgba(248,248,240,0.13); background: rgba(248,248,240,0.06); border-radius: 8px; cursor: pointer; font-size: 13px">{{ horarioTexto }}</button>
+      <button onClick="{{ trocarProporcao }}" style="height: 40px; text-align: left; padding: 0 12px; border: 1px solid rgba(248,248,240,0.13); background: rgba(248,248,240,0.06); border-radius: 8px; cursor: pointer; font-size: 13px">Proporção do telão: {{ proporcao }} (trocar)</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ menuTrazer }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 120px; left: 420px; width: 600px; background: rgba(28,28,31,0.82); border: 1px solid rgba(248,248,240,0.13); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.13), 0 18px 40px rgba(0,0,0,0.5); backdrop-filter: blur(22px) saturate(150%); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="height: 44px; border: 1px solid #f8f8f0; border-radius: 8px; display: flex; align-items: center; padding: 0 12px; color: rgba(248,248,240,0.5)">rompendo</div>
+      <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); padding-top: 4px">MÚSICAS</div>
+      <button onClick="{{ trazerMusica }}" style="height: 44px; text-align: left; padding: 0 12px; border: none; background: rgba(248,248,240,0.06); border-radius: 8px; cursor: pointer">Rompendo em fé · Impulso</button>
+      <div style="font-size: 12px; font-weight: 600; color: rgba(248,248,240,0.5); padding-top: 4px">BÍBLIA</div>
+      <button onClick="{{ trazerVerso }}" style="height: 44px; text-align: left; padding: 0 12px; border: none; background: transparent; border-radius: 8px; cursor: pointer">Romanos 8:28 · NVI</button>
+      <div style="font-size: 12px; color: rgba(248,248,240,0.5); padding-top: 4px">Enter adiciona ao fim do bloco atual · Shift+Enter já põe no ar · Esc fecha</div>
+    </div>
+  </sc-if>
+
+  <!-- botão direito num slide (Editar) -->
+  <sc-if value="{{ ctxAberto }}" hint-placeholder-val="{{ false }}">
+    <div role="menu" style="{{ ctxEstilo }}">
+      <div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 600; color: rgba(248,248,240,0.5)">{{ ctxTitulo }}</div>
+      <button role="menuitem" onClick="{{ ctxAr }}" style="height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: none; border-radius: 6px; background: rgba(242,26,39,0.14); color: #ff9aa0; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer">
+        <span style="width: 8px; height: 8px; border-radius: 4px; background: #f21a27"></span>
+        <span style="flex-grow: 1">Mandar pro ar</span>
+        <span style="font-size: 11px; font-weight: 400; color: #ff9aa0">todas as telas</span>
+      </button>
+      <div style="padding: 8px 10px 2px; font-size: 11px; font-weight: 600; color: rgba(248,248,240,0.5)">Mandar só para</div>
+      <button role="menuitem" onClick="{{ ctxTelao }}" style="height: 32px; padding: 0 10px 0 26px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f8f8f0">Telão</button>
+      <button role="menuitem" onClick="{{ ctxTransm }}" style="height: 32px; padding: 0 10px 0 26px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f8f8f0">Transmissão (saída 2)</button>
+      <button role="menuitem" onClick="{{ ctxRetorno }}" style="height: 32px; padding: 0 10px 0 26px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f8f8f0">Monitor de retorno</button>
+      <div style="height: 1px; background: rgba(248,248,240,0.075); margin: 4px 0"></div>
+      <button role="menuitem" onClick="{{ fecharCtx }}" style="height: 32px; padding: 0 10px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f8f8f0">Duplicar slide</button>
+      <button role="menuitem" onClick="{{ fecharCtx }}" style="height: 32px; padding: 0 10px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f8f8f0">Excluir slide</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ bibAberto }}" hint-placeholder-val="{{ false }}">
+    <div role="menu" onClick="{{ parar }}" style="{{ bibEstilo }}">
+      <div style="padding: 6px 10px 4px; font-size: 11px; font-weight: 600; color: rgba(248,248,240,0.5)">{{ bibTitulo }}</div>
+      <button role="menuitem" onClick="{{ bibEditar }}" style="height: 34px; padding: 0 10px; border: none; border-radius: 6px; background: rgba(248,248,240,0.1); color: #f8f8f0; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer">Editar</button>
+      <button role="menuitem" onClick="{{ bibRoteiro }}" style="height: 34px; padding: 0 10px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f8f8f0">＋ Adicionar ao roteiro</button>
+      <button role="menuitem" onClick="{{ bibAr }}" style="height: 34px; padding: 0 10px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f21a27">Mostrar agora (sem pôr no roteiro)</button>
+      <div style="height: 1px; background: rgba(248,248,240,0.075); margin: 4px 0"></div>
+      <button role="menuitem" onClick="{{ fecharCtx }}" style="height: 34px; padding: 0 10px; border: none; border-radius: 6px; background: transparent; font-size: 13px; text-align: left; cursor: pointer; color: #f8f8f0">Duplicar · Renomear · Excluir…</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ blocoAberto }}" hint-placeholder-val="{{ false }}">
+    <div role="dialog" aria-label="Tempo do bloco" onClick="{{ parar }}" style="{{ blocoPopEstilo }}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <span style="font-size: 13px; font-weight: 700">{{ blocoNome }} · no ar</span>
+        <span style="font-size: 11px; color: rgba(248,248,240,0.5)">{{ blocoDecorrido }}</span>
+      </div>
+      <div style="font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; color: #ff9aa0; line-height: 1.1; padding: 4px 0">{{ blocoRestante }} <span style="font-size: 13px; font-weight: 500; color: rgba(248,248,240,0.5)">restantes</span></div>
+      <div style="height: 4px; border-radius: 2px; background: rgba(248,248,240,0.1); overflow: hidden"><div style="{{ blocoBarra }}"></div></div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-top: 6px">
+        <button onClick="{{ menos5 }}" style="height: 40px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; background: rgba(248,248,240,0.06); font-size: 13px; font-weight: 600; cursor: pointer">−5</button>
+        <button onClick="{{ menos1 }}" style="height: 40px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; background: rgba(248,248,240,0.06); font-size: 13px; font-weight: 600; cursor: pointer">−1</button>
+        <button onClick="{{ mais1 }}" style="height: 40px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; background: rgba(248,248,240,0.06); font-size: 13px; font-weight: 600; cursor: pointer">+1</button>
+        <button onClick="{{ mais5 }}" style="height: 40px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; background: rgba(248,248,240,0.06); font-size: 13px; font-weight: 600; cursor: pointer">+5</button>
+      </div>
+      <div style="font-size: 11px; color: rgba(248,248,240,0.5); text-align: center">minutos no bloco</div>
+      <div style="height: 1px; background: rgba(248,248,240,0.075); margin: 4px 0"></div>
+      <button style="height: 44px; border: 1px solid #f21a27; border-radius: 8px; background: rgba(248,248,240,0.06); color: #f21a27; font-size: 13px; font-weight: 600; cursor: pointer">Segure pra encerrar o bloco</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ temAviso }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; z-index: 40; left: 50%; bottom: 24px; transform: translate(-50%, 0); display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 10px; background: #f8f8f0; color: #161616; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: subir 160ms ease-out">
+      <span style="width: 8px; height: 8px; border-radius: 4px; background: #f21a27"></span>{{ aviso }}
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      pagina: 'mostrar', menu: null, item: 'Grande é o Senhor', slide: 1, slideEd: 1, noArItem: 'Grande é o Senhor',
+      telao: true, horario: false, local: 'Aliança', dia: 'dom 16/11 · 18h',
+      wEsq: 280, wDir: 330, hBib: 260,
+      no: { shows: true }, sel: 'tudo', filtro: 'Músicas',
+      proporcao: '3:1', outrasAbertas: true, outraSel: 'transm', blocoPop: null, bibCtx: null, avulsos: [], extra: 0, limpos: {},
+      novos: [], editando: false, corrigidos: {}, pendentes: {}, ctx: null, aviso: null,
+      msg: 'Pastor, 5 min pro fim'
+    };
+    this.arrasto = null;
+  }
+  renderVals() {
+    const st = this.state;
+    const aoVivo = st.telao || st.horario;
+    const tab = (on) => 'height: 36px; padding: 0 22px; border: none; border-radius: 7px; font-size: 14px; font-weight: 600; cursor: pointer; ' + (on ? 'background: #f8f8f0; color: #161616; box-shadow: none' : 'background: transparent; color: rgba(248,248,240,0.5)');
+    // botão seletor: mostra só o escolhido; clicar abre as opções por cima
+    const seletor = (aberto, cresce) => 'height: 36px; min-width: 0; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-radius: 8px; background: rgba(248,248,240,0.06); font-size: 13px; font-weight: 600; cursor: pointer; color: #f8f8f0; box-sizing: border-box; ' + (cresce ? 'flex-grow: 1; ' : 'flex-shrink: 0; ') + (aberto ? 'border: 1px solid #f8f8f0; box-shadow: 0 0 0 3px rgba(248,248,240,0.14)' : 'border: 1px solid rgba(248,248,240,0.13)');
+    const pop = (top, left, largura, grade) => 'position: absolute; z-index: 20; top: ' + top + 'px; left: ' + left + 'px; width: ' + largura + '; max-height: 380px; overflow: auto; background: rgba(28,28,31,0.82); border: 1px solid rgba(248,248,240,0.13); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.13), 0 18px 40px rgba(0,0,0,0.5); backdrop-filter: blur(22px) saturate(150%); padding: 8px; box-sizing: border-box; transform-origin: top left; animation: surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1); ' + (grade ? 'display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px' : 'display: flex; flex-direction: column; gap: 2px');
+    const opcao = (on) => 'min-height: 40px; display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: none; border-radius: 8px; text-align: left; font-size: 13px; cursor: pointer; color: #f8f8f0; transition: background 120ms; ' + (on ? 'background: rgba(248,248,240,0.1); box-shadow: none' : 'background: transparent');
+    const chev = (aberto) => 'color: rgba(248,248,240,0.5); font-weight: 400; display: inline-block; transition: transform 160ms ease; transform: rotate(' + (aberto ? '180deg' : '0deg') + ')';
+    const corLocal = { 'Aliança': '#7ea6d8', 'Impulso': '#eba640' };
+    const topoPop = (aoVivo ? 30 : 0) + 36 + 42;
+
+    // roteiro
+    const base = [
+      { nome: 'Abertura', tempo: '5 min', itens: [['▶', 'Vinheta de abertura'], ['T', 'Boas-vindas']] },
+      { nome: 'Louvor', tempo: '20 min', itens: [['♪', 'Grande é o Senhor'], ['♪', 'Tu és fiel'], ['▶', 'Vídeo da campanha']] },
+      { nome: 'Palavra', tempo: '40 min', itens: [['✝', 'Romanos 8:28'], ['T', 'Slides da mensagem']] },
+      { nome: 'Encerramento', tempo: '5 min', itens: [['T', 'Avisos'], ['▶', 'Vinheta final']] }
+    ];
+    st.novos.forEach((n) => base[1].itens.push([n.tipo, n.nome, true]));
+    const todos = [];
+    const planos = [];
+    const blocoVivo = (base.find((b) => b.itens.some((x) => x[1] === st.noArItem)) || {}).nome;
+    const fmt = (seg) => { const m = Math.floor(Math.abs(seg) / 60), ss = Math.abs(seg) % 60; return (seg < 0 ? '+' : '') + m + ':' + String(ss).padStart(2, '0'); };
+    const blocos = base.map((b) => {
+      const vivo = st.telao && b.nome === blocoVivo;
+      const total = (parseInt(b.tempo, 10) + st.extra) * 60, gasto = 760;
+      return {
+      nome: b.nome, tempo: b.tempo, vivo, normal: !vivo,
+      restante: fmt(total - gasto),
+      decorrido: fmt(gasto) + ' de ' + fmt(total) + (st.extra ? ' (' + (st.extra > 0 ? '+' : '') + st.extra + ' min)' : ''),
+      barra: 'height: 100%; border-radius: 2px; background: #f21a27; width: ' + Math.min(100, Math.round(gasto / total * 100)) + '%',
+      total, gasto,
+      abrir: (e) => {
+        e.stopPropagation();
+        const raiz = e.currentTarget.closest('[data-raiz]');
+        const bx = raiz ? raiz.getBoundingClientRect() : { left: 0, top: 0, width: 1440 };
+        const esc = bx.width / 1440 || 1;
+        const r0 = e.currentTarget.getBoundingClientRect();
+        this.setState({ blocoPop: st.blocoPop ? null : { x: Math.min((r0.left - bx.left) / esc - 8, 1440 - 300), y: (r0.bottom - bx.top) / esc + 6 } });
+      },
+      botao: 'width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid ' + (st.blocoPop ? '#f21a27' : 'rgba(248,248,240,0.075)') + '; border-radius: 6px; background: ' + (st.blocoPop ? 'rgba(242,26,39,0.12)' : 'rgba(248,248,240,0.06)') + '; cursor: pointer; color: ' + (st.blocoPop ? '#ff9aa0' : 'rgba(248,248,240,0.7)'),
+      itens: b.itens.map(([tipo, nome, novo]) => {
+        todos.push(nome);
+        planos.push([tipo, nome]);
+        const sel = st.item === nome;
+        const noAr = st.telao && nome === st.noArItem;
+        return {
+          tipo, nome, novo: !!novo, noAr,
+          pick: () => this.setState({ item: nome, slideEd: 0, editando: false, menu: null }),
+          estilo: 'width: 100%; min-height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border: none; border-radius: 6px; text-align: left; font-size: 13px; cursor: pointer; color: #f8f8f0; ' + (sel ? 'background: rgba(248,248,240,0.1); box-shadow: inset 2px 0 0 #f8f8f0; font-weight: 600' : 'background: transparent')
+        };
+      })
+    }; });
+    const idx = todos.indexOf(st.item);
+
+    const locais = [['Aliança', 'Ministério Aliança'], ['Impulso', 'Igreja Impulso']].map(([l, sub]) => ({
+      nome: l, sub, estilo: opcao(st.local === l),
+      ponto: 'width: 10px; height: 10px; border-radius: 5px; flex-shrink: 0; background: ' + corLocal[l],
+      pick: () => this.setState({ local: l, menu: null })
+    }));
+    const diasBase = [['dom 16/11 · 18h', 'DOM', '16', '18h', 'hoje'], ['qua 19/11 · 20h', 'QUA', '19', '20h', ''], ['sáb 22/11 · 19h30', 'SÁB', '22', '19h30', 'jovens'], ['dom 23/11 · 10h', 'DOM', '23', '10h', ''], ['dom 23/11 · 18h', 'DOM', '23', '18h', '']];
+    const diasLista = diasBase.map(([d, semana, num, hora, sub]) => {
+      const on = st.dia === d;
+      return {
+        nome: d, semana, num, hora, sub,
+        tagEstilo: 'height: 14px; font-size: 10px; font-weight: 700; ' + (sub === 'hoje' ? 'color: ' + (on ? '#5ec48d' : '#5ec48d') : 'color: ' + (on ? 'rgba(22,22,22,0.6)' : 'rgba(248,248,240,0.5)')),
+        estilo: 'display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 4px 6px; border-radius: 10px; cursor: pointer; transition: background 120ms, transform 120ms; ' + (on ? 'border: 1px solid #f8f8f0; background: #f8f8f0; color: #161616' : 'border: 1px solid rgba(248,248,240,0.075); background: rgba(248,248,240,0.06); color: #f8f8f0'),
+        pick: () => this.setState({ dia: d, menu: null })
+      };
+    });
+    const avulsos = st.avulsos.filter((a) => !planos.some((x) => x[1] === a[1]));
+    const itensLista = avulsos.map((a, i) => [a[0], a[1], i === 0 ? 'Aberto da biblioteca' : '']).concat(planos.map(([t, n], i) => [t, n, i === 0 ? 'No roteiro' : ''])).map(([tipo, nome, secao]) => ({
+      tipo, nome, secao, check: st.item === nome ? '✓' : '', estilo: opcao(st.item === nome),
+      pick: () => this.setState({ item: nome, slideEd: 0, editando: false, menu: null })
+    }));
+
+    // slides
+    const rotulos = ['Intro', 'Verso 1', 'Coro', 'Verso 2', 'Coro', 'Ponte', 'Coro', 'Final'];
+    const textos = ['(instrumental)', 'Grande é o Senhor e mui digno de louvor', 'Nós te louvamos, Senhor', 'Na cidade do nosso Deus', 'Nós te louvamos, Senhor', 'Tu és digno', 'Nós te louvamos, Senhor', '(fim)'];
+    const cor = { 'Intro': '#8a8a92', 'Verso 1': '#7ea6d8', 'Verso 2': '#8cc7a6', 'Coro': '#d98ab4', 'Ponte': '#c9b07a', 'Final': '#8a8a92' };
+    const itemEhNoAr = st.item === st.noArItem;
+    const chave = (i) => st.item + '#' + i;
+    const textoDe = (i) => textos[i] + (st.corrigidos[chave(i)] ? ' (corrigido)' : '');
+    const mandar = (i, destino) => {
+      const k = chave(i);
+      const pend = Object.assign({}, st.pendentes); delete pend[k];
+      const rot = rotulos[i];
+      const quando = destino && destino !== 'Telão' ? {} : { slide: i, noArItem: st.item, telao: true, pendentes: pend };
+      this.setState(Object.assign(quando, { ctx: null,
+        aviso: destino ? rot + ' foi só para: ' + destino : 'No ar: ' + rot + (st.corrigidos[k] ? ' (versão corrigida)' : '') }));
+      clearTimeout(this.tAviso); this.tAviso = setTimeout(() => this.setState({ aviso: null }), 2400);
+    };
+    const abrirCtx = (i) => (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const raiz = e.currentTarget.closest('[data-raiz]');
+      const b = raiz ? raiz.getBoundingClientRect() : { left: 0, top: 0, width: 1440 };
+      const esc = b.width / 1440 || 1;
+      this.setState({ ctx: { i, x: Math.min((e.clientX - b.left) / esc, 1440 - 270), y: Math.min((e.clientY - b.top) / esc, 900 - 320) }, slideEd: i, menu: null });
+    };
+    const slides = rotulos.map((r, i) => {
+      const noAr = st.telao && itemEhNoAr && st.slide === i;
+      const ed = st.slideEd === i;
+      return {
+        rotulo: r, texto: textoDe(i), textoAtual: textoDe(i), noAr, editado: !!st.pendentes[chave(i)],
+        ctx: abrirCtx(i),
+        faixaEstilo: 'height: 22px; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 4px 0 8px; font-size: 11px; font-weight: 600; color: rgba(248,248,240,0.85); background: rgba(0,0,0,0.55); box-shadow: inset 3px 0 0 ' + cor[r],
+        pick: () => { const pend = Object.assign({}, st.pendentes); delete pend[chave(i)]; this.setState({ slide: i, noArItem: st.item, telao: true, pendentes: pend }); },
+        pickEd: () => this.setState({ slideEd: i, editando: false }),
+        estilo: 'aspect-ratio: 16 / 10.5; display: flex; flex-direction: column; padding: 0; border: none; border-radius: 4px; overflow: hidden; cursor: pointer; background: radial-gradient(90% 120% at 22% 18%, #5b3aa8 0%, transparent 60%), radial-gradient(80% 110% at 85% 90%, #b4366b 0%, transparent 62%), linear-gradient(160deg, #1d1446, #120a22); ' + (noAr ? 'outline: 3px solid #f21a27; outline-offset: 2px' : 'outline: 1px solid rgba(248,248,240,0.075)'),
+        miniEstilo: 'width: 100%; aspect-ratio: 16 / 9; flex-shrink: 0; display: flex; flex-direction: column; padding: 0; border-radius: 6px; overflow: hidden; background: radial-gradient(90% 120% at 22% 18%, #5b3aa8 0%, transparent 60%), radial-gradient(80% 110% at 85% 90%, #b4366b 0%, transparent 62%), linear-gradient(160deg, #1d1446, #120a22); cursor: pointer; box-sizing: border-box; ' + (ed ? 'border: 2px solid #f8f8f0' : (noAr ? 'border: 2px solid #f21a27' : 'border: 1px solid rgba(248,248,240,0.13)'))
+      };
+    });
+
+    // edição: livre, sempre. O telão só troca quando o slide for mandado pro ar de novo.
+    const slideEdNoAr = st.telao && itemEhNoAr && st.slideEd === st.slide;
+    const kEd = chave(st.slideEd);
+    const tocarTexto = () => {
+      const marca = {}; marca[kEd] = true;
+      this.setState({ editando: true, corrigidos: Object.assign({}, st.corrigidos, marca), pendentes: Object.assign({}, st.pendentes, marca) });
+    };
+    const pendenteNoAr = slideEdNoAr && !!st.pendentes[kEd];
+    const notaEdicao = slideEdNoAr
+      ? (pendenteNoAr ? '' : 'Este slide está no ar. Pode editar: o telão só muda quando você mandar pro ar de novo.')
+      : 'Clique no texto para editar (no protótipo, clicar simula uma correção). Salva sozinho.';
+    const noArK = st.noArItem + '#' + st.slide;
+    const noArTextoBase = textos[st.slide] + (st.corrigidos[noArK] && !st.pendentes[noArK] ? ' (corrigido)' : '');
+
+    // biblioteca
+    const arvoreBase = [
+      { id: 'shows', nome: 'Shows', filhos: [['tudo', 'Tudo', '16'], ['semetq', 'Sem etiqueta', '1'], ['cancoes', 'Canções', '3'], ['impulso', 'Impulso', '12'], ['propre', 'ProPresenter', '']] },
+      { id: 'midia', nome: 'Mídia', filhos: [['midias', 'Mídias', '2'], ['persiste', 'Persiste', ''], ['nuvem', 'Veio da nuvem', ''], ['dosirvo', 'Do Sirvo', '']] },
+      { id: 'audio', nome: 'Áudio', filhos: [['trilhas', 'Trilhas', ''], ['efeitos', 'Efeitos', '']] },
+      { id: 'biblia', nome: 'Bíblia', filhos: [['nvi', 'NVI', ''], ['ara', 'ARA', '']] },
+      { id: 'sobre', nome: 'Sobreposições', filhos: [] },
+      { id: 'modelos', nome: 'Modelos', filhos: [] }
+    ];
+    const raizDe = (sel) => (arvoreBase.find((n) => n.id === sel || n.filhos.some((f) => f[0] === sel)) || arvoreBase[0]).id;
+    const raizSel = raizDe(st.sel);
+    const arvore = arvoreBase.map((n) => {
+      const aberto = !!st.no[n.id];
+      const ativo = st.sel === n.id;
+      return {
+        nome: n.nome, seta: n.filhos.length ? (aberto ? '▾' : '▸') : '', aberto,
+        conta: '',
+        pick: () => this.setState({ no: aberto ? {} : { [n.id]: true }, sel: n.id }),
+        estilo: 'width: 100%; height: 28px; display: flex; align-items: center; gap: 4px; padding: 0 6px; border: none; border-radius: 6px; text-align: left; font-size: 13px; font-weight: 600; cursor: pointer; color: #f8f8f0; ' + (ativo ? 'background: rgba(248,248,240,0.1)' : 'background: transparent'),
+        filhos: n.filhos.map(([id, nome, conta]) => ({
+          nome, conta,
+          pick: () => this.setState({ sel: id }),
+          estilo: 'width: 100%; height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 8px; border: none; border-radius: 6px; text-align: left; font-size: 12px; cursor: pointer; color: #f8f8f0; ' + (st.sel === id ? 'background: rgba(248,248,240,0.1); box-shadow: inset 2px 0 0 #f8f8f0; font-weight: 600' : 'background: transparent')
+        }))
+      };
+    });
+    const filtrosPor = { shows: ['Músicas', 'Apresentações', 'Sem letra'], midia: ['Vídeo', 'Foto', 'Áudio'], biblia: ['Romanos', 'Salmos', 'João'], audio: ['Trilhas', 'Efeitos'], sobre: ['Todas'], modelos: ['Todos'] };
+    const filtros = (filtrosPor[raizSel] || []).map((f) => ({
+      nome: f, pick: () => this.setState({ filtro: f }),
+      estilo: 'height: 28px; padding: 0 10px; border-radius: 14px; font-size: 12px; cursor: pointer; ' + (st.filtro === f ? 'border: 1px solid #f8f8f0; background: #f8f8f0; color: #161616' : 'border: 1px solid rgba(248,248,240,0.13); background: rgba(248,248,240,0.06); color: #f8f8f0')
+    }));
+    const addRot = (tipo, nome) => () => this.setState({ novos: st.novos.concat([{ tipo, nome }]) });
+    const ctxBib = (tipo, nome) => (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const raiz = e.currentTarget.closest('[data-raiz]');
+      const b = raiz ? raiz.getBoundingClientRect() : { left: 0, top: 0, width: 1440 };
+      const esc = b.width / 1440 || 1;
+      this.setState({ bibCtx: { tipo, nome, x: Math.min((e.clientX - b.left) / esc, 1440 - 280), y: Math.min((e.clientY - b.top) / esc, 900 - 220) }, ctx: null, menu: null });
+    };
+    let conteudo = [];
+    if (raizSel === 'shows') {
+      conteudo = [['Queremos Te Ver', 'Impulso'], ['Quero Ser Como Você', 'Impulso'], ['Saudade', 'Impulso'], ['Te Adoraremos', 'Impulso'], ['Bondade de Deus', 'Canções'], ['Ousado Amor', 'Canções'], ['Grande é o Senhor', 'Canções'], ['Tu és fiel', 'Canções']].map(([n, s]) => ({ nome: n, sub: s, add: addRot('♪', n), ctx: ctxBib('♪', n) }));
+    } else if (raizSel === 'biblia') {
+      conteudo = [['Romanos 8:28', 'NVI · todas as coisas cooperam'], ['Romanos 8:31', 'NVI · se Deus é por nós'], ['Romanos 8:38-39', 'NVI · nada nos separará'], ['Romanos 12:2', 'NVI · não vos conformeis']].map(([n, s]) => ({ nome: n, sub: s, add: addRot('✝', n), ctx: ctxBib('✝', n) }));
+    } else if (raizSel === 'midia') {
+      const cores = ['linear-gradient(160deg, #1d1446, #5b3aa8)', 'linear-gradient(160deg, #0d2a33, #1f6f86)', 'linear-gradient(160deg, #2a070c, #7a1020)', 'linear-gradient(180deg, #1b130c, #c26a1c)', 'linear-gradient(160deg, #151515, #3a3a3a)', 'linear-gradient(160deg, #0d2a33, #8cc7a6)', 'linear-gradient(160deg, #2c1a0c, #b4366b)'];
+      conteudo = ['f1', 'v1', 'loop azul', 'cruz', 'nuvens', 'mar', 'pôr do sol'].map((n, i) => ({ nome: n, add: addRot('▶', n), ctx: ctxBib('▶', n), thumb: 'aspect-ratio: 16 / 9; border-radius: 6px; background: ' + cores[i] }));
+    } else {
+      conteudo = [['Item de exemplo', 'arraste ou use ＋ roteiro'], ['Outro item', '']].map(([n, s]) => ({ nome: n, sub: s, add: addRot('T', n), ctx: ctxBib('T', n) }));
+    }
+
+    // tamanhos (as mesmas colunas servem aos dois modos)
+    const colEsq = 'width: ' + st.wEsq + 'px; flex-shrink: 0; background: rgba(19,19,21,0.62); border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.075); display: flex; flex-direction: column; min-height: 0; position: relative';
+    const colDir = 'width: ' + st.wDir + 'px; flex-shrink: 0; background: rgba(19,19,21,0.62); border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.075); display: flex; flex-direction: column; padding: 12px; gap: 10px; box-sizing: border-box; overflow: auto';
+    const caixaBib = 'height: ' + st.hBib + 'px; flex-shrink: 0; background: rgba(19,19,21,0.62); border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.075); overflow: hidden; display: flex; flex-direction: column; min-height: 0';
+    const arvoreCol = 'width: ' + st.wEsq + 'px; flex-shrink: 0; overflow: auto; padding: 6px; box-sizing: border-box';
+    const divV = 'width: 8px; flex-shrink: 0; cursor: col-resize; display: flex; align-items: center; justify-content: center; background: transparent';
+    const divH = 'height: 8px; flex-shrink: 0; cursor: row-resize; display: flex; align-items: center; justify-content: center; background: transparent';
+
+    const pegar = (qual) => (e) => { e.preventDefault(); this.arrasto = { qual, x: e.clientX, y: e.clientY, v: st[qual] }; };
+    const alternar = (m) => () => this.setState({ menu: st.menu === m ? null : m });
+    const editarTela = 'position: relative; height: 100%; max-height: 100%; max-width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; background: radial-gradient(90% 120% at 22% 18%, #5b3aa8 0%, transparent 60%), radial-gradient(80% 110% at 85% 90%, #b4366b 0%, transparent 62%), linear-gradient(160deg, #1d1446, #120a22); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 34px; line-height: 1.12; text-align: center; padding: 24px 48px; cursor: text; box-sizing: border-box; font-family: Montserrat, Arial Black, sans-serif; font-weight: 900; text-shadow: 0 3px 16px rgba(0,0,0,0.45); ' + (slideEdNoAr ? 'outline: 3px solid #f21a27; outline-offset: 3px' : (st.editando ? 'outline: 2px solid #f8f8f0; outline-offset: 3px' : 'outline: 1px solid rgba(248,248,240,0.13)'));
+
+    // NO AR: proporção real do telão, camadas de cima pra baixo
+    const [pw, ph] = st.proporcao.split(':').map(Number);
+    const telaoPreview = 'width: 100%; aspect-ratio: ' + pw + ' / ' + ph + '; max-height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; ' + (st.telao && !st.limpos.fundo ? 'background: radial-gradient(90% 120% at 22% 18%, #5b3aa8 0%, transparent 60%), radial-gradient(80% 110% at 85% 90%, #b4366b 0%, transparent 62%), linear-gradient(160deg, #1d1446, #120a22)' : 'background: #000000') + '; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12)';
+    const telaoTextoEstilo = 'color: #FFFFFF; font-size: 13px; line-height: 1.12; text-align: center; padding: 6px 12px; font-family: Montserrat, Arial Black, sans-serif; font-weight: 900; text-shadow: 0 2px 10px rgba(0,0,0,0.45); ' + (st.telao && !st.limpos.texto ? '' : 'visibility: hidden');
+    const icones = {
+      sobre: 'M5.5 2.5h8v6h-8z M2.5 6.5v7h8',
+      texto: 'M3.5 3.5h9 M8 3.5v9.5',
+      fundo: 'M2.5 3.5h11v9h-11z M2.5 10.5l3.5-3 2.5 2 2-1.5 3 2.5',
+      audio: 'M6 11.5v-8l7-1.5v8 M6 11.5a1.8 1.8 0 1 1-3.6 0a1.8 1.8 0 1 1 3.6 0 M13 10a1.8 1.8 0 1 1-3.6 0a1.8 1.8 0 1 1 3.6 0',
+      tudo: 'M4 4l8 8 M12 4l-8 8'
+    };
+    const cores = { sobre: '#d98ab4', texto: '#f8f8f0', fundo: '#8cc7a6', audio: '#eba640' };
+    const camadas = [['sobre', 'Limpar sobreposição · F3'], ['texto', 'Limpar texto · F2'], ['fundo', 'Limpar fundo · F1'], ['audio', 'Parar áudio · F4'], ['tudo', 'Segure pra limpar tudo · Esc']].map(([id, aria]) => {
+      const tudo = id === 'tudo';
+      const limpo = !tudo && (!!st.limpos[id] || !st.telao);
+      return {
+        aria, d: icones[id],
+        estilo: 'flex: 1 1 0; min-height: 26px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 5px; cursor: pointer; ' + (tudo ? 'margin-top: 4px; border: 1px solid #f21a27; background: rgba(248,248,240,0.06); color: #f21a27' : (limpo ? 'border: 1px solid rgba(248,248,240,0.075); background: rgba(248,248,240,0.06); color: rgba(248,248,240,0.2)' : 'border: 1px solid rgba(248,248,240,0.13); background: rgba(248,248,240,0.06); color: ' + cores[id])),
+        limpar: () => this.setState({ limpos: tudo ? { sobre: true, texto: true, fundo: true, audio: true } : Object.assign({}, st.limpos, { [id]: !st.limpos[id] }) })
+      };
+    });
+    const outrasBase = [
+      { id: 'transm', curto: 'Transmissão', w: 16, h: 9, estado: 'Saída 2 · 16:9 · letra sem fundo', fundo: '#000000', texto: true },
+      { id: 'retorno', curto: 'Retorno', w: 16, h: 9, estado: 'Monitor de retorno · letra + próximo', fundo: 'rgba(248,248,240,0.42)', texto: true },
+      { id: 'lateral', curto: 'Lateral', w: 9, h: 16, estado: 'Telão lateral · 9:16 · desligado', fundo: '#2A2A27', texto: false }
+    ];
+    const outraAtual = outrasBase.find((o) => o.id === st.outraSel) || outrasBase[0];
+    const outras = outrasBase.map((o) => ({
+      curto: o.curto,
+      pick: () => this.setState({ outraSel: o.id, outrasAbertas: true }),
+      aba: 'flex-grow: 1; height: 26px; border: none; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 120ms; ' + (o.id === st.outraSel && st.outrasAbertas ? 'background: #f8f8f0; color: #161616; box-shadow: none' : 'background: transparent; color: rgba(248,248,240,0.5)')
+    }));
+    const vivoB = blocos.find((b) => b.vivo);
+    const bp = st.blocoPop;
+    const chat = [
+      ['Rayane · Louvor', '18:31', 'Vamos repetir o coro 2x no final', false],
+      ['Pedro · Som', '18:36', 'Microfone 3 voltou', false],
+      ['Pr. Marcos', '18:40', 'Entra o vídeo da campanha depois dessa', true],
+      ['Rayane · Louvor', '18:41', 'ok, emendando', true]
+    ].map(([quem, hora, texto, nova]) => ({ quem, hora, texto, estilo: 'font-size: 13px; line-height: 1.35; padding: 6px 8px; border-radius: 8px; ' + (nova ? 'background: rgba(242,26,39,0.12); color: #f8f8f0' : 'background: rgba(248,248,240,0.06); color: #f8f8f0') }));
+    const ordemProp = ['3:1', '16:9', '21:9', '4:3'];
+
+    const luzLigada = st.telao && !st.limpos.fundo;
+    const programa = 'flex-grow: 1; min-width: 0; min-height: 168px; display: flex; align-items: center; justify-content: center; background: #000000; border-radius: 6px; overflow: hidden; padding: 3px; box-sizing: border-box; ' + (st.telao ? 'box-shadow: 0 0 0 3px #f21a27' : 'box-shadow: 0 0 0 1px rgba(248,248,240,0.13)');
+    return {
+      programa,
+      ambiente: 'position: absolute; inset: 0; z-index: 0; pointer-events: none; transition: opacity 400ms; opacity: ' + (luzLigada ? '0.55' : '0') + '; background: radial-gradient(70% 90% at 78% 28%, #5b3aa8 0%, transparent 62%), radial-gradient(60% 80% at 25% 90%, #b4366b 0%, transparent 60%), linear-gradient(160deg, #2a1650, #120a22)',
+      telaoPreview, telaoTextoEstilo, camadas, outras, chat, proporcao: st.proporcao,
+      outraPreview: 'height: 100%; max-height: 156px; width: 100%; max-width: 100%; aspect-ratio: ' + outraAtual.w + ' / ' + outraAtual.h + '; display: flex; align-items: center; justify-content: center; background: ' + outraAtual.fundo + '; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12)' + (outraAtual.h > outraAtual.w ? '; width: auto' : ''),
+      outraTextoEstilo: 'color: #FFFFFF; font-size: 12px; line-height: 1.12; text-align: center; padding: 6px 12px; font-family: Montserrat, Arial Black, sans-serif; font-weight: 900; ' + (outraAtual.texto && st.telao && !st.limpos.texto ? '' : 'visibility: hidden'),
+      foraRoteiro: !todos.includes(st.item),
+      bibAberto: !!st.bibCtx, bibTitulo: st.bibCtx ? st.bibCtx.nome : '',
+      bibEstilo: st.bibCtx ? 'position: absolute; z-index: 30; left: ' + st.bibCtx.x + 'px; top: ' + st.bibCtx.y + 'px; width: 260px; background: rgba(28,28,31,0.82); border: 1px solid rgba(248,248,240,0.13); border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.13), 0 18px 40px rgba(0,0,0,0.5); backdrop-filter: blur(22px) saturate(150%); padding: 6px; display: flex; flex-direction: column; gap: 2px; transform-origin: top left; animation: surgir 120ms ease-out' : '',
+      bibEditar: () => { const c = st.bibCtx; this.setState({ pagina: 'editar', item: c.nome, slideEd: 0, editando: false, bibCtx: null, avulsos: [[c.tipo, c.nome]].concat(st.avulsos.filter((a) => a[1] !== c.nome)).slice(0, 5) }); },
+      bibRoteiro: () => { const c = st.bibCtx; this.setState({ novos: st.novos.concat([{ tipo: c.tipo, nome: c.nome }]), bibCtx: null }); },
+      bibAr: () => { const c = st.bibCtx; this.setState({ noArItem: c.nome, slide: 0, telao: true, bibCtx: null, aviso: 'No ar: ' + c.nome + ' (fora do roteiro)' }); clearTimeout(this.tAviso); this.tAviso = setTimeout(() => this.setState({ aviso: null }), 2400); },
+      outraTexto: noArTextoBase, outraEstado: outraAtual.estado,
+      blocoAberto: !!(bp && vivoB),
+      blocoPopEstilo: bp ? 'position: absolute; z-index: 30; left: ' + bp.x + 'px; top: ' + bp.y + 'px; width: 280px; background: rgba(28,28,31,0.82); border: 1px solid rgba(248,248,240,0.13); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.13), 0 18px 40px rgba(0,0,0,0.5); backdrop-filter: blur(22px) saturate(150%); padding: 12px; display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; transform-origin: top left; animation: surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1)' : '',
+      blocoNome: vivoB ? vivoB.nome : '', blocoRestante: vivoB ? vivoB.restante : '', blocoDecorrido: vivoB ? vivoB.decorrido : '',
+      blocoBarra: vivoB ? vivoB.barra : '',
+      parar: (e) => e.stopPropagation(),
+      menos5: () => this.setState({ extra: Math.max(-15, st.extra - 5) }), menos1: () => this.setState({ extra: Math.max(-15, st.extra - 1) }),
+      mais1: () => this.setState({ extra: st.extra + 1 }), mais5: () => this.setState({ extra: st.extra + 5 }),
+      outrasAbertas: st.outrasAbertas,
+      alternarOutras: () => this.setState({ outrasAbertas: !st.outrasAbertas }),
+      chevOutras: 'color: rgba(248,248,240,0.5); display: inline-block; transition: transform 160ms ease; transform: rotate(' + (st.outrasAbertas ? '90deg' : '0deg') + ')',
+      resumoOutras: '3 · 2 ligadas',
+      limparAudio: () => this.setState({ limpos: Object.assign({}, st.limpos, { audio: !st.limpos.audio }) }),
+      audioEstilo: 'height: 40px; padding: 0 10px; border: 1px solid rgba(248,248,240,0.13); border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; ' + (st.limpos.audio ? 'background: rgba(248,248,240,0.06); color: rgba(248,248,240,0.3)' : 'background: rgba(248,248,240,0.06); color: #f8f8f0'),
+      trocarProporcao: () => this.setState({ proporcao: ordemProp[(ordemProp.indexOf(st.proporcao) + 1) % ordemProp.length] }),
+      raiz: 'width: 1440px; height: 900px; box-sizing: border-box; display: flex; flex-direction: column; background: #0d0d0f; font-family: Archivo, Segoe UI, system-ui, sans-serif; font-variation-settings: "wdth" 96; -webkit-font-smoothing: antialiased; color: #f8f8f0; font-size: 13px; position: relative; overflow: hidden; padding: 0 10px 10px; user-select: ' + (this.arrasto ? 'none' : 'auto'),
+      mover: (e) => {
+        const a = this.arrasto; if (!a) return;
+        const dx = e.clientX - a.x, dy = e.clientY - a.y;
+        const lim = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+        if (a.qual === 'wEsq') this.setState({ wEsq: lim(a.v + dx, 200, 460) });
+        if (a.qual === 'wDir') this.setState({ wDir: lim(a.v - dx, 260, 460) });
+        if (a.qual === 'hBib') this.setState({ hBib: lim(a.v - dy, 140, 560) });
+      },
+      soltar: () => { if (this.arrasto) { this.arrasto = null; this.forceUpdate(); } },
+      pegarEsq: pegar('wEsq'), pegarDir: pegar('wDir'), pegarBib: pegar('hBib'),
+      colEsq, colDir, caixaBib, arvoreCol, divV, divH,
+
+      tabMostrar: tab(st.pagina === 'mostrar'), tabEditar: tab(st.pagina === 'editar'),
+      irMostrar: () => this.setState({ pagina: 'mostrar', menu: null, ctx: null }),
+      irEditar: () => this.setState({ pagina: 'editar', menu: null }),
+      isMostrar: st.pagina === 'mostrar', isEditar: st.pagina === 'editar',
+      dicaCentro: st.pagina === 'mostrar' ? 'clique num slide = no ar · ← → avançam' : 'clique no texto para editar',
+
+      aoVivo, motivoVivo: st.telao ? 'telão ligado' : 'horário do culto',
+      local: st.local, dia: st.dia,
+      cultoRotulo: st.local + ' · ' + st.dia,
+      selLocalEstilo: seletor(st.menu === 'local', false),
+      localPonto: 'width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; background: ' + corLocal[st.local],
+      chevLocal: chev(st.menu === 'local'), chevDia: chev(st.menu === 'dia'), chevItem: chev(st.menu === 'itemEd'),
+      diaEhHoje: st.dia === 'dom 16/11 · 18h',
+      selDiaEstilo: seletor(st.menu === 'dia', true),
+      selItemEstilo: seletor(st.menu === 'itemEd', true) + '; width: 100%',
+      abrirLocal: alternar('local'), abrirDia: alternar('dia'), abrirItemEd: alternar('itemEd'),
+      menuLocal: st.menu === 'local', menuDia: st.menu === 'dia', menuItemEd: st.menu === 'itemEd',
+      popLocal: pop(topoPop, 12, '240px'),
+      popDia: pop(topoPop, 12, 'calc(100% - 24px)', true),
+      popItem: pop(topoPop, 12, 'calc(100% - 24px)'),
+      locais, diasLista, itensLista,
+      blocos, totalItens: todos.length, totalSlides: rotulos.length,
+      itemAtual: st.item, itemProximo: idx >= 0 && idx < todos.length - 1 ? todos[idx + 1] : '—',
+      itemNoArVivo: st.telao && itemEhNoAr,
+      slides,
+
+      tocarTexto, edNoAr: slideEdNoAr, pendenteNoAr, mandarEsteAr: () => mandar(st.slideEd),
+      ctxCanvas: abrirCtx(st.slideEd),
+      ctxAberto: !!st.ctx,
+      ctxEstilo: st.ctx ? 'position: absolute; z-index: 30; left: ' + st.ctx.x + 'px; top: ' + st.ctx.y + 'px; width: 250px; background: rgba(28,28,31,0.82); border: 1px solid rgba(248,248,240,0.13); border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(248,248,240,0.13), 0 18px 40px rgba(0,0,0,0.5); backdrop-filter: blur(22px) saturate(150%); padding: 6px; display: flex; flex-direction: column; gap: 2px; transform-origin: top left; animation: surgir 120ms ease-out' : '',
+      ctxTitulo: st.ctx ? rotulos[st.ctx.i] + ' · ' + st.item : '',
+      ctxAr: (e) => { e.stopPropagation(); mandar(st.ctx.i); },
+      ctxTelao: (e) => { e.stopPropagation(); mandar(st.ctx.i, 'Telão'); },
+      ctxTransm: (e) => { e.stopPropagation(); mandar(st.ctx.i, 'Transmissão'); },
+      ctxRetorno: (e) => { e.stopPropagation(); mandar(st.ctx.i, 'Monitor de retorno'); },
+      fecharCtx: () => { if (st.ctx || st.blocoPop || st.bibCtx) this.setState({ ctx: null, blocoPop: null, bibCtx: null }); },
+      temAviso: !!st.aviso, aviso: st.aviso || '',
+      telaEdicao: editarTela,
+      textoEdicao: textoDe(st.slideEd) + (st.editando ? ' |' : ''),
+      notaEdicao,
+
+      arvore, filtros, conteudo, listaLinhas: raizSel !== 'midia', listaGrade: raizSel === 'midia',
+
+      noArTexto: st.telao ? noArTextoBase : '',
+      proximoTexto: st.slide < 7 ? rotulos[st.slide + 1] : 'próximo item',
+      msgPalco: st.msg, enviarPalco: () => this.setState({ msg: 'Enviado ✓  ·  escreva outra' }),
+
+      telaoTexto: st.telao ? 'Telão no ar · 00:42' : 'Ligar telão',
+      telaoEstilo: 'height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; ' + (st.telao ? 'background: #f21a27; color: #FFFFFF; border: 1px solid #f21a27' : 'background: rgba(248,248,240,0.06); color: #f8f8f0; border: 1px solid rgba(248,248,240,0.3)'),
+      telaoPonto: 'width: 8px; height: 8px; border-radius: 4px; ' + (st.telao ? 'background: rgba(248,248,240,0.06)' : 'background: rgba(248,248,240,0.3)'),
+      alternarTelao: () => this.setState({ telao: !st.telao }),
+
+      menuApp: st.menu === 'app', menuSirvo: st.menu === 'sirvo', menuTrazer: st.menu === 'trazer',
+      abrirApp: alternar('app'),
+      abrirSirvo: alternar('sirvo'),
+      abrirTrazer: () => this.setState({ menu: 'trazer' }),
+      fechar: () => this.setState({ menu: null }),
+      horarioTexto: st.horario ? 'Simular: fora do horário do culto' : 'Simular: chegou o horário do culto',
+      alternarHorario: () => this.setState({ horario: !st.horario, menu: null }),
+      trazerMusica: () => this.setState({ novos: st.novos.concat([{ tipo: '♪', nome: 'Rompendo em fé' }]), menu: null }),
+      trazerVerso: () => this.setState({ novos: st.novos.concat([{ tipo: '✝', nome: 'Romanos 8:28 (NVI)' }]), menu: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

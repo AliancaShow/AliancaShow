@@ -1,3 +1,4 @@
+import { falhaAlta } from "../../utils/aliancaFalha"
 import { get } from "svelte/store"
 import { uid } from "uid"
 import { EXPORT, OUTPUT } from "../../../types/Channels"
@@ -45,7 +46,6 @@ import {
     events,
     focusMode,
     forceClock,
-    guideActive,
     interactions,
     livePrepare,
     media,
@@ -227,7 +227,8 @@ const clickActions = {
     shortcuts: () => activePopup.set("shortcuts"),
     about: () => activePopup.set("about"),
     quick_search: () => quickSearchActive.set(true),
-    quick_start_guide: () => guideActive.set(true),
+    // leiaute v2: o guia de primeiros passos deixou de existir; quem ainda o pedir acende a faixa de falha (nunca cai calado)
+    quick_start_guide: () => falhaAlta("guia-sem-lugar", "quick_start_guide"),
 
     // main
     custom_text: () => activePopup.set("custom_text"),

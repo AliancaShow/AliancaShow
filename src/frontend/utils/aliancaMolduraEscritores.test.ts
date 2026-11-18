@@ -22,6 +22,7 @@ export const DINAMICOS: Record<string, string[]> = {
     "components/quicksearch/quicksearch.ts": ["id as any"],
     "components/helpers/history.ts": ["obj.location!.page"],
     "components/main/Top.svelte": ["user.activePage as any"],
+    "components/main/AliancaMenuApp.svelte": ["p"],
     "utils/aliancaMoldura.ts": ["alvoSeguro()", "alvo"]
 }
 

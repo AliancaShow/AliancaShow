@@ -21,16 +21,15 @@ import { importFromClipboard } from "../converters/importHelpers"
 import { addSection } from "../converters/project"
 import { requestMain, sendMain } from "../IPC/main"
 import { changeSlidesView } from "../show/slides"
-import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, drawer, editMode, focusedArea, focusMode, guideActive, media, modoAlianca, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, refreshListBoxes, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
+import { activeDrawerTab, activeEdit, activeFocus, activePage, activePopup, activeProject, activeStage, alertMessage, audioChannelsData, contextActive, editMode, focusedArea, focusMode, guideActive, media, modoAlianca, os, outLocked, outputs, playingVideoState, projects, quickSearchActive, refreshEditSlide, refreshListBoxes, selected, showRecentlyUsedProjects, special, spellcheck, styles, timelineRecordingAction, topContextActive } from "../stores"
 import { audioExtensions, imageExtensions, videoExtensions } from "../values/extensions"
 import { drawerTabs } from "../values/tabs"
 import { activeShow } from "./../stores"
 import { abaEscondidaNoEditor } from "./aliancaAbasEditor"
 import { dividirAberto } from "./aliancaDividir"
 import { listaAberta } from "./aliancaGavetaEstado"
-import { voltarDaPagina } from "./aliancaMoldura"
 import { teclaIgnorada, timelineAtiva } from "./aliancaModo"
-import { isOutputWindow, togglePanels, triggerFunction } from "./common"
+import { isOutputWindow, triggerFunction } from "./common"
 import { send } from "./request"
 import { save } from "./save"
 
@@ -56,7 +55,6 @@ const ctrlKeys = {
         }),
     o: () => (teclaIgnorada({ key: "o", ctrlKey: true }) ? null : toggleOutputs()),
     s: () => save(),
-    t: () => togglePanels(),
     y: () => (redo(), atualizarCaixasDaLista()),
     z: () => (undo(), atualizarCaixasDaLista()),
     "?": () => activePopup.set("shortcuts")
@@ -129,10 +127,7 @@ const keys = {
         const fecharDividir = !popupId && !get(selected).id && !!get(dividirAberto)
         // F6: a lista das marcações da gaveta fecha antes da gaveta (e não depende da altura dela); o Esc nunca limpa as marcações
         const fecharLista = !popupId && !get(selected).id && !fecharDividir && get(listaAberta)
-        // 1b: em stage/settings a gaveta nem aparece: o Esc volta da moldura (e a gaveta continua aberta ao chegar em show)
-        const voltarDaGaveta = !popupId && !get(selected).id && !fecharDividir && !fecharLista && get(drawer).height > 40 && ["show", "edit"].includes(get(activePage))
-        const voltarDoEditor = !popupId && !get(selected).id && !fecharDividir && !fecharLista && !voltarDaGaveta && get(activePage) === "edit" && !get(activeEdit)?.items?.length
-        const voltarDaMoldura = !popupId && !get(selected).id && !fecharDividir && !fecharLista && !voltarDaGaveta && !voltarDoEditor && ["stage", "settings"].includes(get(activePage))
+        // leiaute v2: nao existe mais gaveta, editor nem moldura para "voltar": sair de Editar e das paginas e pelo segmentado do topo (P10)
 
         // give time so output don't clear also
         setTimeout(() => {
@@ -141,9 +136,6 @@ const keys = {
             else if (get(modoAlianca) === "preparar") {
                 if (fecharDividir) dividirAberto.set(null)
                 else if (fecharLista) listaAberta.set(false)
-                else if (voltarDaGaveta) drawer.set({ height: 40, stored: get(drawer).height })
-                else if (voltarDoEditor) activePage.set("show")
-                else if (voltarDaMoldura) voltarDaPagina()
             }
         }, 20)
     },
@@ -204,8 +196,6 @@ export function keydown(e: KeyboardEvent) {
         const drawerMenus = (Object.keys(drawerTabs) as DrawerTabIds[]).filter((id) => !abaEscondidaNoEditor(id))
         if (document.activeElement === document.body && Object.keys(drawerMenus).includes((Number(e.key) - 1).toString())) {
             activeDrawerTab.set(drawerMenus[Number(e.key) - 1])
-            // open drawer
-            if (get(drawer).height < 300) drawer.set({ height: get(drawer).stored || 300, stored: null })
             return
         }
 
@@ -442,7 +432,7 @@ export const previewShortcuts = {
 }
 
 function isTimelineActive() {
-    if (get(activePage) === "show") return get(special).timelineActive || get(special).projectTimelineActive
+    if (get(activePage) === "show") return get(special).timelineActive
     if (get(activePage) === "edit") return get(timelineAtiva)
     return false
 }

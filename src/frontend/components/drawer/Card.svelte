@@ -13,6 +13,8 @@
     export let active = false
     export let outlineColor: string | null = null
     export let label: string
+    // leiaute v2: o cartao de midia desenha o nome e o "＋" abaixo (MediaCard), sem a faixa de nome do cartao
+    export let semRotulo = false
     export let count = 0
     export let renameId = ""
     export let title = ""
@@ -66,7 +68,7 @@
             {#if marcado}<span class="marcadoGaveta" data-title="Marcado para o culto"><Icon id="check" size={0.9} white /></span>{/if}
             <slot />
         </div>
-        <Label {label} {count} {renameId} {title} {icon} {white} {color} {mode} />
+        {#if !semRotulo}<Label {label} {count} {renameId} {title} {icon} {white} {color} {mode} />{/if}
     </div>
 </div>
 

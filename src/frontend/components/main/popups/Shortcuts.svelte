@@ -28,7 +28,6 @@
         // "this_is_default_mac_close!": `${ctrl} + q`,
         "preview._update": `${ctrl} + r`,
         "actions.save": `${ctrl} + s`,
-        "actions.toggle_panels": `${ctrl} + t`,
         "edit._title_underline": `${ctrl} + u`,
         "actions.paste": `${ctrl} + v`,
         // "": `${ctrl} + w`, // closing something

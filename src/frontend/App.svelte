@@ -1,9 +1,8 @@
 <script lang="ts">
-    import MainLayout from "./MainLayout.svelte"
+    import AliancaTela from "./components/main/AliancaTela.svelte"
     import MainOutput from "./MainOutput.svelte"
     import ContextMenu from "./components/context/ContextMenu.svelte"
     import Pdf from "./components/export/Pdf.svelte"
-    import Guide from "./components/guide/Guide.svelte"
     import { getContrast } from "./components/helpers/color"
     import { getBlending } from "./components/helpers/output"
     import { checkTimers, startEventTimer, startTimer } from "./components/helpers/timerTick"
@@ -88,10 +87,9 @@
             <Toast />
             <StatusIndicator />
             <Recorder />
-            <Guide />
             <ProgressPanel />
 
-            <MainLayout />
+            <AliancaTela />
 
             {#if ready && Object.keys($profiles).filter((a) => a !== "admin").length && $activeProfile === null}
                 <ProfileSelector />

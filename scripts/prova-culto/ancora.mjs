@@ -17,56 +17,88 @@ const ENTRADA = "src/frontend/MainOutput.svelte"
 /** excecoes: arquivo do fecho que a pilha de layout PODE mudar, e por que a saida continua igual */
 export const EXCECOES = {
     "src/frontend/stores.ts": {
-        motivo: "0b: fachada por modo de drawer/resized/activeDrawerTab/drawerTabsData; na saida `modoAlianca` nunca muda e a fachada se comporta como writable (vitest da fachada 'no processo de saida')",
-        sha: "633fb9f8ea882df1eecfff87b40ab43535fece62dea4bfa927eea3d0c30d13e3"
+        "motivo": "0b: fachada por modo de drawer/resized/activeDrawerTab/drawerTabsData; na saida `modoAlianca` nunca muda e a fachada se comporta como writable (vitest da fachada 'no processo de saida') | leiaute v2 (commit 11): `activePage` passa por guardarPagina; fora da janela principal (currentWindow !== null) ela devolve o valor sem olhar e o writable por baixo e o mesmo",
+        "sha": "e2e7bed8041b4fbe0166da168ebc05f901c491f5c7a6f49e19860c302608aa1f"
     },
     "src/frontend/utils/request.ts": {
-        motivo: "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)",
-        sha: "209887db924050a4db78f9ff81d959c28d4ae15ebe029416287761a4803b4a59"
+        "motivo": "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)",
+        "sha": "209887db924050a4db78f9ff81d959c28d4ae15ebe029416287761a4803b4a59"
     },
     "src/frontend/IPC/main.ts": {
-        motivo: "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)",
-        sha: "c654fc7dc7715ec2b2466bb6e595cd55a34ccacb587f41b73e2771976115014e"
+        "motivo": "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)",
+        "sha": "c654fc7dc7715ec2b2466bb6e595cd55a34ccacb587f41b73e2771976115014e"
     },
     "src/frontend/utils/save.ts": {
-        motivo: "0b: o disco grava drawer/drawerTabsData/resized do lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao `.culto` e o mesmo store que ela ja via",
-        sha: "b03b519cf08b909576ed9eb622cd56e23b5c3973207272c1319955408fdf3001"
+        "motivo": "0b: o disco grava drawer/drawerTabsData/resized do lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao `.culto` e o mesmo store que ela ja via | leiaute v2 (commit 3): grava a chave nova `aliancaTela` (larguras/altura das divisorias); a saida nao le a chave nova",
+        "sha": "536f9fd519125caf8b52accc932e0fc9240aa5e84cfabc9b95ed5a9d08aae763"
     },
     "src/frontend/utils/updateSettings.ts": {
-        motivo: "0b: carregar drawer/drawerTabsData/resized escreve no lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao e o mesmo `set` de antes",
-        sha: "18e1054712a81495c4e9c8938b6be0892b0f4451af35a7b369f59104be83f426"
+        "motivo": "0b: carregar drawer/drawerTabsData/resized escreve no lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao e o mesmo `set` de antes | leiaute v2 (commit 3): le a chave nova `aliancaTela`; carga so na janela principal | rodada de fidelidade: `aliancaTela` lida por normalizarTelaSalva (so numeros finitos); a carga aplica sempre o tema padrao (o tema salvo do FreeShow nao vale mais) e apaga special.projectTimelineActive; tudo so na carga da janela principal",
+        "sha": "3c98d3dd9d1a9d44ecf0131903b729f5654b9e0ccebfed822ca165939ef9d7a7"
     },
     "src/frontend/utils/common.ts": {
-        motivo: "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes",
-        sha: "8a1ee669826a69871d531a8afb1c3165bae135c6a150e629559acb5aed23c51c"
+        "motivo": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes | leiaute v2 (commit 12): sai togglePanels (Ctrl+T) e o import de fecharTudoManual; so a janela principal o chamava | fix: o import de fecharTudoManual sai de verdade",
+        "sha": "e8f3b59a839d133f876afa85db61d411f7a4bf7947c8f9e9373d65d5a33d3721"
     },
     "src/frontend/utils/startup.ts": {
-        motivo: "1b: iniciarLayoutAlianca(), iniciarMolduraAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca e iniciarMolduraAlianca ainda tem guarda de currentWindow",
-        sha: "ea1a81f20ec701d700626e83e2ff311ef7561cb98db800695472b321af423a32"
+        "motivo": "1b: iniciarLayoutAlianca(), iniciarMolduraAlianca() e configurarRegistroDeFalha() rodam em startupMain (a saida sai antes, por startupOutput); iniciarLayoutAlianca e iniciarMolduraAlianca ainda tem guarda de currentWindow | leiaute v2 (commit 10): iniciarMolduraAlianca sai de startupMain (so a janela principal rodava)",
+        "sha": "91088ae04bd4cb6b529e47d2026b953d2d4ff7c4fd4420fb562571912c001b84"
     },
     "src/frontend/utils/shortcuts.ts": {
-        motivo: "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal",
-        sha: "b12e5374f7364d2107ad7afbb4f5068334689634a45d501dccb44fd2bc885868"
+        "motivo": "1a/1b: porta do modo foco removida; 1b: teclas 1 a 6 (troca de pagina) saem e o Esc volta da moldura; atalho so roda na janela principal | leiaute v2 (commit 10): saem voltarDaPagina, tres ramos do Esc do Preparar, a abertura da gaveta no Ctrl+1..8 e projectTimelineActive de isTimelineActive; atalho so roda na janela principal | leiaute v2 (commit 12): sai o atalho `t` (Ctrl+T); atalho so roda na janela principal | fix: a entrada Ctrl+T (togglePanels) sai de verdade",
+        "sha": "5d23178828d31d81af03ab957bf1df345924b1c344f51873eede05e52673481e"
     },
     "src/frontend/components/context/contextMenus.ts": {
-        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
-        sha: "d4955d71515b129536ba5f2c2343bc95a1e112231a7b2f0321d56f4f5b726d1f"
+        "motivo": "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
+        "sha": "d4955d71515b129536ba5f2c2343bc95a1e112231a7b2f0321d56f4f5b726d1f"
     },
     "src/frontend/components/context/menuClick.ts": {
-        motivo: "1a: porta do modo foco removida; atalho e menu so rodam na janela principal",
-        sha: "ee6e6cb0ad17132f171edb1890694b791e797c8a15f3e68ed850d8995ea3e6d8"
+        "motivo": "1a: porta do modo foco removida; atalho e menu so rodam na janela principal | leiaute v2 (commit 10): quick_start_guide passa a chamar falhaAlta; so roda na janela principal",
+        "sha": "d956312fb884d0bd34e8bf38c1d0ec3411cca66dd7daf9328775f8fac190082e"
     },
     "src/frontend/components/main/popups/Shortcuts.svelte": {
-        motivo: "1a/1b: porta do modo foco e linha das teclas 1 a 6 removidas da lista de atalhos; popup so abre na janela principal",
-        sha: "25574a27a8b19b89900127436ea9745e0ce8658a47c403c9884003dfa2fdd26e"
+        "motivo": "1a/1b: porta do modo foco e linha das teclas 1 a 6 removidas da lista de atalhos; popup so abre na janela principal | rodada de fidelidade: sai a linha 'Ctrl + t' (alternar paineis) da lista de atalhos; popup so abre na janela principal",
+        "sha": "017b137b596295059d9a24a0082895582224c9616bd2a1658ea3de5d74e584d4"
     },
     "src/electron/utils/menuTemplate.ts": {
-        motivo: "1a: item do modo foco removido do menu nativo; arquivo do processo principal, o fecho o alcanca so por imports '..' dentro de src/electron e nunca entra no bundle da saida; conferido: unico importador e src/electron/index.ts",
-        sha: "13c7f8b762d5cab36e54a916117577f86518d910709ae2eb38d547740d5c41fd"
+        "motivo": "1a: item do modo foco removido do menu nativo; arquivo do processo principal, o fecho o alcanca so por imports '..' dentro de src/electron e nunca entra no bundle da saida; conferido: unico importador e src/electron/index.ts",
+        "sha": "13c7f8b762d5cab36e54a916117577f86518d910709ae2eb38d547740d5c41fd"
     },
     "src/frontend/utils/aliancaAbasEditor.ts": {
-        motivo: "0b/R2: a aba de antes do editor vira valorPorModo e o catch chama falhaAlta; iniciarAbasDoEditor so roda em startupMain (nunca na saida)",
-        sha: "0a03f8e05766304764ee54ac3d9122cafa6761a2710c4dc32619ba6d24a1c98b"
+        "motivo": "0b/R2: a aba de antes do editor vira valorPorModo e o catch chama falhaAlta; iniciarAbasDoEditor so roda em startupMain (nunca na saida)",
+        "sha": "0a03f8e05766304764ee54ac3d9122cafa6761a2710c4dc32619ba6d24a1c98b"
+    },
+    "src/frontend/utils/aliancaTema.ts": {
+        "motivo": "leiaute v2 (fatia 1, commits 3 e 10): so escreve data-tema=\"luz\" no body da janela principal e sai cedo em qualquer outra janela (currentWindow); nenhum import de store alem de currentWindow; nada assina store | leiaute v2 (commit 12): so o comentario deixa de citar aliancaVisual",
+        "sha": "fbe25fc709b9f3857f714f66cf97dbdd4d16b859ff3aaea27a5716e60b06faf3"
+    },
+    "src/frontend/utils/aliancaTemaLogica.ts": {
+        "motivo": "leiaute v2 (commit 10): arquivo APAGADO (a escolha de tema/fonte do FreeShow e do Preparar morreu: uma aparencia so); a saida nunca o usou de fato",
+        "sha": "apagado"
+    },
+    "src/frontend/components/main/popups/Initialize.svelte": {
+        "motivo": "leiaute v2 (commit 10): sai guideActive.set(true) (o guia deixou de existir); o popup so abre na janela principal",
+        "sha": "934a3a0aaa9936f5918655e950237e1fcb8e9de26124478f489a090f4412c261"
+    },
+    "src/electron/data/defaults.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): acrescenta o padrao da chave `aliancaTela` (280/330/260) em defaultSettings, exigido pelo tipo SaveListSettings; arquivo do processo principal (o fecho o alcanca por imports '..' em src/electron, nunca entra no bundle da saida)",
+        "sha": "d1ad8e85395ee32099e74ecf3565210e08a0c0caac7e236ef0eb26eab4fb20a7"
+    },
+    "src/electron/sirvo/sirvo.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): acrescenta show_enviar_mensagem_palco e show_limpar_mensagem_palco a lista ESCRITA do cliente RPC (a caixa 'mensagem pro palco'); processo principal, nunca entra no bundle da saida; a escrita so e chamada pela janela principal",
+        "sha": "c184714e1c69c14146f2236c8d524f72055917a56b2fb158e3403f4bc4c2d575"
+    },
+    "src/frontend/components/drawer/Card.svelte": {
+        "motivo": "leiaute v2 (rodada de fidelidade): nova prop `semRotulo` (padrao false) que esconde o <Label> do cartao de midia da biblioteca; com o padrao o cartao e identico, e a saida nao monta cartoes da gaveta",
+        "sha": "40824b8f1bbb13fb3fa72f21f570f90f04a6558cf5864f3efb54dbe192583628"
+    },
+    "src/frontend/utils/aliancaSirvo.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): so o TIPO FuncaoDeEscrita ganha duas unioes (show_enviar_mensagem_palco, show_limpar_mensagem_palco) e um comentario; nenhuma linha executavel muda",
+        "sha": "b1c7560f7836c8eb753d9cb44874423ec3428ccf649de19d8a57b19cceed68da"
+    },
+    "src/types/Save.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): so tipo: 'aliancaTela' entra em SaveListSettings (a chave ja era gravada/lida desde o commit 3); nada em tempo de execucao",
+        "sha": "0ac0e498b94ab425e231613006f560df23a74e156b5306415297a20f505c5197"
     }
 }
 
@@ -76,33 +108,33 @@ export const EXCECOES = {
  */
 export const NOVOS_NO_FECHO = {
     "src/frontend/utils/aliancaDrawerTabsLogica.ts": {
-        motivo: "0b: logica pura de `drawerTabsData` por modo; nao assina store",
-        sha: "6cc2921b1ab971a4aadca1dc44f382b063a173f266578b8def8b6b9f34e52e16"
+        "motivo": "0b: logica pura de `drawerTabsData` por modo; nao assina store",
+        "sha": "6cc2921b1ab971a4aadca1dc44f382b063a173f266578b8def8b6b9f34e52e16"
     },
     "src/frontend/utils/aliancaPorModoLogica.ts": {
-        motivo: "0b: fachada por modo; na saida `modoAlianca` nunca muda e ela se comporta como writable",
-        sha: "e3d4679aab7de56d98b21c5404c268b4ed32e6070a726ab6799acef4464c03e3"
+        "motivo": "0b: fachada por modo; na saida `modoAlianca` nunca muda e ela se comporta como writable",
+        "sha": "e3d4679aab7de56d98b21c5404c268b4ed32e6070a726ab6799acef4464c03e3"
     },
     "src/frontend/utils/aliancaLayoutEstado.ts": {
-        motivo: "0b: `iniciarLayoutAlianca` sai cedo fora da janela principal; `valorPorModo` sem assinatura",
-        sha: "cbc1ae8dc6893f1e8df0975d0ef3eb4b772a923b94b5d6cc7c77fd338f2695b7"
+        "motivo": "0b: `iniciarLayoutAlianca` sai cedo fora da janela principal; `valorPorModo` sem assinatura | leiaute v2 (commit 12): sai o export `fecharTudoManual` (so a janela principal o usava)",
+        "sha": "e84517f7319d4dc13062e0984935c4351cd81a91da25c657f4b688a8fce03867"
     },
     "src/frontend/utils/aliancaFalha.ts": {
-        motivo: "R2: so cria um writable e escreve nele; nada monta FaixaDeFalha na janela de saida; na saida a falha vira so console.error; o registro em disco so e configurado em startupMain",
-        sha: "6ce913d9d26b33afa713bb663fab43ff7ec4f07e2fdee27473a7978492a6d929"
+        "motivo": "R2: so cria um writable e escreve nele; nada monta FaixaDeFalha na janela de saida; na saida a falha vira so console.error; o registro em disco so e configurado em startupMain",
+        "sha": "6ce913d9d26b33afa713bb663fab43ff7ec4f07e2fdee27473a7978492a6d929"
     },
-    "src/frontend/utils/aliancaMoldura.ts": {
-        motivo: "1b: so assina dentro de iniciarMolduraAlianca, que sai cedo fora da janela principal (currentWindow); nada escreve em outputs",
-        sha: "9c78979ca52f5e30071504da7d14a91a43058776efbd46730cd89ef710b84e06"
+    "src/frontend/utils/aliancaTelaEstado.ts": {
+        "motivo": "leiaute v2 (commit 3): so cria writables (`aliancaTela`); ninguem da janela de saida os assina | rodada de fidelidade: acrescenta normalizarTelaSalva (funcao pura)",
+        "sha": "e19d5dc00c1ea706b07acf2b53ad29f04a354d0a4ad97cfc4b083336db1fa94c"
     },
-    "src/frontend/utils/aliancaMolduraLogica.ts": {
-        motivo: "1b: logica pura, sem import, sem store e sem efeito; ajustes de 16/nov: textoDoCrumb omite a 3a parte nos tipos sem slides e o titulo de stage vira Monitor de retorno (so string, nenhum import novo)",
-        sha: "c6cde03378ca9d824f0db6f869dcf61d2c7d68ef7fb92e96de10341150ea2558"
+    "src/frontend/utils/aliancaPaginaGuarda.ts": {
+        "motivo": "leiaute v2 (commit 11): funcao pura que embrulha o writable de activePage; na janela de saida nao olha o valor; nada assina store",
+        "sha": "6846d134346e21e362eef74635c48715cfed31ad35895de5554190db6f16c11d"
     }
 }
 
-export const SHA_EXCECOES = "b4667bd4484315e3a3dcef5da4cfe4d97439cce08451e9f8d877a0222607f5fe"
-export const SHA_NOVOS = "c8647db85e4041700f0f2bc92e5b4542cd1b765d06b44722ea23ed6393ae5dba"
+export const SHA_EXCECOES = "419f1212369dc0af2ad428b0fc7e73253cb920aa1c8a31a050ae9b12935c1a6a"
+export const SHA_NOVOS = "3b8201c4d915821b691812831a22e55125968825a181a45c9c2c2c5c35b72165"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */

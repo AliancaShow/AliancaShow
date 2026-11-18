@@ -31,7 +31,6 @@ export function valorPorModo<T>(inicial: T) {
 }
 
 /** Ctrl+T ("fechar tudo") lembra se foi o operador que fechou as colunas: por modo */
-export const fecharTudoManual = valorPorModo(false)
 
 let iniciado = false
 

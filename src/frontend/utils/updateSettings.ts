@@ -1,3 +1,4 @@
+import { aliancaTela, normalizarTelaSalva } from "./aliancaTelaEstado"
 import { get } from "svelte/store"
 import { uid } from "uid"
 import { OUTPUT } from "../../types/Channels"
@@ -163,12 +164,15 @@ export function updateSettings(data: any) {
     sendMain(Main.START, { ports: customPorts, max: data.maxConnections === undefined ? 10 : data.maxConnections, disabled, data: get(serverData) })
 
     // theme
-    let currentTheme = get(themes)[data.theme]
+    // leiaute v2 (uma aparencia so): o tema SALVO nao vale mais. As pecas de upstream dentro da tela nova (Configuracoes, editor, popups, cartoes)
+    // leem --primary/--text/--secondary: um perfil com tema claro ou personalizado vazaria um painel claro dentro da casca escura, e a aba Tema
+    // (onde se trocava) saiu. Sempre o tema padrao; a chave `theme` salva nao e apagada nem lida aqui.
+    let currentTheme = get(themes).default
     if (currentTheme?.colors) {
         // update colors (pre 0.9.2 or 1.4.9)
         const pre092 = currentTheme.colors.secondary?.toLowerCase() === "#e6349c"
         const pre149 = currentTheme.colors.primary?.toLowerCase() === "#292c36"
-        if (data.theme === "default" && (pre092 || pre149)) {
+        if (pre092 || pre149) {
             themes.update((a) => {
                 a.default = clone(defaultThemes.default)
                 currentTheme = a.default
@@ -350,6 +354,7 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
     overlayCategories: (v: any) => overlayCategories.set(v),
     playerVideos: (v: any) => playerVideos.set(v),
     resized: (v: any) => resized.culto.set(v),
+    aliancaTela: (v: any) => aliancaTela.set(normalizarTelaSalva(v)),
     // AliancaShow: descarta as traducoes vindas da API do churchapps. Elas usam a
     // chave do projeto original, que nao podemos usar, e sao todas em ingles. Tirar
     // dos padroes nao bastava: quem ja abriu o app tem as 5 gravadas em
@@ -401,6 +406,8 @@ const updateList: { [key in SaveListSettings | SaveListSyncedSettings]: any } = 
         }
     },
     special: (v: any) => {
+        // leiaute v2: a linha do tempo do PROJETO morreu com Projects.svelte; a flag salva so travaria o Espaco da linha do tempo do show (Timeline.svelte)
+        if (v.projectTimelineActive) delete v.projectTimelineActive
         if (v.capitalize_words === undefined) v.capitalize_words = "Jesus, Lord" // God
         // don't backup when just initialized (or reset)
         if (!v.autoBackupPrevious) v.autoBackupPrevious = Date.now()

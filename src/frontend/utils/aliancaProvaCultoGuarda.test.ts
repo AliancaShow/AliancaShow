@@ -44,36 +44,41 @@ describe("gancho de IPC da prova (so dev)", () => {
     })
 })
 
-describe("montagem unica (D2): Projects, LibraryTabs, Preview e Drawer sobem em UM ponto", () => {
-    const texto = ler("src/frontend/MainLayout.svelte")
+describe("montagem unica (D2): o motor e a biblioteca sobem em UM ponto, a tela nova", () => {
+    const texto = ler("src/frontend/components/main/AliancaTela.svelte")
     // pilha de blocos ate cada ocorrencia
     function pilhaEm(alvo: RegExp): string[][] {
         const achados: string[][] = []
         const pilha: string[] = []
         for (const linha of texto.split("\n")) {
-            for (const m of linha.matchAll(/\{#(if|key|each|await)\s+([^}]*)\}|\{:else if\s+([^}]*)\}|\{\/(if|key|each|await)\}/g)) {
+            for (const m of linha.matchAll(/\{#(if|key|each|await)\s+([^}]*)\}|\{:else if\s+([^}]*)\}|\{:else\}|\{\/(if|key|each|await)\}/g)) {
                 if (m[1]) pilha.push(`${m[1]} ${m[2]}`)
                 else if (m[3] !== undefined) pilha[pilha.length - 1] = `if ${m[3]}`
+                else if (m[0] === "{:else}") pilha[pilha.length - 1] = `else ${pilha[pilha.length - 1]}`
                 else pilha.pop()
             }
             if (alvo.test(linha)) achados.push([...pilha])
         }
         return achados
     }
-    const proibido = (p: string[]) => p.some((b) => /modoAlianca|\$special|chaveDoModo/.test(b) || (b.startsWith("key ") && !/\$activeProfile/.test(b)))
-    it("<Projects aparece uma vez por ramo de pagina (show e scripture), <LibraryTabs, <Preview e o LazyLoad do Drawer uma vez", () => {
-        expect(pilhaEm(/<Projects\b/).length).toBe(2)
-        expect(pilhaEm(/<LibraryTabs\b/).length).toBe(1)
-        expect(pilhaEm(/<Preview\b/).length).toBe(1)
-        expect(pilhaEm(/components\/drawer\/Drawer\.svelte/).length).toBe(1)
+    it("<Preview sobe uma vez, FORA de qualquer {#if} ou {#key} (e o motor do teclado do telao); AnteparoDeModo e FaixaDeFalha tambem", () => {
+        for (const re of [/<Preview\b/, /<AnteparoDeModo\b/, /<FaixaDeFalha\b/]) {
+            const p = pilhaEm(re)
+            expect(p.length, String(re)).toBe(1)
+            expect(p[0], `${re} montado dentro de um bloco`).toEqual([])
+        }
     })
-    it("nenhum deles dentro de {#if ...modo/layout} nem de {#key} que nao seja o perfil", () => {
-        for (const re of [/<Projects\b/, /<LibraryTabs\b/, /<Preview\b/, /components\/drawer\/Drawer\.svelte/]) for (const p of pilhaEm(re)) expect(proibido(p), `${re} em ${JSON.stringify(p)}`).toBe(false)
+    it("o painel da biblioteca e o roteiro sobem uma vez cada, sem depender de modo nem de layout", () => {
+        for (const re of [/<AliancaBibliotecaPainel\b/, /<AliancaRoteiro\b/]) {
+            const p = pilhaEm(re)
+            expect(p.length, String(re)).toBe(1)
+            for (const b of p[0]) expect(/modoAlianca|\$special|chaveDoModo/.test(b), `${re} em ${b}`).toBe(false)
+        }
     })
-    it("nenhum outro arquivo importa Drawer, LibraryTabs nem Preview", () => {
+    it("nenhum outro arquivo importa o Preview antigo", () => {
         const reais = listar("src/frontend")
-            .filter((r) => r !== "src/frontend/MainLayout.svelte")
-            .filter((r) => importa(ler(r)).some((i) => /output\/preview\/Preview\.svelte$|drawer\/Drawer\.svelte$|main\/LibraryTabs\.svelte$|\/LibraryTabs\.svelte$/.test(i)))
+            .filter((r) => r !== "src/frontend/components/main/AliancaTela.svelte")
+            .filter((r) => importa(ler(r)).some((i) => /output\/preview\/Preview\.svelte$/.test(i)))
         expect(reais).toEqual([])
     })
 })

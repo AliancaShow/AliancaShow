@@ -1,3 +1,4 @@
+import { aliancaTela } from "./aliancaTelaEstado"
 import { get } from "svelte/store"
 import { Main } from "../../types/IPC/Main"
 import type { Projects } from "../../types/Projects"
@@ -184,6 +185,7 @@ export function save(closeWhenFinished = false, customTriggers: SaveActions = {}
         sorted: get(sorted),
         remotePassword: get(remotePassword),
         resized: get(resized.culto),
+        aliancaTela: get(aliancaTela),
         slidesOptions: get(slidesOptions),
         splitLines: get(splitLines),
         // templates: get(templates),
@@ -473,6 +475,7 @@ const saveList: { [key in SaveList]: any } = {
     playerVideos,
     remotePassword,
     resized: null,
+    aliancaTela: null,
     scriptures,
     scriptureSettings,
     slidesOptions,

@@ -13,9 +13,9 @@
     function tratar(e: Event) {
         try {
             const alvo = e.target instanceof Element ? e.target : null
-            const topo = alvo?.closest(".top.panel") ?? null
-            const esquerda = topo?.firstElementChild ?? null
-            const engolir = decisor.aoEvento(e.type as TipoDeEvento, { agora: performance.now(), ate: anteparoAte(), naBarra: !!topo, naEsquerda: !!esquerda && esquerda.contains(alvo) })
+            const topo = alvo?.closest('[data-regiao="topo"]') ?? null
+            const segmentado = topo ? (alvo?.closest('[data-acao="segmentado"]') ?? null) : null
+            const engolir = decisor.aoEvento(e.type as TipoDeEvento, { agora: performance.now(), ate: anteparoAte(), naBarra: !!topo, naEsquerda: !!segmentado })
             if (engolir) {
                 e.preventDefault()
                 e.stopImmediatePropagation()

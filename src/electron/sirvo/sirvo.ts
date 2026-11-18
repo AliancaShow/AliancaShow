@@ -33,7 +33,7 @@ export function sirvoAmbiente(): keyof typeof AMBIENTES {
 // recusado aqui mesmo.
 const LEITURA = ["show_cultos", "show_rev", "show_roteiro"]
 // show_tirar_musicas / show_devolver_musica (F3): o operador tirou do projeto uma música que o Sirvo pôs
-const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco", "show_tirar_musicas", "show_devolver_musica"]
+const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco", "show_tirar_musicas", "show_devolver_musica", "show_enviar_mensagem_palco", "show_limpar_mensagem_palco"]
 // O chat do culto (F4 v1, migration 0084 do Sirvo): só leitura, caminho próprio
 // no renderer (aliancaSirvoChat.ts). Fora da trava de escrita: ler o chat
 // nunca pode atrasar "avançar bloco".

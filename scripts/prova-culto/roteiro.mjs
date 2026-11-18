@@ -17,9 +17,12 @@ S.drawer.set({height:300,stored:null}); S.resized.update(a=>({...a,leftPanel:290
 document.activeElement?.blur?.(); await esp(900)`
 
 const SLIDE = (i) => `document.querySelectorAll("#showArea .slide")[${i}]`
-export const BOTAO_MODO = (nome) => `[...document.querySelectorAll("button")].find(b=>b.innerText.trim()===${JSON.stringify(nome)} && b.closest("header, .top, nav, div"))`
+// leiaute v2: o segmentado do topo ("Culto" = Mostrar, "Preparar" = Editar); o nome do roteiro antigo continua o mesmo
+export const BOTAO_MODO = (nome) => `document.querySelector('[data-acao="segmentado"] [data-aba="${nome === "Preparar" ? "editar" : "mostrar"}"]')`
 // os botoes da `.clear` mudam de posicao conforme o estado (o de restaurar so aparece depois de limpar): acha-se pelo marcador do titulo
-const LIMPA = (m) => `[...document.querySelector(".clear").querySelectorAll("button")].find(b=>((b.getAttribute("data-title")||"")+" "+b.innerText).includes(${JSON.stringify(m)}))`
+// leiaute v2: os icones da faixa de camadas da coluna No ar (F1 fundo, F2 texto, F3 sobreposicao, [esc] limpar tudo = de segurar)
+// Restaurar saida mora no menu da pilula do telao (decisao 16): o passo B08 abre o menu no `antes` (preparo) e o clique REAL e no item
+const LIMPA = (m) => m === "Restaurar" ? `document.querySelector('[data-acao="telao-menu-pop"] [data-item="restaurar"]')` : `document.querySelector('[data-acao="camadas"] [data-camada="${m === "[F1]" ? "fundo" : m === "[F2]" ? "texto" : m === "[F3]" ? "sobre" : m === "[esc]" ? "tudo" : "restaurar"}"]')`
 
 export const SECOES = [
     {
@@ -57,8 +60,8 @@ export const SECOES = [
             { id: "B04-repor-tudo", antes: "await MAIN_TUDO()", gesto: { tecla: "F3" }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "B05-limpar-sobreposicao", antes: "await MAIN_TUDO()", alvo: LIMPA("[F3]"), gesto: { clique: true }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "B06-tecla-f4-audio", antes: "await MAIN_TUDO()", gesto: { tecla: "F4" }, semEfeito: "o perfil de teste nao tem audio tocando: F4 so limpa audio (NAO testado com audio real); o botao de audio nasce desabilitado" },
-            { id: "B07-limpar-tudo", antes: "await MAIN_TUDO()", alvo: LIMPA("[esc]"), gesto: { clique: true }, efeito: { fluxo: "outputs", n: 1 } },
-            { id: "B08-restaurar", antes: "await esp(2500)", alvo: LIMPA("Restaurar"), gesto: { clique: true }, efeito: { fluxo: "outputs", n: 1 } },
+            { id: "B07-limpar-tudo", antes: "await MAIN_TUDO()", alvo: LIMPA("[esc]"), gesto: { segurar: 1300 }, efeito: { fluxo: "outputs", n: 1 } },
+            { id: "B08-restaurar", antes: "await esp(2500); document.querySelector('[data-acao=telao-menu]')?.click(); await esp(300)", alvo: LIMPA("Restaurar"), gesto: { clique: true }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "B09-tecla-f1", antes: "await MAIN_TUDO()", gesto: { tecla: "F1" }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "B10-tecla-f2", antes: "await MAIN_TUDO()", gesto: { tecla: "F2" }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "B11-tecla-ponto", antes: "await MAIN_TUDO()", gesto: { tecla: "." }, efeito: { fluxo: "outputs", n: 1 } },
@@ -70,7 +73,7 @@ export const SECOES = [
         titulo: "Gaveta (Midia, abas, busca)",
         preparar: ABRE_SHOW,
         passos: [
-            { id: "C01-aba-midia", alvo: `[...document.querySelectorAll("#leftPanelDrawer button, .drawer button, button")].find(b=>b.innerText.trim()==="Mídia" && b.closest("#leftPanelDrawer, .drawerTabs, .tabs, div"))`, gesto: { clique: true }, efeito: { fluxo: "estado", n: 0 }, semEfeito: "a aba ativa nao e um fluxo gravado: o efeito esta nos sinais (abaAtiva), comparados a parte" },
+            { id: "C01-aba-midia", alvo: `document.querySelector('[data-acao="arvore"] [data-no="media"]')`, gesto: { clique: true }, efeito: { fluxo: "estado", n: 0 }, semEfeito: "a aba ativa nao e um fluxo gravado: o efeito esta nos sinais (abaAtiva), comparados a parte" },
             { id: "C02-ctrl-2-aba", gesto: { tecla: "2", mods: { ctrl: true } }, semEfeito: "so troca a aba da gaveta (sinais)" },
             { id: "C03-ctrl-1-aba", gesto: { tecla: "1", mods: { ctrl: true } }, semEfeito: "so troca a aba da gaveta (sinais)" },
             { id: "C04-ctrl-f", gesto: { tecla: "f", mods: { ctrl: true } }, semEfeito: "abre a busca/localizar, sem escrever no telao" }

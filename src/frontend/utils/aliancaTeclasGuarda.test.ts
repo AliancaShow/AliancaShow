@@ -3,7 +3,7 @@
 //
 // O QUE ESTA GUARDA NAO COBRE: um atalho de pagina escrito por outro caminho (a guarda de escritores, aliancaMolduraEscritores.test.ts, pega
 // qualquer activePage.set novo); o comportamento em tempo de execucao (T-1b-4, CDP).
-import { readFileSync } from "fs"
+import { existsSync, readFileSync } from "fs"
 import { join } from "path"
 import { describe, expect, it } from "vitest"
 
@@ -24,13 +24,17 @@ export function problemasDasTeclas(t: { shortcuts: string; preview: string; topB
 const REAL = {
     shortcuts: ler("src/frontend/utils/shortcuts.ts"),
     preview: ler("src/frontend/components/output/preview/Preview.svelte"),
-    topButton: ler("src/frontend/components/inputs/TopButton.svelte"),
-    showHeader: ler("src/frontend/components/show/ShowHeader.svelte"),
+    // TopButton.svelte foi apagado (leiaute v2): o texto fica vazio e o arquivo NAO pode voltar
+    topButton: "",
+    // ShowHeader.svelte foi apagado (leiaute v2): o texto fica vazio e o arquivo NAO pode voltar
+    showHeader: "",
     popupShortcuts: ler("src/frontend/components/main/popups/Shortcuts.svelte")
 }
 
 describe("teclas 1 a 6 saem (1b, decisao 12)", () => {
     it("o codigo esta limpo", () => expect(problemasDasTeclas(REAL)).toEqual([]))
+    it("ShowHeader.svelte nao existe mais (o titulo e o menu ⋮ moraram no cabecalho do centro)", () => expect(existsSync(join(RAIZ, "src/frontend/components/show/ShowHeader.svelte"))).toBe(false))
+    it("TopButton.svelte nao existe mais", () => expect(existsSync(join(RAIZ, "src/frontend/components/inputs/TopButton.svelte"))).toBe(false))
     it("o `import type` de shortcuts.ts nao carrega mais TopViews", () => expect(REAL.shortcuts).not.toMatch(/import type \{[^}]*TopViews/))
     describe("mutacoes (texto injetado)", () => {
         it("a tabela menus volta", () => expect(problemasDasTeclas({ ...REAL, shortcuts: REAL.shortcuts + '\nconst menus = ["show"]' }).join()).toContain("menus"))

@@ -57,3 +57,4 @@ export async function localizar(j, expr) {
         `const e=(${expr}); if(!e) return {ok:false,motivo:"alvo nao existe"}; e.scrollIntoView({block:"center",inline:"center"}); await esp(300); const r=e.getBoundingClientRect(); if(r.width<1||r.height<1) return {ok:false,motivo:"alvo sem tamanho"}; const x=r.x+r.width/2,y=r.y+r.height/2; const topo=document.elementFromPoint(x,y); const dentro=!!topo&&(topo===e||e.contains(topo)); return {ok:dentro,motivo:dentro?"":"coberto por <"+(topo?topo.tagName+"."+String(topo.className).slice(0,40):"nada")+">",x,y}`
     )
 }
+

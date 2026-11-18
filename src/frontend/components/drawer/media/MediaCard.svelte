@@ -16,6 +16,8 @@
     import { clearBackground, clearSlide } from "../../output/clear"
     import SelectElem from "../../system/SelectElem.svelte"
     import Card from "../Card.svelte"
+    import { motivoSemCulto } from "../../../utils/aliancaGaveta"
+    import { newToast } from "../../../utils/common"
     import MediaLoader from "./MediaLoader.svelte"
 
     export let name: string
@@ -153,6 +155,20 @@
         customMessageCredits.set("")
     }
 
+    // leiaute v2: o "＋" do cartao poe a midia no fim do roteiro (o mesmo `addProjectItem` do duplo clique); 500 ms contra toque duplo
+    let ultimoMais = 0
+    function maisNoRoteiro(e: MouseEvent) {
+        e.stopPropagation()
+        ;(document.activeElement as HTMLElement | null)?.blur?.()
+        const agora = Date.now()
+        if (agora - ultimoMais < 500) return
+        ultimoMais = agora
+        const motivo = motivoSemCulto()
+        if (motivo) return newToast(motivo)
+        addProjectItem({ id: path, name, type: getMediaType(path.slice(path.lastIndexOf(".") + 1, path.length)) })
+        newToast(`"${displayName || name}" entrou no fim do roteiro`)
+    }
+
     function dblclick(e: any) {
         if (e.ctrlKey || e.metaKey || iconClicked) return
 
@@ -238,6 +254,7 @@
         outlineColor={findMatchingOut(path, $outputs)}
         active={findMatchingOut(path, $outputs) !== null}
         label={displayName}
+        semRotulo={$mediaOptions.mode === "grid" && thumbnail}
         title={contentProvider ? "" : path}
         icon={thumbnail ? icon : null}
         white={type === "image"}
@@ -317,8 +334,41 @@
         {/if}
     </Card>
 </SelectElem>
+{#if $mediaOptions.mode === "grid" && thumbnail}
+    <div class="rodape" data-acao="midia-rodape">
+        <span class="rn" data-title={path}>{displayName}</span>
+        <button type="button" class="rmais" aria-label="Adicionar ao roteiro" title="Adicionar ao fim do roteiro" tabindex="-1" on:mousedown|preventDefault on:click={maisNoRoteiro}>＋</button>
+    </div>
+{/if}
 
 <style>
+    .rodape {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 2px 4px;
+    }
+    .rn {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+    }
+    .rmais {
+        flex: none;
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--luz-borda, rgb(248 248 240 / 0.13));
+        border-radius: 6px;
+        background: var(--luz-campo, rgb(248 248 240 / 0.06));
+        color: var(--luz-texto, #f8f8f0);
+        cursor: pointer;
+    }
+    .rmais:hover {
+        background: var(--luz-hover, rgb(248 248 240 / 0.1));
+    }
     .icon {
         display: flex;
         justify-content: center;

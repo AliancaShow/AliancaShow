@@ -3,7 +3,8 @@
 
 import type { Bible } from "json-bible/lib/Bible"
 import type { ICommonTagsResult } from "music-metadata"
-import { type Writable, writable } from "svelte/store"
+import { get, type Writable, writable } from "svelte/store"
+import { guardarPagina } from "./utils/aliancaPaginaGuarda"
 import { comunsDrawerTabs } from "./utils/aliancaDrawerTabsLogica"
 import { criarPorModo } from "./utils/aliancaPorModoLogica"
 import type { ContentProviderId } from "../electron/contentProviders/base/types"
@@ -50,7 +51,8 @@ export const selected: Writable<Selected> = writable({ id: null, data: [] })
 export const clipboard: Writable<Clipboard> = writable({ id: null, data: [] })
 export const connections: Writable<{ [key: string]: { [key: string]: { entered?: boolean; active?: string } } }> = writable({})
 export const activePopup: Writable<null | Popups> = writable(null)
-export const activePage: Writable<TopViews> = writable("show")
+// leiaute v2: na janela principal so show/edit/settings/stage/draw tem lugar (aliancaPaginaGuarda); fora dela e um writable comum
+export const activePage: Writable<TopViews> = guardarPagina(writable<TopViews>("show"), () => get(currentWindow) === null)
 export const contextActive: Writable<boolean> = writable(false)
 export const topContextActive: Writable<boolean> = writable(false)
 export const quickSearchActive: Writable<boolean> = writable(false)

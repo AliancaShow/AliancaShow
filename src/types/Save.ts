@@ -55,6 +55,7 @@ export type SaveListSettings =
     | "dataPath"
     | "lockedOverlays"
     | "drawer"
+    | "aliancaTela"
     | "drawerTabsData"
     | "groupNumbers"
     | "fullColors"
