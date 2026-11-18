@@ -185,3 +185,14 @@ describe("opcoesDoSeletor: chaves unicas (achado 6)", () => {
         expect(opcoesDoSeletor({ roteiro: [{ id: "s", type: "section" }, { id: "p", type: "pdf" }], avulsos: [], atualChave: null, nomeDe })).toEqual([])
     })
 })
+
+describe("modelo e camera no ar avisam 'na hora' (achado 7)", () => {
+    it("modelo que o telao usa avisa; outro modelo nao", () => {
+        expect(avisoAoVivo({ tipo: "template", id: "t1", noAr: [{ templates: ["t1"] }] })).toContain("na hora")
+        expect(avisoAoVivo({ tipo: "template", id: "t2", noAr: [{ templates: ["t1"] }, { templates: [] }] })).toBe("")
+    })
+    it("camera no fundo avisa pelo id; outra camera nao", () => {
+        expect(avisoAoVivo({ tipo: "camera", id: "cam1", noAr: [{ background: { id: "cam1" } }] })).toContain("na hora")
+        expect(avisoAoVivo({ tipo: "camera", id: "cam2", noAr: [{ background: { id: "cam1" } }] })).toBe("")
+    })
+})

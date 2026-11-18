@@ -3,7 +3,7 @@
     // (`edit/Editor.svelte`, o motor), a faixa de pendencia "O telao ainda mostra a versao anterior" com "Mandar pro ar" e a nota de uma linha.
     // Editar um slide que esta no ar e LIVRE: o telao mostra a foto do slide e so troca quando ele for mandado de novo. Fundo, sobreposicao e efeito sao lidos ao
     // vivo: la o aviso diz "muda no telao na hora". Nada aqui escreve em `outputs` a nao ser o botao "Mandar pro ar" (clique do mouse).
-    import { activeEdit, activePopup, activeShow, editMode, groups, outputs, showsCache, templates } from "../../stores"
+    import { activeEdit, activePopup, activeShow, editMode, groups, outputs, showsCache, styles, templates } from "../../stores"
     import { dividirAberto, abrirDividir, fecharDividir } from "../../utils/aliancaDividir"
     import { atualizarSlideNoAr } from "../../utils/aliancaEditarAcoes"
     import { avisoAoVivo, faixaDefasada, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide } from "../../utils/aliancaEditarLogica"
@@ -11,7 +11,7 @@
     import { getAccess } from "../../utils/profile"
     import { getSlideChords } from "../edit/scripts/chords"
     import { getSlideText } from "../edit/scripts/textStyle"
-    import { getActiveOutputs } from "../helpers/output"
+    import { getActiveOutputs, getStyleTemplate } from "../helpers/output"
     import { getLayoutRef } from "../helpers/show"
     import { _show } from "../helpers/shows"
     import LazyLoad from "../helpers/LazyLoad.svelte"
@@ -63,7 +63,17 @@
     $: selos = ehShow && showId && layout ? selosDoShow({ showId, layout, ref, slides: show?.slides, noAr: saidas.map((o: any) => o?.out?.slide) as any }) : {}
     $: situacao = situacaoDoSlide(selos, indice)
     $: nota = ehShow ? notaDoCentro(situacao) : ""
-    $: aoVivo = !ehShow ? avisoAoVivo({ tipo: $activeEdit.type, id: $activeEdit.id, noAr: saidas.map((o: any) => ({ background: o?.out?.background, overlays: o?.out?.overlays, effects: o?.out?.effects })) }) : ""
+    // o modelo que cada saida usa no slide que esta no ar (o mesmo calculo que a saida faz: modelo do estilo, de versiculo, ou o do primeiro slide)
+    function modelosDoAr(o: any, estilos: typeof $styles, modelos: typeof $templates): string[] {
+        const slide = o?.out?.slide
+        const estilo = o?.style ? estilos[o.style] : undefined
+        if (!slide || !estilo) return []
+        const usado = getStyleTemplate(slide, estilo, slide.foto?.slide?.customDynamicValues)
+        const achado = Object.keys(modelos).find((id) => modelos[id] === usado)
+        return achado ? [achado] : []
+    }
+    $: modelosNoAr = $activeEdit.type === "template" ? saidas.map((o: any) => modelosDoAr(o, $styles, $templates)) : []
+    $: aoVivo = !ehShow ? avisoAoVivo({ tipo: $activeEdit.type, id: $activeEdit.id, noAr: saidas.map((o: any, i) => ({ background: o?.out?.background, overlays: o?.out?.overlays, effects: o?.out?.effects, templates: modelosNoAr[i] || [] })) }) : ""
     // a faixa nomeia as telas defasadas (so quando ha mais de uma tela) e reenvia SO para as que mostram este slide
     $: defasadas = ehShow && showId && layout && indice !== null ? saidasQueMostram({ showId, layout, ref, slides: show?.slides, posicao: indice, saidas: idsDasSaidas.map((s) => ({ saida: s, slide: ($outputs[s] as any)?.out?.slide })) }).filter((s) => s.editado) : []
     $: nomesDefasadas = idsDasSaidas.length < 2 ? [] : defasadas.map((d) => (($outputs[d.saida] as any)?.name || "").trim() || `Saída ${idsDasSaidas.indexOf(d.saida) + 1}`)

@@ -57,7 +57,7 @@ export function notaDoCentro(s: SituacaoDoSlide): string {
 // ---------------------------------------------------------------- o que muda no telao NA HORA (decisao 6)
 
 /** o que esta no ar de uma saida (so o que a conta olha) */
-export type ConteudoDoAr = { background?: { path?: string; id?: string } | null; overlays?: string[] | null; effects?: string[] | null }
+export type ConteudoDoAr = { background?: { path?: string; id?: string } | null; overlays?: string[] | null; effects?: string[] | null; templates?: string[] | null }
 
 /**
  * Fundo, sobreposicao e efeito sao lidos AO VIVO pelo telao: editar o que esta no ar muda na hora. Devolve o aviso, ou "" quando a edicao nao
@@ -71,6 +71,9 @@ export function avisoAoVivo(e: { tipo?: string; id?: string; noAr: ConteudoDoAr[
         if (e.tipo === "overlay") return (o.overlays || []).includes(id)
         if (e.tipo === "effect") return (o.effects || []).includes(id)
         if (e.tipo === "media") return o.background?.path === id || o.background?.id === id
+        // a camera no fundo e lida ao vivo pelo id; o modelo que a saida usa no slide no ar (o do estilo, ou o do primeiro slide) e lido ao vivo da lista de modelos
+        if (e.tipo === "camera") return o.background?.id === id
+        if (e.tipo === "template") return (o.templates || []).includes(id)
         return false
     })
     return noAr ? "Isto está no ar: o que você mudar aparece no telão na hora." : ""
