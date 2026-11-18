@@ -3,11 +3,11 @@
 // 1. O Esc que FECHOU ou DESSELECIONOU algo segura por 700 ms o Esc seguinte. O Esc limpa o telao; quem aperta Esc para sair de uma caixa de
 //    texto ou fechar um popover nao pode, no segundo Esc, limpar o telao sem querer (mesmo desenho do incidente de 09/ago do Sirvo: dois toques
 //    na mesma coordenada).
-// 2. Clique repetido no MESMO item em menos de 400 ms e engolido: o duplo clique nunca dispara a acao duas vezes (video nao comeca 2x). A conta
+// 2. Clique repetido no MESMO item em menos de 700 ms e engolido (cabine 18/nov: era 400): o duplo clique nunca dispara a acao duas vezes (video nao comeca 2x). A conta
 //    e feita contra o ultimo clique ACEITO naquele item (clicar de 300 em 300 ms nao silencia o item para sempre).
 
 export const ESC_SEGURA_MS = 700
-export const CLIQUE_REPETIDO_MS = 400
+export const CLIQUE_REPETIDO_MS = 700
 
 /** tecla segurada (auto-repeticao): nunca encadeia, e engolida sempre (segurar Esc para sair de um campo nao limpa o telao quando a espera vence) */
 export function escEngolidoPorRepeticao(e: { repeat?: boolean }): boolean {

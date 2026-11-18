@@ -28,8 +28,8 @@ describe("Esc que fechou algo segura o seguinte (700 ms)", () => {
     })
 })
 
-describe("clique repetido no mesmo item (400 ms)", () => {
-    it("o primeiro passa, o segundo dentro de 400 ms e engolido, o de 400 ms em diante passa", () => {
+describe("clique repetido no mesmo item (700 ms)", () => {
+    it("o primeiro passa, o segundo dentro de 700 ms e engolido, o de 700 ms em diante passa", () => {
         const r = criarRepeticao<string>()
         expect(r.engole("a", 0)).toBe(false)
         expect(r.engole("a", CLIQUE_REPETIDO_MS - 1)).toBe(true)
@@ -40,9 +40,9 @@ describe("clique repetido no mesmo item (400 ms)", () => {
         expect(r.engole("a", 0)).toBe(false)
         expect(r.engole("b", 10)).toBe(false)
     })
-    it("clicar a cada 300 ms nao silencia o item para sempre (conta contra o ultimo ACEITO)", () => {
+    it("clicar a cada 400 ms nao silencia o item para sempre (conta contra o ultimo ACEITO)", () => {
         const r = criarRepeticao<string>()
-        const res = [0, 300, 600, 900, 1200].map((t) => r.engole("a", t))
+        const res = [0, 400, 800, 1200, 1600].map((t) => r.engole("a", t))
         expect(res).toEqual([false, true, false, true, false])
     })
     it("o mapa nao cresce sem fim", () => {
@@ -53,12 +53,12 @@ describe("clique repetido no mesmo item (400 ms)", () => {
 })
 
 describe("clique repetido: distancia do ponteiro (revisao da fatia 2, achado 3)", () => {
-    it("mesma chave, dentro de 400 ms e a ate 6 px: engolido", () => {
+    it("mesma chave, dentro de 700 ms e a ate 6 px: engolido", () => {
         const r = criarRepeticao<string>()
         expect(r.engole("a", 0, { x: 100, y: 100 })).toBe(false)
         expect(r.engole("a", 100, { x: 100 + CLIQUE_REPETIDO_PX, y: 100 })).toBe(true)
     })
-    it("mesma chave, dentro de 400 ms mas o ponteiro andou mais de 6 px: NAO e o mesmo toque, passa", () => {
+    it("mesma chave, dentro de 700 ms mas o ponteiro andou mais de 6 px: NAO e o mesmo toque, passa", () => {
         const r = criarRepeticao<string>()
         expect(r.engole("a", 0, { x: 100, y: 100 })).toBe(false)
         expect(r.engole("a", 100, { x: 100 + CLIQUE_REPETIDO_PX + 1, y: 100 })).toBe(false)

@@ -5,7 +5,7 @@
     import type { MediaStyle } from "../../../../types/Main"
     import type { ShowType } from "../../../../types/Show"
     import { addProjectItem } from "../../../converters/project"
-    import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
+    import { activeProject, activeShow, customMessageCredits, media, mediaOptions, mediaTags, outLocked, outputs, photoApiCredits, projects, styles } from "../../../stores"
     import { tela } from "../../../utils/aliancaTela"
     import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
     import { autorizarAr, gavetaNaoToca, podeMarcar } from "../../../utils/aliancaGavetaToque"
@@ -13,10 +13,13 @@
     import { camadaNaHora, ehAbaDePasta, pastaDaMidia, resolverFim, tagsSemPasta } from "../../../utils/aliancaPastasMidiaLogica"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
-    import { getMediaLayerType, getMediaStyle, getMediaType, loadThumbnail } from "../../helpers/media"
+    import { doesMediaExist, getMediaLayerType, getMediaStyle, getMediaType, isLocalFile, loadThumbnail } from "../../helpers/media"
+    import { VideoPlayer } from "../../media/video/videoPlayer"
+    import { acaoDoClique, estadoDoCartao, formatarDuracao, TRAVA_CARTAO_MS } from "../../../utils/aliancaMidiaCartaoLogica"
+    import { duracaoDeMidia } from "../../../utils/aliancaMidiaDuracao"
     import { findMatchingOut, getAllActiveOutputs, getFirstActiveOutput, setOutput } from "../../helpers/output"
     import Button from "../../inputs/Button.svelte"
-    import { clearBackground, clearSlide } from "../../output/clear"
+    import { clearSlide } from "../../output/clear"
     import SelectElem from "../../system/SelectElem.svelte"
     import Card from "../Card.svelte"
     import { motivoSemCulto } from "../../../utils/aliancaGaveta"
@@ -42,6 +45,41 @@
         thumbnailPath = await loadThumbnail(path)
         if (!thumbnailPath) failed = true
     }
+
+    // C1 (cabine 18/nov): arquivo local que sumiu quebra ALTO (cartao laranja, sem clique). So pergunta ao disco quando a miniatura falhou.
+    let falta = false
+    $: if (failed && isLocalFile(path) && !contentProvider) doesMediaExist(path, true).then((existe) => (falta = !existe))
+    $: if (!failed) falta = false
+
+    // C1: duracao no canto do thumb, lida uma vez por arquivo (cache da sessao); imagem nao tem selo
+    let duracaoLida = 0
+    $: if (type === "video" && thumbnail && path && !contentProvider) lerDuracao(path)
+    async function lerDuracao(p: string) {
+        const d = await duracaoDeMidia.pedir(p)
+        if (p === path) duracaoLida = d
+    }
+    $: duracaoTxt = formatarDuracao(duration || duracaoLida)
+    $: noAr = findMatchingOut(path, $outputs) !== null
+    let trava = false
+    let travaTimer: ReturnType<typeof setTimeout> | undefined
+    function armarTrava() {
+        trava = true
+        clearTimeout(travaTimer)
+        travaTimer = setTimeout(() => (trava = false), TRAVA_CARTAO_MS)
+    }
+    $: gridCartao = $mediaOptions.mode === "grid" && thumbnail
+    // C1: "ja esta no roteiro" (a mesma midia no roteiro aberto): o ＋ vira ✓ verde; clicar de novo adiciona outra vez
+    $: jaNoRoteiro = !!($projects[$activeProject || ""]?.shows || []).some((s: any) => s?.id === path)
+
+    // C1: a engrenagem abre o MESMO menu do botao direito do cartao (ajustes da midia: fim, camada, filtros), ancorado nela
+    function abrirAjustes(e: MouseEvent) {
+        e.stopPropagation()
+        const alvo = (e.currentTarget as HTMLElement).closest(".selectElem") as HTMLElement | null
+        const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+        const fake = new MouseEvent("contextmenu", { clientX: r.left, clientY: r.bottom + 2, bubbles: true, cancelable: true })
+        ;(alvo || (e.currentTarget as HTMLElement)).dispatchEvent(fake)
+    }
+    $: estado = estadoDoCartao({ falta, noAr, trava })
 
     // Store ContentFile object and display name for later use (license check, convert to show, etc.)
     $: if (contentFileData && contentProvider && path) {
@@ -121,10 +159,12 @@
 
     let wait = false
     function click(e: any) {
+        // C1: arquivo que sumiu nunca vai ao ar nem marca (o cartao laranja ja diz por que)
+        if (falta) return
         if (gavetaNaoToca()) {
             if (e.ctrlKey || e.metaKey || e.shiftKey || iconClicked) return
             // cabine 18/nov (B1): em Mostrar o clique simples numa MIDIA (video ou imagem) vai ao ar, como no ProPresenter. So la: em Editar o clique MARCA
-            // para levar ao culto e nunca vai ao ar. A trava de clique repetido (400 ms, aliancaToque) e o `wait` abaixo seguem valendo: nunca dispara 2x.
+            // para levar ao culto e nunca vai ao ar. A trava de clique repetido (700 ms, aliancaToque) e o `wait` abaixo seguem valendo: nunca dispara 2x.
             if (!podeMarcar()) {
                 if (type !== "video" && type !== "image") return
                 if ($outLocked) return newToast("a saída está travada: destrave para mandar ao ar")
@@ -141,13 +181,21 @@
         wait = true
         setTimeout(() => {
             wait = false
-        }, 800)
+        }, TRAVA_CARTAO_MS)
 
         const activeOutputs = getAllActiveOutputs()
 
         const isActive = !soRetornoLigado() && activeOutputs.some((a) => (a.out?.background?.path || a.out?.background?.id) === path)
-        if (isActive) {
-            clearBackground()
+        // C1 (decisao do dono, 18/nov): clicar no que JA esta no ar REINICIA o video (nunca limpa: limpar com um clique e o acidente de 09/ago do Sirvo)
+        const acao = acaoDoClique({ noAr: isActive, falta, tipo: type })
+        if (acao === "nada") return
+        armarTrava()
+        if (acao === "reiniciar") {
+            activeOutputs.forEach((output) => {
+                if ((output.out?.background?.path || output.out?.background?.id) !== path) return
+                VideoPlayer.seekTo(path, output.id, 0)
+                VideoPlayer.play(path, output.id)
+            })
             return
         }
 
@@ -178,17 +226,6 @@
         if (motivo) return newToast(motivo)
         addProjectItem({ id: path, name, type: getMediaType(path.slice(path.lastIndexOf(".") + 1, path.length)) })
         newToast(`"${displayName || name}" entrou no fim do roteiro`)
-    }
-
-    // leiaute v2: o ▶ do cartao poe a midia no fim do roteiro E a manda ao ar, pelo mesmo `click` do cartao (alterna: se ja esta no ar, limpa)
-    function tocarMidia(e: MouseEvent) {
-        if ($outLocked) {
-            e.stopPropagation()
-            return newToast("a saída está travada: destrave para mandar ao ar")
-        }
-        maisNoRoteiro(e)
-        // o ▶ e um gesto deliberado: levanta a guarda da biblioteca so para este clique
-        autorizarAr(() => click({}))
     }
 
     function dblclick(e: any) {
@@ -267,15 +304,16 @@
 </script>
 
 <SelectElem id="media" class="context #media_card" data={{ name, path, type, contentProvider }} {shiftRange} draggable fill>
+    <div class="mc" class:cartao={gridCartao} class:ar={gridCartao && estado === "ar"} class:falta={gridCartao && estado === "falta"} class:trava={gridCartao && estado === "trava"} data-acao="midia-cartao" data-estado={gridCartao ? estado : ""}>
     <Card
         resolution={{ width: 16, height: 9 }}
         loaded={(loaded && ($mediaOptions.mode === "grid" ? thumbnailPath !== "" || loadFullImage : true)) || failed}
         style={thumbnail ? `width: ${$mediaOptions.mode === "grid" ? 100 : 100 / $mediaOptions.columns}%;` : ""}
         mode={$mediaOptions.mode}
         width={100}
-        preview={$activeShow?.id === path}
-        outlineColor={findMatchingOut(path, $outputs)}
-        active={findMatchingOut(path, $outputs) !== null}
+        preview={!gridCartao && $activeShow?.id === path}
+        outlineColor={gridCartao ? null : findMatchingOut(path, $outputs)}
+        active={!gridCartao && noAr}
         label={displayName}
         semRotulo={$mediaOptions.mode === "grid" && thumbnail}
         title={contentProvider ? "" : path}
@@ -342,7 +380,20 @@
             </div>
         {/if}
 
-        {#if failed}
+        {#if gridCartao}
+            {#if duracaoTxt}<span class="dur" data-acao="midia-duracao">{duracaoTxt}</span>{/if}
+            {#if estado === "ar"}<span class="selo">NO AR</span>{/if}
+            {#if estado === "repouso"}<span class="dica"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor" /></svg>AO AR</span>{/if}
+            <button type="button" class="mais" class:ok={jaNoRoteiro} data-acao="midia-mais" aria-label="Adicionar ao roteiro" title={jaNoRoteiro ? "Já está no roteiro — adicionar de novo" : "Adicionar ao fim do roteiro"} tabindex="-1" on:mousedown|preventDefault|stopPropagation on:click={maisNoRoteiro}>
+                <span class="mais-i">{jaNoRoteiro ? "✓" : "＋"}</span>
+            </button>
+        {/if}
+        {#if estado === "falta" && gridCartao}
+            <div class="sumiu" data-acao="midia-sumiu">
+                <Icon size={1.4} id="close" white />
+                <span>ARQUIVO NÃO ENCONTRADO</span>
+            </div>
+        {:else if failed}
             <div class="icon">
                 <Icon size={2.5} id="close" style="color: var(--disconnected);" white />
             </div>
@@ -356,44 +407,250 @@
             </div>
         {/if}
     </Card>
-</SelectElem>
-{#if $mediaOptions.mode === "grid" && thumbnail}
-    <div class="rodape" data-acao="midia-rodape">
-        <span class="rn" data-title={path}>{displayName}</span>
-        <button type="button" class="rmais" aria-label="Adicionar ao roteiro" title="Adicionar ao fim do roteiro" tabindex="-1" on:mousedown|preventDefault on:click={maisNoRoteiro}>＋</button>
-        {#if $tela === "mostrar"}
-            <button type="button" class="rmais" data-acao="midia-tocar" aria-label="Adicionar ao roteiro e mandar ao ar" title="Adicionar ao roteiro e mandar ao ar" tabindex="-1" on:mousedown|preventDefault on:click={tocarMidia}>▶</button>
-        {/if}
+    {#if gridCartao}
+        <!-- faixa do nome: zona segura (so seleciona e arrasta; ir ao ar e so o thumb) -->
+        <div class="pe" data-acao="midia-rodape">
+            <span class="nm" data-title={path}>{displayName}</span>
+            <button type="button" class="eng" data-acao="midia-ajustes" aria-label="Ajustes desta mídia" title="Ajustes desta mídia" tabindex="-1" on:mousedown|preventDefault|stopPropagation on:click={abrirAjustes}>
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="2.2" /><path d="M8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1" /></svg>
+            </button>
+        </div>
+    {/if}
     </div>
-{/if}
+</SelectElem>
 
 <style>
-    .rodape {
+    /* ---- C1 (cabine 18/nov): o cartao de midia. Thumb = unico gatilho de "ao ar"; faixa do nome = zona segura (seleciona e arrasta). Medidas do board. ---- */
+    .mc:not(.cartao) {
+        display: contents;
+    }
+    .mc.cartao {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        padding: 4px;
+        border-radius: var(--luz-raio-cartao);
+        background: var(--luz-campo);
+        box-shadow: inset 0 0 0 1px var(--luz-linha);
+    }
+    .mc.cartao :global(.main) {
+        padding: 0;
+        width: 100% !important;
+        outline: none;
+    }
+    .mc.cartao :global(.card) {
+        border-radius: var(--luz-raio-thumb);
+        overflow: hidden;
+        background: var(--luz-thumb);
+        cursor: pointer;
+    }
+    .mc.cartao :global(.over:hover > .hover) {
+        opacity: 0;
+    }
+    .mc.cartao:hover {
+        background: var(--luz-hover);
+        box-shadow: inset 0 0 0 1px var(--luz-borda-forte);
+    }
+    /* hover: contorno claro no thumb + a dica do que o clique faz (nunca vermelho: vermelho e so "no ar") */
+    .mc.cartao:hover :global(.card)::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: var(--luz-raio-thumb);
+        box-shadow: inset 0 0 0 2px var(--luz-anel);
+        pointer-events: none;
+        z-index: 2;
+    }
+    .dur {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        z-index: 3;
+        height: 18px;
+        padding: 0 5px;
         display: flex;
         align-items: center;
-        gap: 4px;
-        padding: 0 2px 4px;
+        border-radius: var(--luz-raio-selo);
+        background: var(--luz-selo);
+        color: var(--luz-branco);
+        font-size: 11px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        pointer-events: none;
     }
-    .rn {
-        flex: 1 1 auto;
+    .dica {
+        position: absolute;
+        left: 5px;
+        bottom: 5px;
+        z-index: 3;
+        height: 20px;
+        padding: 0 7px 0 5px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        border-radius: var(--luz-raio-selo);
+        background: var(--luz-selo-forte);
+        color: var(--luz-branco);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        pointer-events: none;
+    }
+    .mc.cartao:hover .dica {
+        display: flex;
+    }
+    .selo {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        z-index: 3;
+        padding: 2px 6px;
+        border-radius: var(--luz-raio-selo);
+        background: var(--luz-vermelho);
+        color: var(--luz-branco);
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 14px;
+        pointer-events: none;
+    }
+    /* o alvo real do "＋" e 38 x 38 e encosta nas duas bordas do thumb: errar para cima ou para a esquerda ainda cai no ＋, nunca no ar */
+    .mais {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        z-index: 4;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        color: var(--luz-texto);
+    }
+    .mais-i {
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--luz-raio-botao);
+        background: var(--luz-selo-forte);
+        box-shadow: inset 0 0 0 1px var(--luz-borda-forte);
+        font-size: 15px;
+        line-height: 1;
+    }
+    .mais.ok .mais-i {
+        color: var(--luz-verde);
+        box-shadow: inset 0 0 0 1px var(--luz-verde-borda);
+    }
+    .pe {
+        height: 30px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 2px 0 0 6px;
+        min-width: 0;
+    }
+    .nm {
+        flex: 1;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: 12px;
+        font-weight: 600;
+        color: var(--luz-texto);
     }
-    .rmais {
+    .eng {
         flex: none;
-        width: 28px;
-        height: 28px;
-        border: 1px solid var(--luz-borda, rgb(248 248 240 / 0.13));
-        border-radius: 6px;
-        background: var(--luz-campo, rgb(248 248 240 / 0.06));
-        color: var(--luz-texto, #f8f8f0);
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: var(--luz-raio-thumb);
+        background: transparent;
+        color: var(--luz-mudo);
         cursor: pointer;
     }
-    .rmais:hover {
-        background: var(--luz-hover, rgb(248 248 240 / 0.1));
+    .mc.cartao:hover .eng,
+    .eng:hover {
+        color: var(--luz-texto);
+    }
+    /* no ar: o cartao INTEIRO fica vermelho (leitura a 2 m), faixa do nome cheia */
+    .mc.cartao.ar,
+    .mc.cartao.ar:hover {
+        background: var(--luz-vermelho);
+        box-shadow: 0 0 0 2px var(--luz-vermelho);
+    }
+    .mc.ar .nm {
+        color: var(--luz-branco);
+    }
+    .mc.ar .eng {
+        color: var(--luz-branco-suave);
+    }
+    .mc.cartao.ar :global(.card)::after {
+        display: none;
+    }
+    /* trava de 700 ms: o thumb escurece e uma barra enche, para o operador ver que o primeiro clique valeu */
+    .mc.trava :global(.card) {
+        filter: brightness(0.6);
+    }
+    .mc.trava :global(.card)::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 3px;
+        width: 100%;
+        background: var(--luz-branco);
+        z-index: 5;
+        transform-origin: left;
+        animation: encherTrava 700ms linear forwards;
+    }
+    @keyframes encherTrava {
+        from {
+            transform: scaleX(0);
+        }
+        to {
+            transform: scaleX(1);
+        }
+    }
+    /* arquivo sumiu: laranja, sem clique, com o motivo escrito */
+    .mc.falta {
+        background: var(--luz-laranja-lavagem);
+        box-shadow: inset 0 0 0 1px var(--luz-laranja-borda);
+    }
+    .mc.falta :global(.card) {
+        cursor: not-allowed;
+    }
+    .mc.falta .nm {
+        color: var(--luz-laranja);
+    }
+    .sumiu {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: var(--luz-thumb);
+        color: var(--luz-laranja);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+    .mc.falta .mais,
+    .mc.falta .dica {
+        display: none;
     }
     .icon {
         display: flex;
@@ -428,7 +685,7 @@
         display: flex;
     }
     .icons .button {
-        background-color: rgb(0 0 0 / 0.6);
+        background-color: var(--luz-selo);
         pointer-events: all;
     }
     .chips {
@@ -443,12 +700,12 @@
     }
     .chips span {
         pointer-events: all;
-        background-color: rgb(0 0 0 / 0.6);
+        background-color: var(--luz-selo);
         color: var(--text);
         padding: 1px 5px;
         font-size: 0.7em;
         font-weight: bold;
-        border-radius: 3px;
+        border-radius: var(--luz-raio-selo);
         outline: 1px solid transparent;
     }
     .chips span.proprio {
@@ -457,7 +714,7 @@
 
     .icons span {
         pointer-events: all;
-        background-color: rgb(0 0 0 / 0.6);
+        background-color: var(--luz-selo);
         padding: 3px;
         font-size: 0.75em;
         font-weight: bold;

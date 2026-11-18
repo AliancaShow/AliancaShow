@@ -110,7 +110,7 @@ function aoClique(e: MouseEvent) {
         const alvo = e.target instanceof Element ? e.target : null
         if (!alvo) return
         // duplo clique no slide de Mostrar: NAO faz nada (decisao do Andre: "gente clica 2x e o video dispara 2x"). Na biblioteca e no roteiro (fatia 6) vale
-        // a mesma regra; fora o duplo clique, o clique repetido (< 400 ms no mesmo item) tambem e engolido.
+        // a mesma regra; fora o duplo clique, o clique repetido (< 700 ms no mesmo item) tambem e engolido.
         if (e.type === "dblclick") {
             if (!alvo.closest(ITEM_DO_CENTRO) || alvo.closest(CAMPO)) return
             e.preventDefault()

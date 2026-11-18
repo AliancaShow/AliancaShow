@@ -1,6 +1,6 @@
 // Leiaute v2, biblioteca: o botao ▶ da linha. Poe o item no fim do roteiro do culto aberto E manda o PRIMEIRO slide ao ar, pelo mesmo
 // caminho do clique num slide de Mostrar (`slideClick` de show/Slides.svelte: `setOutput("slide")` + `updateOut`). Respeita a saida travada.
-// A trava de clique repetido (< 400 ms no mesmo botao) e a global de aliancaToque (o ▶ e um botao dentro de `.context`, na regiao da biblioteca).
+// A trava de clique repetido (< 700 ms no mesmo botao) e a global de aliancaToque (o ▶ e um botao dentro de `.context`, na regiao da biblioteca).
 // So e importado por componentes da janela principal.
 import { get } from "svelte/store"
 import { customActionActivation } from "../components/actions/actions"

@@ -31,7 +31,7 @@
     import FaixaDeFalha from "./FaixaDeFalha.svelte"
     import ProfileChangerMenu from "./ProfileChangerMenu.svelte"
 
-    // as duas travas de gesto da fatia 2 (Esc que fechou algo segura o seguinte 700 ms; clique repetido no mesmo item < 400 ms e engolido). Ligadas
+    // as duas travas de gesto da fatia 2 (Esc que fechou algo segura o seguinte 700 ms; clique repetido no mesmo item < 700 ms e engolido). Ligadas
     // AGORA (na criacao, antes dos filhos): o ouvinte de Esc tem de rodar na captura ANTES dos popovers, que tambem capturam.
     const soltarTravas = ligarTravasDeToque()
     onDestroy(soltarTravas)
