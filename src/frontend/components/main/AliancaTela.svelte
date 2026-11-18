@@ -14,7 +14,9 @@
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
+    import AliancaCorpoPagina from "./AliancaCorpoPagina.svelte"
     import AliancaDivisoria from "./AliancaDivisoria.svelte"
+    import AliancaNoAr from "./AliancaNoAr.svelte"
     import AliancaTopo from "./AliancaTopo.svelte"
     import AnteparoDeModo from "./AnteparoDeModo.svelte"
     import FaixaDeFalha from "./FaixaDeFalha.svelte"
@@ -22,6 +24,10 @@
 
     $: pagina = $activePage
     $: emPagina = pagina === "settings" || pagina === "stage" || pagina === "draw"
+    // pagina sem lugar na tela nova (scripture, calendar, reflow ou valor novo do upstream): corpo vazio com o nome, e a faixa de falha acende.
+    // Nunca cai calado numa tela antiga e nunca "volta para show". (O guarda de activePage, commit 11, recusa a escrita antes de chegar aqui.)
+    $: semLugar = !emPagina && pagina !== "show" && pagina !== "edit"
+    $: if (semLugar) falhaAlta("pagina-sem-lugar", pagina)
 
     // ----- medidas do conteudo (o `main`) e divisorias -----
     let w = 1920
@@ -77,10 +83,14 @@
 
     <AliancaTopo />
 
-    {#if emPagina}
+    {#if semLugar}
+        <div class="corpo" data-regiao="corpo-pagina" data-pagina={pagina}>
+            <div class="painel semLugar" style="flex: 1; min-width: 0">Página sem lugar: {pagina}</div>
+        </div>
+    {:else if emPagina}
         <div class="corpo" data-regiao="corpo-pagina" data-pagina={pagina}>
             <div class="painel" style="flex: 1; min-width: 0">
-                <!-- AQUI:pagina -->
+                <AliancaCorpoPagina pagina={emPagina ? pagina : "settings"} esq={valores.esq} dir={valores.dir} />
             </div>
         </div>
     {:else}
@@ -102,7 +112,7 @@
             </div>
             <AliancaDivisoria eixo="v" on:pegar={pegar("dir")} />
             <aside class="painel dir" data-regiao="no-ar" style="width: {valores.dir}px">
-                <!-- AQUI:no-ar -->
+                <AliancaNoAr />
             </aside>
         </div>
     {/if}
@@ -182,6 +192,11 @@
     .col,
     .dir {
         flex-shrink: 0;
+    }
+    .semLugar {
+        align-items: center;
+        justify-content: center;
+        color: var(--luz-mudo);
     }
     .centro {
         flex: 1;
