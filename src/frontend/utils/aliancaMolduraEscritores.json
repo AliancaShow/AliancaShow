@@ -47,6 +47,7 @@
         "p"
     ],
     "components/main/AliancaSirvoPilula.svelte": [
+        "\"settings\"",
         "\"settings\""
     ],
     "components/main/AliancaTelaoPilula.svelte": [

@@ -81,7 +81,8 @@
     }
     onDestroy(() => tRestaura && clearTimeout(tRestaura))
     // aviso de desenho ativo (Preencher, zoom ou tracos): o telao pode estar coberto e nada mais no topo avisaria. Era o botao vermelho de Top.svelte.
-    $: desenho = ($drawTool, $drawSettings, $paintCache, desenhoAtivo(get(drawTool), get(drawSettings), get(paintCache) as any))
+    const lerDesenho = (_a: unknown, _b: unknown, _c: unknown) => desenhoAtivo(get(drawTool), get(drawSettings), get(paintCache) as any)
+    $: desenho = lerDesenho($drawTool, $drawSettings, $paintCache)
     $: podeRestaurar = !$outLocked && !!$outputCache && restauraPronto
     $: motivoRestaurar = $outLocked ? "A saída está travada." : !$outputCache ? "Não há nada limpo para restaurar." : !restauraPronto ? "Espere um instante." : ""
     $: if (pergunta) menuAberto = false

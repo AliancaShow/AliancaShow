@@ -41,7 +41,7 @@
         <button type="button" class="mais" class:aberto aria-haspopup="menu" aria-expanded={aberto} aria-label="Mais opções do show" title="Mais opções do show" tabindex="-1" on:mousedown|preventDefault on:click={() => (aberto = !aberto)}>⋮</button>
         {#if aberto}
             <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
-            <div class="menu" role="menu" on:click={() => (aberto = false)}>
+            <div class="menu" role="menu" tabindex="-1" on:click={() => (aberto = false)}>
                 <button type="button" role="menuitem" tabindex="-1" on:click={() => showNotesActive.set(!$showNotesActive)}><span class="ck">{$showNotesActive ? "✓" : ""}</span>Notas do show</button>
                 <button type="button" role="menuitem" tabindex="-1" on:click={() => special.update((a) => ({ ...a, timelineActive: !a.timelineActive }))}><span class="ck">{$special.timelineActive ? "✓" : ""}</span>Linha do tempo do show</button>
                 <button type="button" role="menuitem" tabindex="-1" on:click={travar}><span class="ck">{atual.locked ? "✓" : ""}</span>Bloquear alterações</button>

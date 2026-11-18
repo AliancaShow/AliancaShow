@@ -63,7 +63,8 @@
     })
 
     // o selo HOJE do botao fechado: o culto aberto e o de hoje (o relogio e lido quando o culto aberto muda)
-    $: diaEhHoje = ehHoje(cultoAberto?.cultoId, ($activeProject, hojeLocalISO()))
+    const hojeAgora = (_aberto: unknown) => hojeLocalISO()
+    $: diaEhHoje = ehHoje(cultoAberto?.cultoId, hojeAgora($activeProject))
 
     // ---------------------------------------------------------------- opcoes (so calculadas com o popover de dia aberto)
 

@@ -16,8 +16,10 @@
     let erro = ""
     let tique = 0
     // a mensagem some da caixa quando o `ate` passa (o tique reavalia a cada 5 s)
-    $: viva = (tique, mensagemViva($sirvoRoteiro?.mensagem_palco, sirvoAgora()))
-    $: motivo = ($sirvo, porQueNaoConduz())
+    const lerViva = (_tique: number, r: typeof $sirvoRoteiro) => mensagemViva(r?.mensagem_palco, sirvoAgora())
+    const lerMotivo = (_estado: unknown) => porQueNaoConduz()
+    $: viva = lerViva(tique, $sirvoRoteiro)
+    $: motivo = lerMotivo($sirvo)
     const relogio = setInterval(() => (tique += 1), 5000)
     onDestroy(() => clearInterval(relogio))
 

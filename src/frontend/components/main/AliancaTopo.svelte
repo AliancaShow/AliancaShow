@@ -13,9 +13,9 @@
     export let semTelaFisica = false
 
     // a aba acesa segue o `modoAlianca` (o que o teclado obedece); pagina e modo discordando acende o contorno de alerta
-    $: ({ marcado, cruzado } = marcadoDoSegmentado($activePage, $modoAlianca))
     let marcado: "mostrar" | "editar" | null = null
     let cruzado = false
+    $: ({ marcado, cruzado } = marcadoDoSegmentado($activePage, $modoAlianca))
 
     function irMostrar() {
         irAoCulto()
