@@ -72,7 +72,7 @@
     <div class="grade">
         {#each lista as linha (linha.id)}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div class="linha context #show_drawer" class:on={aberto === linha.id} role="button" tabindex="-1" data-show={linha.id} data-title="Botão direito: editar, mostrar agora…" on:click={() => openShow(linha.id)}>
+            <div class="linha context #show_drawer" class:on={aberto === linha.id} role="button" tabindex="-1" data-show={linha.id} data-menu-titulo={linha.nome} data-title="Botão direito: editar, mostrar agora…" on:click={() => openShow(linha.id)}>
                 <div class="nome">
                     <span class="t">{linha.nome}</span>
                     <span class="s">{nomeDaCategoria(linha.categoria)}</span>

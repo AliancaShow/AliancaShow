@@ -1,0 +1,53 @@
+import { describe, expect, it } from "vitest"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+import { contextMenuItems } from "./contextMenus"
+import { NOVOS, REMOVIDOS, semDestinoPorLayout } from "./aliancaMenusBibliotecaLayouts"
+
+// os layouts ANTIGOS, lidos do texto de contextMenus.ts (o modulo de registro troca os do mapa vivo ao ser importado)
+const fonte = readFileSync(join(__dirname, "contextMenus.ts"), "utf8")
+function antigoDe(layout: string): string[] | null {
+    const ini = fonte.indexOf(`
+    ${layout}: [`)
+    if (ini < 0) return null
+    const abre = fonte.indexOf("[", ini)
+    const m = [null, fonte.slice(abre + 1, fonte.indexOf("]", abre))]
+    return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : null
+}
+
+describe("menus da biblioteca e do roteiro (fatia 6)", () => {
+    it("o registro troca os layouts e acende a falha alta de quem ficou sem destino (a conta e do outro arquivo; o modulo so a chama)", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).toContain("Object.assign(contextMenuLayouts, NOVOS)")
+        expect(reg).toMatch(/semDestinoPorLayout\(antigos\)[\s\S]*falhaAlta\("menu-biblioteca"/)
+    })
+    it("todo item do menu novo existe em contextMenuItems (ou e separador/grupo)", () => {
+        const itensDaFatia = ["alianca_roteiro", "alianca_agora", "alianca_agora_item", "alianca_subir", "alianca_descer", "alianca_tirar", "alianca_titulo", "alianca_novo_bloco"]
+        const registrados = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8") + readFileSync(join(__dirname, "aliancaMenusEditar.ts"), "utf8")
+        for (const [layout, itens] of Object.entries(NOVOS))
+            for (const i of itens) {
+                if (i === "SEPARATOR" || i.startsWith("GROUP_")) continue
+                const existe = !!contextMenuItems[i] || (itensDaFatia.includes(i) && registrados.includes(`${i}:`)) || i === "alianca_editar" || i === "alianca_mover" || i === "alianca_fim" || i === "alianca_camada"
+                expect(existe, `${layout}: ${i}`).toBe(true)
+            }
+    })
+    it("todo item do menu ANTIGO esta no novo ou declarado em REMOVIDOS, com o destino escrito", () => {
+        const antigos: { [k: string]: string[] } = {}
+        for (const k of Object.keys(NOVOS)) {
+            const a = antigoDe(k)
+            if (a) antigos[k] = a
+        }
+        // show_drawer e project_effect nasceram aqui (o FreeShow nao tinha menu para eles)
+        expect(Object.keys(NOVOS).filter((k) => !antigos[k]).sort()).toEqual(["project_effect", "show_drawer"])
+        expect(semDestinoPorLayout(antigos)).toEqual({})
+        for (const [layout, declarados] of Object.entries(REMOVIDOS)) for (const [item, destino] of Object.entries(declarados)) expect(destino.length, `${layout}.${item}`).toBeGreaterThan(5)
+    })
+    it("mutacao: um item antigo a mais, sem declaracao, e acusado", () => {
+        const antigos: { [k: string]: string[] } = { media_card: [...(antigoDe("media_card") || []), "item_novo_do_upstream"] }
+        expect(semDestinoPorLayout(antigos).media_card).toEqual(["item_novo_do_upstream"])
+    })
+    it("so os itens deliberados vao ao ar (Mostrar agora / play do roteiro)", () => {
+        const aoAr = ["alianca_agora", "alianca_agora_item", "play_no_audio", "play_no_filters"]
+        for (const itens of Object.values(NOVOS)) for (const i of itens) if (/^play|agora/.test(i)) expect(aoAr).toContain(i)
+    })
+})

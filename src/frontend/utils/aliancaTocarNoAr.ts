@@ -14,15 +14,18 @@ import { newToast } from "./common"
 
 export const MOTIVO_TRAVADA = "a saída está travada: destrave para mandar ao ar"
 
-/** Retorna o motivo de nao ter ido ao ar ("" = foi). A falha em por no roteiro (sem culto aberto) vai em aviso e NAO impede o envio. */
-export async function tocarShowNoAr(id: string): Promise<string> {
+/**
+ * Retorna o motivo de nao ter ido ao ar ("" = foi). A falha em por no roteiro (sem culto aberto) vai em aviso e NAO impede o envio.
+ * `entrarNoRoteiro: false` e o "Mostrar agora (sem pôr no roteiro)" do botao direito (fatia 6): o telao recebe o primeiro slide e o roteiro nao muda.
+ */
+export async function tocarShowNoAr(id: string, opcoes: { entrarNoRoteiro?: boolean } = {}): Promise<string> {
     if (get(outLocked)) {
         newToast(MOTIVO_TRAVADA)
         return MOTIVO_TRAVADA
     }
     const projetoId = get(activeProject)
     const jaNoCulto = !!projetoId && (get(projects)[projetoId]?.shows || []).some((s: { id: string }) => s.id === id)
-    if (!jaNoCulto) {
+    if (!jaNoCulto && opcoes.entrarNoRoteiro !== false) {
         const r = porShowNoFim(id)
         if (!r.entrou && r.motivo) newToast(`Não entrou no roteiro: ${r.motivo}`)
     }

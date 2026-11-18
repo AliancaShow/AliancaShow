@@ -2,6 +2,7 @@
     import { fade } from "svelte/transition"
     import { selected } from "../../stores"
     import "./aliancaMenusEditar" // registra os itens de Editar nos mapas de contextMenus.ts
+    import "./aliancaMenusBiblioteca" // fatia 6: biblioteca e roteiro
     import { saidasDoMenu } from "../../utils/aliancaEditarAcoes"
     import { mostrarMandarSo } from "../../utils/aliancaEditarSaidas"
     import { tela } from "../../utils/aliancaTela"
@@ -25,6 +26,8 @@
     let y = 0
     let side: "right" | "left" = "right"
     let translate = 0
+    // fatia 6: o titulo do menu (nome do item clicado) vem de `data-menu-titulo` no elemento
+    let titulo = ""
 
     let autoCloseTimeout: NodeJS.Timeout | null = null
     let searchQuery = ""
@@ -53,6 +56,7 @@
         translate = 0
 
         contextElem = target.closest?.(".context") || document.body
+        titulo = (contextElem as any)?.closest?.("[data-menu-titulo]")?.getAttribute?.("data-menu-titulo") || ""
         let id: string | null = contextElem?.classList.length ? [...contextElem?.classList].find((c: string) => c.includes("#")) || null : null
 
         // don't show drawer context menu in search input
@@ -234,6 +238,7 @@
     <div class="contextMenu" style="left: {x}px; top: {y}px;transform: translateY(-{translate}%);--background: rgb({rgb.r} {rgb.g} {rgb.b} / 0.97);" class:top class:isOptimized transition:fade={{ duration: 60 }}>
         {#key update}
             <SpellCheckMenu />
+            {#if titulo}<div class="menuTitulo">{titulo}</div>{/if}
 
             {#each activeMenu as id, i}
                 {#if id === "SEPARATOR"}
@@ -274,8 +279,25 @@
         border: 1px solid var(--primary-lighter);
 
         --background: rgba(35, 35, 45, 0.97);
-        background-color: var(--background);
-        backdrop-filter: blur(8px);
+        /* leiaute v2: o menu e um popover Luz (opaco, sem desfoque) */
+        background-color: var(--luz-pop-opaco, var(--background));
+        border-color: var(--luz-borda, var(--primary-lighter));
+        border-radius: var(--luz-raio, 6px);
+        box-shadow:
+            inset 0 0 0 1px var(--luz-borda, transparent),
+            0 16px 40px rgba(0, 0, 0, 0.55);
+        color: var(--luz-texto, inherit);
+        font-family: var(--luz-fonte, inherit);
+        max-width: min(360px, calc(100vw - 16px));
+    }
+    .menuTitulo {
+        padding: 4px 14px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--luz-mudo, rgb(248 248 240 / 0.5));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .top {
@@ -284,10 +306,10 @@
     }
 
     hr {
-        margin: 8px 0;
+        margin: 4px 0;
         height: 1px;
         border: none;
-        background-color: var(--primary-lighter);
+        background-color: var(--luz-linha, var(--primary-lighter));
     }
 
     .group {
