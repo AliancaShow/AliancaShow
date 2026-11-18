@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest"
-import { faixaAberta, fracao, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { describe, expect, it, vi } from "vitest"
+import { arrastoVale, criarLimitador, prenderVolume, VOLUME_MAXIMO, outrasSaidasComVideo, saidasHabilitadas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -51,9 +51,79 @@ describe("timersNaFaixa", () => {
     it("nada ativo = nada", () => expect(timersNaFaixa(timers, [])).toEqual([]))
 })
 
-describe("faixaAberta", () => {
-    it("fechada sem nada", () => expect(faixaAberta({ video: false, audio: false, timers: 0, spotify: false })).toBe(false))
-    it.each([{ video: true }, { audio: true }, { timers: 1 }, { spotify: true }])("abre com %o", (p) => expect(faixaAberta({ video: false, audio: false, timers: 0, spotify: false, ...p })).toBe(true))
+describe("extrasDaFaixa (revisao da fatia 7, achado 3: a faixa tem uma linha so)", () => {
+    it.each([
+        [0, 0],
+        [1, 0],
+        [2, 1],
+        [5, 4]
+    ])("%s coisas -> +%s", (total, extras) => expect(extrasDaFaixa(total)).toBe(extras))
+})
+
+describe("varias saidas: a faixa segue a mesma saida da tela (revisao da fatia 7, achado 4)", () => {
+    const o = { b: { enabled: true }, a: { enabled: true }, c: { enabled: false }, d: { enabled: true, invisible: true } }
+    it("habilitadas e visiveis, na ordem do objeto (nao a de nome: a primeira e a principal)", () => {
+        expect(saidasHabilitadas(o)).toEqual(["b", "a"])
+        expect(saidasHabilitadas(null)).toEqual([])
+    })
+    it("conta so as outras saidas com video DIFERENTE do que a faixa controla", () => {
+        expect(outrasSaidasComVideo([{ caminho: "/v/b.mp4", video: true }], "/v/a.mp4")).toBe(1)
+        expect(outrasSaidasComVideo([{ caminho: "/v/a.mp4", video: true }], "/v/a.mp4")).toBe(0)
+        expect(
+            outrasSaidasComVideo(
+                [
+                    { caminho: "/i/foto.jpg", video: false },
+                    { caminho: "", video: true }
+                ],
+                ""
+            )
+        ).toBe(0)
+        expect(
+            outrasSaidasComVideo(
+                [
+                    { caminho: "/v/b.mp4", video: true },
+                    { caminho: "/v/c.mp4", video: true }
+                ],
+                ""
+            )
+        ).toBe(2)
+    })
+})
+
+describe("volume (revisao da fatia 7, achado 5)", () => {
+    it("o teto e 125 %: o que o ajuste da midia aceita nao e reduzido calado", () => {
+        expect(VOLUME_MAXIMO).toBe(1.25)
+        expect(prenderVolume(1.25)).toBe(1.25)
+        expect(prenderVolume(9)).toBe(1.25)
+        expect(prenderVolume(-1)).toBe(0)
+        expect(prenderVolume(0, 0.01)).toBe(0.01)
+        expect(prenderVolume(NaN)).toBe(0)
+    })
+    it("limitador: no maximo uma escrita por intervalo, o valor final nunca se perde", () => {
+        vi.useFakeTimers()
+        const escritas: number[] = []
+        const l = criarLimitador<number>((v) => escritas.push(v), 100)
+        for (let i = 1; i <= 30; i++) {
+            l.empurrar(i / 100)
+            vi.advanceTimersByTime(10) // 30 movimentos em 300 ms
+        }
+        expect(escritas.length).toBeLessThanOrEqual(4) // ~10 por segundo
+        expect(escritas[0]).toBe(0.01) // o primeiro passa na hora
+        l.fechar(0.4)
+        expect(escritas[escritas.length - 1]).toBe(0.4) // soltar grava o final na hora
+        vi.advanceTimersByTime(500)
+        expect(escritas[escritas.length - 1]).toBe(0.4) // e nada espera atras
+        vi.useRealTimers()
+    })
+    it("limitador: sem nada pendente, nao escreve de novo", () => {
+        vi.useFakeTimers()
+        const escritas: number[] = []
+        const l = criarLimitador<number>((v) => escritas.push(v), 100)
+        l.empurrar(1)
+        vi.advanceTimersByTime(1000)
+        expect(escritas).toEqual([1])
+        vi.useRealTimers()
+    })
 })
 
 // Guarda de TEXTO (o DOM so existe no app): a faixa e a linha ficam fora da trava de clique repetido e fora da tela No ar (nao e camada).
@@ -65,11 +135,63 @@ describe("faixa de transporte (guarda de texto)", () => {
         expect(ler("components/main/AliancaTransporte.svelte")).toMatch(/class="faixa"[^>]*data-sem-trava/)
         expect(ler("components/main/AliancaTransporteLinha.svelte")).toMatch(/class="linha"[^>]*data-sem-trava/)
     })
-    it("mora no No ar, entre a tela e as outras telas, e nao e posicionada sobre ela", () => {
+    it("mora no No ar, entre a tela e as outras telas, e a caixa da faixa nao e posicionada sobre ela", () => {
         expect(ler("components/main/AliancaNoAr.svelte")).toMatch(/<AliancaCamadas \/>\s*<\/div>\s*<AliancaTransporte \/>\s*<AliancaOutrasTelas/)
-        expect(ler("components/main/AliancaTransporte.svelte")).not.toMatch(/position:\s*(absolute|fixed)/)
+        const css = ler("components/main/AliancaTransporte.svelte")
+        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    /* so a primeira linha"))
+        expect(caixa).not.toMatch(/position:\s*(absolute|fixed)/)
     })
-    it("nenhuma tecla nova: a faixa nao escuta o teclado", () => {
-        for (const a of ["AliancaTransporte", "AliancaTransporteLinha", "AliancaBarra"]) expect(ler(`components/main/${a}.svelte`)).not.toMatch(/on:keydown|svelte:window|svelte:body/)
+    it("a faixa e a tela No ar escolhem a saida pela MESMA funcao (achado 4)", () => {
+        expect(ler("components/main/AliancaNoAr.svelte")).toContain("saidasHabilitadas($outputs)")
+        expect(ler("components/main/AliancaTransporte.svelte")).toContain("saidasHabilitadas($outputs)")
+        expect(ler("components/main/AliancaTransporte.svelte")).not.toContain("getFirstOutputIdWithBackground")
+    })
+    it("altura fixa reservada: 36 px sempre, sem animacao de altura nem margem que muda (achado 3)", () => {
+        const css = ler("components/main/AliancaTransporte.svelte")
+        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    /* so a primeira linha"))
+        expect(caixa).toMatch(/height:\s*36px/)
+        expect(css).not.toMatch(/grid-template-rows|transition:[^;]*(height|margin)/)
+    })
+    it("nenhuma tecla nova: a faixa nao escuta o teclado (so o ponteiro, para fechar o painel)", () => {
+        for (const a of ["AliancaTransporte", "AliancaTransporteLinha", "AliancaBarra"]) expect(ler(`components/main/${a}.svelte`)).not.toMatch(/on:key(down|up|press)|svelte:body/)
+    })
+})
+
+describe("busca nunca chega ao fim (revisao da fatia 7, achado 1)", () => {
+    it("o limite e o fim menos 0,25 s", () => {
+        expect(limiteBusca(10)).toBe(9.75)
+        expect(limiteBusca(10, 0)).toBe(9.75)
+    })
+    it("com `toTime` proprio, vale o fim do trecho", () => {
+        expect(limiteBusca(10, 6)).toBe(5.75)
+        expect(limiteBusca(10, 40)).toBe(9.75) // toTime alem da duracao: vale a duracao
+    })
+    it("sem duracao nao ha para onde buscar", () => {
+        expect(limiteBusca(0)).toBe(0)
+        expect(limiteBusca(NaN)).toBe(0)
+    })
+    it("arrastar alem da ponta direita prende antes do fim; o meio passa como veio", () => {
+        expect(prenderBusca(10, 10)).toBe(9.75)
+        expect(prenderBusca(99, 10, 6)).toBe(5.75)
+        expect(prenderBusca(4, 10)).toBe(4)
+        expect(prenderBusca(-3, 10)).toBe(0)
+    })
+    it("clipe curtissimo nao fica negativo", () => {
+        expect(prenderBusca(0.2, 0.1)).toBe(0)
+    })
+})
+
+describe("arrasto preso ao arquivo em que comecou (revisao da fatia 7, achado 2)", () => {
+    const a = { caminho: "/v/a.mp4", saida: "default" }
+    it("vale enquanto o mesmo arquivo segue na mesma saida", () => {
+        expect(arrastoVale(a, "/v/a.mp4", "default")).toBe(true)
+    })
+    it("morre se outro video entra, se a saida muda ou se o fundo some", () => {
+        expect(arrastoVale(a, "/v/b.mp4", "default")).toBe(false)
+        expect(arrastoVale(a, "/v/a.mp4", "outra")).toBe(false)
+        expect(arrastoVale(a, "", "default")).toBe(false)
+    })
+    it("sem arrasto nao vale nada", () => {
+        expect(arrastoVale(null, "/v/a.mp4", "default")).toBe(false)
     })
 })

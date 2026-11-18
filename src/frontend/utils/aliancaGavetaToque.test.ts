@@ -30,10 +30,14 @@ describe("a guarda da biblioteca (fatia 6)", () => {
         })
         expect(gavetaNaoToca()).toBe(true)
     })
-    it("dispararNoAlvo sem alvo ou fora da tela acende a falha e nao dispara nada", () => {
+    it("dispararNoAlvo sem item acende a falha (defeito de codigo)", () => {
         falhas.length = 0
         expect(dispararNoAlvo(null)).toBe(false)
+        expect(falhas.length).toBe(1)
+    })
+    it("revisao da fatia 6, achado 10: item que saiu da tela (lista recriada) devolve false, sem faixa de falha (quem chama avisa o operador)", () => {
+        falhas.length = 0
         expect(dispararNoAlvo({ isConnected: false } as any)).toBe(false)
-        expect(falhas.length).toBe(2)
+        expect(falhas.length).toBe(0)
     })
 })

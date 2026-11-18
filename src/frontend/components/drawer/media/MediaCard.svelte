@@ -274,7 +274,7 @@
         title={contentProvider ? "" : path}
         icon={thumbnail ? icon : null}
         white={type === "image"}
-        showPlayOnHover={!marcavel}
+        showPlayOnHover={false}
         {marcavel}
         marcado={estaMarcado}
         checkered={$mediaOptions.mode === "grid" && mediaStyle.fit !== "blur" && !failed}

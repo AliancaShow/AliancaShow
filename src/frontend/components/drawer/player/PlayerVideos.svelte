@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import type { Category } from "../../../../types/Tabs"
     import { activeFocus, activePlayerTagFilter, activeShow, focusMode, outLocked, outputs, playerTags, playerVideos } from "../../../stores"
     import { translateText } from "../../../utils/language"
@@ -12,6 +12,7 @@
     import Center from "../../system/Center.svelte"
     import SelectElem from "../../system/SelectElem.svelte"
     import Card from "../Card.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
 
     export let active: string
     export let searchValue = ""
@@ -70,6 +71,20 @@
             return a
         })
     }
+
+    // o clique so seleciona (abre o video no centro); o ▶ (e o "Mostrar agora") manda ao ar (revisao da fatia 6, achado 4)
+    function tocar(video: any) {
+        if (gavetaNaoToca() || $outLocked) return
+
+        if (findMatchingOut(video.rid, $outputs)) {
+            clearBackground()
+            return
+        }
+
+        // set as "foreground" type (clear slide & ignore "background" layer)
+        clearSlide()
+        setOutput("background", { id: video.rid, type: "player", muted: false, loop: false, startAt: 0, ignoreLayer: true })
+    }
 </script>
 
 {#if fullFilteredVideos.length}
@@ -85,22 +100,10 @@
             label={video.name || ""}
             renameId="player_{video.rid}"
             title={video.id || ""}
-            showPlayOnHover
             on:click={(e) => {
-                if (gavetaNaoToca() || $outLocked || e.ctrlKey || e.metaKey || iconClicked) return
+                // o clique so seleciona: abre o video no centro (a previa), o que o duplo clique fazia e a trava de toque engole em Mostrar (revisao da fatia 6, achado 15)
+                if (e.ctrlKey || e.metaKey || iconClicked) return
                 if (e.target?.closest?.(".edit")) return
-
-                if (findMatchingOut(video.rid, $outputs)) {
-                    clearBackground()
-                    return
-                }
-
-                // set as "foreground" type (clear slide & ignore "background" layer)
-                clearSlide()
-                setOutput("background", { id: video.rid, type: "player", muted: false, loop: false, startAt: 0, ignoreLayer: true })
-            }}
-            on:dblclick={() => {
-                if (iconClicked) return
                 if ($focusMode) activeFocus.set({ id: video.rid, type: "player" })
                 else activeShow.set({ id: video.rid, type: "player" })
             }}
@@ -121,6 +124,7 @@
                 {/if}
             </div>
 
+            <TocarAgora flutuante titulo={findMatchingOut(video.rid, $outputs) ? "Tirar do ar" : "Mandar ao ar"} on:tocar={() => tocar(video)} />
             <SelectElem id="player" data={video.rid} style="width: 100%;" draggable>
                 <img src={getThumbnail(video.id || "")} alt="Video thumbnail for {video.name || 'video'}" style="width: 100%;height: 100%;aspect-ratio: 19/9;object-fit: cover;" on:load={() => (loaded[video.rid] = true)} />
             </SelectElem>

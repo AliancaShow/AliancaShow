@@ -15,6 +15,7 @@
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import Center from "../../system/Center.svelte"
     import SelectElem from "../../system/SelectElem.svelte"
+    import TocarAgora from "../TocarAgora.svelte"
 
     export let searchValue
 
@@ -60,6 +61,18 @@
         })
     }
 
+    // o clique so seleciona; o ▶ (e o "Mostrar agora" do botao direito) executa (revisao da fatia 6, achado 4)
+    function tocarAcao(action) {
+        if (gavetaNaoToca()) return
+        if (action.shows?.length) {
+            receivedMidi({ id: action.id, bypass: true })
+            return
+        }
+
+        runAction(action, { source: "click" })
+        timelineRecordingAction.set({ id: "run_action", data: { id: action.id } })
+    }
+
     function keydown(e: KeyboardEvent) {
         if (e.key === "Enter" && searchValue.length > 1 && e.target?.closest(".search")) {
             let action = filteredActionsSearch[0]
@@ -85,20 +98,10 @@
             {#each filteredActionsSearch as action}
                 {@const isReadOnly = readOnly || action.tags?.some((tagId) => profile[tagId] === "read")}
 
-                <div class="action context #action{isReadOnly ? '_readonly' : ''}{showGrid ? ' grid-item' : ''}">
+                <div class="action context #action{isReadOnly ? '_readonly' : ''}{showGrid ? ' grid-item' : ''}" data-tocavel>
                     <SelectElem id="action" data={action} style={showGrid ? "display: block; width: 100%; height: 100%;" : "display: flex; flex: 1;"} draggable>
                         <Button
-                            title="{translateText('media.play')}: <b>{action.name}</b>"
-                            on:click={(e) => {
-                                if (gavetaNaoToca() || e.ctrlKey || e.metaKey) return
-                                if (action.shows?.length) {
-                                    receivedMidi({ id: action.id, bypass: true })
-                                    return
-                                }
-
-                                runAction(action, { source: "click" })
-                                timelineRecordingAction.set({ id: "run_action", data: { id: action.id } })
-                            }}
+                            title="<b>{action.name}</b>: ▶ ou botão direito, Mostrar agora"
                             outline={$runningActions.includes(action.id)}
                             bold={false}
                             dark
@@ -178,6 +181,7 @@
                             {/if}
                         </Button>
                     </SelectElem>
+                    <TocarAgora flutuante={showGrid} titulo="Executar a função" on:tocar={() => tocarAcao(action)} />
                 </div>
             {/each}
         </div>
@@ -217,6 +221,7 @@
     }
 
     .action {
+        position: relative;
         display: flex;
         flex-direction: row;
         width: 100%;

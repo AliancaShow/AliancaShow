@@ -8,17 +8,20 @@
 import { get } from "svelte/store"
 import { addProjectItem } from "../../converters/project"
 import { AudioPlayer } from "../../audio/audioPlayer"
-import { activeProject, editingProjectTemplate, outLocked, overlays, projects } from "../../stores"
+import { playScripture } from "../drawer/bible/scripture"
+import { activeProject, contextActive, editingProjectTemplate, outLocked, overlays, projects, showsCache } from "../../stores"
 import { newToast } from "../../utils/common"
 import { falhaAlta } from "../../utils/aliancaFalha"
 import { porShowNoFim } from "../../utils/aliancaBiblioteca"
 import { motivoSemCulto } from "../../utils/aliancaGaveta"
 import { dispararNoAlvo } from "../../utils/aliancaGavetaToque"
-import { blocosDe, criarEngolidor, moverBloco, moverItem } from "../../utils/aliancaMenusBibliotecaLogica"
+import { blocosDe, criarAnteparo, criarEngolidor, itemContinuaLa, motivoDaTrava, moverBloco, moverItem, type AcaoDeBloco } from "../../utils/aliancaMenusBibliotecaLogica"
 import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
-import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
+import { deleteAction } from "../helpers/clipboard"
 import { history } from "../helpers/history"
+import { loadShows } from "../helpers/setShow"
+import { swichProjectItem } from "../helpers/showActions"
 import { getExtension, getMediaType } from "../helpers/media"
 import { contextMenuItems, contextMenuLayouts, type ContextMenuItem } from "./contextMenus"
 import { menuClick } from "./menuClick"
@@ -61,6 +64,38 @@ if (typeof window !== "undefined") {
     )
 }
 
+// ---------------------------------------------------------------- o anteparo (revisao da fatia 6, achado 2)
+
+// O 1o toque num item fecha o menu; o 2o toque de um duplo clique cairia no que estava embaixo (um slide, o ▶ de outra linha: o mesmo desenho do
+// incidente de 09/ago). Por ~250 ms, so sobre o retangulo que o menu ocupava, o toque e engolido. Transparente: nao desenha nada, nao fica no caminho
+// de um clique fora do retangulo nem depois do prazo. Os toques que ainda caem no menu em fade tambem sao engolidos (a acao nao roda 2x).
+const anteparo = criarAnteparo(250)
+const GESTOS_DE_TOQUE = ["pointerdown", "pointerup", "mousedown", "mouseup", "click", "dblclick"]
+if (typeof window !== "undefined") {
+    window.addEventListener(
+        "click",
+        (e) => {
+            const menu = e.target instanceof Element ? e.target.closest(".contextMenu") : null
+            if (menu) anteparo.armar(menu.getBoundingClientRect(), performance.now())
+        },
+        true
+    )
+    for (const tipo of GESTOS_DE_TOQUE)
+        window.addEventListener(
+            tipo,
+            (e) => {
+                const me = e as MouseEvent
+                if (me.button !== 0 || !anteparo.engole({ x: me.clientX, y: me.clientY }, performance.now())) return
+                const noMenu = e.target instanceof Element && !!e.target.closest(".contextMenu")
+                if (noMenu && get(contextActive)) return // o menu segue aberto: o toque e dele
+                e.preventDefault()
+                e.stopImmediatePropagation()
+                e.stopPropagation()
+            },
+            true
+        )
+}
+
 // ---------------------------------------------------------------- as acoes
 
 type Sel = { id?: string | null; data: any[] } | null
@@ -70,25 +105,29 @@ const engolir = criarEngolidor(400)
 const classeDoMenu = (el: HTMLElement | null): string => [...(el?.classList || [])].find((c) => c.startsWith("#")) || ""
 const marca = (el: HTMLElement | null, nome: string) => (el as any)?.closest?.(`[${nome}]`)?.getAttribute?.(nome) ?? null
 
-/** o item de roteiro em que o botao direito foi dado: pela marca `data-indice` do botao, nunca pela selecao (com varios selecionados age no clicado) */
+/**
+ * o item de roteiro em que o botao direito foi dado: pela marca `data-indice` do botao, nunca pela selecao (com varios selecionados age no clicado).
+ * Confere tambem o `data-id`: se o roteiro mudou com o menu aberto (Sirvo, outro PC, Ctrl+Z) a posicao pode ser de OUTRO item; entao recusa com um aviso.
+ */
 function itemDoRoteiro(contextElem: HTMLElement | null) {
     const bruto = marca(contextElem, "data-indice")
     const indice = bruto === null || bruto === "" ? NaN : Number(bruto)
+    const idMarcado = marca(contextElem, "data-id")
     const projetoId = get(activeProject)
     const lista: any[] = (projetoId && get(projects)[projetoId]?.shows) || []
-    if (!Number.isInteger(indice) || !lista[indice]) {
-        falhaAlta("menu-roteiro", `o item clicado (${bruto}) nao existe no roteiro aberto`)
+    if (!idMarcado || !Number.isInteger(indice)) {
+        falhaAlta("menu-roteiro", `o botao do item do roteiro nao traz data-indice/data-id (${bruto}/${idMarcado})`)
+        return null
+    }
+    if (!itemContinuaLa(lista, indice, idMarcado)) {
+        newToast("O roteiro mudou. Abra o menu de novo.")
         return null
     }
     return { projetoId: projetoId!, lista, indice, item: lista[indice] }
 }
 
-function roteiroTravado(projetoId: string, item: any): string {
-    const projeto: any = get(projects)[projetoId]
-    if (get(editingProjectTemplate)) return "edite o modelo de culto pela tela de modelos"
-    if (projeto?.sectionsLocked) return "o roteiro esta travado"
-    if (item?.type === "section" && cabecalhoTrancado(projeto, item)) return "esse bloco vem do Sirvo e esta trancado"
-    return ""
+function roteiroTravado(projetoId: string, item: any, acao: AcaoDeBloco = "estrutura"): string {
+    return motivoDaTrava(get(projects)[projetoId], item, acao, !!get(editingProjectTemplate))
 }
 
 function gravarLista(projetoId: string, nova: any[]) {
@@ -107,7 +146,8 @@ function paraORoteiro(classe: string, contextElem: HTMLElement | null, sel: Sel)
         return
     }
     const dados = (sel?.data || []).filter((d) => d !== null && d !== undefined)
-    if (!dados.length) return falhaAlta("menu-biblioteca", `${classe}: nada selecionado para pôr no roteiro`)
+    // a selecao e lida na hora do clique no item do menu: se a lista se refez nesse meio tempo nao ha nada selecionado, e isso e normal (achado 10)
+    if (!dados.length) return void newToast("A seleção mudou. Abra o menu de novo.")
     for (const d of dados) {
         if (classe === "#media_card") {
             const path: string = d.path || ""
@@ -121,6 +161,20 @@ function paraORoteiro(classe: string, contextElem: HTMLElement | null, sel: Sel)
     newToast(dados.length === 1 ? "entrou no fim do roteiro" : `${dados.length} itens entraram no fim do roteiro`)
 }
 
+/**
+ * O elemento do ITEM da biblioteca que recebe o clique de "Mostrar agora": o proprio `.context` quando ele e o cartao (`.card`) ou o botao da linha;
+ * quando o `.context` e um envoltorio (sobreposicao, acao) o cartao/botao de dentro. Nunca um icone interno.
+ */
+const TOCAR = '[data-acao="tocar-ao-ar"]'
+function alvoDoItem(contextElem: HTMLElement | null): HTMLElement | null {
+    if (!contextElem) return null
+    // as portas com ▶ (`TocarAgora`) tocam pelo ▶: e o caminho unico do gesto deliberado, dentro do item ou na linha que o envolve
+    const tocar = (contextElem.querySelector(TOCAR) || contextElem.closest("[data-tocavel]")?.querySelector(TOCAR)) as HTMLElement | null
+    if (tocar) return tocar
+    if (contextElem.matches(".card, button")) return contextElem
+    return (contextElem.querySelector(".card") as HTMLElement | null) || (contextElem.querySelector("button") as HTMLElement | null) || contextElem
+}
+
 /** "Mostrar agora (sem pôr no roteiro)": o que o clique da biblioteca fazia antes da fatia 6, sem tocar no roteiro */
 function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
     if (get(outLocked)) return void newToast(MOTIVO_TRAVADA)
@@ -132,9 +186,21 @@ function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
         return
     }
     const alvo = ultimoAlvo
-    if (alvo && engolir("agora:" + (alvo.id || classe + ":" + (alvo.textContent || "").slice(0, 40)), performance.now())) return
-    // versiculo: o clique so previa; quem toca era o duplo clique (o antigo "tocar") — o gesto de ir ao ar dele
-    dispararNoAlvo(alvo, classe.startsWith("#scripture") ? "dblclick" : "click")
+    const item = alvoDoItem(contextElem)
+    if (item && engolir("agora:" + classe + ":" + ((item.closest(".main, .action") || item).textContent || "").trim().slice(0, 80), performance.now())) return
+    // versiculo: nao se refaz gesto (com a Biblia ja no ar o duplo clique devolve false e nada ia ao ar: revisao da fatia 6, achado 1). A selecao ja
+    // andou para o versiculo do botao direito; `playScripture` poe a selecao no telao, no ar ou nao.
+    if (classe.startsWith("#scripture")) {
+        if (!alvo?.closest?.(".verse")) return void newToast("Clique com o botão direito em cima de um versículo")
+        void playScripture()
+        return
+    }
+    // idempotente (revisao da fatia 6, achado 9): o clique do cartao ALTERNA (no ar -> tira); "Mostrar agora" repetido nao pode tirar do ar o que
+    // o operador acabou de mandar. O cartao (Card.svelte) marca `.main.active` quando o item esta numa saida.
+    if (item?.closest(".main.active")) return void newToast("Já está no ar")
+    // o clique vai no ITEM (o cartao, a linha), nunca no elemento mais interno sob o ponteiro: um botao direito em cima da estrela/tag/filtro do
+    // cartao refazia o clique do ICONE (tirava o favorito) e nada ia ao ar (revisao da fatia 6, achado 6)
+    if (!dispararNoAlvo(item, "click") && item) newToast("A lista mudou. Abra o menu de novo.")
 }
 
 /** "Mostrar agora" de um item que JA esta no roteiro (nao mexe no roteiro) */
@@ -144,7 +210,18 @@ function mostrarAgoraDoItem(contextElem: HTMLElement | null, sel: Sel) {
     if (get(outLocked)) return void newToast(MOTIVO_TRAVADA)
     if (engolir("agora-item:" + r.projetoId + ":" + r.indice, performance.now())) return
     const tipo = (r.item.type || "show") as string
-    if (tipo === "show") return void tocarShowNoAr(r.item.id, { entrarNoRoteiro: false })
+    if (tipo === "show") {
+        // o item do roteiro tem o SEU leiaute gravado e o centro tem que mostrar ESSE item (a mesma musica duas vezes, com arranjos diferentes): aplica o
+        // leiaute do item, abre o item e so entao manda ao ar (revisao da fatia 6, achado 11)
+        const { indice, item } = r
+        void (async () => {
+            await loadShows([item.id])
+            if (get(showsCache)[item.id]) swichProjectItem(indice, item.id)
+            abrirItemDoRoteiro(item, indice)
+            await tocarShowNoAr(item.id, { entrarNoRoteiro: false })
+        })()
+        return
+    }
     if (tipo === "audio") return void AudioPlayer.start(r.item.id, { name: r.item.name })
     if (tipo === "video" || tipo === "image") return menuClick("play", false, contextMenuItems.play, contextElem as any, null, { id: "show", data: [{ id: r.item.id, type: tipo, index: r.indice }] } as any)
     falhaAlta("menu-roteiro", `"Mostrar agora" nao existe para itens do tipo ${tipo}`)
@@ -166,11 +243,9 @@ function tirar(contextElem: HTMLElement | null) {
     if (!r) return
     const trava = roteiroTravado(r.projetoId, r.item)
     if (trava) return void newToast(trava)
-    // bloco: sai so o cabecalho; os itens ficam e passam ao bloco de cima (a mesma regra de apagar uma secao na lista de antes)
-    gravarLista(
-        r.projetoId,
-        r.lista.filter((_a, i) => i !== r.indice)
-    )
+    // a MESMA porta do Delete e do x da lista (revisao da fatia 6, achado 3): mantem o rodape "Fora do roteiro", avisa o Sirvo da musica tirada,
+    // deixa o rastro "tirado · Desfazer" e nao tira show privado. De bloco sai so o cabecalho; os itens ficam e passam ao bloco de cima.
+    deleteAction({ id: "show", data: [{ index: r.indice }] })
 }
 
 const ACOES: { [id: string]: (c: Chamada) => void } = {
@@ -199,7 +274,7 @@ const ACOES: { [id: string]: (c: Chamada) => void } = {
     alianca_novo_bloco: ({ contextElem }) => {
         const r = itemDoRoteiro(contextElem)
         if (!r) return
-        const trava = roteiroTravado(r.projetoId, r.item)
+        const trava = roteiroTravado(r.projetoId, r.item, "novo")
         if (trava) return void newToast(trava)
         // o novo bloco entra logo DEPOIS do bloco clicado (depois do ultimo item dele), nao no meio dele
         const { lead, blocos } = blocosDe(r.lista)

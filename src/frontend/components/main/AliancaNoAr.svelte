@@ -6,6 +6,7 @@
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
     import { desligarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { ROTULO_FAIXA, SUBTITULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
+    import { saidasHabilitadas } from "../../utils/aliancaTransporteLogica"
     import { getResolution } from "../helpers/output"
     import PreviewOutput from "../output/preview/PreviewOutput.svelte"
     import AliancaCamadas from "./AliancaCamadas.svelte"
@@ -15,9 +16,8 @@
     import AliancaTransporte from "./AliancaTransporte.svelte"
 
     // saidas habilitadas e visiveis; a primeira e a principal ("Telao"), as demais viram abas
-    $: habilitadas = Object.entries($outputs)
-        .filter(([, o]) => o?.enabled && !o?.invisible)
-        .map(([id]) => id)
+    // (a mesma conta da faixa de transporte logo abaixo: `saidasHabilitadas`)
+    $: habilitadas = saidasHabilitadas($outputs)
     $: principal = habilitadas[0] || ""
     $: outras = habilitadas.slice(1)
     $: resolucao = principal ? getResolution(null, [$outputs, $styles], false, principal) : { width: 1920, height: 1080 }
