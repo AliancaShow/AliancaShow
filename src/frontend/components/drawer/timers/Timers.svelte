@@ -126,7 +126,7 @@
             {/if}
 
             <SelectElem id="global_timer" data={timer} draggable={!onlyPlaying} selectable={!onlyPlaying}>
-                <div class:outline={!onlyPlaying && isActive} class:project={list.includes(timer.id)} class={onlyPlaying ? "" : `context #global_timer${isReadOnly ? "_readonly" : ""}`} style="display: flex;justify-content: space-between;padding: 3px;">
+                <div data-sem-trava class:outline={!onlyPlaying && isActive} class:project={list.includes(timer.id)} class={onlyPlaying ? "" : `context #global_timer${isReadOnly ? "_readonly" : ""}`} style="display: flex;justify-content: space-between;padding: 3px;">
                     <div style="display: flex;min-width: 0;{onlyPlaying ? '' : 'width: 50%;'}">
                         <Button disabled={isReadOnly || timer.type !== "counter"} on:click={() => playPauseGlobal(timer.id, timer)} title={translateText(isPlaying ? "media.pause" : "media.play")}>
                             <Icon id={isPlaying ? "pause" : "play"} white={!isPlaying} />

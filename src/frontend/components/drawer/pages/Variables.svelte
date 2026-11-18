@@ -72,7 +72,7 @@
                 {@const max = Number(variable.maxValue ?? maxDefault)}
 
                 <SelectElem style="width: calc(25% - 5px);" id="variable" data={variable} draggable>
-                    <div class="variable numberBox context #variable{isReadOnly ? '_readonly' : ''}">
+                    <div class="variable numberBox context #variable{isReadOnly ? '_readonly' : ''}" data-sem-trava>
                         <div class="reset">
                             <Button title={translateText("actions.reset")} on:click={() => updateVariable(defaultValue, variable.id, "number")}>
                                 <Icon id="reset" white />

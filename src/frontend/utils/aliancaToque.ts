@@ -4,7 +4,7 @@ import { get } from "svelte/store"
 import { activePopup, contextActive, quickSearchActive, selected, topContextActive } from "../stores"
 import { falhaAlta } from "./aliancaFalha"
 import { tela } from "./aliancaTela"
-import { criarEscSeguro, criarRepeticao } from "./aliancaToqueLogica"
+import { chaveDoClique, criarEscSeguro, criarRepeticao } from "./aliancaToqueLogica"
 
 const esc = criarEscSeguro()
 const repeticao = criarRepeticao<Element>()
@@ -43,26 +43,46 @@ function aoEsc(e: KeyboardEvent) {
     }
 }
 
-/** onde um clique e "no mesmo item": slide da grade de Mostrar, linha do roteiro e item da biblioteca (todos levam a classe `context`) */
-const ITEM = '[data-regiao="centro"] .context, [data-regiao="roteiro"] .context, [data-regiao="biblioteca"] .context'
+/** onde um duplo clique nao faz nada: um .context do centro (a grade de slides) */
+const ITEM_DO_CENTRO = '[data-regiao="centro"] .context'
+
+const ponto = (e: MouseEvent) => ({ x: e.clientX, y: e.clientY })
+
+/**
+ * O mousedown de um item que seleciona sozinho (versiculo) pergunta antes: se o clique que vem em seguida vai ser engolido, a selecao nao anda,
+ * senao a lista mostraria um item e o telao ficaria no outro (revisao da fatia 2, achado 4). Nao registra nada.
+ */
+export function cliqueVaiSerEngolido(e: MouseEvent): boolean {
+    try {
+        if (get(tela) !== "mostrar") return false
+        const alvo = e.target instanceof Element ? e.target : null
+        const chave = alvo ? chaveDoClique(alvo) : null
+        return !!chave && repeticao.vaiEngolir(chave, performance.now(), ponto(e))
+    } catch (erro) {
+        falhaAlta("clique-repetido", erro)
+        return false
+    }
+}
 
 function aoClique(e: MouseEvent) {
     try {
         // so em Mostrar: em Editar o duplo clique e gesto de editar (marcar, renomear)
         if (get(tela) !== "mostrar") return
         const alvo = e.target instanceof Element ? e.target : null
-        const item = alvo?.closest(ITEM)
-        if (!item) return
+        if (!alvo) return
         // duplo clique no slide de Mostrar: NAO faz nada (decisao do Andre: "gente clica 2x e o video dispara 2x"). Na biblioteca e no roteiro o
         // dblclick e uma acao propria (a biblioteca ganha a regra na fatia 6): so o clique repetido e engolido ali.
         if (e.type === "dblclick") {
-            if (!alvo?.closest('[data-regiao="centro"] .context')) return
+            if (!alvo.closest(ITEM_DO_CENTRO)) return
             e.preventDefault()
             e.stopImmediatePropagation()
             e.stopPropagation()
             return
         }
-        if (repeticao.engole(item, performance.now())) {
+        // a chave e o clicavel mais interno (botao, slide, versiculo...), nao o conteiner; controles de transporte ficam de fora
+        const chave = chaveDoClique(alvo)
+        if (!chave) return
+        if (repeticao.engole(chave, performance.now(), ponto(e))) {
             e.preventDefault()
             e.stopImmediatePropagation()
             e.stopPropagation()

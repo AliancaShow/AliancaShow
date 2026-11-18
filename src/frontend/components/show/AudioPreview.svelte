@@ -165,7 +165,7 @@
     <canvas bind:this={canvas} />
 {/if}
 
-<div class="main media context #media_preview" bind:this={mediaElem}>
+<div class="main media context #media_preview" data-sem-trava bind:this={mediaElem}>
     <div class="buttons">
         <MaterialButton
             disabled={$outLocked || isMic}
