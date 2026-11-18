@@ -200,7 +200,7 @@
 </div>
 
 {#if overlayWithNonExistentCategory}
-    <FloatingInputs side="left" onlyOne>
+    <FloatingInputs side="left" onlyOne style={estiloDock("left")}>
         <MaterialButton icon="autofill" on:click={createNonExistentCategories}>
             <T id="category.create_nonexistent" />
         </MaterialButton>
@@ -229,7 +229,6 @@
         padding: 5px;
         place-content: flex-start;
 
-        padding-bottom: 60px;
         /* box-shadow: inset 0 -40px 25px -20px rgb(0 0 0 / 0.3); */
     }
 

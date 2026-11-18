@@ -542,7 +542,7 @@
         border-radius: 12px;
         box-shadow:
             inset 0 0 0 1px var(--luz-borda, rgb(248 248 240 / 0.13)),
-            0 18px 40px rgb(0 0 0 / 0.5);
+            var(--luz-sombra-pop);
         backdrop-filter: var(--luz-vidro, none);
         transform-origin: top left;
         animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);

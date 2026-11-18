@@ -642,7 +642,7 @@
 
 <!-- MAIN -->
 
-<div class="scroll" style="flex: 1;overflow-y: auto;{ehPastaView ? 'padding-bottom: 56px;' : ''}" bind:this={scrollElem}>
+<div class="scroll" style="flex: 1;overflow-y: auto;" bind:this={scrollElem}>
     <!-- o painel da pasta rola junto com a grade: numa gaveta baixa o rodape dele nao fica escondido atras do zoom -->
     {#if ehPastaView && cfgAberta && $tela !== "mostrar" && pastaId && tagDaPasta}
         <AliancaPastaCfg {pastaId} />
@@ -791,6 +791,9 @@
                     </p>
                 </MaterialButton>
             </FloatingInputs>
+        {:else}
+            <!-- altura reservada da barra: entrar/sair de subpasta nao faz a grade saltar -->
+            <div style="flex: none;height: 42px;" aria-hidden="true"></div>
         {/if}
     {/if}
 
@@ -892,6 +895,5 @@
         overflow-y: auto;
         overflow-x: hidden;
 
-        padding-bottom: 60px;
     }
 </style>
