@@ -59,4 +59,10 @@ describe("a guarda da biblioteca (fatia 6)", () => {
         const t = ler("src/frontend/utils/aliancaToque.ts")
         expect(t).toMatch(/ITEM_DO_CENTRO = '[^']*biblioteca[^']*roteiro[^']*'|ITEM_DO_CENTRO = '[^']*roteiro[^']*biblioteca[^']*'/)
     })
+    it("revisao da fatia 6, achado 7: anterior/proximo da Biblia no ar sao transporte, nao item da biblioteca: seguem a regra do teclado (naoEMostrar), nao a guarda do item", () => {
+        const t = ler("src/frontend/components/drawer/bible/Scripture.svelte")
+        expect(t).toContain("_moveSelection(true, naoEMostrar())")
+        expect(t).toContain("_moveSelection(false, naoEMostrar())")
+        expect(t).not.toMatch(/_moveSelection\((true|false), gavetaNaoToca\(\)\)/)
+    })
 })

@@ -201,6 +201,14 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
         await clicarItem("Mostrar agora")
         await esperar(700)
         ok("D7 versiculo A no ar: Mostrar agora no versiculo B manda o B ao ar (escreve em outputs)", (await escritas()) >= 1, `n=${await escritas()}`)
+        // achado 7: com a Biblia no ar o botao "proximo" do rodape anda a selecao E atualiza o telao (como o Ctrl+seta)
+        const prox = await localizar(j, `[...document.querySelectorAll('[data-regiao=biblioteca] button')].find(b=>/Arrow Right/.test((b.getAttribute("title")||"")+(b.getAttribute("data-title")||"")))`)
+        if (prox.ok) {
+          await j.ev(`window.__n=0; window.__m=0; return 1`)
+          await clicarEm(j, prox.x, prox.y)
+          await esperar(900)
+          ok("D8 Biblia no ar: o botao proximo do rodape manda o versiculo seguinte ao telao", (await escritas()) >= 1, `n=${await escritas()}`)
+        } else ok("D8 o botao proximo existe com a Biblia no ar", false, prox.motivo)
         await limpar()
       } else ok("D5 versiculo existe no perfil", false) }
     await noDaArvore("Shows")
