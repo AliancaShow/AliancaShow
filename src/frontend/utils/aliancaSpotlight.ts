@@ -18,7 +18,7 @@ import { listarBiblioteca, type LinhaDaBiblioteca } from "./aliancaBibliotecaLog
 import { prepararEdicaoDoShow } from "./aliancaEditarAcoes"
 import { falhaAlta } from "./aliancaFalha"
 import { alternarTelaCheia, salvarAgora } from "./aliancaJanela"
-import { acaoDaTecla, filtrarAcoes, lerReferencia, MAXIMO_POR_SECAO, rotuloDaReferencia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, conferirLivro, filtrarAcoes, lerReferencia, MAX_VERSICULOS, MAXIMO_POR_SECAO, rotuloDaReferencia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "./aliancaTocarNoAr"
 import { telaAtual, trocarTela } from "./aliancaTela"
 import { newToast } from "./common"
@@ -37,7 +37,7 @@ export type Resultado = {
     /** so tipo "midia"/"audio": o tipo do arquivo para o `activeShow` */
     arquivo?: { nome: string; tipo: string }
     /** so tipo "versiculo" */
-    versiculo?: { ref: ReferenciaBiblica; biblia: string; nomeDaBiblia: string; texto: string; motivo: string | null }
+    versiculo?: { ref: ReferenciaBiblica; biblia: string; idDaVersao?: string; nomeDaBiblia: string; texto: string; motivo: string | null }
     /** so tipo "acao" */
     atalho?: string
 }
@@ -104,12 +104,13 @@ export function buscarAcoes(consulta: string): Resultado[] {
     return filtrarAcoes(consulta, undefined, MAXIMO_POR_SECAO.acao).map((a) => ({ chave: "acao:" + a.id, tipo: "acao" as const, titulo: a.nome, id: a.id, icone: "settings", atalho: a.atalho }))
 }
 
-/** a Biblia que o Spotlight usa: a aba aberta na pasta Biblia (colecao = a primeira versao dela) ou, sem aba, a primeira instalada */
+/** a Biblia que o Spotlight usa: a aba aberta na pasta Biblia (colecao = a versao de pre-visualizacao dela, a MESMA que o Scripture toca) ou, sem aba, a primeira instalada */
 function bibliaEmUso(): { aba: string; id: string; nome: string } | null {
     const todas = get(scriptures)
     const aba = get(drawerTabsData).scripture?.activeSubTab || Object.keys(todas)[0] || ""
     if (!aba || !todas[aba]) return null
-    const id = todas[aba]?.collection?.versions?.[0] || aba
+    const versoes = todas[aba]?.collection?.versions
+    const id = versoes?.[todas[aba]?.collection?.previewIndex || 0] || versoes?.[0] || aba
     return { aba, id, nome: todas[aba]?.customName || todas[aba]?.name || id }
 }
 
@@ -121,13 +122,17 @@ export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
     const base = { chave: "versiculo:" + rotulo, tipo: "versiculo" as const, titulo: rotulo, icone: "scripture", id: rotulo }
     const biblia = bibliaEmUso()
     if (!biblia) return [{ ...base, detalhe: "Nenhuma Bíblia instalada", versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo: "Nenhuma Bíblia instalada: adicione uma em Importar." } }]
-    const sem = (motivo: string): Resultado[] => [{ ...base, detalhe: motivo, versiculo: { ref, biblia: biblia.aba, nomeDaBiblia: biblia.nome, texto: "", motivo } }]
+    const sem = (motivo: string): Resultado[] => [{ ...base, detalhe: motivo, versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto: "", motivo } }]
     try {
         const bible = await loadJsonBible(biblia.id)
         if (!bible) return sem(`Não consegui abrir a Bíblia ${biblia.nome}`)
         // a biblioteca json-bible NAO recusa livro, capitulo ou versiculo que nao existe: cai calada no primeiro. A existencia se confere nos dados.
         const dadosDoLivro = bible.data.books.find((b) => Number(b.number) === ref.livro)
         if (!dadosDoLivro) return sem(`${ref.nomeDoLivro} não está na Bíblia ${biblia.nome}`)
+        // o numero do livro nao basta: Biblia com outra numeracao mostraria o texto de outro livro sob o rotulo "Romanos"
+        const conferencia = conferirLivro(String(dadosDoLivro.name || ""), ref.livro)
+        if (conferencia.resultado === "outro") return sem(`O livro ${ref.livro} da Bíblia ${biblia.nome} é "${conferencia.nome}", não ${ref.nomeDoLivro}`)
+        if (ref.versiculos && ref.versiculos[1] - ref.versiculos[0] + 1 > MAX_VERSICULOS) return sem(`São ${ref.versiculos[1] - ref.versiculos[0] + 1} versículos: o máximo de uma vez é ${MAX_VERSICULOS}. Peça um trecho menor.`)
         const dadosDoCapitulo = dadosDoLivro.chapters.find((c) => Number(c.number) === ref.capitulo)
         if (!dadosDoCapitulo) return sem(`${ref.nomeDoLivro} não tem o capítulo ${ref.capitulo}`)
         const temVersiculo = (v: number) => dadosDoCapitulo.verses.some((x) => Number(x.number) === v || (x.endNumber && v > Number(x.number) && v <= Number(x.endNumber)))
@@ -147,7 +152,7 @@ export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
             }
             texto = partes.join(" ")
         }
-        return [{ ...base, titulo: `${rotulo} · ${biblia.nome}`, detalhe: texto || "Abre o capítulo na pasta Bíblia", versiculo: { ref, biblia: biblia.aba, nomeDaBiblia: biblia.nome, texto, motivo: null } }]
+        return [{ ...base, titulo: `${rotulo} · ${biblia.nome}`, detalhe: texto || "Abre o capítulo na pasta Bíblia", versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto, motivo: null } }]
     } catch (erro) {
         falhaAlta("spotlight-versiculo", erro)
         return sem("Não consegui ler esse versículo")
@@ -253,6 +258,14 @@ export async function executarResultado(r: Resultado, acao: AcaoDeTecla): Promis
             }
             if (acao === "ao-ar" && get(outLocked)) {
                 newToast(MOTIVO_TRAVADA)
+                return false
+            }
+            // a Biblia que o Scripture vai tocar tem de estar carregada ANTES: senao o "ao ar" dele toca a referencia antiga (ou Genesis 1:1) e ninguem avisa
+            try {
+                if (v.idDaVersao && !(await loadJsonBible(v.idDaVersao))) throw new Error("sem dados")
+            } catch (erro) {
+                falhaAlta("spotlight-biblia", erro)
+                newToast(`A Bíblia ${v.nomeDaBiblia} ainda não carregou: nada foi aberto. Tente de novo.`)
                 return false
             }
             quickSearchActive.set(false)

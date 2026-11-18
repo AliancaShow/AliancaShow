@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, LIVROS, lerReferencia, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, MAX_VERSICULOS, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -37,6 +37,33 @@ describe("spotlight: referencia de versiculo", () => {
         expect(rotuloDaReferencia(lerReferencia("Sl 23")!)).toBe("Salmos 23")
         expect(versiculosParaAbrir(lerReferencia("Rm 8:28-30")!)).toEqual([[28, 29, 30]])
         expect(versiculosParaAbrir(lerReferencia("Sl 23")!)).toEqual([[1]])
+    })
+})
+
+describe("spotlight: formatos de referencia que a igreja digita", () => {
+    it("ordinal e algarismo romano: 1ª Co, I Co, II Tm", () => {
+        expect(lerReferencia("1ª Co 13:4")?.livro).toBe(46)
+        expect(lerReferencia("1º Co 13:4")?.livro).toBe(46)
+        expect(lerReferencia("I Co 13:4")?.livro).toBe(46)
+        expect(lerReferencia("II Tm 3:16")?.livro).toBe(55)
+        expect(lerReferencia("III Jo 4")?.livro).toBe(64)
+    })
+    it("o 'I' de Isaias nao e algarismo romano", () => {
+        expect(lerReferencia("Is 53:5")?.livro).toBe(23)
+        expect(lerReferencia("Isaías 9 6")?.livro).toBe(23)
+    })
+    it("versiculos seguidos por virgula: Jo 3:16,17 vira o intervalo 16-17; salto nao e referencia", () => {
+        expect(lerReferencia("Jo 3:16,17")?.versiculos).toEqual([16, 17])
+        expect(lerReferencia("Jo 3:16, 17, 18")?.versiculos).toEqual([16, 18])
+        expect(lerReferencia("Jo 3:16,18")).toBeNull()
+    })
+    it("nome por extenso com mais de uma palavra", () => {
+        expect(lerReferencia("Atos dos Apóstolos 2:1")?.livro).toBe(44)
+        expect(lerReferencia("Cantares de Salomão 2:1")?.livro).toBe(22)
+    })
+    it("intervalo acima do maximo nao abre calado: o limite e conhecido", () => {
+        expect(MAX_VERSICULOS).toBe(40)
+        expect(versiculosParaAbrir({ livro: 19, nomeDoLivro: "Salmos", capitulo: 119, versiculos: [1, 40] })[0]).toHaveLength(40)
     })
 })
 
@@ -86,6 +113,87 @@ describe("spotlight: o que cada tecla faz", () => {
         for (const tipo of ["show", "midia", "audio", "versiculo", "acao"] as const)
             for (const tela of ["editar", "pagina"] as const)
                 for (const alt of [false, true]) expect(["tocar", "ao-ar"], `${tipo}/${tela}/${alt}`).not.toContain(acaoDaTecla(tipo, tela, alt))
+    })
+})
+
+describe("spotlight: Enter so age sobre a lista da consulta escrita", () => {
+    it("lista da consulta atual e sem busca pendente: libera", () => {
+        expect(listaEmDia("jo 3 16", "jo 3 16", false)).toBe(true)
+        expect(listaEmDia("  jo 3 16 ", "jo 3 16", false)).toBe(true)
+    })
+    it("lista de outra consulta (o Enter chegou dentro do debounce): nao libera", () => {
+        expect(listaEmDia("jo 3 16", "jo 3 1", false)).toBe(false)
+        expect(listaEmDia("jo 3 16", "jo 3 16", true)).toBe(false)
+    })
+    it("campo vazio nunca libera (lista de uma busca anterior e invisivel)", () => {
+        expect(listaEmDia("", "", false)).toBe(false)
+        expect(listaEmDia("   ", "jo 3 16", false)).toBe(false)
+    })
+})
+
+describe("spotlight: a selecao segue a identidade, nao o indice", () => {
+    const l = (...chaves: string[]) => chaves.map((chave) => ({ chave }))
+    it("acha o selecionado pela chave onde ele estiver", () => {
+        expect(indiceDaChave(l("a", "b", "c"), "b")).toBe(1)
+        // chegou uma secao ACIMA: o selecionado continua o mesmo, so mudou de indice
+        expect(indiceDaChave(l("v", "a", "b", "c"), "b")).toBe(2)
+    })
+    it("sem selecionado (ou ele sumiu): o topo", () => {
+        expect(indiceDaChave(l("a", "b"), null)).toBe(0)
+        expect(indiceDaChave(l("a", "b"), "x")).toBe(0)
+        expect(indiceDaChave([], "x")).toBe(0)
+    })
+    it("as secoes lentas (midia e audio) vem depois das imediatas: a que chega tarde entra ABAIXO", () => {
+        const ids = SECOES.map((s) => s.id)
+        expect(ids[0]).toBe("versiculo")
+        for (const tarde of ["midia", "audio"]) for (const cedo of ["versiculo", "show", "acao"]) expect(ids.indexOf(tarde)).toBeGreaterThan(ids.indexOf(cedo))
+    })
+})
+
+describe("spotlight: o teclado do telao fica de fora mesmo com o foco fora do campo", () => {
+    const t = (key: string, mods: { ctrl?: boolean; alt?: boolean } = {}, foco = false) => destinoDaTecla({ key, ctrl: !!mods.ctrl, alt: !!mods.alt }, foco)
+    it("com o foco no campo o fluxo normal segue (o campo e .edit, o telao ja ignora)", () => {
+        for (const k of ["Escape", " ", "ArrowLeft", "a", "PageDown"]) expect(t(k, {}, true)).toBe("deixar")
+    })
+    it("com o foco fora do campo: Esc fecha a busca, o resto e engolido (nunca chega ao telao)", () => {
+        expect(t("Escape")).toBe("fechar")
+        for (const k of [" ", "ArrowLeft", "ArrowRight", "PageDown", "PageUp", "a", "1", "F5", "Home", "."]) expect(t(k), k).toBe("engolir")
+        expect(t("o", { ctrl: true })).toBe("engolir")
+    })
+    it("so modificador e Tab nao fazem nada por si", () => {
+        for (const k of ["Control", "Shift", "Alt", "Meta", "Tab"]) expect(t(k)).toBe("deixar")
+    })
+})
+
+describe("spotlight: o Enter que sobra depois de fechar", () => {
+    it("logo depois de executar, com a busca fechada, o Enter e engolido (nao chega ao Scripture.svelte)", () => {
+        expect(ESPERA_POS_FECHAR_MS).toBeGreaterThanOrEqual(400)
+        expect(enterDepoisDeFechar(1000, 1000 + ESPERA_POS_FECHAR_MS - 1, false)).toBe(true)
+        expect(enterDepoisDeFechar(1000, 1000 + ESPERA_POS_FECHAR_MS, false)).toBe(false)
+    })
+    it("nunca engole com a busca aberta nem sem ter executado nada", () => {
+        expect(enterDepoisDeFechar(1000, 1100, true)).toBe(false)
+        expect(enterDepoisDeFechar(null, 1100, false)).toBe(false)
+    })
+})
+
+describe("spotlight: o livro da Biblia confere pelo NOME, nao so pelo numero", () => {
+    it("o nome que a Biblia da ao livro e o do Spotlight: confere", () => {
+        expect(conferirLivro("Romanos", 45)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("1 Coríntios", 46)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("I Coríntios", 46)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("1Co", 46)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("Salmos", 19)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("João", 43)).toEqual({ resultado: "ok" })
+    })
+    it("numeracao diferente (o livro 45 da Biblia e Hebreus): recusa e diz qual livro e", () => {
+        expect(conferirLivro("Hebreus", 45)).toEqual({ resultado: "outro", nome: "Hebreus" })
+        expect(conferirLivro("2 João", 62)).toEqual({ resultado: "outro", nome: "2 João" })
+    })
+    it("nome que a tabela nao reconhece (outro idioma, nome longo): vale o numero, e o rotulo mostra o nome da Biblia", () => {
+        expect(conferirLivro("Romans", 45)).toEqual({ resultado: "desconhecido" })
+        expect(conferirLivro("Cântico dos Cânticos", 22)).toEqual({ resultado: "desconhecido" })
+        expect(conferirLivro("", 45)).toEqual({ resultado: "desconhecido" })
     })
 })
 

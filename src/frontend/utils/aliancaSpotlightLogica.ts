@@ -49,7 +49,7 @@ export const LIVROS: Livro[] = [
     { n: 19, nome: "Salmos", abrevs: ["sl", "sal", "salmo", "ps"] },
     { n: 20, nome: "Provérbios", abrevs: ["pv", "pr", "prov"] },
     { n: 21, nome: "Eclesiastes", abrevs: ["ec", "ecl"] },
-    { n: 22, nome: "Cantares", abrevs: ["ct", "cant", "cantares de salomao"] },
+    { n: 22, nome: "Cantares", abrevs: ["ct", "cant", "cantaresdesalomao"] },
     { n: 23, nome: "Isaías", abrevs: ["is", "isa"] },
     { n: 24, nome: "Jeremias", abrevs: ["jr", "jer"] },
     { n: 25, nome: "Lamentações", abrevs: ["lm", "lam"] },
@@ -71,7 +71,7 @@ export const LIVROS: Livro[] = [
     { n: 41, nome: "Marcos", abrevs: ["mc", "mar", "marc"] },
     { n: 42, nome: "Lucas", abrevs: ["lc", "luc"] },
     { n: 43, nome: "João", abrevs: ["jo", "joa"] },
-    { n: 44, nome: "Atos", abrevs: ["at", "ato"] },
+    { n: 44, nome: "Atos", abrevs: ["at", "ato", "atosdosapostolos"] },
     { n: 45, nome: "Romanos", abrevs: ["rm", "rom"] },
     { n: 46, nome: "1 Coríntios", abrevs: ["1co", "1cor"] },
     { n: 47, nome: "2 Coríntios", abrevs: ["2co", "2cor"] },
@@ -129,20 +129,44 @@ export function lerReferencia(texto: string): ReferenciaBiblica | null {
     const t = String(texto ?? "")
         .trim()
         .replace(/\s+/g, " ")
-    const m = /^(?:([123])\s*[ºo°.]?\s*)?([A-Za-zÀ-ÿ]+)\.?\s*(\d{1,3})(?:\s*[:.,;]\s*|\s+)?(?:(\d{1,3})(?:\s*[-–a]\s*(\d{1,3}))?)?$/.exec(t)
+    // prefixo: 1/2/3 (com ordinal 1ª, 1º) ou algarismo romano (I, II, III; so com espaco depois, para o "Is" de Isaias nao virar "I s"); o nome pode ter ate 4 palavras
+    const m = /^(?:(?:([123])\s*[ºªo°.]?|([Ii]{1,3})[\s.])\s*)?([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,3})\.?\s*(\d{1,3})(?:\s*[:.,;]\s*|\s+)?(?:(\d{1,3})(?:\s*[-–a]\s*(\d{1,3})|((?:\s*,\s*\d{1,3})+))?)?$/.exec(t)
     if (!m) return null
-    const livro = acharLivro(m[1] ? Number(m[1]) : null, m[2])
+    const prefixo = m[1] ? Number(m[1]) : m[2] ? m[2].length : null
+    const livro = acharLivro(prefixo, m[3])
     if (!livro) return null
-    const capitulo = Number(m[3])
+    const capitulo = Number(m[4])
     if (!capitulo) return null
     let versiculos: [number, number] | null = null
-    if (m[4]) {
-        const a = Number(m[4])
+    if (m[5]) {
+        const a = Number(m[5])
         if (!a) return null
-        const b = m[5] ? Number(m[5]) : a
+        const b = m[6] ? Number(m[6]) : a
         versiculos = [a, b >= a ? b : a]
+        if (m[7]) {
+            // "Jo 3:16,17,18": so seguidos viram intervalo; com salto nao e uma referencia que este campo saiba abrir
+            const lista = [a, ...m[7].split(",").filter((x) => x.trim()).map(Number)]
+            if (lista.some((v, i) => i > 0 && v !== lista[i - 1] + 1)) return null
+            versiculos = [a, lista[lista.length - 1]]
+        }
     }
     return { livro: livro.n, nomeDoLivro: livro.nome, capitulo, versiculos }
+}
+
+/**
+ * O livro que a Biblia chama de `nomeNaBiblia` e mesmo o livro `numero` da tabela? A biblioteca numera os livros como cada Biblia quiser (so NT 1-27,
+ * deuterocanonicos), entao so o numero nao basta: "Rm 8:28" no livro 45 de uma Biblia onde o 45 e Hebreus mostraria o texto de outro livro.
+ * "ok" = o nome e o do livro; "outro" = o nome e de OUTRO livro (recusa, com o nome); "desconhecido" = o nome nao e reconhecido (outro idioma): vale o numero.
+ */
+export function conferirLivro(nomeNaBiblia: string, numero: number): { resultado: "ok" | "desconhecido" } | { resultado: "outro"; nome: string } {
+    const n = normalizar(nomeNaBiblia)
+    const m = /^([123])\s*([a-z]+)$/.exec(n) || /^(i{1,3})\s+([a-z]+)$/.exec(n) || /^()([a-z]+)$/.exec(n)
+    if (!m) return { resultado: "desconhecido" }
+    const romano: { [r: string]: number } = { i: 1, ii: 2, iii: 3 }
+    const prefixo = m[1] ? romano[m[1]] || Number(m[1]) : null
+    const achado = acharLivro(prefixo, m[2])
+    if (!achado) return { resultado: "desconhecido" }
+    return achado.n === numero ? { resultado: "ok" } : { resultado: "outro", nome: nomeNaBiblia }
 }
 
 /** "Romanos 8:28", "Romanos 8:28-30" ou "Salmos 23" */
@@ -152,12 +176,15 @@ export function rotuloDaReferencia(r: ReferenciaBiblica): string {
     return `${r.nomeDoLivro} ${r.capitulo}:${a}${b > a ? "-" + b : ""}`
 }
 
+/** quantos versiculos de uma vez a busca abre (acima disso o resultado recusa com o motivo, nunca corta calado) */
+export const MAX_VERSICULOS = 40
+
 /** os numeros dos versiculos que o `openScripture` pede (`[[28]]`, `[[28,29,30]]`); capitulo inteiro = `[[1]]` e nao toca */
 export function versiculosParaAbrir(r: ReferenciaBiblica): number[][] {
     if (!r.versiculos) return [[1]]
     const [a, b] = r.versiculos
     const lista: number[] = []
-    for (let v = a; v <= b && lista.length < 40; v++) lista.push(v)
+    for (let v = a; v <= b && lista.length < MAX_VERSICULOS; v++) lista.push(v)
     return [lista]
 }
 
@@ -233,6 +260,40 @@ export function enterRepetido(ultimo: { chave: string; em: number } | null | und
     return !!ultimo && ultimo.chave === chave && agora - ultimo.em < esperaMs
 }
 
+/**
+ * A lista na tela e a da consulta que esta ESCRITA? Enter so executa se sim: a busca espera 90 ms depois da ultima tecla, e o Enter que chega
+ * antes disso pegaria o resultado da consulta anterior ("jo 3 1" no lugar de "jo 3 16"). Campo vazio nunca libera.
+ */
+export function listaEmDia(consulta: string, consultaDaLista: string, pendente: boolean): boolean {
+    const q = consulta.trim()
+    return !!q && !pendente && q === consultaDaLista.trim()
+}
+
+/** o indice do resultado selecionado, achado pela chave (a lista ganha secoes no meio do caminho e o indice muda; a identidade nao). Sem chave ou sumiu: o topo */
+export function indiceDaChave(lista: { chave: string }[], chave: string | null): number {
+    if (chave === null) return 0
+    const i = lista.findIndex((r) => r.chave === chave)
+    return i < 0 ? 0 : i
+}
+
+/**
+ * O que fazer com uma tecla enquanto a busca esta aberta e o foco ESCAPOU do campo (clique na barra de rolagem, num titulo, na barra de dicas...).
+ * No campo o fluxo normal segue. Fora dele o teclado do telao (Esc que limpa, setas e espaco que avancam, letras de atalho) nao pode agir: Esc fecha a
+ * busca, o resto e engolido. So modificador sozinho e Tab passam.
+ */
+export function destinoDaTecla(e: { key: string; ctrl: boolean; alt: boolean }, focoNoCampo: boolean): "deixar" | "fechar" | "engolir" {
+    if (focoNoCampo) return "deixar"
+    if (e.key === "Escape") return "fechar"
+    if (["Control", "Shift", "Alt", "Meta", "Tab", "CapsLock"].includes(e.key)) return "deixar"
+    return "engolir"
+}
+
+/** quanto tempo depois de executar um resultado o Enter que sobrar (auto-repeat, segundo toque nervoso) e engolido: o foco ja caiu no body e ele iria ao `Scripture.svelte` */
+export const ESPERA_POS_FECHAR_MS = 600
+export function enterDepoisDeFechar(ultimaExecucaoEm: number | null, agora: number, aberta: boolean, esperaMs = ESPERA_POS_FECHAR_MS): boolean {
+    return !aberta && ultimaExecucaoEm !== null && agora - ultimaExecucaoEm < esperaMs
+}
+
 /** a seta anda sem dar a volta (parar no fim e a regra da lista do app); lista vazia = -1 */
 export function andar(atual: number, passo: number, total: number): number {
     if (total <= 0) return -1
@@ -243,10 +304,11 @@ export function andar(atual: number, passo: number, total: number): number {
 export const MAXIMO_POR_SECAO = { show: 8, midia: 5, audio: 5, acao: 5 } as const
 
 export type SecaoDoSpotlight = { id: "versiculo" | "show" | "midia" | "audio" | "acao"; titulo: string }
+// a ordem e FIXA e as secoes que leem disco (midia, audio) ficam por ultimo: quando chegam tarde entram ABAIXO do que ja estava pintado
 export const SECOES: SecaoDoSpotlight[] = [
     { id: "versiculo", titulo: "Versículo" },
     { id: "show", titulo: "Músicas e apresentações" },
+    { id: "acao", titulo: "Ações" },
     { id: "midia", titulo: "Mídia" },
-    { id: "audio", titulo: "Áudio" },
-    { id: "acao", titulo: "Ações" }
+    { id: "audio", titulo: "Áudio" }
 ]

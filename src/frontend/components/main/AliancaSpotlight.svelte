@@ -15,20 +15,29 @@
     import { quickSearchActive, activePopup } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { acaoDoResultado, buscarAcoes, buscarAudio, buscarMidia, buscarShows, buscarVersiculo, executarResultado, type Resultado } from "../../utils/aliancaSpotlight"
-    import { andar, enterRepetido, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
+    import { andar, destinoDaTecla, enterDepoisDeFechar, enterRepetido, indiceDaChave, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
     import { tela } from "../../utils/aliancaTela"
+    import { escFechou } from "../../utils/aliancaToque"
     import { highlightText } from "../quicksearch/searchHighlight"
     import Icon from "../helpers/Icon.svelte"
 
     let consulta = ""
     let porSecao: { [id: string]: Resultado[] } = {}
-    let marcado = 0
+    // o selecionado e a CHAVE do resultado, nunca o indice: quando uma secao chega depois a lista muda de tamanho e o selecionado continua o mesmo
+    let selChave: string | null = null
     let campo: HTMLInputElement
     let buscando = false
+    // a consulta que gerou a lista na tela, e se ha busca por fazer (debounce pendente ou rodando): o Enter so age sobre a lista da consulta escrita
+    let busca = 0
+    let adiar: ReturnType<typeof setTimeout> | undefined
+    let consultaDaLista = ""
+    let pendente = false
+    // o Enter que chegou antes da lista alcançar o campo: executa assim que a lista da consulta pintar
+    let fila: { ctrl: boolean } | null = null
 
     // a lista plana, na ordem das secoes (a seta anda por ela)
     $: lista = SECOES.flatMap((s) => porSecao[s.id] || [])
-    $: if (marcado >= lista.length) marcado = Math.max(0, lista.length - 1)
+    $: marcado = indiceDaChave(lista, selChave)
     $: atual = lista[marcado] || null
 
     const ROTULO: { [id in AcaoDeTecla]: string } = {
@@ -49,42 +58,89 @@
     // ---------- abrir e fechar
     $: if ($quickSearchActive) abriu()
     let jaAberta = false
+    // onde o foco estava ao abrir (o chat, o campo da mensagem pro palco...): fechar sem escolher devolve o foco para la
+    let focoAnterior: HTMLElement | null = null
+    let escolheu = false
     async function abriu() {
         if (jaAberta) return
         jaAberta = true
-        consulta = ""
-        porSecao = {}
-        marcado = 0
+        const a = document.activeElement as HTMLElement | null
+        focoAnterior = a && a !== document.body && a !== campo ? a : null
+        escolheu = false
+        zerar()
         await tick()
         campo?.focus()
     }
-    $: if (!$quickSearchActive) jaAberta = false
+    // ao abrir e ao fechar: nada da busca anterior sobrevive (promessa em voo, debounce pendente, Enter na fila, lista)
+    function zerar() {
+        busca++
+        clearTimeout(adiar)
+        adiar = undefined
+        fila = null
+        pendente = false
+        consultaDaLista = ""
+        buscando = false
+        consulta = ""
+        porSecao = {}
+        selChave = null
+    }
+    function fechou() {
+        if (!jaAberta) return
+        jaAberta = false
+        zerar()
+        const voltar = focoAnterior
+        focoAnterior = null
+        // escolher um resultado leva a atencao para onde o resultado foi aberto: so Esc, Ctrl+K e clique fora devolvem o foco
+        if (!escolheu && voltar?.isConnected) tick().then(() => (!document.activeElement || document.activeElement === document.body) && voltar.focus())
+    }
+    $: if (!$quickSearchActive) fechou()
 
     // ---------- buscar
-    let busca = 0
-    let adiar: ReturnType<typeof setTimeout> | undefined
     function digitou() {
         clearTimeout(adiar)
+        fila = null
         const q = consulta
         if (!q.trim()) {
             busca++
             porSecao = {}
             buscando = false
+            pendente = false
+            consultaDaLista = ""
             return
         }
-        adiar = setTimeout(() => rodar(q), 90)
+        pendente = true
+        adiar = setTimeout(() => {
+            adiar = undefined
+            void rodar(q)
+        }, 90)
+    }
+    // a lista da consulta pintou: libera e executa o Enter que esperava por ela
+    async function listaPintou(q: string) {
+        if (consulta.trim() !== q.trim()) return
+        consultaDaLista = q.trim()
+        pendente = false
+        if (!fila) return
+        const f = fila
+        fila = null
+        await tick()
+        if (atual) void escolher(atual, acaoDoResultado(atual, f.ctrl))
     }
     async function rodar(q: string) {
         const minha = ++busca
         buscando = true
         try {
-            // o que e imediato aparece na hora; midia, audio e versiculo (leem disco/Biblia) entram quando chegam
-            porSecao = { show: buscarShows(q), acao: buscarAcoes(q) }
-            marcado = 0
-            const [versiculo, midia, audio] = await Promise.all([buscarVersiculo(q), buscarMidia(q), buscarAudio(q)])
+            // primeira pintura: versiculo (le a Biblia ja carregada, nao espera disco), musicas e acoes juntos, na ordem das secoes; o selecionado e o topo.
+            // Depois disso a selecao nunca mais sai do lugar: midia e audio (leem pasta) entram ABAIXO, cada um quando chega, sem esperar o outro
+            const versiculo = await buscarVersiculo(q)
             if (minha !== busca) return
-            porSecao = { ...porSecao, versiculo, midia, audio }
-            marcado = 0
+            selChave = null
+            porSecao = { versiculo, show: buscarShows(q), acao: buscarAcoes(q) }
+            void listaPintou(q)
+            const entrar = async (id: "midia" | "audio", procurar: Promise<Resultado[]>) => {
+                const achados = await procurar
+                if (minha === busca) porSecao = { ...porSecao, [id]: achados }
+            }
+            await Promise.all([entrar("midia", buscarMidia(q)), entrar("audio", buscarAudio(q))])
         } catch (erro) {
             falhaAlta("spotlight-buscar", erro)
         } finally {
@@ -97,11 +153,19 @@
     async function escolher(r: Resultado, acao: AcaoDeTecla | null) {
         if (!acao) return
         // o segundo Enter (ou clique) no mesmo resultado em menos de 400 ms nao faz nada: auto-repeat da tecla e duplo clique
+        escolheu = true
         const chave = r.chave + "|" + acao
         const agora = performance.now()
         if (enterRepetido(ultimo, chave, agora)) return
         ultimo = { chave, em: agora }
         await executarResultado(r, acao)
+    }
+
+    function manterFoco(e: MouseEvent) {
+        if (e.target !== campo) e.preventDefault()
+    }
+    function marcar(i: number) {
+        selChave = lista[i]?.chave ?? null
     }
 
     function teclar(e: KeyboardEvent) {
@@ -111,18 +175,51 @@
         if ((ctrl && (k === "k" || k === "g")) || e.key === "F8") {
             if ($activePopup) return
             e.preventDefault()
+            // Ctrl+K segurado repete o keydown: sem isto abriria e fecharia a cada repeticao
+            if (e.repeat) return
             quickSearchActive.set(!$quickSearchActive)
             return
         }
+        // depois de executar, o Enter que sobrar (tecla segurada, segundo toque) nao pode chegar ao Scripture.svelte, que manda ao ar com Ctrl+Enter
+        if (e.key === "Enter" && enterDepoisDeFechar(ultimo?.em ?? null, performance.now(), $quickSearchActive)) {
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            return
+        }
         if (!$quickSearchActive) return
+        // a tecla que ainda compoe texto (IME, teclado de emoji) e do campo
+        if (e.isComposing || e.key === "Process") return
+        // o foco escapou do campo: o teclado do telao nao pode agir (Esc limparia o telao, seta e espaco avancariam o slide no ar)
+        const destino = destinoDaTecla({ key: e.key, ctrl, alt: e.altKey }, document.activeElement === campo)
+        if (destino !== "deixar" && e.key !== "Enter" && e.key !== "ArrowDown" && e.key !== "ArrowUp") {
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            if (destino === "fechar") {
+                escFechou()
+                quickSearchActive.set(false)
+            } else campo?.focus()
+            return
+        }
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault()
             e.stopPropagation()
-            marcado = andar(marcado, e.key === "ArrowDown" ? 1 : -1, lista.length)
+            marcar(andar(marcado, e.key === "ArrowDown" ? 1 : -1, lista.length))
             tick().then(() => document.querySelector(".quicksearch .linha.sel")?.scrollIntoView({ block: "nearest" }))
         } else if (e.key === "Enter") {
             e.preventDefault()
             e.stopPropagation()
+            // Enter segurado nao executa de novo (nem empilha avisos)
+            if (e.repeat || !consulta.trim()) return
+            if (!listaEmDia(consulta, consultaDaLista, pendente)) {
+                // a lista ainda e da consulta anterior: o Enter espera por ela (e adianta a busca, sem esperar o debounce)
+                fila = { ctrl }
+                if (adiar) {
+                    clearTimeout(adiar)
+                    adiar = undefined
+                    void rodar(consulta)
+                }
+                return
+            }
             if (atual) void escolher(atual, ctrl ? ctrlEnter : enter)
         }
     }
@@ -135,7 +232,8 @@
 <svelte:window on:keydown|capture={teclar} />
 
 {#if $quickSearchActive}
-    <div class="quicksearch spotlight" data-acao="spotlight" role="dialog" aria-label="Buscar">
+    <!-- o mousedown em qualquer parte que nao seja o campo nao tira o foco dele (o foco fora do campo deixaria o teclado do telao agir) -->
+    <div class="quicksearch spotlight" data-acao="spotlight" role="dialog" aria-label="Buscar" on:mousedown={manterFoco}>
         <div class="campo">
             <span class="lupa" aria-hidden="true"><Icon id="search" size={1.2} white /></span>
             <input bind:this={campo} class="edit" data-acao="spotlight-campo" type="text" placeholder="Buscar música, letra, mídia, versículo (Rm 8:28) ou ação" spellcheck="false" autocomplete="off" bind:value={consulta} on:input={digitou} />
@@ -150,7 +248,7 @@
                         {#each porSecao[secao.id] as r (r.chave)}
                             {@const i = lista.indexOf(r)}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <div class="linha" class:sel={i === marcado} class:aviso={!!r.versiculo?.motivo} role="option" aria-selected={i === marcado} tabindex="-1" data-resultado={r.chave} data-tipo={r.tipo} on:mousemove={() => (marcado = i)} on:mousedown|preventDefault on:click={() => escolher(r, acaoPrimaria(r))}>
+                            <div class="linha" class:sel={i === marcado} class:aviso={!!r.versiculo?.motivo} role="option" aria-selected={i === marcado} tabindex="-1" data-resultado={r.chave} data-tipo={r.tipo} on:mousemove={() => marcar(i)} on:mousedown|preventDefault on:click={() => escolher(r, acaoPrimaria(r))}>
                                 <span class="icone"><Icon id={r.icone || "slide"} size={1.1} white /></span>
                                 <span class="texto">
                                     <span class="nome">{r.titulo}</span>

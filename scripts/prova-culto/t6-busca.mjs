@@ -6,6 +6,7 @@
 //   D. saida travada: Ctrl+Enter e Enter de versiculo recusam, a busca fica aberta e nada escreve em outputs
 //   E. versiculo: "Rm 8:28", "Romanos 8 28" e "Jo 3.16"; Enter manda ao ar (uma escrita no tempo da trava de 400 ms, mesmo com Enter repetido); Ctrl+Enter so abre na Biblia
 //   F. Editar: Enter num show abre no editor ("Aberto da biblioteca") e Ctrl+Enter poe no roteiro, sem nenhuma escrita em outputs; Enter de versiculo so abre; ainda em Editar
+//   H. correcoes da revisao (T6_SO=H roda so esta secao): Enter no debounce, selecao estavel, foco, repeticao, livro, Biblia carregando
 //   G. acoes: "config" abre Configuracoes, "telas" abre a aba Telas; de uma pagina, Enter num show abre em Mostrar e nao manda ao ar
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
@@ -45,6 +46,7 @@ const {loadShows}=await import(U("components/helpers/setShow")); await loadShows
 S.activeShow.set({id:alvo[1].shows[i].id,index:i,type:"show"}); S.activeDrawerTab.set("shows")
 window.__n=0; S.outputs.subscribe(()=>window.__n++); await esp(1200); return 1`)
 
+    if (process.env.T6_SO !== "H") {
     // ---------- A
     ok("A0 a busca nao esta aberta de inicio", !(await aberta()))
     await ctrlK()
@@ -262,6 +264,107 @@ for (const id of ids.slice(0,6)) { const t=(get(S.textCache)[id]||""); const nom
     ok("G5 'tela cheia' acha a acao com o atalho F11", l.some((x) => x.t === "acao" && /Tela cheia/.test(x.n)))
     await tecla(j, "Escape")
     await esperar(900)
+    }
+
+    // ---------- H (correcoes da revisao da fatia 5)
+    await j.ev(`window.__os=[]; S.openScripture.subscribe(v=>{ if(v) window.__os.push(JSON.stringify(v)) }); return 1`)
+    const aberturas = () => j.ev(`return window.__os.slice()`)
+    await limpar()
+    await j.ev(`T.trocarTela("show","segmentado"); S.activeDrawerTab.set("shows"); return 1`)
+    // H1 (achado 1): o Enter logo depois da ultima tecla (dentro do debounce) age sobre a consulta ESCRITA, nunca sobre a lista da consulta anterior
+    await ctrlK()
+    await digitar("Jo 3.16")
+    const h1a = (await aberturas()).length
+    await j.ev(`document.querySelector('[data-acao=spotlight-campo]').select(); return 1`)
+    await j.enviar("Input.insertText", { text: "config" })
+    await tecla(j, "Enter")
+    await esperar(2500)
+    const h1 = (await aberturas()).slice(h1a)
+    ok("H1 trocar a consulta e dar Enter no mesmo instante age sobre a NOVA consulta (Configuracoes), nao manda o versiculo velho ao ar", h1.length === 0 && (await noAr()) === null && (await dom(`get(S.activePage)==="settings"`)), `${JSON.stringify(h1)} ${await noAr()} ${await dom("get(S.activePage)")}`)
+    await j.ev(`S.activePage.set("show"); return 1`)
+    await limpar()
+    // H2 (achado 5): fechar e reabrir com a busca velha ainda por chegar: a lista nao aparece com o campo vazio e o Enter nao executa nada invisivel
+    await ctrlK()
+    await j.enviar("Input.insertText", { text: "Jo 3.16" })
+    await tecla(j, "Escape")
+    await tecla(j, "k", { ctrl: true })
+    await esperar(1800)
+    const h2a = (await aberturas()).length
+    ok("H2a reaberta: o campo esta vazio e nenhuma lista da busca anterior", (await aberta()) && (await dom(`document.querySelector('[data-acao=spotlight-campo]').value===""`)) && (await linhas()).length === 0, JSON.stringify(await linhas()))
+    await tecla(j, "Enter")
+    await esperar(1200)
+    ok("H2b Enter com o campo vazio nao executa nada (a busca fica aberta)", (await aberta()) && (await aberturas()).length === h2a && (await noAr()) === null, `${(await aberturas()).length - h2a} ${await noAr()}`)
+    await limpar()
+    // H3 (achados 2 e 9): a selecao fica no resultado escolhido quando midia/audio chegam; as secoes vao na ordem fixa (musicas, acoes, midia, audio)
+    await ctrlK()
+    await digitar("te")
+    const h3a = await linhas()
+    ok("H3a 'te' acha 2+ resultados", h3a.length >= 2, String(h3a.length))
+    await tecla(j, "ArrowDown")
+    await esperar(150)
+    const h3b = (await linhas()).find((x) => x.sel)
+    await esperar(1500)
+    const h3c = (await linhas()).find((x) => x.sel)
+    ok("H3b o item marcado com a seta continua o mesmo depois de tudo chegar", !!h3b && !!h3c && h3b.c === h3c.c, JSON.stringify([h3b?.c, h3c?.c]))
+    const ordem = await dom(`[...document.querySelectorAll('[data-acao=spotlight] .titulo')].map(t=>t.textContent.trim())`)
+    const pos = (t) => ordem.findIndex((x) => x.includes(t))
+    ok("H3c as secoes vem em ordem fixa: musicas antes de acoes antes de midia", pos("Músicas") >= 0 && pos("Músicas") < pos("Ações") && (pos("Mídia") < 0 || pos("Ações") < pos("Mídia")), JSON.stringify(ordem))
+    await limpar()
+    // H4 (achado 3): clicar numa parte da busca que nao e o campo NAO tira o foco do campo; e, se o foco escapar, Esc/setas/espaco nao chegam ao telao
+    {
+        await j.ev(`S.activePage.set("show"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("shows")
+const p=get(S.projects)[get(S.activeProject)]; const i=p.shows.findIndex(s=>(s.type===undefined||s.type==="show"))
+S.activeShow.set({id:p.shows[i].id,index:i,type:"show"}); await esp(900); return 1`)
+        const a = await localizar(j, `document.querySelectorAll("#showArea .slide")[1]`)
+        await clicarEm(j, a.x, a.y)
+        await esperar(700)
+        const noArAntes = await noAr()
+        ok("H4a ha um slide no ar", noArAntes !== null, String(noArAntes))
+        await ctrlK()
+        await digitar("te")
+        for (const [nome, sel] of [["dicas", ".dicas"], ["titulo da secao", ".titulo"]]) {
+            const alvo = await localizar(j, `document.querySelector('[data-acao=spotlight] ${sel}')`)
+            if (!alvo.ok) { ok("H4b clicar em " + nome, false, alvo.motivo); continue }
+            await clicarEm(j, alvo.x, alvo.y)
+            await esperar(200)
+            ok(`H4b clicar em ${nome} mantem o foco no campo`, await dom(`document.activeElement===document.querySelector('[data-acao=spotlight-campo]')`), await dom(`document.activeElement?.tagName+'.'+document.activeElement?.className`))
+        }
+        // mesmo com o foco fora (so por seguranca): tira o foco a forca e dispara as teclas
+        await j.ev(`document.activeElement.blur(); return 1`)
+        await tecla(j, " ")
+        await tecla(j, "ArrowRight")
+        await esperar(300)
+        ok("H4c com o foco fora do campo, espaco e seta nao mexem no slide no ar", (await noAr()) === noArAntes && (await aberta()), String(await noAr()))
+        await j.ev(`document.activeElement.blur(); return 1`)
+        await tecla(j, "Escape")
+        await esperar(400)
+        ok("H4d com o foco fora do campo, Esc fecha a busca e NAO limpa o telao", !(await aberta()) && (await noAr()) === noArAntes, String(await noAr()))
+        await esperar(900)
+    }
+    await limpar()
+    // H5 (achado 6): fechar sem escolher devolve o foco ao campo onde o operador estava digitando (o chat, a mensagem pro palco...)
+    await j.ev(`const i=document.createElement("input"); i.id="__h5"; i.className="edit"; i.style.cssText="position:fixed;left:4px;bottom:4px;z-index:9999"; document.body.appendChild(i); i.focus(); return 1`)
+    await ctrlK()
+    ok("H5a aberta, o foco foi para o campo da busca", await dom(`document.activeElement===document.querySelector('[data-acao=spotlight-campo]')`))
+    await tecla(j, "Escape")
+    await esperar(400)
+    ok("H5b Esc devolve o foco ao campo anterior", await dom(`document.activeElement?.id==="__h5"`), await dom(`document.activeElement?.tagName`))
+    await ctrlK()
+    await ctrlK()
+    ok("H5c Ctrl+K de novo tambem devolve", await dom(`document.activeElement?.id==="__h5"`))
+    await j.ev(`document.getElementById("__h5")?.remove(); return 1`)
+    await limpar()
+    // H6 (achado 4): Ctrl+Enter em versiculo ("so abrir na Biblia") com um segundo Ctrl+Enter colado nao manda nada ao ar (o 2o chegava ao Scripture.svelte)
+    await j.ev(`S.activeDrawerTab.set("shows"); return 1`)
+    await ctrlK()
+    await digitar("Jo 3.16")
+    const h6a = await escritas()
+    await tecla(j, "Enter", { ctrl: true })
+    await tecla(j, "Enter", { ctrl: true })
+    await esperar(2500)
+    ok("H6 Ctrl+Enter duplo em versiculo so abre a Biblia: nada no ar, nenhuma escrita", (await noAr()) === null && (await escritas()) === h6a && (await dom(`get(S.activeDrawerTab)==="scripture"`)), `${await noAr()} ${h6a}->${await escritas()}`)
+    await j.ev(`S.activeDrawerTab.set("shows"); return 1`)
+    await limpar()
 } catch (erro) {
     console.error("ERRO", erro)
     falhas.push("erro: " + erro.message)
