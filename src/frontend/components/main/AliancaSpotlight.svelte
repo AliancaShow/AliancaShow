@@ -188,7 +188,7 @@
         }
         if (!$quickSearchActive) return
         // a tecla que ainda compoe texto (IME, teclado de emoji) e do campo
-        if (e.isComposing || e.keyCode === 229) return
+        if (e.isComposing || e.key === "Process") return
         // o foco escapou do campo: o teclado do telao nao pode agir (Esc limparia o telao, seta e espaco avancariam o slide no ar)
         const destino = destinoDaTecla({ key: e.key, ctrl, alt: e.altKey }, document.activeElement === campo)
         if (destino !== "deixar" && e.key !== "Enter" && e.key !== "ArrowDown" && e.key !== "ArrowUp") {
