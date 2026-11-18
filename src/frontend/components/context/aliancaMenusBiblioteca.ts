@@ -26,7 +26,7 @@ import { menuClick } from "./menuClick"
 const VERMELHO = "#f21a27"
 
 const ITENS: { [id: string]: ContextMenuItem } = {
-    alianca_roteiro: { label: "＋ Adicionar ao roteiro", icon: "add", iconColor: "#97c7ff", translate: false },
+    alianca_roteiro: { label: "＋ Adicionar ao roteiro", translate: false },
     alianca_agora: { label: "Mostrar agora (sem pôr no roteiro)", icon: "play", iconColor: VERMELHO, color: VERMELHO, translate: false },
     alianca_agora_item: { label: "Mostrar agora", icon: "play", iconColor: VERMELHO, color: VERMELHO, translate: false },
     alianca_subir: { label: "Mover para cima", icon: "up", iconColor: "#93f190", translate: false },

@@ -288,6 +288,7 @@
             0 16px 40px rgba(0, 0, 0, 0.55);
         color: var(--luz-texto, inherit);
         font-family: var(--luz-fonte, inherit);
+        font-size: 13px;
         max-width: min(360px, calc(100vw - 16px));
     }
     .menuTitulo {
