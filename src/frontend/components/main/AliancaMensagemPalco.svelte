@@ -10,7 +10,7 @@
     import { sirvo, sirvoAgora } from "../../utils/aliancaSirvo"
     import { enviarMensagemPalco, limparMensagemPalco } from "../../utils/aliancaMensagemPalco"
     import { mensagemDaCaixa } from "../../utils/aliancaMensagemPalcoVista"
-    import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_ERRO_MS, avisoDaCaixa, caminhoDoEnvio, campoAposEnvio, conferirDuvida, duvidaDoEnvio, envioAceito, mensagemViva, prepararMensagem, restanteTexto, type Duvida } from "../../utils/aliancaMensagemPalcoLogica"
+    import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_APARECER_MS, PRAZO_ERRO_MS, acompanharEnvio, avisoDaCaixa, caminhoDoEnvio, campoAposEnvio, campoEstaNoPalco, conferirDuvida, duvidaDoEnvio, envioAceito, mensagemViva, prepararMensagem, rotuloNoPalco, type Duvida, type Envio } from "../../utils/aliancaMensagemPalcoLogica"
     import { desligarSoRetorno, ligarSoRetorno, porQueNaoLigarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { outputs } from "../../stores"
 
@@ -21,6 +21,8 @@
     // envio que estourou o tempo e pode ter chegado: a proxima leitura do roteiro diz (conferirDuvida)
     let duvida: (Duvida & { campo: string }) | null = null
     let minutos: number = MINUTOS_PADRAO
+    // A3: o envio que deu certo e esta sendo acompanhado: o texto FICA no campo enquanto a mensagem esta no palco
+    let envio: Envio | null = null
     let avisoModo = ""
     let tAviso: ReturnType<typeof setTimeout> | null = null
     let tique = 0
@@ -30,6 +32,8 @@
     const lerMotivo = (e: typeof $sirvo) => caminhoDoEnvio(e).motivo
     $: viva = lerViva(tique, $mensagemDaCaixa)
     $: if (duvida) conferir(viva)
+    $: if (envio) acompanhar(viva, tique)
+    $: noPalco = campoEstaNoPalco(texto, viva)
     $: motivo = lerMotivo($sirvo)
     // a contagem nasce certa: com a viva recem-chegada o `agora` ainda podia ter ate 5 s (o relogio so anda de 5 em 5 s sem viva)
     $: if (viva) agora = sirvoAgora()
@@ -64,9 +68,20 @@
         if (c === "aberta") return
         duvida = null
         if (c === "vencida") return
-        // chegou: o palco tem a mensagem; a caixa deixa de dizer que nao sabe
+        // chegou: o palco tem a mensagem; a caixa deixa de dizer que nao sabe (o texto fica no campo: A3)
         limparErro()
-        texto = campoAposEnvio(texto, d.campo)
+        envio = { campo: d.campo, texto: d.texto, visto: true, venceEm: 0 }
+    }
+    // A3: o campo so se esvazia quando a mensagem SAI do palco (expirou ou alguem limpou) e ainda e o texto enviado
+    function acompanhar(v: typeof viva, _tique: number) {
+        const e = envio
+        if (!e) return
+        const r = acompanharEnvio(e, v, sirvoAgora())
+        if (r === "noPalco") e.visto = true
+        else if (r === "saiu") {
+            texto = campoAposEnvio(texto, e.campo)
+            envio = null
+        } else if (r === "perdeu") envio = null
     }
     // o motivo do modo depende dos retornos configurados (a loja de saidas)
     const lerModo = (_o: unknown) => porQueNaoLigarSoRetorno()
@@ -99,8 +114,10 @@
         const campo = texto
         const r = await enviarMensagemPalco(texto, minutos)
         enviando = false
-        if (r.ok) texto = campoAposEnvio(texto, campo)
-        else {
+        if (r.ok) {
+            // A3: o texto FICA no campo, destacado como "no palco"; esvazia quando a mensagem sair
+            envio = { campo, texto: (prepararMensagem(campo) as { texto?: string }).texto || campo, visto: false, venceEm: sirvoAgora() + PRAZO_APARECER_MS }
+        } else {
             mostrarErro(r.mensagem)
             if (r.codigo === "rede") duvida = { ...duvidaDoEnvio((prepararMensagem(campo) as { texto?: string }).texto || campo, minutos, sirvoAgora()), campo }
         }
@@ -112,6 +129,11 @@
         const r = await limparMensagemPalco()
         enviando = false
         if (!r.ok) mostrarErro(r.mensagem)
+        else if (envio) {
+            // o operador limpou: o campo esvazia junto (se ainda e o texto enviado)
+            texto = campoAposEnvio(texto, envio.campo)
+            envio = null
+        }
     }
     function aoTeclar(ev: KeyboardEvent) {
         ev.stopPropagation()
@@ -132,7 +154,7 @@
         <button type="button" class="modo" class:ligado={$soRetorno} class:inerte={!$soRetorno && !!motivoModo} aria-pressed={$soRetorno} aria-disabled={!$soRetorno && !!motivoModo} tabindex="-1" data-acao="modo-so-retorno" title={$soRetorno ? "Só retorno ligado: clique para voltar ao normal." : motivoModo || "Só retorno: o que você mandar ao ar vai só para o monitor de retorno, não para o telão."} on:mousedown|preventDefault on:click={modo}>{$soRetorno ? "● Só retorno" : "○ Só retorno"}</button>
     </div>
     <div class="linha">
-        <input class="edit campo" type="text" maxlength={LIMITE_MENSAGEM} placeholder="Pastor, 5 min pro fim" aria-label="Mensagem pro palco" data-acao="mensagem-palco" bind:value={texto} on:keydown={aoTeclar} />
+        <input class="edit campo" class:noar={noPalco} type="text" maxlength={LIMITE_MENSAGEM} placeholder="Pastor, 5 min pro fim" aria-label="Mensagem pro palco" data-acao="mensagem-palco" bind:value={texto} on:keydown={aoTeclar} />
         <button type="button" class="enviar" tabindex="-1" disabled={enviando || !texto.trim()} data-acao="enviar-mensagem-palco" on:mousedown|preventDefault on:click={enviar}>Enviar</button>
     </div>
     <div class="opcoes">
@@ -146,7 +168,7 @@
     </div>
     <div class="estado" data-acao="estado-mensagem-palco">
         {#if viva}
-            <span class="vt">No palco: “{viva.texto}” · sai em <b class="rest" data-acao="restante-mensagem">{restanteTexto(viva.ateMs, agora || sirvoAgora())}</b></span><button type="button" class="limpar" tabindex="-1" data-acao="limpar-mensagem-palco" on:mousedown|preventDefault on:click={limpar}>Limpar</button>
+            <span class="vt"><b class="pal" data-acao="restante-mensagem">● {rotuloNoPalco(viva.ateMs, agora || sirvoAgora())}</b>{#if !noPalco} · “{viva.texto}”{/if}</span><button type="button" class="limpar" tabindex="-1" data-acao="limpar-mensagem-palco" on:mousedown|preventDefault on:click={limpar}>Limpar</button>
         {/if}
     </div>
     <div class="estado" data-acao="aviso-mensagem-palco" role="status">
@@ -243,9 +265,10 @@
         font-size: 11px;
         color: var(--luz-mudo);
     }
-    .rest {
+    .pal {
         font-variant-numeric: tabular-nums;
-        color: var(--luz-texto);
+        color: var(--luz-laranja);
+        font-weight: 650;
     }
     .linha {
         display: flex;
@@ -263,6 +286,10 @@
         padding: 0 10px;
         font: inherit;
         font-size: 12px;
+    }
+    .campo.noar {
+        border-color: var(--luz-laranja);
+        background: color-mix(in srgb, var(--luz-laranja) 14%, transparent);
     }
     .campo:focus {
         outline: none;

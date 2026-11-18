@@ -322,6 +322,7 @@
     let prevAutosizeSignature = ""
     $: autosizeSignature = `${isStage ? stageItem?.style || "" : item?.style || ""}_${resolvedTemplateId}_${chordLines ? 1 : 0}_${stageAutoSize ? 1 : 0}_${item?.textFit || ""}_${stageItem?.textFit || ""}_${JSON.stringify(item?.lines || stageItem?.lines || "")}_${ratio}`
 
+    let hiddenAutosizeRetries = 0
     let debounceTimer: NodeJS.Timeout | null = null
     function debouncedCalculateAutosize(delay = 50) {
         if (debounceTimer) clearTimeout(debounceTimer)
@@ -395,6 +396,15 @@
 
         let elem = itemElem
         if (!elem) return
+
+        // AliancaShow: instancia ESCONDIDA (display:none, como o Preview antigo que fica montado atras da coluna No ar) mede 0x0: scrollWidth/Height = 0 e o
+        // texto "nunca estoura", entao cresce ate 800px e ESCREVE esse valor no cache, que e dividido com a miniatura visivel (que le o cache e fica gigante).
+        // Sem caixa medivel nao mede nem le/escreve cache; tenta de novo algumas vezes (como o Stagebox) caso a caixa so tenha nascido sem tamanho.
+        if (isStage && (!elem.clientWidth || !elem.clientHeight)) {
+            if (hiddenAutosizeRetries < 5) debouncedCalculateAutosize(200 * ++hiddenAutosizeRetries)
+            return
+        }
+        hiddenAutosizeRetries = 0
 
         const isDynamic = isTextItem && getItemText(isStage ? stageItem : item).includes("{")
 

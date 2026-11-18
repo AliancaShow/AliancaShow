@@ -385,7 +385,9 @@
                     <!-- use PreviewCanvas only in remote StageShow -->
                     <!-- {#if $currentWindow === "output" && !$special.optimizedMode} -->
                     <!-- <PreviewCanvas capture={$previewBuffers[outputWindowId]} id={outputWindowId} fullscreen /> -->
-                    {#if ($outputs[outputWindowId] || $allOutputs[outputWindowId])?.stageOutput}
+                    <!-- AliancaShow: o item "saida atual" SEM fonte propria cai na saida do layout (`settings.output`); com o modo "so retorno" essa saida e o
+                         PROPRIO retorno, e desenhar o layout dele dentro dele e recursao. Sem fonte explicita, mostra o conteudo da saida (o que o modo mandou) -->
+                    {#if ($outputs[outputWindowId] || $allOutputs[outputWindowId])?.stageOutput && item.currentOutput?.source}
                         {#if !disableStagePreview}
                             <StageLayout outputId={outputWindowId} stageId={($outputs[outputWindowId] || $allOutputs[outputWindowId])?.stageOutput} edit={false} disableStagePreview={true} />
                         {/if}
