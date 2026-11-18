@@ -195,7 +195,9 @@
     }
     .faixa {
         flex: 1;
-        min-height: 0;
+        /* cabine 18/nov (A10): a faixa de cima NUNCA colapsa, mesmo que a altura medida (`h`) esteja velha: o cabecalho do roteiro (AO VIVO, ROTEIRO,
+           seletor, ＋ Adicionar) saia empilhado em cima da biblioteca. O minimo e o mesmo de `prender` (FAIXA_MIN_ALTURA); quem cede e a biblioteca. */
+        min-height: 240px;
         display: flex;
     }
     .painel {
@@ -222,7 +224,9 @@
         overflow: hidden;
     }
     .bib {
-        flex-shrink: 0;
+        /* cede ate o minimo da divisoria (LIMITES.bib[0]) quando a faixa de cima precisa do espaco */
+        flex-shrink: 1;
+        min-height: 140px;
         overflow: hidden;
     }
     .dir {
