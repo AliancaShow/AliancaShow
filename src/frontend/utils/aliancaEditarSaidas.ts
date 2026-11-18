@@ -25,3 +25,14 @@ export function destinosDoEnvio(e: { saidas?: string[]; bindings?: string[] | nu
 export function jaMostramOSlide(saidas: { id: string; slide?: { id?: string; layout?: string; index?: number } | null }[], showId: string, layout: string, index: number): string[] {
     return saidas.filter((o) => o.slide?.id === showId && o.slide.layout === layout && o.slide.index === index).map((o) => o.id)
 }
+
+/**
+ * As saidas que um envio de slide alcanca de verdade: as ligadas (sem chave nem palco); se alguma esta "ativa", so as ativas. E a regra de `setOutput`/
+ * `refreshOut` (getActiveOutputs com `hasToBeActive`). Os selos NO AR / EDITADO olham a MESMA lista: uma saida ligada e nao ativa nunca recebe foto nova,
+ * entao com a lista de "ligadas" o EDITADO dela nao saia nunca.
+ */
+export function saidasDoEnvio(saidas: { id: string; enabled?: boolean; active?: boolean; isKeyOutput?: boolean; stageOutput?: boolean }[]): string[] {
+    let ligadas = (saidas || []).filter((s) => s && s.enabled === true && !s.isKeyOutput && !s.stageOutput)
+    if (ligadas.some((s) => s.active === true)) ligadas = ligadas.filter((s) => s.active === true)
+    return ligadas.map((s) => s.id)
+}

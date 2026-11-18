@@ -12,7 +12,8 @@
     import { getAccess } from "../../utils/profile"
     import { getSlideChords } from "../edit/scripts/chords"
     import { getSlideText } from "../edit/scripts/textStyle"
-    import { getActiveOutputs, getStyleTemplate } from "../helpers/output"
+    import { getStyleTemplate } from "../helpers/output"
+    import { saidasDoEnvio } from "../../utils/aliancaEditarSaidas"
     import { getLayoutRef } from "../helpers/show"
     import { _show } from "../helpers/shows"
     import LazyLoad from "../helpers/LazyLoad.svelte"
@@ -63,7 +64,8 @@
     $: porCento = Math.round($zoomDoEditor * 100)
 
     // ----- no ar -----
-    $: idsDasSaidas = getActiveOutputs($outputs, false, true, true)
+    // a mesma lista que o envio alcanca (ligada E ativa): senao o EDITADO de uma tela que nunca recebe foto nova nao sai mais
+    $: idsDasSaidas = saidasDoEnvio(Object.entries($outputs || {}).map(([id, o]) => ({ ...(o as any), id })))
     $: saidas = idsDasSaidas.map((id) => $outputs[id])
     $: selos = ehShow && showId && layout ? selosDoShow({ showId, layout, ref, slides: show?.slides, noAr: saidas.map((o: any) => o?.out?.slide) as any }) : {}
     $: situacao = situacaoDoSlide(selos, indice)

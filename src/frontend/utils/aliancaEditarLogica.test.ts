@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mostrarMandarSo, saidasParaMandar } from "./aliancaEditarSaidas"
+import { mostrarMandarSo, saidasDoEnvio, saidasParaMandar } from "./aliancaEditarSaidas"
 import { FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, editDoItemDoRoteiro, tipoDeEdicaoDesconhecido, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
 
 const ref = [{ id: "a" }, { id: "b" }, { id: "c" }]
@@ -212,5 +212,17 @@ describe("audio e tipos fora do seletor (menor 9)", () => {
         expect(tipoDeEdicaoDesconhecido("pdf")).toBe(true)
         expect(tipoDeEdicaoDesconhecido("audio")).toBe(false)
         expect(itemEmEdicao({ edit: { type: "pdf", id: "x.pdf" }, show: { id: "x.pdf", type: "pdf" }, nomeDe: () => "x" })).toBeNull()
+    })
+})
+
+describe("saidasDoEnvio: os selos olham as mesmas saidas que o envio (menor 11)", () => {
+    it("com uma saida ativa, a ligada-e-nao-ativa fica de fora (nunca recebe foto nova)", () => {
+        expect(saidasDoEnvio([{ id: "A", enabled: true, active: true }, { id: "B", enabled: true, active: false }])).toEqual(["A"])
+    })
+    it("sem nenhuma ativa, valem todas as ligadas", () => {
+        expect(saidasDoEnvio([{ id: "A", enabled: true }, { id: "B", enabled: true }])).toEqual(["A", "B"])
+    })
+    it("desligada, chave e palco nunca entram", () => {
+        expect(saidasDoEnvio([{ id: "A", enabled: false }, { id: "K", enabled: true, isKeyOutput: true }, { id: "S", enabled: true, stageOutput: true }, { id: "B", enabled: true }])).toEqual(["B"])
     })
 })

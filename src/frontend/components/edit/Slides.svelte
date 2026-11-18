@@ -3,7 +3,7 @@
     import { activeEdit, activeShow, cachedShowsData, editColumns, outputs, showsCache } from "../../stores"
     import { selosDoShow } from "../../utils/aliancaEditarLogica"
     import T from "../helpers/T.svelte"
-    import { getActiveOutputs } from "../helpers/output"
+    import { saidasDoEnvio } from "../../utils/aliancaEditarSaidas"
     import { getShowCacheId } from "../helpers/show"
     import { _show } from "../helpers/shows"
     import SkeletonSlide from "../slide/SkeletonSlide.svelte"
@@ -22,7 +22,7 @@
     $: selos = calcularSelos(currentShow, $outputs, activeLayout, showId)
     function calcularSelos(..._deps: any[]) {
         if (!showId || !currentShow || !activeLayout) return {}
-        const saidas = getActiveOutputs($outputs, false, true, true).map((id) => $outputs[id]?.out?.slide)
+        const saidas = saidasDoEnvio(Object.entries($outputs || {}).map(([id, o]) => ({ ...(o as any), id }))).map((id) => $outputs[id]?.out?.slide)
         const ref = _show(showId).layouts([activeLayout]).ref()[0] || []
         return selosDoShow({ showId, layout: activeLayout, ref, slides: currentShow.slides, noAr: saidas as any })
     }
