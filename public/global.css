@@ -282,8 +282,12 @@ body[data-tema="luz"] {
     --luz-fundo: #0d0d0f;
     --luz-painel: rgba(19, 19, 21, 0.62);
     --luz-painel-opaco: #131315;
-    --luz-pop: rgba(28, 28, 31, 0.82);
     --luz-pop-opaco: #1c1c1f;
+    /* D16 (vidro): o desfoque NAO foi medido na cabine (scripts/prova-culto/vidro.mjs exige a saida real com video 1080p) e o plano manda
+       o caminho seguro: popover opaco, sem backdrop-filter. Para ligar o vidro, depois de a medicao passar, so estas duas linhas mudam:
+       --luz-pop: rgba(28, 28, 31, 0.82);  --luz-vidro: blur(22px) saturate(150%); */
+    --luz-pop: var(--luz-pop-opaco);
+    --luz-vidro: none;
     --luz-texto: #f8f8f0;
     --luz-mudo: rgba(248, 248, 240, 0.5);
     --luz-fraco: rgba(248, 248, 240, 0.3);
