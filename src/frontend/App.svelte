@@ -85,7 +85,7 @@
                 <ProfileSelector />
             {/if}
         {:else}
-            <Center>
+            <Center style="overflow: hidden;">
                 <Loader size={2} />
             </Center>
         {/if}
