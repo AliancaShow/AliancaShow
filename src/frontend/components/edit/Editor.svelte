@@ -2,6 +2,7 @@
     import { onMount } from "svelte"
     import { activeEdit, activePopup, activeShow, cloudUsers, editMode, focusMode, refreshEditSlide, showsCache } from "../../stores"
     import { isActiveShowInUseByCloudUser } from "../../utils/cloudSync"
+    import { edicaoDoItemMostrado } from "../../utils/aliancaEditarLogica"
     import { getAccess } from "../../utils/profile"
     import Icon from "../helpers/Icon.svelte"
     import { getLayoutRef } from "../helpers/show"
@@ -40,9 +41,9 @@
 
     onMount(() => {
         // mainly for overlay preview
-        if ($activeShow?.id && ($activeShow.type || "show") !== "show" && (!$activeEdit.id || $activeEdit.type === $activeShow.type)) {
-            activeEdit.set({ id: $activeShow.id, type: $activeShow.type, items: [] } as any)
-        }
+        // so tipo editavel (aliancaEditarLogica): bloco, pdf, ppt... nunca viram `activeEdit.type` (faixa de falha "editar-tipo-desconhecido", cabine 18/nov A9)
+        const edicao = edicaoDoItemMostrado($activeShow as any, $activeEdit as any)
+        if (edicao) activeEdit.set(edicao as any)
     })
 
     let hideCloudConflict = false

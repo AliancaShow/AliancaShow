@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { mostrarMandarSo, saidasDoEnvio, saidasParaMandar } from "./aliancaEditarSaidas"
-import { FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, editDoItemDoRoteiro, tipoDeEdicaoDesconhecido, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
+import { edicaoDoItemMostrado, FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, editDoItemDoRoteiro, tipoDeEdicaoDesconhecido, estaNoRoteiro, itemEmEdicao, opcoesDoSeletor, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
 
 const ref = [{ id: "a" }, { id: "b" }, { id: "c" }]
 const slides = (itemsB: any[] = [1]) => ({ a: { items: [0] }, b: { items: itemsB }, c: { items: [2] } })
@@ -294,5 +294,20 @@ describe("saidasDoEnvio: os selos olham as mesmas saidas que o envio (menor 11)"
                 { id: "B", enabled: true }
             ])
         ).toEqual(["B"])
+    })
+})
+
+describe("cabine 18/nov, A9: o Editor so abre edicao de tipo editavel", () => {
+    it("bloco (section), pdf, ppt, folder, player e scripture nao viram activeEdit", () => {
+        for (const type of ["section", "pdf", "ppt", "folder", "player", "scripture"]) expect(edicaoDoItemMostrado({ id: "x", type }, { type: "show" }), type).toBeNull()
+    })
+    it("show nao muda nada; midia, audio, sobreposicao e efeito abrem a edicao do proprio item", () => {
+        expect(edicaoDoItemMostrado({ id: "s", type: "show" }, null)).toBeNull()
+        expect(edicaoDoItemMostrado({ id: "s" }, null)).toBeNull()
+        for (const type of ["media", "audio", "overlay", "effect"]) expect(edicaoDoItemMostrado({ id: "m", type }, { type: "show" }), type).toEqual({ id: "m", type, items: [] })
+    })
+    it("edicao em curso de OUTRO item ou tipo nao e pisada", () => {
+        expect(edicaoDoItemMostrado({ id: "m", type: "media" }, { id: "o", type: "overlay" })).toBeNull()
+        expect(edicaoDoItemMostrado({ id: "m", type: "media" }, { id: "o", type: "media" })).toEqual({ id: "m", type: "media", items: [] })
     })
 })
