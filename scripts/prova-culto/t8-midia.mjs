@@ -11,7 +11,7 @@
 //   H. temporizador de contagem: linha com nome e tempo, pausar/continuar e parar com cliques reais; some quando para
 //   I. Spotify: a linha aparece com estado de Spotify e some sem ele
 //   J. as teclas de midia (espaco, setas) NAO foram tocadas: a faixa nao escuta o teclado
-import { mkdirSync, writeFileSync } from "node:fs"
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, mover, tecla } from "./lib.mjs"
@@ -46,7 +46,11 @@ const clicarSel = async (sel, rotulo) => {
 async function arrastar(sel, de, ate) {
     const a = await localizar(j, `document.querySelector(${JSON.stringify(sel)})`)
     if (!a.ok) throw new Error(`barra ${sel}: ${a.motivo}`)
-    const r = await dom(`(()=>{const r=document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return {x:r.x,w:r.width,y:r.y+r.height/2}})()`)
+    const medir = () => dom(`(()=>{const r=document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return {x:r.x,w:r.width,y:r.y+r.height/2}})()`)
+    let r = await medir()
+    await mover(j, r.x + r.w * de, r.y)
+    await esperar(600) // o passar do mouse acende a dica (tooltip) e a coluna pode se ajustar: mede de novo com ela assentada
+    r = await medir()
     const x0 = r.x + r.w * de
     const x1 = r.x + r.w * ate
     await mover(j, x0, r.y)
@@ -57,6 +61,8 @@ async function arrastar(sel, de, ate) {
     }
     await j.enviar("Input.dispatchMouseEvent", { type: "mouseReleased", x: x1, y: r.y, button: "left", clickCount: 1 })
     await esperar(500)
+    const f = await medir()
+    return { x1, fracaoFinal: (x1 - f.x) / f.w } // onde o ponteiro acabou, em fracao da barra COMO ELA ESTAVA ao soltar (a coluna pode se ajustar 5 px durante o arrasto)
 }
 
 // arquivos: o video do perfil de teste e um WAV de 12 s gerado aqui (fora do perfil, para nao mexer na biblioteca da prova)
@@ -179,9 +185,9 @@ try {
     await clicarSel('[data-transporte=video] [data-acao=transporte-mudo]', "mudo")
     await esperar(400)
     ok("E: mudo desliga", (await videoState())?.muted === false)
-    await arrastar('[data-transporte=video] .vol .barra', 0.99, 0.4)
+    const fimVol = await arrastar('[data-transporte=video] .vol .barra', 0.99, 0.4)
     const vol = await dom(`get(S.media)[${JSON.stringify(VIDEO)}]?.volume`)
-    ok("E: arrastar o volume escreve o volume do arquivo (~0,4)", typeof vol === "number" && vol > 0.3 && vol < 0.5, String(vol))
+    ok("E: arrastar o volume escreve o volume do arquivo (onde o ponteiro soltou, ~0,4)", typeof vol === "number" && Math.abs(vol - Math.min(1, Math.max(0, fimVol.fracaoFinal))) < 0.03 && vol > 0.2 && vol < 0.5, `${vol} esperado ${fimVol.fracaoFinal}`)
     ok("E: nenhum slide foi para o ar por causa da faixa", (await dom(`get(S.outputs).default.out.slide ?? null`)) === null)
 
     // ---- J. teclado: a faixa nao ficou com o foco (o espaco e as setas continuam sendo da pagina)
@@ -261,6 +267,28 @@ try {
     await clicarSel('[data-acao=camadas] [data-camada=audio]', "parar audio")
     await j.ev(`const C=await import(U("components/output/clear")); C.clearAll(true); const T2=await import(U("components/drawer/timers/timers")); T2.resetTimer("t8"); await esp(3500); return 1`)
     ok("K: ao esvaziar, tudo volta ao lugar", (await faixa()).estado === "vazio" && (await abaixo()) === lay0, `${JSON.stringify(await faixa())} ${await abaixo()} ${await dom(`${FAIXA}.innerText`)}`)
+
+    // ---- L. varias saidas (revisao da fatia 7, achado 4): a faixa segue a MESMA saida que a tela No ar mostra (a primeira do objeto, nao a de nome
+    // mais baixo), diz o nome dela quando ha mais de uma e avisa "+1 saida" (sem controles) se a outra tem um video DIFERENTE
+    const VIDEO2 = VIDEO.replace("v1.mp4", "v2.mp4")
+    copyFileSync(VIDEO, VIDEO2)
+    const nomeOrig = await dom(`get(S.outputs).default.name ?? ""`)
+    // (a 2a saida ganha uma aba em "outras telas": a referencia de posicao e medida COM ela, antes da midia)
+    await j.ev(`S.outputs.update(o=>{o.default.name="Zeta"; o.default.out={}; o.segunda={...JSON.parse(JSON.stringify(o.default)), name:"Alfa", enabled:true, out:{}}; return o}); await esp(1000); return 1`)
+    const lay2 = await abaixo()
+    await j.ev(`S.outputs.update(o=>{o.default.out={background:{path:${JSON.stringify(VIDEO)},type:"video",name:"v1.mp4"}}; o.segunda.out={background:{path:${JSON.stringify(VIDEO2)},type:"video",name:"v2.mp4"}}; return o}); await esp(1200); return 1`)
+    ok("L: com duas saidas, a faixa controla a PRINCIPAL (a da tela), nao a de nome mais baixo", (await dom(`document.querySelector('[data-transporte=video] .nome')?.textContent`)) === "v1")
+    ok("L: na linha do video, o volume e o resto dos controles continuam visiveis com o aviso ao lado", (await dom(`(()=>{const f=${FAIXA}.getBoundingClientRect(); const v=document.querySelector('[data-transporte=video] .vol .barra').getBoundingClientRect(); const o=${FAIXA}.querySelector('.outra.fixa').getBoundingClientRect(); return v.width>=28 && v.right<=o.left+1 && o.right<=f.right+1})()`)) === true)
+    ok("L: a linha diz o nome da saida quando ha mais de uma", (await dom(`document.querySelector('[data-transporte=video] [data-transporte-saida]')?.innerText`)) === "Zeta")
+    ok("L: a outra saida com video diferente aparece como \"+1 saida\", sem controles", (await dom(`(()=>{const e=${FAIXA}.querySelector('[data-acao=transporte-outra]'); return !!e && /[+]1 saída/.test(e.innerText) && !e.querySelector('button, [role=slider]')})()`)) === true)
+    ok("L: o video e o aviso nao mexem em nada abaixo", (await abaixo()) === lay2, `${await abaixo()} vs ${lay2}`)
+    await print("duas-saidas", 200)
+    await j.ev(`S.outputs.update(o=>{o.segunda.out.background={path:${JSON.stringify(VIDEO)},type:"video",name:"v1.mp4"}; return o}); await esp(800); return 1`)
+    ok("L: o MESMO arquivo nas duas saidas nao e \"outra midia\" (e controlado junto)", (await dom(`!${FAIXA}.querySelector('[data-acao=transporte-outra]')`)) === true)
+    await j.ev(`S.outputs.update(o=>{o.default.out={}; o.segunda.out.background={path:${JSON.stringify(VIDEO2)},type:"video",name:"v2.mp4"}; return o}); await esp(800); return 1`)
+    ok("L: principal sem video e outra com: a faixa vazia ainda avisa \"+1 saida com midia\"", (await dom(`${FAIXA}.dataset.estado`)) === "vazio" && /\+1 saída com mídia/.test(await dom(`${FAIXA}.innerText`)), await dom(`${FAIXA}.innerText`))
+    await j.ev(`S.outputs.update(o=>{delete o.segunda; o.default.name=${JSON.stringify(nomeOrig)}; o.default.out={}; return o}); await esp(800); return 1`)
+    ok("L: de volta a uma saida so, sem nome de saida nem aviso", (await faixa()).estado === "vazio" && (await abaixo()) === lay0, `${await abaixo()} vs ${lay0}`)
 } catch (e) {
     console.log("FALHA excecao", e.message)
     falhas.push("excecao")

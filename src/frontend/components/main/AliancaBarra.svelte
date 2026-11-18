@@ -65,7 +65,7 @@
     .barra {
         position: relative;
         flex: 1 1 0;
-        min-width: 40px;
+        min-width: 28px;
         height: 22px;
         display: flex;
         align-items: center;

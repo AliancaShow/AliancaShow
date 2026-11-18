@@ -44,6 +44,18 @@ export function prenderBusca(valor: number, duracao: number, toTime = 0): number
     return Math.min(Math.max(0, valor || 0), limiteBusca(duracao, toTime))
 }
 
+/** As saidas que a coluna No ar considera: habilitadas e visiveis, na ordem do objeto. A primeira e a principal (a que a tela mostra E a que a faixa controla). */
+export function saidasHabilitadas(outputs: Record<string, { enabled?: boolean; invisible?: boolean } | undefined> | null | undefined): string[] {
+    return Object.entries(outputs || {})
+        .filter(([, o]) => o?.enabled && !o?.invisible)
+        .map(([id]) => id)
+}
+
+/** Quantas OUTRAS saidas tem um video diferente do que a faixa controla (o mesmo arquivo nas duas e controlado junto, nao conta). */
+export function outrasSaidasComVideo(outras: { caminho: string; video: boolean }[], caminhoPrincipal: string): number {
+    return outras.filter((o) => o.video && !!o.caminho && o.caminho !== caminhoPrincipal).length
+}
+
 /** O arrasto guarda em que arquivo/saida comecou; se o fundo trocou no meio, ele morre (a busca cairia no video novo). */
 export type ArrastoMidia = { caminho: string; saida: string }
 export function arrastoVale(a: ArrastoMidia | null, caminho: string, saida: string): boolean {

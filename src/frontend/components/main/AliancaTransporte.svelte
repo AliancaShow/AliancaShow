@@ -9,15 +9,13 @@
     import type { Unsubscriber } from "svelte/store"
     import { AudioPlayer } from "../../audio/audioPlayer"
     import { activePage, activeTimers, media, outLocked, outputs, playerVideos, playingAudio, timers } from "../../stores"
-    import { arrastoVale, extrasDaFaixa, prenderBusca, timersNaFaixa, type ArrastoMidia } from "../../utils/aliancaTransporteLogica"
+    import { arrastoVale, extrasDaFaixa, outrasSaidasComVideo, prenderBusca, saidasHabilitadas, timersNaFaixa, type ArrastoMidia } from "../../utils/aliancaTransporteLogica"
     import { getAccess } from "../../utils/profile"
     import AudioMeter from "../drawer/audio/AudioMeter.svelte"
     import { getCurrentTimerValue, playPauseGlobal, resetTimer } from "../drawer/timers/timers"
     import { splitPath } from "../helpers/get"
     import { getExtension, getFileName, getMediaType, removeExtension } from "../helpers/media"
-    import { getActiveOutputs } from "../helpers/output"
     import { joinTimeBig } from "../helpers/time"
-    import { getFirstOutputIdWithBackground } from "../helpers/video"
     import { VideoPlayer } from "../media/video/videoPlayer"
     import { videoSync } from "../media/video/videoSync"
     import { fadePause, skipNext, skipPrev, spotifyIsFading, spotifyState, togglePlay } from "../output/preview/SpotifyManager"
@@ -26,15 +24,27 @@
     const COR_VIDEO = "#8cc7a6"
     const COR_AUDIO = "#eba640"
 
-    // ---------------- video: o fundo da primeira saida com fundo (a mesma conta do Preview) ----------------
-    $: ativas = getActiveOutputs($outputs, true, true, true)
-    $: comFundo = ativas.filter((id) => $outputs[id]?.out?.background)
-    $: idSaida = getFirstOutputIdWithBackground(comFundo) || comFundo[0] || ""
+    // ---------------- video: o fundo da saida PRINCIPAL, a mesma que a tela No ar logo acima mostra (revisao da fatia 7, achado 4) ----------------
+    $: habilitadas = saidasHabilitadas($outputs)
+    $: idSaida = habilitadas[0] || ""
+    $: variasSaidas = habilitadas.length > 1
+    $: nomeSaida = variasSaidas ? $outputs[idSaida]?.name || idSaida : ""
     $: fundo = idSaida ? $outputs[idSaida]?.out?.background : null
     $: caminho = (fundo?.path || fundo?.id || "") as string
     $: tipoFundo = (fundo?.type || (caminho ? getMediaType(getExtension(caminho)) : "image")) as string
     $: temVideo = !!fundo && !!caminho && (tipoFundo === "video" || tipoFundo === "player")
     $: nomeVideo = fundo?.type === "player" ? $playerVideos[fundo?.id || ""]?.name || "" : caminho.includes(".") && !caminho.includes("base64") ? removeExtension(splitPath(caminho).name) : fundo?.name || ""
+
+    // outra saida com um video DIFERENTE: so um aviso, sem controles (o operador ve que ha mais, mas a faixa so mexe no da tela)
+    const ehVideo = (b: any, c: string) => !!c && (b?.type === "video" || b?.type === "player" || (!b?.type && getMediaType(getExtension(c)) === "video"))
+    $: outrasVideo = outrasSaidasComVideo(
+        habilitadas.slice(1).map((id) => {
+            const b = $outputs[id]?.out?.background
+            const c = (b?.path || b?.id || "") as string
+            return { caminho: c, video: ehVideo(b, c) }
+        }),
+        temVideo ? caminho : ""
+    )
 
     let dadosVideo = { duracao: 0, pausado: true, repetir: false, mudo: false }
     let tempoVideo = 0
@@ -247,10 +257,10 @@
 
 <div bind:this={faixaEl} class="faixa" class:tem-mais={!!extras} data-acao="transporte" data-estado={total ? "ativo" : "vazio"} data-painel={painel ? "1" : "0"} data-sem-trava>
     <div class="lista" class:painel>
-        {#if !total}<div class="item vazio">nada tocando</div>{/if}
+        {#if !total}<div class="item vazio">nada tocando{#if outrasVideo}<span class="outra" data-acao="transporte-outra">· +{outrasVideo} saída com mídia</span>{/if}</div>{/if}
         {#if temVideo}
             <div class="item">
-                <AliancaTransporteLinha tipo="video" cor={COR_VIDEO} nome={nomeVideo} pausado={dadosVideo.pausado} atual={tempoVideo} duracao={dadosVideo.duracao} repetir={dadosVideo.repetir} mudo={dadosVideo.mudo} volume={tipoFundo === "player" ? null : volumeVideo} travada={$outLocked} on:alternar={alternarVideo} on:repetir={alternarRepetir} on:mudo={alternarMudo} on:comecar={comecarVideo} on:mover={moverVideo} on:soltar={soltarVideo} on:volume={volumeDoVideo} />
+                <AliancaTransporteLinha tipo="video" cor={COR_VIDEO} nome={nomeVideo} saida={nomeSaida} pausado={dadosVideo.pausado} atual={tempoVideo} duracao={dadosVideo.duracao} repetir={dadosVideo.repetir} mudo={dadosVideo.mudo} volume={tipoFundo === "player" ? null : volumeVideo} travada={$outLocked} on:alternar={alternarVideo} on:repetir={alternarRepetir} on:mudo={alternarMudo} on:comecar={comecarVideo} on:mover={moverVideo} on:soltar={soltarVideo} on:volume={volumeDoVideo} />
             </div>
         {/if}
         {#if temAudio}
@@ -298,6 +308,9 @@
             </div>
         {/if}
     </div>
+    {#if total && outrasVideo}
+        <span class="outra fixa" data-acao="transporte-outra" data-title="+{outrasVideo} saída com mídia diferente: sem controles aqui" aria-label="+{outrasVideo} saída com mídia">+{outrasVideo} saída</span>
+    {/if}
     {#if extras > 0}
         <button type="button" class="mais" class:lig={painel} tabindex="-1" aria-expanded={painel} data-acao="transporte-mais" data-title={painel ? "Fechar a lista" : "Ver o que mais está tocando"} on:mousedown|preventDefault on:click={() => (painel = !painel)}>+{extras}</button>
     {/if}
@@ -363,6 +376,19 @@
     }
     .vazio {
         color: var(--luz-fraco);
+    }
+    /* aviso de OUTRA saida com video diferente: texto, sem controle */
+    .outra {
+        color: var(--luz-ambar);
+        white-space: nowrap;
+    }
+    .outra.fixa {
+        flex: 0 0 auto;
+        align-self: center;
+        font-size: 10px;
+    }
+    .faixa.tem-mais .outra.fixa {
+        margin-right: 34px;
     }
     .vu {
         position: absolute;

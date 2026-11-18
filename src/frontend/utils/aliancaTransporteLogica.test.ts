@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { arrastoVale, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { arrastoVale, outrasSaidasComVideo, saidasHabilitadas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -60,6 +60,20 @@ describe("extrasDaFaixa (revisao da fatia 7, achado 3: a faixa tem uma linha so)
     ])("%s coisas -> +%s", (total, extras) => expect(extrasDaFaixa(total)).toBe(extras))
 })
 
+describe("varias saidas: a faixa segue a mesma saida da tela (revisao da fatia 7, achado 4)", () => {
+    const o = { b: { enabled: true }, a: { enabled: true }, c: { enabled: false }, d: { enabled: true, invisible: true } }
+    it("habilitadas e visiveis, na ordem do objeto (nao a de nome: a primeira e a principal)", () => {
+        expect(saidasHabilitadas(o)).toEqual(["b", "a"])
+        expect(saidasHabilitadas(null)).toEqual([])
+    })
+    it("conta so as outras saidas com video DIFERENTE do que a faixa controla", () => {
+        expect(outrasSaidasComVideo([{ caminho: "/v/b.mp4", video: true }], "/v/a.mp4")).toBe(1)
+        expect(outrasSaidasComVideo([{ caminho: "/v/a.mp4", video: true }], "/v/a.mp4")).toBe(0)
+        expect(outrasSaidasComVideo([{ caminho: "/i/foto.jpg", video: false }, { caminho: "", video: true }], "")).toBe(0)
+        expect(outrasSaidasComVideo([{ caminho: "/v/b.mp4", video: true }, { caminho: "/v/c.mp4", video: true }], "")).toBe(2)
+    })
+})
+
 // Guarda de TEXTO (o DOM so existe no app): a faixa e a linha ficam fora da trava de clique repetido e fora da tela No ar (nao e camada).
 import { readFileSync } from "fs"
 import { join } from "path"
@@ -74,6 +88,11 @@ describe("faixa de transporte (guarda de texto)", () => {
         const css = ler("components/main/AliancaTransporte.svelte")
         const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    /* so a primeira linha"))
         expect(caixa).not.toMatch(/position:\s*(absolute|fixed)/)
+    })
+    it("a faixa e a tela No ar escolhem a saida pela MESMA funcao (achado 4)", () => {
+        expect(ler("components/main/AliancaNoAr.svelte")).toContain("saidasHabilitadas($outputs)")
+        expect(ler("components/main/AliancaTransporte.svelte")).toContain("saidasHabilitadas($outputs)")
+        expect(ler("components/main/AliancaTransporte.svelte")).not.toContain("getFirstOutputIdWithBackground")
     })
     it("altura fixa reservada: 36 px sempre, sem animacao de altura nem margem que muda (achado 3)", () => {
         const css = ler("components/main/AliancaTransporte.svelte")
