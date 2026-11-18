@@ -1,6 +1,7 @@
 import { get } from "svelte/store"
 import type { Media } from "../../../types/Show"
 import { actions, actionTags, activeActionTagFilter, activeEdit, activeMediaTagFilter, activePlayerTagFilter, activeTagFilter, activeTimerTagFilter, activeVariableTagFilter, contextData, drawerTabsData, globalTags, groups, media, mediaOptions, mediaTags, outputs, overlays, playerTags, playerVideos, selected, shows, sorted, timers, timerTags, variables, variableTags } from "../../stores"
+import { saidasDoMenu } from "../../utils/aliancaEditarAcoes"
 import { mediaTagsComuns, pastas as pastasDaGaveta } from "../../utils/aliancaPastasMidiaEstado"
 import { PASTA_RAIZ, abaDaPasta, pastaDaMidia } from "../../utils/aliancaPastasMidiaLogica"
 import { translateText } from "../../utils/language"
@@ -110,6 +111,7 @@ const loadActions = {
             { label: "Parar (último quadro)", id: "parar", enabled: proprio === "parar", translate: false }
         ]
     },
+    alianca_so: () => saidasDoMenu().map((s) => ({ label: s.nome, icon: "play", id: s.id, translate: false })),
     alianca_camada: () => {
         const vt = get(media)[get(selected).data[0]?.path || ""]?.videoType || ""
         return [

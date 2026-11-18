@@ -5,12 +5,12 @@ import { naoEMostrar, telaAtual, tela } from "./aliancaTela"
 import { tecladoVivo } from "./aliancaTecladoLogica"
 
 // Regra unica da TELA (fatia 2; antes Modo Culto | Preparar).
-// Em Editar nenhuma TECLA mexe no telao. Em Mostrar e nas paginas do menu o teclado da saida vive (decisao provisoria, aliancaTecladoLogica.ts).
+// Em Editar so o Esc mexe no telao (fatia 3: limpa; a trava de 700 ms da fatia 2 vale). Em Mostrar e nas paginas do menu o teclado da saida vive (decisao provisoria, aliancaTecladoLogica.ts).
 // Clique na tela, celular, MIDI e API nao passam por aqui (sao gestos deliberados de quem/onde manda).
 
 /** Uma unica regra: o teclado so mexe na saida em Mostrar (regra A do plano). */
-export function tecladoPodeMexerNaSaida(alvo?: any): boolean {
-    return tecladoVivo(telaAtual(), ehCampoDeTexto(alvo))
+export function tecladoPodeMexerNaSaida(alvo?: any, tecla?: string): boolean {
+    return tecladoVivo(telaAtual(), ehCampoDeTexto(alvo), tecla)
 }
 
 /**
@@ -38,7 +38,7 @@ export const avisoTecla = writable(0)
  * Ctrl+C etc. passam em silencio. Sem `e` (origem sem evento): avisa sempre.
  */
 export function teclaIgnorada(e?: { key: string; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean; target?: any }): boolean {
-    if (tecladoPodeMexerNaSaida(e?.target)) return false
+    if (tecladoPodeMexerNaSaida(e?.target, e?.key)) return false
     if (!e || teclaMexeriaNaSaida(e)) avisoTecla.update((n) => n + 1)
     return true
 }
@@ -91,6 +91,8 @@ export function iniciarMarcaDeTecla() {
         (e: KeyboardEvent) => {
             if (["Control", "Shift", "Alt", "Meta", "AltGraph", "CapsLock"].includes(e.key)) return
             if (ehCampoDeTexto(e.target)) return
+            // fatia 3: o Esc e a unica tecla que limpa o telao em Editar; nao conta como "tecla em curso" (senao o proprio destino o recusaria)
+            if (e.key === "Escape") return
             clearTimeout(liberarTimer)
             liberarTimer = undefined
             teclaEmCurso = true

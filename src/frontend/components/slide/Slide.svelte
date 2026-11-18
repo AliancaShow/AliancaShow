@@ -37,8 +37,9 @@
     export let columns = 1
     export let output: { color: string; line: number; maxLines: number; cached: boolean; clickRevealed?: boolean } | null = null
     export let active = false
-    // AliancaShow: selo "no ar" no canto (so o Preparar passa)
-    export let selo = ""
+    // Leiaute v2 (fatia 3): os selos da miniatura em Editar. `noAr` = o telao mostra este slide; `editado` = o slide vivo ja difere da foto que o telao mostra
+    export let noAr = false
+    export let editado = false
     export let focused = false
     export let list = false
     export let endIndex: null | number = null
@@ -266,8 +267,11 @@
 </script>
 
 <div class="main" class:active class:focused style="width: {viewMode === 'grid' || viewMode === 'simple' || viewMode === 'groups' || noQuickEdit ? 100 / columns : 100}%;">
-    {#if selo}
-        <span class="selo" class:mudou={selo !== "no ar"} data-title={selo !== "no ar" ? "O telão mostra a versão antiga até você mandar de novo." : ""}>{selo}</span>
+    {#if noAr || editado}
+        <span class="selos">
+            {#if editado}<span class="selo editado" data-title="O telão mostra a versão antiga até você mandar de novo.">EDITADO</span>{/if}
+            {#if noAr}<span class="selo noAr">NO AR</span>{/if}
+        </span>
     {/if}
     <!-- group box -->
     {#if $fullColors}
@@ -279,7 +283,7 @@
         <Actions {slide} {columns} {index} actions={layoutSlide.actions || {}} />
     {/if}
     <!-- content -->
-    <div class="slide context #{isLocked ? 'default' : $focusMode ? 'slideFocus' : name === null ? 'slideChild' : 'slide'}" class:disabled={layoutSlide.disabled} class:afterEnd={endIndex !== null && index > endIndex} {style} role="none" on:click>
+    <div data-indice={index} class="slide context #{isLocked ? 'default' : $focusMode ? 'slideFocus' : name === null ? ($tela === 'editar' ? 'slideChildEditar' : 'slideChild') : $tela === 'editar' ? 'slideEditar' : 'slide'}" class:disabled={layoutSlide.disabled} class:afterEnd={endIndex !== null && index > endIndex} {style} role="none" on:click>
         <div class="hover overlay" />
         <!-- <DropArea id="slide" hoverTimeout={0} file> -->
         <div style="width: 100%;height: 100%;">
@@ -514,8 +518,9 @@
         border-radius: 0 !important;
     }
 
+    /* o slide em edicao: fio claro de 2 px, como o prototipo (o vermelho e so de "no ar") */
     .main.focused {
-        outline: 2px solid var(--secondary-opacity);
+        outline: 2px solid var(--luz-texto);
         outline-offset: -1px;
         z-index: 2;
     }
@@ -545,25 +550,30 @@
         outline: none;
     }
 
-    .selo {
+    /* selos do prototipo: EDITADO (branco translucido) e NO AR (vermelho), no canto de cima da miniatura (a faixa de baixo e do nome do grupo) */
+    .selos {
         position: absolute;
-        top: 4px;
-        right: 4px;
+        right: 8px;
+        top: 8px;
         z-index: 5;
-        padding: 1px 6px;
-        border-radius: 10px;
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: #fff;
-        background: rgb(242 26 39 / 0.9);
+        display: flex;
+        gap: 4px;
         pointer-events: none;
     }
-    .selo.mudou {
-        background: var(--aviso, #e0a030);
-        color: #1a1200;
+    .selo {
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.4;
+    }
+    .selo.editado {
+        background: rgb(255 255 255 / 0.22);
         pointer-events: auto;
+    }
+    .selo.noAr {
+        background: #f21a27;
     }
 
     .group_box {

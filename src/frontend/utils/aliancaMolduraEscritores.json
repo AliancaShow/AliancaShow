@@ -1,5 +1,11 @@
 {
     "portas": {
+        "components/context/aliancaMenusEditar.ts": {
+            "classe": "gesto: botao direito (Editar na linha de show da biblioteca)",
+            "chamadas": [
+                "\"edit\", \"botao-direito\""
+            ]
+        },
         "components/context/menuClick.ts": {
             "classe": "gesto: botao direito (Editar e abrir em Mostrar) e paginas do menu",
             "chamadas": [
@@ -23,12 +29,6 @@
             "chamadas": [
                 "\"settings\", \"botao-de-pagina\"",
                 "\"edit\", \"botao-de-pagina\""
-            ]
-        },
-        "components/edit/Navigation.svelte": {
-            "classe": "gesto, morre com o arquivo (fatia 3): voltar de Editar",
-            "chamadas": [
-                "\"show\", \"voltar-de-pagina\""
             ]
         },
         "components/edit/tools/SlideStyle.svelte": {

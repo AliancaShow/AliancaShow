@@ -11,6 +11,7 @@
     import { _show } from "../helpers/shows"
     import T from "../helpers/T.svelte"
     import { type ContextMenuItem, contextMenuItems } from "./contextMenus"
+    import { acaoDeEditar } from "./aliancaMenusEditar"
     import { menuClick } from "./menuClick"
 
     export let contextElem: HTMLDivElement | null = null
@@ -418,7 +419,8 @@
         let actionItem: HTMLElement | null = contextElem?.classList.contains("_" + id) ? contextElem : contextElem?.querySelector("._" + id) || null
         let sel = $selected
 
-        menuClick(id, enabled, menu, contextElem, actionItem, sel)
+        // Leiaute v2, fatia 3: os itens de Editar ficam fora de menuClick.ts (fecho da janela de saida); o resto segue o fluxo de sempre
+        if (!acaoDeEditar({ id, menu, contextElem, sel })) menuClick(id, enabled, menu, contextElem, actionItem, sel)
 
         // don't hide context menu
         const keepOpen = ["uppercase", "lowercase", "capitalize", "trim"] // "dynamic_values" (caret position is lost)

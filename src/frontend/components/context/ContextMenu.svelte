@@ -1,6 +1,9 @@
 <script lang="ts">
     import { fade } from "svelte/transition"
     import { selected } from "../../stores"
+    import "./aliancaMenusEditar" // registra os itens de Editar nos mapas de contextMenus.ts
+    import { saidasDoMenu } from "../../utils/aliancaEditarAcoes"
+    import { mostrarMandarSo } from "../../utils/aliancaEditarSaidas"
     import { tela } from "../../utils/aliancaTela"
     import { getExtension, getMediaType } from "../helpers/media"
     import { activePage, activePopup, companion, contextActive, contextData, currentWindow, dictionary, localeDirection, os, special, spellcheck, theme, themes } from "../../stores"
@@ -153,6 +156,8 @@
         if (id === "media_tag_filter") return $contextData.media_tags
         // AliancaShow F7: pastas de midia so no Preparar; "ao terminar" e "camada" so para video
         if (id === "alianca_mover") return $tela !== "mostrar"
+        // Editar: "Mandar so para" so com duas telas ou mais (com uma, seria o mesmo que "Mandar pro ar")
+        if (id === "alianca_so") return mostrarMandarSo(saidasDoMenu())
         if (id === "alianca_fim" || id === "alianca_camada") return $tela !== "mostrar" && getMediaType(getExtension($selected.data?.[0]?.path || $selected.data?.[0]?.id || "")) === "video"
         if (id === "player_tag_filter") return $contextData.player_tags
         if (id === "action_tag_filter") return $contextData.action_tags

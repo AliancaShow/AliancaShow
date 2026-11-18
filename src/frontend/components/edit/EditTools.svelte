@@ -12,18 +12,15 @@
     import { getLayoutRef, isSlideLocked } from "../helpers/show"
     import { _show } from "../helpers/shows"
     import { getStyles } from "../helpers/style"
-    import FloatingInputs from "../input/FloatingInputs.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
-    import Tabs from "../main/Tabs.svelte"
     import Center from "../system/Center.svelte"
     import { comDesfazerAgrupado } from "../../utils/aliancaDesfazerAgrupado"
-    import { getBoxStyle, getFilterStyle, getItemStyle, getSlideStyle, setBoxStyle, setFilterStyle, setItemStyle, setSlideStyle } from "./scripts/itemClipboard"
+    import { getBoxStyle, getItemStyle, getSlideStyle, setBoxStyle, setItemStyle, setSlideStyle } from "./scripts/itemClipboard"
     import { DEFAULT_ITEM_STYLE } from "./scripts/itemHelpers"
     import { addStyleString } from "./scripts/textStyle"
     import BoxStyle from "./tools/BoxStyle.svelte"
     import ItemsList from "./tools/ItemsList.svelte"
     import ItemStyle from "./tools/ItemStyle.svelte"
-    import OverlayStyle from "./tools/OverlayStyle.svelte"
     import SlideFilters from "./tools/SlideFilters.svelte"
     import SlideStyle from "./tools/SlideStyle.svelte"
     import TemplateStyle from "./tools/TemplateStyle.svelte"
@@ -33,7 +30,7 @@
         text: { name: "items.text", icon: "text" },
         item: { name: "tools.item", icon: "item" },
         slide: { name: "tools.slide", icon: "options", overflow: true },
-        filters: { name: "edit.filters", icon: "filter", overflow: true }
+        filters: { name: "edit.filters", icon: "filter", overflow: true } // as abas sairam: o objeto so guarda `remove` (alvoDoRodape olha se ha slide e caixa)
     }
     let active: string = Object.keys(tabs)[0]
     $: tabs.text.icon = item?.type && itemBoxes[item.type] ? itemBoxes[item.type]!.icon : "text"
@@ -114,13 +111,12 @@
 
     // COPY
 
-    // Preparar (8b): o rodape age sobre o ALVO (texto, caixa ou slide), nao sobre a aba; no Culto `aba` e a aba de sempre
-    $: organizado = true
+    // o rodape age sobre o ALVO (texto, caixa ou slide), nao sobre uma aba (leiaute v2, fatia 3: o painel organizado e o unico)
     let tipoEdicao: "show" | "template" | "overlay" = "show"
     $: tipoEdicao = $activeEdit.type === "overlay" ? "overlay" : $activeEdit.type === "template" ? "template" : "show"
     $: escolhidos = $activeEdit.items.length
     $: alvo = alvoDoRodape({ escolhidos, templateTextMode, templateItemMode, slideRemovido: !!tabs.slide.remove, tipo: tipoEdicao })
-    $: aba = organizado ? alvo : active
+    $: aba = alvo
 
     $: itemType = aba === "text" ? item?.type || "text" : ""
     $: type = `${aba}${itemType}`
@@ -140,7 +136,7 @@
     function clearClipboard() {
         copyPasteEdit.update((a) => {
             delete a[type]
-            if (organizado) delete a["item"]
+            delete a["item"]
             return a
         })
     }
@@ -154,16 +150,23 @@
         if (alvoDe === "text" && item) return getBoxStyle(item)
         if (alvoDe === "item" && item) return getItemStyle(item)
         if (alvoDe === "slide") return getSlideStyle()
-        if (alvoDe === "filters") return getFilterStyle()
         return null
     }
 
     // PASTE
 
+    // o botao do prototipo "Aplicar este estilo em todos os slides": copia o estilo do alvo e cola em todos de uma vez (so show; texto e slide)
+    $: podeAplicarEmTodos = isShow && (aba === "text" || aba === "slide")
+    async function aplicarEmTodos() {
+        if (colando || !podeAplicarEmTodos) return
+        copyStyle()
+        await pasteStyle(true)
+    }
+
     // Preparar (8b): trava de clique duplo enquanto cola, e o desfazer da colagem em grupo e UMA entrada so
     let colando = false
 
-    async function pasteStyle(applyToAll = false, applyToFollowing = false) {
+    async function pasteStyle(applyToAll = false) {
         let styles = $copyPasteEdit[type]
         if (!Array.isArray(styles)) return
         if (colando) return
@@ -186,7 +189,7 @@
 
         slides = clone(slides)
 
-        const agrupar = organizado && isShow && (aba === "text" || aba === "slide") && !!$activeShow?.id
+        const agrupar = isShow && (aba === "text" || aba === "slide") && !!$activeShow?.id
         if (agrupar) {
             colando = true
             try {
@@ -199,15 +202,7 @@
         function setNewStyle(semHistorico = false) {
             if (aba === "text") return setBoxStyle(styles, slides, itemType as ItemType, semHistorico)
             if (aba === "item") return setItemStyle(styles, slides)
-            if (aba === "slide") return setSlideStyle(styles[0], slides, semHistorico)
-            if (aba === "filters") {
-                let indexes: number[] = []
-                if (applyToFollowing) indexes = ref.map((_, i) => i).filter((a) => a >= activeSlide)
-                else if (applyToAll) indexes = ref.map((_, i) => i)
-                else indexes = [activeSlide]
-
-                return setFilterStyle(styles[0], indexes)
-            }
+            return setSlideStyle(styles[0], slides, semHistorico)
         }
     }
 
@@ -215,7 +210,7 @@
 
     async function reset() {
         // Preparar: reset de varios dados num slide = UMA entrada de desfazer
-        if (organizado && isShow && (aba === "text" || aba === "slide") && $activeShow?.id) {
+        if (isShow && (aba === "text" || aba === "slide") && $activeShow?.id) {
             if (colando) return
             colando = true
             try {
@@ -286,16 +281,6 @@
                 newData: { style: { key: "style", values: [DEFAULT_ITEM_STYLE] } },
                 location: { page: "edit", show: $activeShow!, slide: slideId, items: $activeEdit.items }
             })
-            return
-        }
-
-        if (aba === "filters") {
-            let indexes = [activeSlide]
-            if (typeof indexes[0] !== "number") return
-
-            history({ id: "SHOW_LAYOUT", newData: { key: "filterEnabled", data: undefined, indexes } }) // pre 1.4.4
-            history({ id: "SHOW_LAYOUT", newData: { key: "filter", data: undefined, indexes } }) // pre 1.5.0
-            history({ id: "SHOW_LAYOUT", newData: { key: "backdrop-filter", data: undefined, indexes } })
             return
         }
 
@@ -409,7 +394,6 @@
     $: currentShow = $showsCache[$activeShow?.id || ""]
     $: isLocked = activeId ? false : currentShow?.locked || isSlideLocked($activeShow?.id || "", ref[activeSlide]?.id || "", currentShow) || profile.global === "read" || profile[currentShow?.category || ""] === "read"
     // $: isDefault = $activeEdit.type === "overlay" ? $overlays[activeId || ""]?.isDefault : $activeEdit.type === "template" ? $templates[activeId || ""]?.isDefault : false
-    $: overflowHidden = !!(isShow || $activeEdit.type === "template" || $activeEdit.type === "overlay")
 
     $: currentCopied = $copyPasteEdit[type]
     $: currentItemStyle = getItemsStyle($showsCache[$activeEdit?.id || $activeShow?.id || ""])
@@ -417,7 +401,7 @@
 
     // ----- Preparar (8b): painel organizado -----
     // blocos: conteudo (texto/midia...), Caixa (posicao e aparencia) e a secao Slide (fechada, no fim)
-    $: temCaixa = organizado && escolhidos > 0 && !templateTextMode
+    $: temCaixa = escolhidos > 0 && !templateTextMode
     $: mostrarConteudo = !!item && !templateItemMode
     $: mostrarCaixa = !templateTextMode && allSlideItems.length > 0 && (escolhidos > 0 || templateItemMode)
     $: secaoSlide = !tabs.slide.remove && tipoEdicao !== "overlay"
@@ -488,7 +472,7 @@
 <svelte:window on:keydown={keydown} />
 
 <div class="main border editTools">
-    {#if slideActive && !isLocked && organizado}
+    {#if slideActive && !isLocked}
         <div class="content">
             <ItemsList {allSlideItems} recolhivel />
 
@@ -547,123 +531,31 @@
         </div>
 
         {#if item || aba === "slide"}
-            <FloatingInputs>
+            <!-- rodape fixo (nao flutua sobre o conteudo): o estilo copiado vale para o alvo de cima -->
+            <div class="rodape" data-acao="editar-rodape">
                 <span class="rotuloRodape">{rotuloRodape}</span>
-
-                <div class="divider"></div>
-
-                {#if copiedStyleDifferent}
-                    <MaterialButton icon="paste" title="actions.paste" disabled={colando} on:click={() => pasteStyle()}>
-                        <T id="actions.paste" />
-                    </MaterialButton>
-
-                    <div class="divider"></div>
-                {/if}
-                {#if currentCopied && !copiedStyleDifferent}
-                    {#if isShow}
-                        <MaterialButton icon="paste" title="actions.to_all" disabled={colando} on:click={() => pasteStyle(true)}>
-                            <T id="actions.to_all" />
-                        </MaterialButton>
+                <div class="botoes">
+                    {#if copiedStyleDifferent}
+                        <button type="button" class="b" disabled={colando} on:click={() => pasteStyle()}>Colar estilo</button>
                     {/if}
-                {:else}
-                    <MaterialButton disabled={!currentItemStyle?.length} title="actions.copy" on:click={copyStyle}>
-                        <Icon id="copy" white={copiedStyleDifferent} />
-                        {#if !copiedStyleDifferent}<T id="actions.copy" />{/if}
-                    </MaterialButton>
-                {/if}
-
-                {#if currentCopied}
-                    <div class="divider"></div>
-                    <MaterialButton icon="clear" title="clear.general: formats.clipboard" on:click={clearClipboard}></MaterialButton>
-                {:else if aba !== "item"}
-                    <div class="divider"></div>
-                    <MaterialButton icon="reset" title="actions.reset" disabled={colando} on:click={reset}></MaterialButton>
-                {/if}
-            </FloatingInputs>
-        {/if}
-    {:else if slideActive && !isLocked}
-        <Tabs {tabs} bind:active {overflowHidden} />
-
-        {#if active === "text"}
-            <div class="content">
-                {#if item}
-                    <BoxStyle id={item?.type || "text"} bind:allSlideItems bind:item />
-                {:else}
-                    <Center faded>
-                        <T id="empty.items" />
-                    </Center>
-                {/if}
-            </div>
-        {:else if active === "item"}
-            <div class="content">
-                <ItemStyle bind:allSlideItems bind:item />
-            </div>
-        {:else if active === "filters"}
-            <div class="content">
-                <SlideFilters />
-            </div>
-        {:else if active === "slide"}
-            <div class="content">
-                {#if $activeEdit.type === "template"}
-                    <TemplateStyle bind:allSlideItems />
-                {:else if $activeEdit.type === "overlay"}
-                    <OverlayStyle bind:allSlideItems />
-                {:else}
-                    <SlideStyle bind:allSlideItems />
-                {/if}
-            </div>
-        {/if}
-
-        {#if item || active === "slide" || active === "filters"}
-            <FloatingInputs>
-                {#if copiedStyleDifferent}
-                    <MaterialButton icon="paste" title="actions.paste" disabled={colando} on:click={() => pasteStyle()}>
-                        <T id="actions.paste" />
-                    </MaterialButton>
-
-                    <div class="divider"></div>
-                {/if}
-                {#if currentCopied && !copiedStyleDifferent}
-                    {#if isShow}
-                        {#if active === "filters"}
-                            <MaterialButton icon="down" title="actions.to_following" on:click={() => pasteStyle(false, true)}>
-                                <!-- <T id="actions.to_following" /> -->
-                            </MaterialButton>
-
-                            <div class="divider"></div>
+                    {#if currentCopied && !copiedStyleDifferent}
+                        {#if isShow}
+                            <button type="button" class="b" disabled={colando} on:click={() => pasteStyle(true)}>Colar em todos os slides</button>
                         {/if}
-                        <MaterialButton icon="paste" title="actions.to_all" disabled={colando} on:click={() => pasteStyle(true)}>
-                            <T id="actions.to_all" />
-                        </MaterialButton>
+                    {:else}
+                        <button type="button" class="b" disabled={!currentItemStyle?.length} on:click={copyStyle}>Copiar estilo</button>
                     {/if}
-                {:else}
-                    <MaterialButton disabled={!currentItemStyle?.length} title="actions.copy" on:click={copyStyle}>
-                        <Icon id="copy" white={copiedStyleDifferent} />
-                        {#if !copiedStyleDifferent}<T id="actions.copy" />{/if}
-                    </MaterialButton>
+                    {#if currentCopied}
+                        <button type="button" class="b" title="Esquecer o estilo copiado" on:click={clearClipboard}>Esquecer cópia</button>
+                    {:else if aba !== "item"}
+                        <button type="button" class="b" disabled={colando} title="Voltar ao estilo padrão" on:click={reset}>Restaurar</button>
+                    {/if}
+                </div>
+                {#if podeAplicarEmTodos && !currentCopied}
+                    <button type="button" class="b grande" disabled={colando || !currentItemStyle?.length} title="Copia o estilo deste slide e aplica em todos os slides do show" on:click={aplicarEmTodos}>Aplicar este estilo em todos os slides</button>
                 {/if}
-
-                <div class="divider"></div>
-
-                <!-- && !copiedStyleDifferent -->
-                {#if currentCopied}
-                    <MaterialButton icon="clear" title="clear.general: formats.clipboard" on:click={clearClipboard}></MaterialButton>
-                {:else}
-                    <MaterialButton icon="reset" title="actions.reset" on:click={reset}>
-                        <!-- {#if !isShow}<T id="actions.reset" />{/if} -->
-                    </MaterialButton>
-                {/if}
-            </FloatingInputs>
+            </div>
         {/if}
-
-        <!-- <span style="display: flex;flex-wrap: wrap;white-space: nowrap;">
-            {#if $activeEdit.type === "template" || $activeEdit.type === "overlay"}
-                <Button style="flex: 1;" title={translateText("actions.copy")} on:click={copyToCreateData} dark center>
-                    <Icon id="copy" right />
-                    DEV: Copy to "createData"
-                </Button>
-            {/if}
-        </span> -->
     {:else if isLocked}
         <Center faded>
             <Icon id="lock" size={2} white />
@@ -685,11 +577,12 @@
     }
 
     .content {
-        height: 100%;
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
         overflow-x: hidden;
 
-        padding-bottom: 50px;
+        padding-bottom: 12px;
     }
     .content :global(section) {
         padding: 10px;
@@ -706,14 +599,12 @@
         margin-top: 10px;
         padding: 0 5px;
     }
+    /* titulos de bloco como os do prototipo: TEXTO, CAIXA, SLIDE (rotulo pequeno em caixa alta, sem fundo) */
     .blocoTitulo {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: var(--primary-darker);
-        border-bottom: 1px solid var(--primary-lighter);
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
+        border-bottom: 1px solid var(--luz-linha);
         overflow: hidden;
         padding: 0 12px;
     }
@@ -725,9 +616,12 @@
         padding-inline: 0;
     }
     .blocoTitulo p {
-        font-weight: 500;
-        font-size: 0.8rem;
-        opacity: 0.8;
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--luz-mudo);
+        opacity: 1;
         padding: 8px 0;
     }
     .bloco :global(svg.seta) {
@@ -737,12 +631,44 @@
     .bloco :global(svg.seta.aberta) {
         transform: rotate(-90deg);
     }
-    .rotuloRodape {
+    .rodape {
+        flex-shrink: 0;
         display: flex;
-        align-items: center;
-        padding: 0 10px;
-        font-size: 0.75em;
-        opacity: 0.7;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--luz-linha);
+    }
+    .rodape .botoes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .rodape .b {
+        height: 36px;
+        padding: 0 8px;
+        border: 1px solid var(--luz-borda);
+        border-radius: 8px;
+        background: var(--luz-campo);
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .rodape .b.grande {
+        height: 40px;
+        font-size: 13px;
+    }
+    .rodape .b:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+    .rotuloRodape {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--luz-mudo);
         white-space: nowrap;
     }
 </style>

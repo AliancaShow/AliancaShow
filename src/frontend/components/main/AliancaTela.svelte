@@ -2,6 +2,8 @@
     // Leiaute v2: a tela unica da janela principal (substitui MainLayout.svelte). Topo de 56 px + corpo
     //   [ (esquerda | centro) / biblioteca ] | direita
     // As larguras (esquerda, direita) e a altura (biblioteca) sao px, gravadas em `aliancaTela`; o centro absorve a sobra.
+    // Em Editar (fatia 3) as colunas trocam de conteudo: slides do item (AliancaItemEditando) a esquerda, o editor (AliancaEditarCentro) no centro e as
+    // propriedades (AliancaEditarFerramentas) a direita; a biblioteca segue por baixo, de ponta a ponta.
     // Cada regiao leva `data-regiao` (topo, roteiro, centro, no-ar, biblioteca, corpo-pagina): a Prova do Culto e a de fidelidade usam.
     //
     // MOTOR (montado desde o primeiro dia e fora de qualquer {#if}): o Preview escondido (teclado do telao, temporizadores de slide),
@@ -15,9 +17,9 @@
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
-    import Navigation from "../edit/Navigation.svelte"
-    import LazyLoad from "../helpers/LazyLoad.svelte"
+    import AliancaEditarCentro from "./AliancaEditarCentro.svelte"
     import AliancaEditarFerramentas from "./AliancaEditarFerramentas.svelte"
+    import AliancaItemEditando from "./AliancaItemEditando.svelte"
     import AliancaCentro from "./AliancaCentro.svelte"
     import AliancaRoteiro from "./AliancaRoteiro.svelte"
     import AliancaBibliotecaPainel from "./AliancaBibliotecaPainel.svelte"
@@ -111,13 +113,11 @@
             <div class="area">
                 <div class="faixa">
                     <section class="painel col" data-regiao="roteiro" style="width: {valores.esq}px">
-                        {#if pagina === "edit"}<Navigation />{:else}<AliancaRoteiro />{/if}
+                        {#if pagina === "edit"}<AliancaItemEditando />{:else}<AliancaRoteiro />{/if}
                     </section>
                     <AliancaDivisoria eixo="v" on:pegar={pegar("esq")} />
                     <section class="painel centro" data-regiao="centro">
-                        {#if pagina === "edit"}
-                            <div class="editor"><LazyLoad component={() => import("../edit/Editor.svelte")} show={true} /></div>
-                        {:else}<AliancaCentro />{/if}
+                        {#if pagina === "edit"}<AliancaEditarCentro />{:else}<AliancaCentro />{/if}
                     </section>
                 </div>
                 <AliancaDivisoria eixo="h" on:pegar={pegar("bib")} />
@@ -207,12 +207,6 @@
     .col,
     .dir {
         flex-shrink: 0;
-    }
-    .editor {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-        overflow: auto;
     }
     .semLugar {
         align-items: center;

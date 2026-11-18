@@ -32,11 +32,11 @@
     import Resizeable from "../../system/Resizeable.svelte"
     import Snaplines from "../../system/Snaplines.svelte"
     import Timeline from "../../timeline/Timeline.svelte"
-    import EditHeader from "../EditHeader.svelte"
     import Editbox from "../editbox/Editbox.svelte"
     import { getUsedChords } from "../scripts/chords"
     import { addItem } from "../scripts/itemHelpers"
     import { setCaretAtEnd } from "../scripts/textStyle"
+    import { zoomDoEditor } from "../../../utils/aliancaEditarEstado"
     import { centerZoom } from "../scripts/zoom"
 
     $: currentShowId = $activeShow?.id || $activeEdit.showId || ""
@@ -214,10 +214,13 @@
 
     // ZOOM
     let scrollElem: HTMLDivElement | undefined
+    // leiaute v2 (fatia 3): o zoom e uma variavel so, `zoomDoEditor`, que o cabecalho do centro tambem escreve (botoes −, % e ＋); Ctrl+roda segue aqui
     let zoom = 1
     let zoomOrigin: { x: number; y: number } | null = null
+    $: if ($zoomDoEditor !== zoom) zoom = $zoomDoEditor
     function updateZoom(e: any) {
         zoom = e.detail
+        zoomDoEditor.set(zoom)
         const origin = zoomOrigin
         zoomOrigin = null
         centerZoom(origin, scrollElem, ".droparea")
@@ -348,10 +351,6 @@
 
 <svelte:window on:keydown={keydown} on:keyup={keyup} on:blur={blurred} on:paste={paste} />
 
-{#if currentShow}
-    <EditHeader showId={currentShowId} />
-{/if}
-
 <div class="editArea">
     <div class="parent" class:noOverflow={zoom >= 1} bind:this={scrollElem} bind:offsetWidth={width} bind:offsetHeight={height}>
         {#if Slide}
@@ -442,7 +441,7 @@
                 </MaterialButton>
             {/if}
 
-            <MaterialZoom hidden={$editMode === "chords" || hasBackground} columns={zoom} min={0.2} max={4} defaultValue={1} addValue={0.1} on:change={updateZoom} on:origin={(e) => (zoomOrigin = e.detail)} />
+            <MaterialZoom hidden columns={zoom} min={0.2} max={4} defaultValue={1} addValue={0.1} on:change={updateZoom} on:origin={(e) => (zoomOrigin = e.detail)} />
         </FloatingInputs>
     {/if}
 
@@ -460,7 +459,7 @@
 <style>
     .editArea {
         width: 100%;
-        height: calc(100% - 30px);
+        height: 100%;
         display: flex;
         flex-direction: column;
     }

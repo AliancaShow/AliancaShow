@@ -1,11 +1,8 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
-    import { activeEdit, activeFocus, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, notFound, outLocked, outputs, outputSlideCache, popupData, shows, showsCache, slidesOptions, special, templates, textCache } from "../../stores"
-    import { tela } from "../../utils/aliancaTela"
-    import { dividirAberto } from "../../utils/aliancaDividir"
+    import { activeEdit, activeFocus, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, notFound, outLocked, outputs, outputSlideCache, showsCache, slidesOptions, special, templates } from "../../stores"
     import { temFundoQuebrado } from "../../utils/aliancaFundoQuebrado"
     import { indiceDaFoto } from "../../utils/aliancaFotoLogica"
-    import { showEstaSemLetra } from "../../utils/aliancaSemLetraLogica"
     import { hasNewerUpdate, wait } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
     import { videoExtensions } from "../../values/extensions"
@@ -25,7 +22,6 @@
     import Autoscroll from "../system/Autoscroll.svelte"
     import Center from "../system/Center.svelte"
     import DropArea from "../system/DropArea.svelte"
-    import AliancaDividir from "./AliancaDividir.svelte"
 
     export let showId: string
     export let layout = ""
@@ -339,39 +335,8 @@
         })
     }
 
-    // AliancaShow: "no ar · mudou" = o slide no ar difere da foto (so conta o texto/itens; com debounce)
-    let mudouNoAr: { [index: number]: boolean } = {}
-    let mudouTimer: ReturnType<typeof setTimeout> | undefined
-    $: agendarMudou(currentShow, $outputs, activeLayout, showId)
-    function agendarMudou(..._deps: any[]) {
-        clearTimeout(mudouTimer)
-        mudouTimer = setTimeout(avaliarMudou, 250)
-    }
-    function avaliarMudou() {
-        const novo: { [index: number]: boolean } = {}
-        getActiveOutputs($outputs, false, true).forEach((outputId) => {
-            const outSlide = $outputs[outputId]?.out?.slide
-            if (!outSlide?.foto || outSlide.id !== showId || outSlide.layout !== activeLayout || typeof outSlide.index !== "number") return
-            const ref = _show(showId).layouts([activeLayout]).ref()[0] || []
-            const pos = indiceDaFoto(outSlide.foto, outSlide.index, ref)
-            if (pos < 0 || novo[pos] !== undefined) return
-            const aoVivo = _show(showId).slides([ref[pos]?.id]).get()?.[0]
-            novo[pos] = JSON.stringify(aoVivo?.items || []) !== JSON.stringify(outSlide.foto.slide?.items || [])
-        })
-        if (JSON.stringify(novo) !== JSON.stringify(mudouNoAr)) mudouNoAr = novo
-    }
-    onDestroy(() => clearTimeout(mudouTimer))
-
     let profile = getAccess("shows")
     $: isLocked = currentShow?.locked || profile.global === "read" || profile[currentShow?.category || ""] === "read"
-
-    // AliançaShow (Preparar F4): música "sem letra" (veio da lista da banda): o botão principal é "Colar letra"
-    $: semLetraAqui = $tela === "editar" && !isLocked && showEstaSemLetra(showId, $shows, $categories, $showsCache, $textCache)
-    $: artistaDaMusica = ((($showsCache[showId]?.meta || {}) as any).artist as string) || ""
-    function colarLetra() {
-        popupData.set({ modo: "preencher", showId })
-        activePopup.set("alianca_letra")
-    }
 
     function createSlide() {
         if (isLocked) return
@@ -540,8 +505,6 @@
                             <T id="error.no_show" />
                         {/if}
                     </Center>
-                {:else if $tela === "editar" && $dividirAberto === showId}
-                    <AliancaDividir {showId} />
                 {:else}
                     <div class="grid" class:auto={colunas !== null} style={$focusMode ? "" : "padding-bottom: 60px;"}>
                         {#if layoutSlides.length}
@@ -559,7 +522,6 @@
                                             color={slide.color}
                                             output={activeSlides[i]}
                                             active={activeSlides[i] !== undefined}
-                                            selo={$tela === "editar" && activeSlides[i] !== undefined ? (mudouNoAr[i] ? "no ar · mudou" : "no ar") : ""}
                                             {endIndex}
                                             list={!gridMode}
                                             columns={colunasDaGrade}
@@ -578,11 +540,6 @@
                             <Center absolute>
                                 <span style="opacity: 0.5;font-size: 2em;margin-bottom: 10px;"><T id="empty.slides" /></span>
 
-                                {#if semLetraAqui}
-                                    <MaterialButton variant="contained" icon="add" title="Colar a letra desta música (pode ter acordes em cima)" style="justify-content: start;padding: 8px 14px;margin-bottom: 8px;" on:click={colarLetra}>
-                                        Colar letra{#if artistaDaMusica}&nbsp;· {artistaDaMusica}{/if}
-                                    </MaterialButton>
-                                {/if}
                                 <MaterialButton variant="outlined" disabled={isLocked} icon="add" title="tooltip.project" style="justify-content: start;padding: 8px 14px;" on:click={createSlide}>
                                     <T id="new.slide" />
                                 </MaterialButton>
