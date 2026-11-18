@@ -19,6 +19,7 @@ import { blocosDe, criarAnteparo, criarEngolidor, moverBloco, moverItem } from "
 import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
 import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
+import { deleteAction } from "../helpers/clipboard"
 import { history } from "../helpers/history"
 import { getExtension, getMediaType } from "../helpers/media"
 import { contextMenuItems, contextMenuLayouts, type ContextMenuItem } from "./contextMenus"
@@ -205,11 +206,9 @@ function tirar(contextElem: HTMLElement | null) {
     if (!r) return
     const trava = roteiroTravado(r.projetoId, r.item)
     if (trava) return void newToast(trava)
-    // bloco: sai so o cabecalho; os itens ficam e passam ao bloco de cima (a mesma regra de apagar uma secao na lista de antes)
-    gravarLista(
-        r.projetoId,
-        r.lista.filter((_a, i) => i !== r.indice)
-    )
+    // a MESMA porta do Delete e do x da lista (revisao da fatia 6, achado 3): mantem o rodape "Fora do roteiro", avisa o Sirvo da musica tirada,
+    // deixa o rastro "tirado · Desfazer" e nao tira show privado. De bloco sai so o cabecalho; os itens ficam e passam ao bloco de cima.
+    deleteAction({ id: "show", data: [{ index: r.indice }] })
 }
 
 const ACOES: { [id: string]: (c: Chamada) => void } = {

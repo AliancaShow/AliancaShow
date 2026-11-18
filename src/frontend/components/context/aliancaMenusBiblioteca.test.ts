@@ -63,4 +63,10 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         for (const t of ["mousedown", "mouseup", "click", "dblclick"]) expect(reg, t).toContain(`"${t}"`)
         expect(reg).toMatch(/anteparo\.engole\([\s\S]{0,400}stopImmediatePropagation\(\)/)
     })
+    it("revisao da fatia 6, achado 3: \"Tirar do roteiro\" passa pela porta do Delete (deleteAction), nao grava a lista na mao", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        const tirar = reg.slice(reg.indexOf("function tirar("), reg.indexOf("const ACOES"))
+        expect(tirar).toContain('deleteAction({ id: "show", data: [{ index: r.indice }] })')
+        expect(tirar).not.toContain("gravarLista")
+    })
 })

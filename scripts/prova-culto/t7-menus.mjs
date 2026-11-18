@@ -213,6 +213,12 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await direito(d.x, d.y)
       await clicarItem("Tirar do roteiro")
       ok("E5 Tirar do roteiro tira so o item clicado", (await tamanho()) === nAntes - 1)
+      // revisao da fatia 6, achado 3: pela mesma porta do Delete (o rastro "tirado · Desfazer" aparece e o Desfazer repoe o item)
+      await esperar(300)
+      ok("E5b Tirar do roteiro deixa o rastro \"tirado\" com Desfazer", await dom(`!!document.querySelector('[data-acao=lista-roteiro] .tirado .td')`))
+      { const td = await localizar(j, `document.querySelector('[data-acao=lista-roteiro] .tirado .td')`)
+        if (td.ok) { await clicarEm(j, td.x, td.y); await esperar(500) }
+        ok("E5c Desfazer repoe o item no mesmo lugar", (await tamanho()) === nAntes && (await projeto()) === antes, `tam=${await tamanho()}`) }
     }
 
     // ---------- G: o 2o toque do duplo clique nao atravessa o menu (revisao da fatia 6, achado 2)
