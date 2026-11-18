@@ -12,7 +12,7 @@ const SEM_MARCA = "a lista nova nao mostra essa marca"
 export const NOVOS: Layout = {
     // biblioteca
     show_drawer: ["alianca_editar", "alianca_roteiro", "alianca_agora"],
-    media_card: ["edit", "alianca_roteiro", "alianca_agora", "SEPARATOR", "play_no_audio", "play_no_filters", "createSlideshow", "SEPARATOR", "favourite", "SEPARATOR", "alianca_mover", "alianca_fim", "alianca_camada", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open"],
+    media_card: ["edit", "alianca_roteiro", "SEPARATOR", "play_no_audio", "play_no_filters", "createSlideshow", "SEPARATOR", "favourite", "SEPARATOR", "alianca_mover", "alianca_fim", "alianca_camada", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open"],
     audio_button: ["edit", "alianca_roteiro", "alianca_agora", "SEPARATOR", "effects_library_add", "favourite", "SEPARATOR", "alianca_mover", "SEPARATOR", "system_open"],
     audio_button_playlist: ["edit", "alianca_agora", "SEPARATOR", "remove"],
     overlay_card: ["edit", "alianca_roteiro", "alianca_agora", "SEPARATOR", "overlay_actions", "display_duration", "SEPARATOR", "lock_to_output", "place_under_slide", "SEPARATOR", "rename", "recolor", "duplicate", "delete"],
@@ -53,7 +53,7 @@ export const NOVOS: Layout = {
 /** layout -> item do menu ANTIGO que nao esta no novo -> para onde foi. Texto vai para a descricao do PR e para o teste */
 export const REMOVIDOS: { [layout: string]: { [item: string]: string } } = {
     show_drawer: {},
-    media_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    media_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples na midia agora manda ao ar (cabine 18/nov, B1), nao abre no centro" },
     audio_button: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
     audio_button_playlist: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
     overlay_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },

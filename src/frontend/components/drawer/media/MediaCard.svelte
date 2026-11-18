@@ -123,8 +123,14 @@
     function click(e: any) {
         if (gavetaNaoToca()) {
             if (e.ctrlKey || e.metaKey || e.shiftKey || iconClicked) return
-            // fatia 6: em Mostrar o clique so seleciona (a previa); marcar para levar ao culto e coisa de Editar
-            if (!podeMarcar()) return
+            // cabine 18/nov (B1): em Mostrar o clique simples numa MIDIA (video ou imagem) vai ao ar, como no ProPresenter. So la: em Editar o clique MARCA
+            // para levar ao culto e nunca vai ao ar. A trava de clique repetido (400 ms, aliancaToque) e o `wait` abaixo seguem valendo: nunca dispara 2x.
+            if (!podeMarcar()) {
+                if (type !== "video" && type !== "image") return
+                if ($outLocked) return newToast("a saída está travada: destrave para mandar ao ar")
+                autorizarAr(() => click({}))
+                return
+            }
             const m = marcadoDeArquivo({ path, name, type, contentProvider })
             if (m) cliqueDeMarcar(m)
             return

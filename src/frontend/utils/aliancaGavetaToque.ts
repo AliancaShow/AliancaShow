@@ -1,5 +1,6 @@
 // Leiaute v2, fatia 6: a regra unica da biblioteca. Um clique num item da biblioteca SO SELECIONA (a previa); ir ao ar e o ▶, Ctrl+Enter ou o
-// botao direito -> "Mostrar agora (sem pôr no roteiro)". A guarda das portas da gaveta (`if (gavetaNaoToca()) return`) vale SEMPRE, em Mostrar e em Editar,
+// botao direito -> "Mostrar agora". EXCECAO (cabine 18/nov, B1): em Mostrar, o clique simples numa MIDIA (video ou imagem) vai ao ar, como no ProPresenter (`MediaCard`, via `autorizarAr`); show, letra, versiculo e o resto seguem so selecionando.
+// A guarda das portas da gaveta (`if (gavetaNaoToca()) return`) vale SEMPRE, em Mostrar e em Editar,
 // salvo dentro de `autorizarAr`, que so o ▶ e o "Mostrar agora" abrem (um gesto deliberado do operador, de forma sincrona).
 //
 // Antes (fatias 1-5) `gavetaNaoToca` morava em `aliancaModo.ts` e valia `tela != mostrar`. Aquele arquivo faz parte do fecho da janela de saida (a ancora o

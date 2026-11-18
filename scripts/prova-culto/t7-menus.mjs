@@ -1,10 +1,10 @@
-// Fatia 6 (botao direito da biblioteca e do roteiro; clique simples nao vai ao ar): fumaca com cliques e teclas REAIS (nunca force) contra o Show de dev
+// Fatia 6 (botao direito da biblioteca e do roteiro; clique simples so seleciona, EXCETO midia: cabine 18/nov B1): fumaca com cliques e teclas REAIS (nunca force) contra o Show de dev
 // (CDP, FS_CDP_PORTA) e prints 1920x1080.
 //   node scripts/prova-culto/t7-menus.mjs <pasta-de-prints>
-//   A. clique simples em Mostrar so seleciona: show, midia, efeito/sobreposicao, versiculo -> zero escritas em outputs, nada no ar
+//   A. clique simples em Mostrar so seleciona: show, efeito/sobreposicao, versiculo -> zero escritas em outputs, nada no ar. MIDIA (B1): vai ao ar com um clique
 //   B. duplo clique nao dispara 2x: na biblioteca e no roteiro (zero escritas, o roteiro nao muda)
 //   C. botao direito numa linha de show: Editar / ＋ roteiro / Mostrar agora, sem "Busca rapida"; Mostrar agora vai ao ar SEM pôr no roteiro; repetido < 400 ms conta 1x
-//   D. botao direito numa midia e num efeito: Mostrar agora poe no ar, o roteiro nao muda; saida travada recusa
+//   D. botao direito numa midia (sem Mostrar agora, A11) e num efeito (Mostrar agora poe no ar, o roteiro nao muda); saida travada recusa
 //   E. botao direito num item do roteiro: Editar, Mostrar agora, Mover, Tirar do roteiro
 //   F. botao direito num bloco: Editar titulo (cursor no titulo), Mover, Novo bloco, Tirar
 import { mkdirSync, writeFileSync } from "node:fs"
@@ -69,7 +69,8 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
     const tam0 = await tamanho()
     await print("00-inicio")
 
-    // ---------- A: clique simples so seleciona
+    // ---------- A: clique simples so seleciona (a midia, B1, vai ao ar)
+    let escritasUmClique = 0
     { const a = await localizar(j, `document.querySelectorAll('[data-regiao=biblioteca] .linha[data-show]')[3]`)
       const id = await dom(`document.querySelectorAll('[data-regiao=biblioteca] .linha[data-show]')[3].dataset.show`)
       await clicarEm(j, a.x, a.y); await esperar(700)
@@ -77,8 +78,12 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       ok("A1b nada foi ao ar", !(await algoNoAr())) }
     await noDaArvore("Mídia")
     { const a = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#media_card"]')`)
+      await j.ev(`window.__n=0; return 1`)
       await clicarEm(j, a.x, a.y); await esperar(900)
-      ok("A2 clique num cartao de midia: zero escritas em outputs e nada no ar", (await escritas()) === 0 && !(await algoNoAr()), `n=${await escritas()}`) }
+      escritasUmClique = await escritas()
+      ok("A2 (B1) clique simples num cartao de midia: vai ao ar", escritasUmClique >= 1 && (await noAr()).some((x) => x.b), `n=${escritasUmClique} ${JSON.stringify(await noAr())}`)
+      ok("A2b o roteiro nao ganhou item (o clique so manda ao ar)", (await tamanho()) === tam0)
+      await limpar() }
     await noDaArvore("Sobreposições")
     { const a = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#effect_card"]')`)
       await clicarEm(j, a.x, a.y); await esperar(900)
@@ -91,8 +96,10 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
     // ---------- B: duplo clique
     await noDaArvore("Mídia")
     { const a = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#media_card"]')`)
+      await limpar()
       await clicarEm(j, a.x, a.y, 1); await clicarEm(j, a.x, a.y, 2); await esperar(900)
-      ok("B1 duplo clique num cartao de midia: zero escritas e o roteiro nao ganhou item", (await escritas()) === 0 && (await tamanho()) === tam0, `n=${await escritas()} tam=${await tamanho()}`) }
+      ok("B1 (B1) duplo clique num cartao de midia vai ao ar UMA vez (mesma contagem de escritas de um clique) e o roteiro nao ganhou item", (await escritas()) === escritasUmClique && (await noAr()).some((x) => x.b) && (await tamanho()) === tam0, `n=${await escritas()} (um clique: ${escritasUmClique}) tam=${await tamanho()}`)
+      await limpar() }
     await noDaArvore("Shows")
     { const a = await localizar(j, `document.querySelectorAll('[data-regiao=biblioteca] .linha[data-show]')[4]`)
       await clicarEm(j, a.x, a.y, 1); await clicarEm(j, a.x, a.y, 2); await esperar(900)
@@ -145,34 +152,33 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
     { const a = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#media_card"]')`)
       await direito(a.x, a.y)
       const m = await menu()
-      ok("D1 o menu da midia tem ＋ roteiro e Mostrar agora (sem a previa antiga)", !!m && m.some((t) => t.includes("Adicionar ao roteiro")) && m.some((t) => t.startsWith("Mostrar agora")) && !m.some((t) => /^Pré-visualizar|^Preview/i.test(t)), JSON.stringify(m))
+      ok("D1 o menu da midia tem ＋ roteiro, sem a previa antiga e SEM o Mostrar agora (A11: o clique e o ▶ ja mandam ao ar)", !!m && m.some((t) => t.includes("Adicionar ao roteiro")) && !m.some((t) => t.startsWith("Mostrar agora")) && !m.some((t) => /^Pré-visualizar|^Preview/i.test(t)), JSON.stringify(m))
       await print("02-menu-midia")
+      await fecharMenu()
+      await limpar()
+      // B1: o clique manda ao ar; com a saida travada recusa e nada vai ao ar
       const tam = await tamanho()
-      await clicarItem("Mostrar agora")
+      await clicarEm(j, a.x, a.y); await esperar(900)
       const ar = await noAr()
-      ok("D2 Mostrar agora: a midia foi ao fundo da saida e o roteiro nao mudou", ar.some((x) => x.b) && (await tamanho()) === tam, JSON.stringify(ar))
+      ok("D2 clique na midia: foi ao fundo da saida e o roteiro nao mudou", ar.some((x) => x.b) && (await tamanho()) === tam, JSON.stringify(ar))
+      // o clique no cartao que JA esta no ar o tira (passada a trava de 800 ms): o comportamento antigo do cartao, nao e um segundo disparo
+      await esperar(900)
+      await clicarEm(j, a.x, a.y); await esperar(900)
+      ok("D2c segundo clique (depois da trava) no cartao que esta no ar o tira do ar", !(await noAr()).some((x) => x.b))
       await limpar()
       await j.ev(`S.outLocked.set(true); return 1`)
-      await direito(a.x, a.y)
-      await clicarItem("Mostrar agora")
-      ok("D3 saida travada: recusa e nada vai ao ar", !(await algoNoAr()) && (await escritas()) === 0)
+      await clicarEm(j, a.x, a.y); await esperar(700)
+      ok("D3 saida travada: o clique recusa e nada vai ao ar", !(await algoNoAr()) && (await escritas()) === 0)
       await j.ev(`S.outLocked.set(false); return 1`)
       await limpar()
-      // revisao da fatia 6, achado 6: botao direito em cima do icone do cartao (a estrela de favorito) manda o ITEM ao ar; o icone nao e executado
+      // o icone do cartao (a estrela de favorito) so tira o favorito: nao manda a midia ao ar (iconClicked)
       const caminho = ar.find((x) => x.b)?.b
       await j.ev(`S.media.update(a=>{a[${JSON.stringify(caminho)}]={...(a[${JSON.stringify(caminho)}]||{}),favourite:true}; return a}); await esp(700); return 1`)
       const est = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#media_card"] .icons button')`)
       if (est.ok) {
-        await direito(est.x, est.y)
-        await clicarItem("Mostrar agora")
-        const arI = await noAr()
+        await clicarEm(j, est.x, est.y); await esperar(700)
         const fav = await dom(`!!get(S.media)[${JSON.stringify(caminho)}]?.favourite`)
-        ok("D2b Mostrar agora com o botao direito no icone do cartao: a midia vai ao ar e o favorito nao e tirado", arI.some((x) => x.b) && fav, JSON.stringify({ arI, fav }))
-        // achado 9: repetir (passado o engolidor) nao tira do ar
-        await esperar(600)
-        await direito(est.x, est.y)
-        await clicarItem("Mostrar agora")
-        ok("D2c Mostrar agora num item que ja esta no ar nao o tira do ar (idempotente)", (await noAr()).some((x) => x.b))
+        ok("D2b clique no icone de favorito do cartao: tira o favorito e a midia NAO vai ao ar", !fav && !(await algoNoAr()), JSON.stringify({ fav, ar: await noAr() }))
       } else ok("D2b o cartao tem o icone de favorito", false, est.motivo)
       await j.ev(`S.media.update(a=>{a[${JSON.stringify(caminho)}]={...a[${JSON.stringify(caminho)}],favourite:false}; return a}); await esp(300); return 1`)
       await limpar() }
