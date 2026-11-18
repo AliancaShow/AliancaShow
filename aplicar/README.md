@@ -374,3 +374,8 @@ Todo o resto (projeto ativo, show ativo, índice de slide, arranjo, outputs, gru
 - Exportar o SVG do logotipo para a barra superior.
 - Confirmar se o vermelho de projeção (conteúdo) é o mesmo `#F21A27` da interface.
 - Baixar o `.woff2` da JetBrains Mono para `public/fonts/`.
+
+## Leiaute v2 (nov/2026)
+
+- `aplicar/leiaute-v2/` guarda os protótipos aprovados (`Tela-luz.dc.html`, 1440x900, e `Tela-luz-1080.dc.html`, o board da cabine, 1920x1080), cada um com `data-regiao` nas cinco regiões (`topo`, `roteiro`, `centro`, `biblioteca`, `no-ar`). O atributo é a única diferença para o original: `scripts/prova-culto/anotacao.test.mjs` tira os `data-regiao` e exige igualdade byte a byte com o SHA-256 do original.
+- `AliancaShow Mostrar.dc.html` e `Especificacao Tema AliancaShow.dc.html` foram superados pelo leiaute v2 e ficam em `aplicar/superados/`.
