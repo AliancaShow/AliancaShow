@@ -1,15 +1,19 @@
 // Modo "so retorno" (fatia 8 / 8b): o estado, os gestos (ligar/desligar) e o PONTO UNICO de desvio que o `setOutput` consulta. A parte pura vive em
 // aliancaSoRetornoLogica.ts. Fica ligado ate o operador desligar (sem timer). Nao e persistido: uma sessao nova nasce desligada, e o
-// `iniciarSoRetorno` (chamado UMA vez no startupMain) devolve qualquer `settings.output` que uma queda tenha deixado trocado.
+// `iniciarSoRetorno` (chamado UMA vez no onMount do topo, AliancaTelaoPilula) devolve qualquer `settings.output` que uma queda tenha deixado trocado.
 // Importa so `svelte/store`, `../stores` e a logica pura: entra no grafo da janela de saida, onde `soRetorno` e sempre `false` (store por janela).
 import { get, writable } from "svelte/store"
 import { outputs, stageShows } from "../stores"
-import { devolverFonte, idDeLeitura, idsDeRetorno, outVazio, porQueNaoLigar, roteamento, slideDoTelao, temMarca, trocarFonte } from "./aliancaSoRetornoLogica"
+import { falhaAlta } from "./aliancaFalha"
+import { devolverFonte, idDeLeitura, idsDeRetorno, motivoDaRecusa, outVazio, porQueNaoLigar, roteamento, slideDoTelao, temMarca, trocarFonte } from "./aliancaSoRetornoLogica"
 
 export const soRetorno = writable(false)
 
-/** o modo esta ligado AGORA? (os caminhos que limpam o telao antes de enviar consultam isto) */
-export const soRetornoLigado = (): boolean => get(soRetorno)
+/**
+ * o modo esta valendo AGORA para o gesto do operador? (os caminhos que limpam o telao antes de enviar consultam isto). Dentro de `semDesvio`
+ * (automacao do telao, ajuste do que ja esta no ar) o modo NAO vale: la tudo segue falando com o telao, como se ele estivesse desligado.
+ */
+export const soRetornoLigado = (): boolean => get(soRetorno) && desvio === 0
 
 export const retornosLigados = () => idsDeRetorno(get(outputs) as any)
 export const porQueNaoLigarSoRetorno = () => porQueNaoLigar(retornosLigados())
@@ -23,6 +27,23 @@ export function semDesvio<T>(fn: () => T): T {
     } finally {
         desvio--
     }
+}
+
+/** estamos dentro de `semDesvio`/`suspenderDesvio`? (o `setTimeout` de uma automacao leva isto para depois da pilha) */
+export const emDesvio = (): boolean => desvio > 0
+
+/**
+ * Abre a janela da AUTOMACAO do telao (temporizador de slide/pasta, avancar ao fim da midia, linha do tempo): o modo so desvia gestos do operador, entao a
+ * automacao nasce SEM desvio e le o telao. Devolve `null` com o modo desligado (nada muda, nenhum quadro na pilha); senao a funcao que fecha a janela
+ * (chamar num `finally`).
+ */
+export function iniciarAutomacao(): (() => void) | null {
+    return get(soRetorno) ? suspenderDesvio() : null
+}
+
+/** D1: recusa ALTA de um envio que o modo nao aceita (sem tocar telao, retorno nem tocador) */
+export function recusarNoModo(oQue: string): void {
+    falhaAlta("so-retorno-recusa", motivoDaRecusa(oQue))
 }
 
 /** suspende o desvio ate chamar a funcao devolvida (sem quadro extra na pilha: a prova do Culto atribui cada escrita a quem a pediu) */
@@ -40,7 +61,7 @@ export function destinoDoEnvio(data: unknown): string[] | null {
 }
 
 /** de que saida ler "o slide atual" (as setas): no modo, o retorno */
-export const saidaDeLeitura = (id: string): string => idDeLeitura(get(soRetorno), retornosLigados(), id)
+export const saidaDeLeitura = (id: string): string => idDeLeitura(get(soRetorno) && desvio === 0, retornosLigados(), id)
 
 let tocadas: string[] = []
 
@@ -84,7 +105,7 @@ export function desligarSoRetorno() {
 
 let iniciado = false
 /**
- * Chamado UMA vez na partida da janela principal (startupMain), nao por componente (R2): (1) devolve o que uma queda com o modo ligado deixou trocado,
+ * Chamado UMA vez no onMount do topo da janela principal (AliancaTelaoPilula), nao pela coluna No ar (R2): (1) devolve o que uma queda com o modo ligado deixou trocado,
  * quando os layouts terminam de carregar; (2) R4: se o retorno some (desabilitado/removido) com o modo ligado, desliga e avisa em `aoDesligarSozinho`.
  */
 export function iniciarSoRetorno(aoDesligarSozinho: (motivo: string) => void = () => {}): () => void {

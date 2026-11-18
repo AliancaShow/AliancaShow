@@ -7,6 +7,7 @@ import { fadeinAllPlayingAudio, fadeoutAllPlayingAudio } from "../../../audio/au
 import { AudioInputCapture } from "../../../audio/routing/audioInputCapture"
 import { requestMain } from "../../../IPC/main"
 import { media, outputs, playerVideos, playingVideos, playingVideoState, special, transitionData } from "../../../stores"
+import { iniciarAutomacao } from "../../../utils/aliancaSoRetorno"
 import { playFolder } from "../../../utils/shortcuts"
 import { customActionActivation } from "../../actions/actions"
 import { getVimeoData, getYouTubeData } from "../../drawer/player/playerHelper"
@@ -343,7 +344,13 @@ export class VideoPlayer {
         const background = get(outputs)[outputIds?.[0] || ""]?.out?.background
         // project media folder
         if (background?.folderPath) {
-            playFolder(background.folderPath)
+            // AliancaShow (8b, I1): o fim do video da pasta e AUTOMACAO do telao (o modo "so retorno" so desvia gestos do operador)
+            const solta = iniciarAutomacao()
+            try {
+                playFolder(background.folderPath)
+            } finally {
+                solta?.()
+            }
             return finish()
         }
 

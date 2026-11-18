@@ -12,7 +12,8 @@ import { actions, activeFocus, activeProject, activeRename, activeShow, activeTi
 import { isMainWindow, isOutputWindow, newToast } from "../../utils/common"
 import { indiceDaFoto, mesmoSlideDaFoto, podeTerFoto, tirarFoto } from "../../utils/aliancaFoto"
 import { destinoRecusaTecla } from "../../utils/aliancaModo"
-import { destinoDoEnvio } from "../../utils/aliancaSoRetorno"
+import { destinoDoEnvio, recusarNoModo, semDesvio } from "../../utils/aliancaSoRetorno"
+import { aceitaNoModo, oQueRecusou } from "../../utils/aliancaSoRetornoLogica"
 import { resolverFim } from "../../utils/aliancaPastasMidiaLogica"
 import { translateText } from "../../utils/language"
 import { confirmCustom } from "../../utils/popup"
@@ -66,11 +67,15 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
     if (destinoRecusaTecla()) return
 
     // AliancaShow (8b): modo "so retorno" — o PONTO UNICO de desvio. Ligado, o que vai ao ar (nunca a limpeza) segue SO para o(s) retorno(s), com ou sem
-    // saida explicita no pedido; o telao nao muda, o som da casa nao muda e os efeitos de "foi ao ar" nao rodam. Desligado: `desvio` e null e nada abaixo muda.
+    // saida explicita no pedido; o telao nao muda e os efeitos de "foi ao ar" nao rodam. So slide de TEXTO entra (D1, abaixo). Desligado: `desvio` e null e nada abaixo muda.
     const desvio = destinoDoEnvio(data)
     const modo = desvio !== null
+    // D1: o modo aceita SO slide de texto. Midia, PDF, sobreposicao, efeito e slide com video sao recusados ALTO, sem tocar telao, retorno nem tocador
+    if (modo) {
+        const temVideo = type === "slide" && getSlideVideoItems(data).length > 0
+        if (!aceitaNoModo(type, data, temVideo)) return recusarNoModo(oQueRecusou(type, data, temVideo))
+    }
     if (desvio && !desvio.length) return // modo ligado e o retorno sumiu: descarta (nunca cai no telao)
-    if (modo && type === "background") data = { ...data, muted: true }
 
     const ref = data?.layout ? _show(data.id).layouts([data.layout]).ref()[0] || [] : []
 
@@ -138,7 +143,7 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
 
     const inputData = clone(data)
 
-    checkAudio(type, data, allOutputIds, outs, { podeCongelar, regraAlianca, silenciar: modo })
+    checkAudio(type, data, allOutputIds, outs, { podeCongelar, regraAlianca })
 
     outputs.update((a) => {
         if (type === "slide" && data?.id) {
@@ -259,7 +264,7 @@ function resolverFimDoFundo(data: any, allOutputIds: string[]) {
     return { data: resto, podeCongelar: r.podeCongelar, regraAlianca: r.origem !== "hoje" && r.origem !== "pedido" }
 }
 
-function checkAudio(type: string, data: any, allOutputIds: string[], outs: string[], fim: { podeCongelar?: boolean; regraAlianca?: boolean; silenciar?: boolean } = {}) {
+function checkAudio(type: string, data: any, allOutputIds: string[], outs: string[], fim: { podeCongelar?: boolean; regraAlianca?: boolean } = {}) {
     if (type === "background") {
         if (data) {
             const newPath = data.path || data.id || ""
@@ -273,7 +278,7 @@ function checkAudio(type: string, data: any, allOutputIds: string[], outs: strin
                 if (bgPath && bgPath !== newPath) VideoPlayer.stop(bgPath, outputId)
             })
 
-            VideoPlayer.start(newPath, { loop: data.loop, muted: fim.silenciar ? true : data.muted, startAt: data.startAt || 0, isOnline: data.type === "player", podeCongelar: fim.podeCongelar, regraAlianca: fim.regraAlianca }, allOutputIds)
+            VideoPlayer.start(newPath, { loop: data.loop, muted: data.muted, startAt: data.startAt || 0, isOnline: data.type === "player", podeCongelar: fim.podeCongelar, regraAlianca: fim.regraAlianca }, allOutputIds)
         } else {
             VideoPlayer.stopByOutputIds(allOutputIds)
         }
@@ -297,7 +302,7 @@ function checkAudio(type: string, data: any, allOutputIds: string[], outs: strin
 
         // start new video items
         newItems.forEach((item: any) => {
-            VideoPlayer.start(item.src, { loop: item.loop !== false, muted: fim.silenciar ? true : item.muted, startAt: item.startAt || 0, type: "item" }, allOutputIds)
+            VideoPlayer.start(item.src, { loop: item.loop !== false, muted: item.muted, startAt: item.startAt || 0, type: "item" }, allOutputIds)
         })
     }
 }
@@ -457,7 +462,8 @@ function startOverlayTimer(outputId: string, overlayId: string, outData: string[
                 clearOverlayTimer(outputId, overlayId)
                 if (!get(outputs)[outputId]?.out?.[type]?.includes(overlayId)) return
 
-                setOutput(type, overlayId, true, outputId)
+                // AliancaShow (8b, I2): a expiracao de uma sobreposicao e LIMPEZA do telao, nao envio do operador: nunca e desviada pelo modo "so retorno"
+                semDesvio(() => setOutput(type, overlayId, true, outputId))
             }, overlay.displayDuration! * 1000)
         }
 

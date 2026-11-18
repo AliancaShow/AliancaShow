@@ -15,7 +15,7 @@ import { checkActionTrigger, getFewestOutputLines, getItemWithMostLines, playPdf
 import { _show } from "./shows"
 import { runActionId } from "../actions/actions"
 import { indiceDaFoto } from "../../utils/aliancaFoto"
-import { saidaDeLeitura } from "../../utils/aliancaSoRetorno"
+import { emDesvio, iniciarAutomacao, saidaDeLeitura, suspenderDesvio } from "../../utils/aliancaSoRetorno"
 
 type Options = { isSpace: boolean; slideLayers: boolean; playNext: boolean }
 
@@ -43,11 +43,18 @@ export class OutputHelper {
             playNext: options.playNext === true
         }
 
-        if (triggerKey === "Home") return this.playFirstSlide(outputId)
-        if (triggerKey === "End") return this.playLastSlide(outputId)
-        if (triggerKey === "ArrowLeft" || triggerKey === "PageUp") return this.playPrevious(outputId, opts)
+        // AliancaShow (8b, I1): chamada SEM tecla e com `playNext` e a AUTOMACAO do telao (temporizador de slide/pasta, avancar ao fim da midia): o modo "so retorno"
+        // so desvia gestos do operador, entao ela roda sem desvio e le o telao (`iniciarAutomacao` devolve null com o modo desligado: nada muda)
+        const solta = triggerKey === "" && opts.playNext ? iniciarAutomacao() : null
+        try {
+            if (triggerKey === "Home") return this.playFirstSlide(outputId)
+            if (triggerKey === "End") return this.playLastSlide(outputId)
+            if (triggerKey === "ArrowLeft" || triggerKey === "PageUp") return this.playPrevious(outputId, opts)
 
-        this.playNext(outputId, opts) // ArrowRight, PageDown, Space
+            this.playNext(outputId, opts) // ArrowRight, PageDown, Space
+        } finally {
+            solta?.()
+        }
     }
 
     // AliancaShow: o Remote salta para um item da ordem do culto. Abre o item e
@@ -553,14 +560,22 @@ export class OutputHelper {
 
         this.pendingSlides[outputId] = data
 
+        // AliancaShow (8b, I1): a escrita adiada herda a "janela da automacao" (o `setTimeout` roda depois da pilha em que ela estava aberta)
+        const automacao = emDesvio()
+
         // allow custom actions to trigger first
         setTimeout(() => {
             if (this.pendingSlides[outputId] === data) {
                 delete this.pendingSlides[outputId]
             }
 
-            setOutput("slide", data, false, outputId)
-            updateOut(data.id, data.index!, layout, slideLayers, outputId)
+            const solta = automacao ? suspenderDesvio() : null
+            try {
+                setOutput("slide", data, false, outputId)
+                updateOut(data.id, data.index!, layout, slideLayers, outputId)
+            } finally {
+                solta?.()
+            }
         })
     }
 

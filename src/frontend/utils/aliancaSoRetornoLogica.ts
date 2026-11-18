@@ -32,6 +32,21 @@ export function roteamento(modo: boolean, desvio: number, retornos: string[], da
     return { desvia: true, ids: retornos }
 }
 
+/**
+ * D1 (decisao do coordenador): o modo "so retorno" aceita SO slide de texto (letra/versiculo: o caso de uso da banda ver a letra antes da igreja).
+ * Midia (fundo/video), PDF/PowerPoint, audio, sobreposicao, efeito e temporizador de pasta sao RECUSADOS (e ditos alto) em todos os caminhos.
+ * `temVideo`: o slide de texto traz um item de video (o tocador nao pode nascer no retorno).
+ */
+export const aceitaNoModo = (type: string, data: any, temVideo = false): boolean => type === "slide" && !!data && (data.type === undefined || data.type === "show") && !temVideo
+
+/** o que foi recusado, em palavras curtas, para a mensagem */
+export function oQueRecusou(type: string, data: any, temVideo = false): string {
+    if (type === "slide") return data?.type === "pdf" ? "PDF" : data?.type === "ppt" ? "apresentação" : temVideo ? "vídeo" : "mídia"
+    return type === "overlays" ? "sobreposição" : type === "effects" ? "efeito" : "mídia"
+}
+
+export const motivoDaRecusa = (oQue: string): string => `Só retorno: só letra vai para o retorno — desligue o modo para mandar ${oQue}`
+
 /** de que saida as setas leem "o slide atual": no modo, do retorno */
 export const idDeLeitura = (modo: boolean, retornos: string[], id: string): string => (modo && retornos.length ? retornos[0] : id)
 

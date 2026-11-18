@@ -2,6 +2,7 @@ import { get, type Unsubscriber } from "svelte/store"
 import type { LayoutRef } from "../../../types/Show"
 import { actions, activeShow, outputs, showsCache, timelineRecordingAction } from "../../stores"
 import { actionData } from "../actions/actionData"
+import { iniciarAutomacao } from "../../utils/aliancaSoRetorno"
 import { getFirstActiveOutput, setOutput } from "../helpers/output"
 import { updateOut } from "../helpers/showActions"
 import { _show } from "../helpers/shows"
@@ -144,8 +145,14 @@ export class ShowTimeline {
         const line = ref.line || 0
         const outSlide = getFirstActiveOutput()?.out?.slide
         if (outSlide?.id !== showRef.id || outSlide?.layout !== showRef.layoutId || outSlide?.index !== index || (outSlide?.line || 0) !== line) {
-            setOutput("slide", { id: showRef.id, layout: showRef.layoutId, index, line })
-            updateOut(showRef.id, index, layoutRef)
+            // AliancaShow (8b, I1): a linha do tempo move o TELAO sozinha: o modo "so retorno" so desvia gestos do operador
+            const solta = iniciarAutomacao()
+            try {
+                setOutput("slide", { id: showRef.id, layout: showRef.layoutId, index, line })
+                updateOut(showRef.id, index, layoutRef)
+            } finally {
+                solta?.()
+            }
         }
     }
 }
