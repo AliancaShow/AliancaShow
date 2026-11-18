@@ -385,3 +385,27 @@ describe("removerGruposVazios (lista de baixo: cabecalho solto)", () => {
         expect(removerGruposVazios([], linha)).toEqual([])
     })
 })
+
+describe("marcacao do leiaute v2 (cartoes)", () => {
+    it("cor e segunda linha por agenda; desconhecida cai na neutra", async () => {
+        const { corDaAgenda, subDaAgenda } = await import("./aliancaSeletorLogica")
+        expect(corDaAgenda("alianca")).toBe("#7ea6d8")
+        expect(corDaAgenda("impulso")).toBe("#eba640")
+        expect(corDaAgenda("todos")).toMatch(/^rgba/)
+        expect(subDaAgenda("impulso")).toBe("Igreja Impulso")
+        expect(subDaAgenda("todos")).toBe("Todas as agendas")
+    })
+    it("partes do dia: semana em maiuscula e dia sem zero; data invalida vira null", async () => {
+        const { partesDoDia } = await import("./aliancaSeletorLogica")
+        expect(partesDoDia("2026-11-15")).toEqual({ semana: "DOM", num: "15" })
+        expect(partesDoDia("2026-11-07")).toEqual({ semana: "SÁB", num: "7" })
+        expect(partesDoDia("2026-11-31")).toBeNull()
+        expect(partesDoDia("")).toBeNull()
+    })
+    it("HOJE so quando o culto aberto e o de hoje", async () => {
+        const { ehHoje } = await import("./aliancaSeletorLogica")
+        expect(ehHoje("2026-11-15", "2026-11-15")).toBe(true)
+        expect(ehHoje("2026-11-14", "2026-11-15")).toBe(false)
+        expect(ehHoje(null, "2026-11-15")).toBe(false)
+    })
+})

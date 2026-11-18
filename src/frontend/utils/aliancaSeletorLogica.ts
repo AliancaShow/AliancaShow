@@ -303,3 +303,30 @@ export function estadoDoBotaoDia({ ativo, noFiltro, temCultos, agendaNome, anoAt
     const dica = noFiltro ? `Culto aberto: ${quem}${rot.evento ? ` — ${rot.evento}` : ""}` : `Aberto: ${quem} (fora do filtro ${agendaNome})`
     return { texto: rot.curto, textoCurto: rot.semSemana, dica, desabilitado: false, foraDoFiltro: !noFiltro }
 }
+
+// ---------------------------------------------------------------- marcacao do leiaute v2 (cartoes de local e de dia)
+
+/** bolinha de cada agenda no botao e no popover de local (cores do prototipo: Aliança azul, Impulso ambar; Extra verde; Todos neutra) */
+export function corDaAgenda(id: string): string {
+    if (id === "alianca") return "#7ea6d8"
+    if (id === "impulso") return "#eba640"
+    if (id === "extra") return "#5ec48d"
+    return "rgba(248, 248, 240, 0.5)"
+}
+
+/** a segunda linha do cartao de local */
+export function subDaAgenda(id: string): string {
+    if (id === "alianca") return "Ministério Aliança"
+    if (id === "impulso") return "Igreja Impulso"
+    if (id === "extra") return "Eventos avulsos"
+    return "Todas as agendas"
+}
+
+/** o cartao de dia: "DOM" e "15" a partir do culto (null quando nao e dia valido: o cartao mostra o nome inteiro) */
+export function partesDoDia(cultoId: string): { semana: string; num: string } | null {
+    const v = dataValida(cultoId)
+    return v ? { semana: SEMANAS_CURTAS[v.semana].toUpperCase(), num: String(v.dia) } : null
+}
+
+/** o culto aberto e o de hoje (selo HOJE no botao fechado) */
+export const ehHoje = (cultoId: string | null | undefined, hoje: string) => !!cultoId && cultoId === hoje

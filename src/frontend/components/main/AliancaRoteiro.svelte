@@ -237,7 +237,6 @@
         color: var(--luz-mudo);
     }
     .seletor {
-        padding: 0 12px 8px;
         position: relative;
     }
     .avisoLugar {
