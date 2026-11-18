@@ -157,6 +157,19 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       await clicarItem("Mostrar agora")
       ok("D3 saida travada: recusa e nada vai ao ar", !(await algoNoAr()) && (await escritas()) === 0)
       await j.ev(`S.outLocked.set(false); return 1`)
+      await limpar()
+      // revisao da fatia 6, achado 6: botao direito em cima do icone do cartao (a estrela de favorito) manda o ITEM ao ar; o icone nao e executado
+      const caminho = ar.find((x) => x.b)?.b
+      await j.ev(`S.media.update(a=>{a[${JSON.stringify(caminho)}]={...(a[${JSON.stringify(caminho)}]||{}),favourite:true}; return a}); await esp(700); return 1`)
+      const est = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#media_card"] .icons button')`)
+      if (est.ok) {
+        await direito(est.x, est.y)
+        await clicarItem("Mostrar agora")
+        const arI = await noAr()
+        const fav = await dom(`!!get(S.media)[${JSON.stringify(caminho)}]?.favourite`)
+        ok("D2b Mostrar agora com o botao direito no icone do cartao: a midia vai ao ar e o favorito nao e tirado", arI.some((x) => x.b) && fav, JSON.stringify({ arI, fav }))
+      } else ok("D2b o cartao tem o icone de favorito", false, est.motivo)
+      await j.ev(`S.media.update(a=>{a[${JSON.stringify(caminho)}]={...a[${JSON.stringify(caminho)}],favourite:false}; return a}); await esp(300); return 1`)
       await limpar() }
     await noDaArvore("Sobreposições")
     { const a = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#effect_card"]')`)

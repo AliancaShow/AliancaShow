@@ -163,6 +163,16 @@ function paraORoteiro(classe: string, contextElem: HTMLElement | null, sel: Sel)
     newToast(dados.length === 1 ? "entrou no fim do roteiro" : `${dados.length} itens entraram no fim do roteiro`)
 }
 
+/**
+ * O elemento do ITEM da biblioteca que recebe o clique de "Mostrar agora": o proprio `.context` quando ele e o cartao (`.card`) ou o botao da linha;
+ * quando o `.context` e um envoltorio (sobreposicao, acao) o cartao/botao de dentro. Nunca um icone interno.
+ */
+function alvoDoItem(contextElem: HTMLElement | null): HTMLElement | null {
+    if (!contextElem) return null
+    if (contextElem.matches(".card, button")) return contextElem
+    return (contextElem.querySelector(".card") as HTMLElement | null) || (contextElem.querySelector("button") as HTMLElement | null) || contextElem
+}
+
 /** "Mostrar agora (sem pôr no roteiro)": o que o clique da biblioteca fazia antes da fatia 6, sem tocar no roteiro */
 function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
     if (get(outLocked)) return void newToast(MOTIVO_TRAVADA)
@@ -174,7 +184,8 @@ function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
         return
     }
     const alvo = ultimoAlvo
-    if (alvo && engolir("agora:" + (alvo.id || classe + ":" + (alvo.textContent || "").slice(0, 40)), performance.now())) return
+    const item = alvoDoItem(contextElem)
+    if (item && engolir("agora:" + classe + ":" + ((item.closest(".main, .action") || item).textContent || "").trim().slice(0, 80), performance.now())) return
     // versiculo: nao se refaz gesto (com a Biblia ja no ar o duplo clique devolve false e nada ia ao ar: revisao da fatia 6, achado 1). A selecao ja
     // andou para o versiculo do botao direito; `playScripture` poe a selecao no telao, no ar ou nao.
     if (classe.startsWith("#scripture")) {
@@ -182,7 +193,9 @@ function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
         void playScripture()
         return
     }
-    dispararNoAlvo(alvo, "click")
+    // o clique vai no ITEM (o cartao, a linha), nunca no elemento mais interno sob o ponteiro: um botao direito em cima da estrela/tag/filtro do
+    // cartao refazia o clique do ICONE (tirava o favorito) e nada ia ao ar (revisao da fatia 6, achado 6)
+    dispararNoAlvo(item, "click")
 }
 
 /** "Mostrar agora" de um item que JA esta no roteiro (nao mexe no roteiro) */

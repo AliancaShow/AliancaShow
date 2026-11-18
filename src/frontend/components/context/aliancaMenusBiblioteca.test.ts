@@ -79,4 +79,11 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         expect(rot).toContain("data-id={cab.item.id}")
         expect(rot).toContain("data-id={l.item.id}")
     })
+    it("revisao da fatia 6, achado 6: Mostrar agora dispara o clique no item (alvoDoItem), nunca no elemento mais interno do botao direito (ultimoAlvo)", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).toContain("function alvoDoItem(")
+        expect(reg).toContain('dispararNoAlvo(item, "click")')
+        expect(reg).toContain("const item = alvoDoItem(contextElem)")
+        expect(reg).not.toMatch(/dispararNoAlvo\(alvo,/)
+    })
 })
