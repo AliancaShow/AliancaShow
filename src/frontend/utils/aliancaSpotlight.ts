@@ -125,16 +125,20 @@ export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
     try {
         const bible = await loadJsonBible(biblia.id)
         if (!bible) return sem(`Não consegui abrir a Bíblia ${biblia.nome}`)
+        // a biblioteca json-bible NAO recusa livro, capitulo ou versiculo que nao existe: cai calada no primeiro. A existencia se confere nos dados.
+        const dadosDoLivro = bible.data.books.find((b) => Number(b.number) === ref.livro)
+        if (!dadosDoLivro) return sem(`${ref.nomeDoLivro} não está na Bíblia ${biblia.nome}`)
+        const dadosDoCapitulo = dadosDoLivro.chapters.find((c) => Number(c.number) === ref.capitulo)
+        if (!dadosDoCapitulo) return sem(`${ref.nomeDoLivro} não tem o capítulo ${ref.capitulo}`)
+        const temVersiculo = (v: number) => dadosDoCapitulo.verses.some((x) => Number(x.number) === v || (x.endNumber && v > Number(x.number) && v <= Number(x.endNumber)))
         const livro = await bible.getBook(ref.livro)
-        if (!livro) return sem(`${ref.nomeDoLivro} não está na Bíblia ${biblia.nome}`)
         const capitulo = await livro.getChapter(ref.capitulo)
-        if (!capitulo) return sem(`${ref.nomeDoLivro} não tem o capítulo ${ref.capitulo}`)
         let texto = ""
         if (ref.versiculos) {
             const partes: string[] = []
             for (let v = ref.versiculos[0]; v <= ref.versiculos[1]; v++) {
+                if (!temVersiculo(v)) return sem(`${ref.nomeDoLivro} ${ref.capitulo} não tem o versículo ${v}`)
                 const verso = capitulo.getVerse(v)
-                if (!verso) return sem(`${ref.nomeDoLivro} ${ref.capitulo} não tem o versículo ${v}`)
                 partes.push(
                     String(verso.getHTML?.() || "")
                         .replace(/<[^>]*>/g, "")
