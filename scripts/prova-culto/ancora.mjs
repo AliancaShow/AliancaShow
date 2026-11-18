@@ -33,8 +33,8 @@ export const EXCECOES = {
         "sha": "536f9fd519125caf8b52accc932e0fc9240aa5e84cfabc9b95ed5a9d08aae763"
     },
     "src/frontend/utils/updateSettings.ts": {
-        "motivo": "0b: carregar drawer/drawerTabsData/resized escreve no lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao e o mesmo `set` de antes | leiaute v2 (commit 3): le a chave nova `aliancaTela`; carga so na janela principal",
-        "sha": "6d7a2b68f8890bfe94a7e2903d97638d37d3cf5f3bf0297f93564ef6973ab60b"
+        "motivo": "0b: carregar drawer/drawerTabsData/resized escreve no lado `.culto`; na saida `modoAlianca` e sempre o Culto, entao e o mesmo `set` de antes | leiaute v2 (commit 3): le a chave nova `aliancaTela`; carga so na janela principal | rodada de fidelidade: `aliancaTela` lida por normalizarTelaSalva (so numeros finitos); a carga aplica sempre o tema padrao (o tema salvo do FreeShow nao vale mais) e apaga special.projectTimelineActive; tudo so na carga da janela principal",
+        "sha": "3c98d3dd9d1a9d44ecf0131903b729f5654b9e0ccebfed822ca165939ef9d7a7"
     },
     "src/frontend/utils/common.ts": {
         "motivo": "0b: togglePanels guarda o 'fechei tudo' por modo (valorPorModo); so o atalho `t` da janela principal chama, e no Culto equivale a variavel unica de antes | leiaute v2 (commit 12): sai togglePanels (Ctrl+T) e o import de fecharTudoManual; so a janela principal o chamava | fix: o import de fecharTudoManual sai de verdade",
@@ -57,8 +57,8 @@ export const EXCECOES = {
         "sha": "d956312fb884d0bd34e8bf38c1d0ec3411cca66dd7daf9328775f8fac190082e"
     },
     "src/frontend/components/main/popups/Shortcuts.svelte": {
-        "motivo": "1a/1b: porta do modo foco e linha das teclas 1 a 6 removidas da lista de atalhos; popup so abre na janela principal",
-        "sha": "25574a27a8b19b89900127436ea9745e0ce8658a47c403c9884003dfa2fdd26e"
+        "motivo": "1a/1b: porta do modo foco e linha das teclas 1 a 6 removidas da lista de atalhos; popup so abre na janela principal | rodada de fidelidade: sai a linha 'Ctrl + t' (alternar paineis) da lista de atalhos; popup so abre na janela principal",
+        "sha": "017b137b596295059d9a24a0082895582224c9616bd2a1658ea3de5d74e584d4"
     },
     "src/electron/utils/menuTemplate.ts": {
         "motivo": "1a: item do modo foco removido do menu nativo; arquivo do processo principal, o fecho o alcanca so por imports '..' dentro de src/electron e nunca entra no bundle da saida; conferido: unico importador e src/electron/index.ts",
@@ -79,6 +79,26 @@ export const EXCECOES = {
     "src/frontend/components/main/popups/Initialize.svelte": {
         "motivo": "leiaute v2 (commit 10): sai guideActive.set(true) (o guia deixou de existir); o popup so abre na janela principal",
         "sha": "934a3a0aaa9936f5918655e950237e1fcb8e9de26124478f489a090f4412c261"
+    },
+    "src/electron/data/defaults.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): acrescenta o padrao da chave `aliancaTela` (280/330/260) em defaultSettings, exigido pelo tipo SaveListSettings; arquivo do processo principal (o fecho o alcanca por imports '..' em src/electron, nunca entra no bundle da saida)",
+        "sha": "d1ad8e85395ee32099e74ecf3565210e08a0c0caac7e236ef0eb26eab4fb20a7"
+    },
+    "src/electron/sirvo/sirvo.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): acrescenta show_enviar_mensagem_palco e show_limpar_mensagem_palco a lista ESCRITA do cliente RPC (a caixa 'mensagem pro palco'); processo principal, nunca entra no bundle da saida; a escrita so e chamada pela janela principal",
+        "sha": "c184714e1c69c14146f2236c8d524f72055917a56b2fb158e3403f4bc4c2d575"
+    },
+    "src/frontend/components/drawer/Card.svelte": {
+        "motivo": "leiaute v2 (rodada de fidelidade): nova prop `semRotulo` (padrao false) que esconde o <Label> do cartao de midia da biblioteca; com o padrao o cartao e identico, e a saida nao monta cartoes da gaveta",
+        "sha": "40824b8f1bbb13fb3fa72f21f570f90f04a6558cf5864f3efb54dbe192583628"
+    },
+    "src/frontend/utils/aliancaSirvo.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): so o TIPO FuncaoDeEscrita ganha duas unioes (show_enviar_mensagem_palco, show_limpar_mensagem_palco) e um comentario; nenhuma linha executavel muda",
+        "sha": "b1c7560f7836c8eb753d9cb44874423ec3428ccf649de19d8a57b19cceed68da"
+    },
+    "src/types/Save.ts": {
+        "motivo": "leiaute v2 (rodada de fidelidade): so tipo: 'aliancaTela' entra em SaveListSettings (a chave ja era gravada/lida desde o commit 3); nada em tempo de execucao",
+        "sha": "0ac0e498b94ab425e231613006f560df23a74e156b5306415297a20f505c5197"
     }
 }
 
@@ -104,8 +124,8 @@ export const NOVOS_NO_FECHO = {
         "sha": "6ce913d9d26b33afa713bb663fab43ff7ec4f07e2fdee27473a7978492a6d929"
     },
     "src/frontend/utils/aliancaTelaEstado.ts": {
-        "motivo": "leiaute v2 (commit 3): so cria writables (`aliancaTela`); ninguem da janela de saida os assina",
-        "sha": "175c3c996dc5e076973a11342124cdec5e0e765a812bea6048ff76f6f782d5b1"
+        "motivo": "leiaute v2 (commit 3): so cria writables (`aliancaTela`); ninguem da janela de saida os assina | rodada de fidelidade: acrescenta normalizarTelaSalva (funcao pura)",
+        "sha": "e19d5dc00c1ea706b07acf2b53ad29f04a354d0a4ad97cfc4b083336db1fa94c"
     },
     "src/frontend/utils/aliancaPaginaGuarda.ts": {
         "motivo": "leiaute v2 (commit 11): funcao pura que embrulha o writable de activePage; na janela de saida nao olha o valor; nada assina store",
@@ -113,8 +133,8 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "bb4d8c1b6444e0ce4d47db89e054b4d36ce554ed84e80ef9f72509ebcad207aa"
-export const SHA_NOVOS = "3003f60b347bb4d80804c926fcedf1c48be2909a4e908d9a2e395840cff3f2a0"
+export const SHA_EXCECOES = "419f1212369dc0af2ad428b0fc7e73253cb920aa1c8a31a050ae9b12935c1a6a"
+export const SHA_NOVOS = "3b8201c4d915821b691812831a22e55125968825a181a45c9c2c2c5c35b72165"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */

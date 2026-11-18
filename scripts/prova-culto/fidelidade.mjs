@@ -4,10 +4,12 @@
 //   F2 1920x1080  telao ligado, slide 2 no ar
 //   F3 1920x1080  como F2, com a pasta Midia aberta (grade)
 //   F4 1440x900   como F2 (a regua de medidas.mjs)
+//   F5 1920x1080  como F2, com o popover de DIA aberto (clique real no botao de dia)
+//   F6 1920x1080  como F2, com o popover da pilula do telao aberto (clique real no ▾)
 // O que o app nao tem como mostrar sem o Sirvo vivo (bloco ao vivo, AO VIVO pelo roteiro) fica de fora e e dito no PR.
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, esperar, clicarEm } from "./lib.mjs"
+import { abrir, esperar, clicarEm, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-1"
 mkdirSync(saida, { recursive: true })
@@ -50,8 +52,25 @@ O.setOutput("slide",{id,layout,index:1,line:0}); await esp(1200)`)
     await j.ev(`S.activeDrawerTab.set("media"); await esp(1500)`)
     await print("F3-midia-1920", 1920, 1080)
 
-    // F4: como F2 a 1440x900
+    // F5 e F6: popovers abertos por clique REAL, fechados pelo Esc do proprio popover (ele engole a tecla: nada limpa o telao)
     await j.ev(`S.activeDrawerTab.set("shows"); await esp(800)`)
+    const alvo = async (css) => j.ev(`const e=document.querySelector(${JSON.stringify(css)}); if(!e) return null; const r=e.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}`)
+    let c = await alvo("[data-acao=seletor-culto] .bt.dia")
+    if (!c) throw new Error("botao de dia nao achado")
+    await clicarEm(j, c.x, c.y)
+    await esperar(500)
+    await print("F5-popover-dia-1920", 1920, 1080)
+    await tecla(j, "Escape")
+    await esperar(900)
+    c = await alvo("[data-acao=telao-menu]")
+    if (!c) throw new Error("menu do telao nao achado")
+    await clicarEm(j, c.x, c.y)
+    await esperar(500)
+    await print("F6-popover-telao-1920", 1920, 1080)
+    await tecla(j, "Escape")
+    await esperar(500)
+
+    // F4: como F2 a 1440x900
     await print("F4-telao-ligado-1440", 1440, 900)
 } finally {
     await j.ev(`const O=await import(U("components/helpers/output")); O.clearAll?.(true); S.outputDisplay.set(false); await esp(800)`).catch(() => {})
