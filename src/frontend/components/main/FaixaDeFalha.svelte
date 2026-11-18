@@ -3,12 +3,14 @@
     // `position: fixed` para nunca interceptar toque nem empurrar alvo (regra 4.2.2). Some so ao reabrir o programa.
     import { falhas } from "../../utils/aliancaFalha"
 
-    $: primeira = $falhas[0]
-    $: demais = $falhas.length - 1
-    $: detalhe = $falhas.map((f) => `${f.origem} (${f.vezes}x): ${f.mensagem}`).join("\n")
+    // C3 (cabine 18/nov): a recusa do so retorno aparece na tarja da coluna No ar (AliancaNoAr), nao aqui: continua registrada em `falhas`
+    $: visiveis = $falhas.filter((f) => f.origem !== "so-retorno-recusa")
+    $: primeira = visiveis[0]
+    $: demais = visiveis.length - 1
+    $: detalhe = visiveis.map((f) => `${f.origem} (${f.vezes}x): ${f.mensagem}`).join("\n")
 </script>
 
-{#if $falhas.length}
+{#if visiveis.length}
     <div class="faixaFalha" role="alert" data-title={detalhe}>
         Falha interna do AliançaShow: {primeira.origem} ({primeira.vezes}×){#if demais > 0}
             e mais {demais}{/if}. Avise quem cuida do programa.

@@ -90,7 +90,8 @@ const {loadShows}=await import(U("components/helpers/setShow")); await loadShows
     ok("A. a fonte do layout aponta para o retorno e CONTINUA apontando (R1: a recuperacao nao desfaz)", (await fonte()) === "ret_t10", String(await fonte()))
     ok("A. o retorno foi semeado com o slide do telao (nao apaga o monitor)", (await idxRet()) === 0, String(await idxRet()))
     ok("A. o telao nao foi tocado ao ligar", (await telao()) === tel0)
-    ok("A. a coluna No ar diz o que esta no retorno", /retorno: .*slide 1/.test(await dom(`${sel("retorno-mostra")}?.textContent||""`)), await dom(`${sel("retorno-mostra")}?.textContent||""`))
+    // C3 (cabine 18/nov, contrato mudou): a tarja diz so "SÓ RETORNO · telão parado"; o que o retorno mostra esta na aba Retorno logo abaixo
+ok("A. a coluna No ar diz que o modo esta ligado e o telao parado", /telão parado/.test(await dom(`${sel("retorno-mostra")}?.textContent||""`)), await dom(`${sel("retorno-mostra")}?.textContent||""`))
     await print("t10-a-ligado")
 
     // ---------- A4 + A5 (cabine, 18/nov): o layout de palco do retorno com o modo LIGADO
