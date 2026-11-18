@@ -92,6 +92,8 @@
         height: 100%;
         padding: 20px var(--navigation-width);
         z-index: 5000;
+        /* tela inteira por cima do topo: sem isto a faixa de arrastar do topo vence por baixo e o X do cabecalho vira alca da janela */
+        -webkit-app-region: no-drag;
 
         backdrop-filter: blur(4px);
 

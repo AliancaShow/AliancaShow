@@ -241,6 +241,7 @@
         max-width: 90%;
 
         z-index: 5001;
+        -webkit-app-region: no-drag;
 
         transition:
             top 0.2s ease,

@@ -267,6 +267,7 @@
         box-shadow: 1px 1px 3px 2px rgb(0 0 0 / 0.2);
         padding: 8px 0;
         z-index: 5001;
+        -webkit-app-region: no-drag;
 
         border-radius: 6px;
 
