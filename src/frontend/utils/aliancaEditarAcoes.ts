@@ -6,6 +6,7 @@ import { _show } from "../components/helpers/shows"
 import { loadShows } from "../components/helpers/setShow"
 import { activeEdit, activeShow, outLocked, outputs, refreshEditSlide, showsCache } from "../stores"
 import { falhaAlta } from "./aliancaFalha"
+import { saidasQueMostram } from "./aliancaEditarLogica"
 import { destinosDoEnvio, jaMostramOSlide, saidasParaMandar } from "./aliancaEditarSaidas"
 import { refotografarSaidas } from "./aliancaRefotografar"
 
@@ -13,8 +14,9 @@ import { refotografarSaidas } from "./aliancaRefotografar"
 // E o clique do slide de Mostrar (components/show/Slides.svelte `slideClick`) sem o `e`: um gesto deliberado do operador. Quem chama e um clique do
 // mouse (nunca tecla: em Editar so o Esc mexe no telao), entao nao passa pela guarda de tecla em curso.
 
-/** O `index` e a posicao no layout ativo. `outputId` vazio = todas as telas (o que o clique no slide faz). */
-export function mandarSlideAoAr(showId: string, index: number, outputId = ""): boolean {
+/** O `index` e a posicao no layout ativo. `saidas` vazio = as telas do slide (o que o clique no slide faz); com ids, so essas. */
+export function mandarSlideAoAr(showId: string, index: number, saidas: string | string[] = []): boolean {
+    const alvo = Array.isArray(saidas) ? saidas : saidas ? [saidas] : []
     try {
         if (get(outLocked)) return false
         const layout: string = get(showsCache)[showId]?.settings?.activeLayout || ""
@@ -26,7 +28,7 @@ export function mandarSlideAoAr(showId: string, index: number, outputId = ""): b
         customActionActivation("slide_click")
         checkActionTrigger(ref[index].data, index)
         // dar tempo para as acoes configuradas rodarem primeiro (igual ao clique em Mostrar)
-        const destinos = destinosDoEnvio({ outputId, bindings: ref[index].data?.bindings, ativas: getActiveOutputs(get(outputs) || {}, true, false, true) })
+        const destinos = destinosDoEnvio({ saidas: alvo, bindings: ref[index].data?.bindings, ativas: getActiveOutputs(get(outputs) || {}, true, false, true) })
         setTimeout(() => {
             // quem ja estava neste slide, ANTES do envio (depois o `setOutput` ja escreveu o indice novo)
             const jaNoAr = jaMostramOSlide(
@@ -35,14 +37,37 @@ export function mandarSlideAoAr(showId: string, index: number, outputId = ""): b
                 layout,
                 index
             )
-            setOutput("slide", { id: showId, layout, index, line: 0, revealCount: 0, itemClickReveal: false }, false, outputId)
-            updateOut(showId, index, ref, true, outputId)
+            for (const id of alvo.length ? alvo : [""]) {
+                setOutput("slide", { id: showId, layout, index, line: 0, revealCount: 0, itemClickReveal: false }, false, id)
+                updateOut(showId, index, ref, true, id)
+            }
             // o mesmo slide ja no ar: "mandar de novo" tira uma foto nova (e o que a faixa de pendencia pede) so nas saidas DESTE envio
             refotografarSaidas(jaNoAr)
         })
         return true
     } catch (erro) {
         falhaAlta("mandar-slide", erro)
+        return false
+    }
+}
+
+/**
+ * Faixa de pendencia: manda o slide EDITADO de novo, mas so para as telas que ja o mostravam. Nunca faz outra tela pular de slide. Devolve false (e acende a
+ * falha) se nenhuma tela mostra o slide: a faixa so aparece quando alguma mostra, entao isso e um erro, nao um "nada a fazer".
+ */
+export function atualizarSlideNoAr(showId: string, index: number): boolean {
+    try {
+        const layout: string = get(showsCache)[showId]?.settings?.activeLayout || ""
+        const ref = layout ? _show(showId).layouts([layout]).ref()[0] || [] : []
+        const todas = get(outputs) || {}
+        const ids = saidasQueMostram({ showId, layout, ref, slides: get(showsCache)[showId]?.slides, posicao: index, saidas: getActiveOutputs(todas, true, true, true).map((saida) => ({ saida, slide: (todas[saida] as any)?.out?.slide })) }).map((s) => s.saida)
+        if (!ids.length) {
+            falhaAlta("atualizar-slide", `nenhuma saida mostra o slide ${index} do show ${showId}`)
+            return false
+        }
+        return mandarSlideAoAr(showId, index, ids)
+    } catch (erro) {
+        falhaAlta("atualizar-slide", erro)
         return false
     }
 }

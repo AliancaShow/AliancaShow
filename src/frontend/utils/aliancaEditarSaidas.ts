@@ -16,8 +16,8 @@ export function mostrarMandarSo(saidas: { id: string }[]): boolean {
  * Para que saidas um envio de slide vai: a tela pedida (o "Mandar so para"), senao as telas ligadas ao slide (`bind_to`), senao todas as ativas.
  * E a mesma regra de `setOutput`/`updateOut`; ela e repetida aqui para o "mandar de novo" so tocar nas saidas que o envio tocou.
  */
-export function destinosDoEnvio(e: { outputId?: string; bindings?: string[] | null; ativas: string[] }): string[] {
-    if (e.outputId) return [e.outputId]
+export function destinosDoEnvio(e: { saidas?: string[]; bindings?: string[] | null; ativas: string[] }): string[] {
+    if (e.saidas?.length) return e.saidas
     return e.bindings && e.bindings.length ? e.bindings : e.ativas
 }
 

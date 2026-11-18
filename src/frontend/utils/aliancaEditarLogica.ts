@@ -43,6 +43,13 @@ export const NOTA_LIVRE = "Clique no texto para editar. Salva sozinho."
 export const NOTA_NO_AR = "Este slide está no ar. Pode editar: o telão só muda quando você mandar pro ar de novo."
 export const FAIXA_DEFASADO = "O telão ainda mostra a versão anterior. Ela só troca quando você mandar pro ar de novo."
 
+/** a faixa nomeia a tela defasada quando ha mais de uma tela (`nomes` vazio = so uma tela: "O telão") */
+export function faixaDefasada(nomes: string[]): string {
+    if (!nomes.length) return FAIXA_DEFASADO
+    const quem = nomes.length === 1 ? nomes[0] : `${nomes.slice(0, -1).join(", ")} e ${nomes[nomes.length - 1]}`
+    return `${quem} ainda ${nomes.length === 1 ? "mostra" : "mostram"} a versão anterior. ${nomes.length === 1 ? "Ela" : "Elas"} só ${nomes.length === 1 ? "troca" : "trocam"} quando você mandar pro ar de novo.`
+}
+
 export function notaDoCentro(s: SituacaoDoSlide): string {
     return s === "livre" ? NOTA_LIVRE : s === "no-ar" ? NOTA_NO_AR : ""
 }
@@ -122,4 +129,21 @@ export function itemEmEdicao(e: { edit: { type?: string; id?: string; showId?: s
     }
     if (!id) return null
     return { chave: chaveDoItem(tipo, id), tipo, id, nome: e.nomeDe(tipo, id) || "" }
+}
+
+// ---------------------------------------------------------------- quem mostra ESTE slide (faixa "Mandar pro ar")
+
+/**
+ * As saidas que mostram o slide da posicao `posicao` do layout vivo (a foto manda: o layout pode ter andado). `editado` = a foto dessa saida difere do
+ * slide vivo. A faixa de pendencia reenvia so para estas: mandar o slide para uma tela que estava em outro e "pular", nao "atualizar".
+ */
+export function saidasQueMostram(e: { showId: string; layout: string; ref: { id: string }[]; slides: { [id: string]: any } | null | undefined; posicao: number; saidas: { saida: string; slide: SaidaDoAr | null | undefined }[] }): { saida: string; editado: boolean }[] {
+    const achadas: { saida: string; editado: boolean }[] = []
+    for (const { saida, slide: o } of e.saidas || []) {
+        if (!o || o.id !== e.showId || o.layout !== e.layout || typeof o.index !== "number") continue
+        const pos = o.foto ? indiceDaFoto(o.foto, o.index, e.ref as any) : o.index
+        if (pos !== e.posicao || !e.ref[pos]) continue
+        achadas.push({ saida, editado: !!o.foto && assinatura(e.slides?.[e.ref[pos].id]) !== assinatura(o.foto.slide) })
+    }
+    return achadas
 }

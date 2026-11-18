@@ -35,7 +35,7 @@ vi.mock("./aliancaFoto", async () => ({
 }))
 
 import { outLocked, outputs, showsCache } from "../stores"
-import { mandarSlideAoAr } from "./aliancaEditarAcoes"
+import { atualizarSlideNoAr, mandarSlideAoAr } from "./aliancaEditarAcoes"
 
 const foto = (i: number, v: string) => ({ slideId: "s" + i, ocorrencia: 0, index: i, slide: { v } })
 const noAr = (i: number) => ({ out: { slide: { id: "show", layout: "L", index: i, foto: foto(i, "velho") } } })
@@ -81,5 +81,24 @@ describe("Mandar so para: mexe so na saida escolhida (achado 1)", () => {
         await espera()
         expect(fotoDe("A")).toBe("novo")
         expect(fotoDe("B")).toBe("novo")
+    })
+})
+
+describe("Faixa Mandar pro ar: atualiza so quem mostra o slide (achado 2)", () => {
+    it("transmissao no slide 2 (editado), telao no slide 1: o telao NAO pula para o 2", async () => {
+        showsCache.set({ show: { settings: { activeLayout: "L" }, slides: { s2: { items: [1, 2] } } } } as any)
+        outputs.set({ A: noAr(1), B: noAr(2) } as any)
+        expect(atualizarSlideNoAr("show", 2)).toBe(true)
+        await espera()
+        const a = (get(outputs) as any).A.out.slide
+        expect(a.index).toBe(1)
+        expect(a.foto.slide.v).toBe("velho")
+        expect(fotoDe("B")).toBe("novo")
+    })
+    it("nenhuma tela mostra o slide: falha alta, nada vai ao ar", async () => {
+        outputs.set({ A: noAr(1), B: noAr(1) } as any)
+        expect(atualizarSlideNoAr("show", 2)).toBe(false)
+        await espera()
+        expect((get(outputs) as any).A.out.slide.index).toBe(1)
     })
 })

@@ -5,8 +5,8 @@
     // vivo: la o aviso diz "muda no telao na hora". Nada aqui escreve em `outputs` a nao ser o botao "Mandar pro ar" (clique do mouse).
     import { activeEdit, activePopup, activeShow, editMode, groups, outputs, showsCache, templates } from "../../stores"
     import { dividirAberto, abrirDividir, fecharDividir } from "../../utils/aliancaDividir"
-    import { mandarSlideAoAr } from "../../utils/aliancaEditarAcoes"
-    import { FAIXA_DEFASADO, avisoAoVivo, notaDoCentro, selosDoShow, situacaoDoSlide } from "../../utils/aliancaEditarLogica"
+    import { atualizarSlideNoAr } from "../../utils/aliancaEditarAcoes"
+    import { avisoAoVivo, faixaDefasada, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide } from "../../utils/aliancaEditarLogica"
     import { zoomDoEditor } from "../../utils/aliancaEditarEstado"
     import { getAccess } from "../../utils/profile"
     import { getSlideChords } from "../edit/scripts/chords"
@@ -58,14 +58,18 @@
     $: porCento = Math.round($zoomDoEditor * 100)
 
     // ----- no ar -----
-    $: saidas = getActiveOutputs($outputs, false, true, true).map((id) => $outputs[id])
+    $: idsDasSaidas = getActiveOutputs($outputs, false, true, true)
+    $: saidas = idsDasSaidas.map((id) => $outputs[id])
     $: selos = ehShow && showId && layout ? selosDoShow({ showId, layout, ref, slides: show?.slides, noAr: saidas.map((o: any) => o?.out?.slide) as any }) : {}
     $: situacao = situacaoDoSlide(selos, indice)
     $: nota = ehShow ? notaDoCentro(situacao) : ""
     $: aoVivo = !ehShow ? avisoAoVivo({ tipo: $activeEdit.type, id: $activeEdit.id, noAr: saidas.map((o: any) => ({ background: o?.out?.background, overlays: o?.out?.overlays, effects: o?.out?.effects })) }) : ""
+    // a faixa nomeia as telas defasadas (so quando ha mais de uma tela) e reenvia SO para as que mostram este slide
+    $: defasadas = ehShow && showId && layout && indice !== null ? saidasQueMostram({ showId, layout, ref, slides: show?.slides, posicao: indice, saidas: idsDasSaidas.map((s) => ({ saida: s, slide: ($outputs[s] as any)?.out?.slide })) }).filter((s) => s.editado) : []
+    $: nomesDefasadas = idsDasSaidas.length < 2 ? [] : defasadas.map((d) => (($outputs[d.saida] as any)?.name || "").trim() || `Saída ${idsDasSaidas.indexOf(d.saida) + 1}`)
     function mandar() {
         if (indice === null || !showId) return
-        mandarSlideAoAr(showId, indice)
+        atualizarSlideNoAr(showId, indice)
     }
 </script>
 
@@ -106,7 +110,7 @@
 
 {#if situacao === "defasado"}
     <div class="faixa" role="status" data-acao="editar-pendencia">
-        <span class="txt">{FAIXA_DEFASADO}</span>
+        <span class="txt">{faixaDefasada(nomesDefasadas)}</span>
         <button type="button" class="mandar" data-acao="editar-mandar-pro-ar" on:click={mandar}>Mandar pro ar</button>
     </div>
 {:else if aoVivo}

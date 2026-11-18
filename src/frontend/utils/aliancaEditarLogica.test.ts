@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { mostrarMandarSo, saidasParaMandar } from "./aliancaEditarSaidas"
-import { avisoAoVivo, contagemDeSlides, empurrarAvulso, estaNoRoteiro, itemEmEdicao, MAX_AVULSOS, notaDoCentro, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
+import { FAIXA_DEFASADO, avisoAoVivo, contagemDeSlides, faixaDefasada, empurrarAvulso, estaNoRoteiro, itemEmEdicao, MAX_AVULSOS, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
 
 const ref = [{ id: "a" }, { id: "b" }, { id: "c" }]
 const slides = (itemsB: any[] = [1]) => ({ a: { items: [0] }, b: { items: itemsB }, c: { items: [2] } })
@@ -129,4 +129,28 @@ describe("saidas do 'Mandar so para'", () => {
         expect(mostrarMandarSo([{ id: "1" }])).toBe(false)
         expect(mostrarMandarSo([{ id: "1" }, { id: "2" }])).toBe(true)
     })
+})
+
+describe("saidasQueMostram: quem a faixa 'Mandar pro ar' atualiza", () => {
+    const L = (saida: string, index: number, v: any[]) => ({ saida, slide: { id: "s", layout: "L", index, foto: foto(["a", "b", "c"][index], v) } as any })
+    it("so a saida que esta NESTE slide; a que esta em outro nao entra", () => {
+        const r = saidasQueMostram({ showId: "s", layout: "L", ref, slides: slides([1, 2]), posicao: 1, saidas: [L("telao", 0, [0]), L("transmissao", 1, [1])] })
+        expect(r).toEqual([{ saida: "transmissao", editado: true }])
+    })
+    it("duas saidas no mesmo slide: as duas, cada uma com o seu estado", () => {
+        const r = saidasQueMostram({ showId: "s", layout: "L", ref, slides: slides([1, 2]), posicao: 1, saidas: [L("telao", 1, [1, 2]), L("transmissao", 1, [1])] })
+        expect(r).toEqual([
+            { saida: "telao", editado: false },
+            { saida: "transmissao", editado: true }
+        ])
+    })
+    it("outro show/layout ou saida limpa: nada", () => {
+        expect(saidasQueMostram({ showId: "s", layout: "L", ref, slides: slides(), posicao: 1, saidas: [{ saida: "x", slide: { id: "z", layout: "L", index: 1 } }, { saida: "y", slide: null }] })).toEqual([])
+    })
+})
+
+describe("faixaDefasada: nomeia a tela defasada", () => {
+    it("sem nomes (uma tela so): o texto de sempre", () => expect(faixaDefasada([])).toBe(FAIXA_DEFASADO))
+    it("uma tela", () => expect(faixaDefasada(["Transmissão"])).toBe("Transmissão ainda mostra a versão anterior. Ela só troca quando você mandar pro ar de novo."))
+    it("duas telas", () => expect(faixaDefasada(["Telão", "Transmissão"])).toContain("Telão e Transmissão ainda mostram"))
 })
