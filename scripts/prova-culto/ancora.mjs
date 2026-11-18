@@ -17,8 +17,8 @@ const ENTRADA = "src/frontend/MainOutput.svelte"
 /** excecoes: arquivo do fecho que a pilha de layout PODE mudar, e por que a saida continua igual */
 export const EXCECOES = {
     "src/frontend/stores.ts": {
-        "motivo": "0b: fachada por modo de drawer/resized/activeDrawerTab/drawerTabsData; na saida `modoAlianca` nunca muda e a fachada se comporta como writable (vitest da fachada 'no processo de saida')",
-        "sha": "633fb9f8ea882df1eecfff87b40ab43535fece62dea4bfa927eea3d0c30d13e3"
+        "motivo": "0b: fachada por modo de drawer/resized/activeDrawerTab/drawerTabsData; na saida `modoAlianca` nunca muda e a fachada se comporta como writable (vitest da fachada 'no processo de saida') | leiaute v2 (commit 11): `activePage` passa por guardarPagina; fora da janela principal (currentWindow !== null) ela devolve o valor sem olhar e o writable por baixo e o mesmo",
+        "sha": "e2e7bed8041b4fbe0166da168ebc05f901c491f5c7a6f49e19860c302608aa1f"
     },
     "src/frontend/utils/request.ts": {
         "motivo": "0a: gancho de IPC dentro de import.meta.env.DEV (some do build)",
@@ -106,11 +106,15 @@ export const NOVOS_NO_FECHO = {
     "src/frontend/utils/aliancaTelaEstado.ts": {
         "motivo": "leiaute v2 (commit 3): so cria writables (`aliancaTela`); ninguem da janela de saida os assina",
         "sha": "175c3c996dc5e076973a11342124cdec5e0e765a812bea6048ff76f6f782d5b1"
+    },
+    "src/frontend/utils/aliancaPaginaGuarda.ts": {
+        "motivo": "leiaute v2 (commit 11): funcao pura que embrulha o writable de activePage; na janela de saida nao olha o valor; nada assina store",
+        "sha": "6846d134346e21e362eef74635c48715cfed31ad35895de5554190db6f16c11d"
     }
 }
 
-export const SHA_EXCECOES = "08bddbe75b9388879fc79a92f365ece696870e40a435fa9b1090637c707758fd"
-export const SHA_NOVOS = "cca44206a6c3dc808f117d823a748946e7639dd17ac87e13685d88f7d6d2f7c9"
+export const SHA_EXCECOES = "944190891857190bfd98f25fbc9b8d051df8efa18ee5457f71b00078e3f0451d"
+export const SHA_NOVOS = "c89f7f57d251144c89e109e5adda22d8005f0db2a416603a06da145dbf0fb254"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
