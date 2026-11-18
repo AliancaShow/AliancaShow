@@ -85,7 +85,6 @@
     let prevId: string | undefined = undefined
     $: if (mediaPath !== prevId) {
         videoTime = 0
-        autoPause = true
         prevId = mediaPath
 
         timeMarkersEnabled = !!$videoMarkers[mediaPath]?.length || false
@@ -109,14 +108,12 @@
         }
         // if (background.type !== "media" && background.type !== "video") return
 
-        autoPause = true
         // videoData.paused = true
         playingInOutput = true
     }
 
     // WIP player video output time
 
-    let autoPause = true
     let hasLoaded = false
 
     let manageSubtitles = false
