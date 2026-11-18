@@ -76,16 +76,8 @@
     }
     $: if ($activeTriggerFunction === "drawer_search") campo?.focus()
 
-    function teclaDoCampo(e: KeyboardEvent) {
-        // Backspace/Delete/Enter/Esc digitados aqui nunca chegam ao keydown global; Ctrl+Enter/Ctrl+F sao tratados em `teclar` (janela)
-        if (!(e.key === "Enter" && (e.ctrlKey || e.metaKey)) && !((e.ctrlKey || e.metaKey) && e.key === "f")) e.stopPropagation()
-        if (e.key === "Escape") {
-            e.preventDefault()
-            if (searchValue.length) searchValue = ""
-            else campo.blur()
-        }
-        if (e.key === "Enter") teclar(e)
-    }
+    // O campo de busca NAO trata teclado por conta propria (como o do Drawer antigo): Ctrl+Enter, F1-F5, Esc e os atalhos com Ctrl seguem para o
+    // ouvinte de janela (`teclar`) e para os atalhos globais UMA vez. Chamar `teclar` daqui mandava o primeiro slide ao ar duas vezes (Ctrl+Enter).
 
     const NOVOS = [
         { id: "musica", rotulo: "＋ Nova música" },
@@ -128,7 +120,7 @@
         {#if emMidia}
             <AliancaMidiaControles />
         {/if}
-        <input bind:this={campo} class="busca search edit drawer_search" type="text" placeholder="Buscar música, trecho da letra ou versículo" spellcheck="false" autocomplete="off" bind:value={searchValue} on:keydown={teclaDoCampo} />
+        <input bind:this={campo} class="busca search edit drawer_search" type="text" placeholder="Buscar música, trecho da letra ou versículo" spellcheck="false" autocomplete="off" bind:value={searchValue} />
     </div>
     <div class="corpo">
         <div class="arv" style="width: {esq}px"><AliancaArvore /></div>

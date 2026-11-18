@@ -7,15 +7,16 @@
     import { clearAudio } from "../../audio/audioFading"
     import { outLocked, outputs, playingAudio, playingMetronome, timelineRecordingAction } from "../../stores"
     import { camadasDoNoAr, COR_DA_CAMADA, SEGURAR_MS, tudoDesabilitado, type IdCamada } from "../../utils/aliancaCamadasLogica"
-    import { clearAll, clearBackground, clearSlide } from "../output/clear"
-    import { isOutCleared, setOutput } from "../helpers/output"
+    import { clearAll, clearBackground, clearOverlays, clearSlide } from "../output/clear"
+    import { isOutCleared } from "../helpers/output"
 
     $: audioLimpo = !Object.keys($playingAudio).length && !$playingMetronome
     $: audioSemMicrofone = !Object.values($playingAudio).filter((a) => !a.isMic).length && !$playingMetronome
     $: entrada = {
         fundoLimpo: isOutCleared("background", $outputs),
         textoLimpo: isOutCleared("slide", $outputs),
-        sobreposicaoLimpa: isOutCleared("overlays", $outputs, true),
+        // sem contar as sobreposicoes TRAVADAS (checkLocked=false): com so uma travada no ar o icone fica apagado, como o botao antigo (`lockedOverlay`)
+        sobreposicaoLimpa: isOutCleared("overlays", $outputs, false),
         efeitosLimpos: isOutCleared("effects", $outputs, true),
         audioLimpo,
         tudoLimpo: isOutCleared(null, $outputs) && audioSemMicrofone,
@@ -41,8 +42,8 @@
             clearSlide()
             timelineRecordingAction.set({ id: "clear_slide" })
         } else if (id === "sobre") {
-            setOutput("overlays", [])
-            setOutput("effects", [])
+            // `clearOverlays` MANTEM as sobreposicoes travadas e passa por `destinoRecusaTecla()`, como o botao de antes
+            clearOverlays()
             timelineRecordingAction.set({ id: "clear_overlays" })
         } else {
             clearAudio("", { clearPlaylist: true, clearMicrophones: true, commonClear: true })
