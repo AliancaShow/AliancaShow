@@ -6,11 +6,12 @@
     // capturado antes de chegar aos atalhos do telao).
     import { onDestroy } from "svelte"
     import { activePopup, activeProfile, isDev, profiles } from "../../stores"
-    import { alternarFerramentasDeDev, alternarTelaCheia, recarregarJanela } from "../../utils/aliancaJanela"
+    import { alternarFerramentasDeDev, alternarTelaCheia, desfazerAgora, recarregarJanela, refazerAgora, salvarAgora } from "../../utils/aliancaJanela"
     import { trocarTela } from "../../utils/aliancaTela"
     import { desenhoBloqueado } from "../../utils/aliancaDesenho"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { escFechou } from "../../utils/aliancaToque"
+    import AliancaCortina from "./AliancaCortina.svelte"
 
     let aberto = false
     let raiz: HTMLElement
@@ -20,17 +21,22 @@
     // perfis de acesso: o seletor e o perfil moram em Configurações (aba Perfis); aqui só o nome do perfil ativo, quando há mais de um
     $: perfilAtivo = $activeProfile && Object.keys($profiles).filter((a) => a !== "admin").length > 1 ? $profiles[$activeProfile]?.name || "" : ""
 
-    type Item = { id: string; nome: string; agir: () => void; mudo?: boolean }
+    type Item = { id: string; nome: string; agir: () => void; mudo?: boolean; atalho?: string }
     type Grupo = Item[]
     $: grupos = [
         [...(settingsDisabled ? [] : [{ id: "settings", nome: "Configurações…", agir: () => ir("settings") }]), { id: "stage", nome: "Telas e monitor de retorno…", agir: () => ir("stage") }, { id: "draw", nome: "Ferramentas da saída (desenhar, zoom)", agir: () => ir("draw") }],
         [
-            { id: "import", nome: "Importar…", agir: () => activePopup.set("import") },
-            { id: "export", nome: "Exportar…", agir: () => activePopup.set("export") },
-            { id: "history", nome: "Histórico…", agir: () => activePopup.set("history") }
+            { id: "save", nome: "Salvar", agir: salvarAgora, atalho: "Ctrl+S" },
+            { id: "undo", nome: "Desfazer", agir: desfazerAgora, atalho: "Ctrl+Z" },
+            { id: "redo", nome: "Refazer", agir: refazerAgora, atalho: "Ctrl+Y" }
         ],
         [
-            { id: "fullscreen", nome: "Tela cheia", agir: alternarTelaCheia },
+            { id: "import", nome: "Importar…", agir: () => activePopup.set("import"), atalho: "Ctrl+I" },
+            { id: "export", nome: "Exportar…", agir: () => activePopup.set("export"), atalho: "Ctrl+E" },
+            { id: "history", nome: "Histórico…", agir: () => activePopup.set("history"), atalho: "Ctrl+H" }
+        ],
+        [
+            { id: "fullscreen", nome: "Tela cheia", agir: alternarTelaCheia, atalho: "F11" },
             { id: "shortcuts", nome: "Atalhos e ajuda…", agir: () => activePopup.set("shortcuts"), mudo: true },
             { id: "about", nome: "Sobre o AliançaShow…", agir: () => activePopup.set("about"), mudo: true }
         ],
@@ -89,12 +95,15 @@
         <span class="seta">▾</span>
     </button>
     {#if aberto}
+        <AliancaCortina on:fechar={() => (aberto = false)} />
         <div class="menu" role="menu">
             {#if perfilAtivo}<div class="perfil" data-acao="menu-perfil">Perfil: {perfilAtivo}</div>{/if}
             {#each grupos as g, n}
                 {#if n > 0}<div class="sep" role="separator" />{/if}
                 {#each g as i (i.id)}
-                    <button class="item" class:mudo={i.mudo} role="menuitem" data-item={i.id} tabindex="-1" on:mousedown|preventDefault on:click={() => escolher(i)}>{i.nome}</button>
+                    <button class="item" class:mudo={i.mudo} role="menuitem" data-item={i.id} tabindex="-1" on:mousedown|preventDefault on:click={() => escolher(i)}
+                        ><span>{i.nome}</span>{#if i.atalho}<span class="atalho">{i.atalho}</span>{/if}</button
+                    >
                 {/each}
             {/each}
         </div>
@@ -152,6 +161,12 @@
             0 18px 40px rgba(0, 0, 0, 0.5);
         transform-origin: top left;
         animation: luz-surgir 120ms ease-out;
+    }
+    .atalho {
+        margin-left: auto;
+        padding-left: 16px;
+        font-size: 12px;
+        color: var(--luz-mudo);
     }
     .item {
         min-height: 40px;
