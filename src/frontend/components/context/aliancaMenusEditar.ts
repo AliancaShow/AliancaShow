@@ -6,6 +6,7 @@
 // `ContextItem.svelte` chama `acaoDeEditar(id)` antes de `menuClick`: se o id e daqui, a acao e esta; senao o fluxo de sempre.
 import { get } from "svelte/store"
 import { mandarSlideAoAr, prepararEdicaoDoShow } from "../../utils/aliancaEditarAcoes"
+import { falhaAlta } from "../../utils/aliancaFalha"
 import { emEditar, trocarTela } from "../../utils/aliancaTela"
 import { activeShow } from "../../stores"
 import { contextMenuItems, contextMenuLayouts, type ContextMenuItem } from "./contextMenus"
@@ -30,16 +31,27 @@ Object.assign(contextMenuLayouts, LAYOUTS)
 
 type Chamada = { id: string; menu: ContextMenuItem; contextElem: HTMLElement | null; sel: { id?: string | null; data: any[] } | null }
 
-const slideDaSelecao = (sel: Chamada["sel"]) => (sel?.id === "slide" ? sel.data?.[0] : null)
+/**
+ * O slide em que o operador clicou com o botao direito (a miniatura `.context` leva `data-indice`). Com varios selecionados o menu continua valendo para a
+ * selecao inteira, mas "Mandar pro ar" e do slide CLICADO, nao do primeiro da lista. Sem a marca no elemento ou fora da selecao: falha alta, nada vai ao ar.
+ */
+function slideDaSelecao(sel: Chamada["sel"], contextElem: HTMLElement | null) {
+    if (sel?.id !== "slide") return null
+    const marca = (contextElem as any)?.closest?.("[data-indice]")?.getAttribute?.("data-indice")
+    const clicado = marca === null || marca === undefined || marca === "" ? NaN : Number(marca)
+    const slide = Number.isInteger(clicado) ? (sel.data || []).find((s: any) => s?.index === clicado) : null
+    if (!slide) falhaAlta("menu-editar", `o slide clicado (${marca}) nao esta na selecao do botao direito`)
+    return slide || null
+}
 
 const ACOES: { [id: string]: (c: Chamada) => void } = {
-    alianca_ar: ({ sel }) => {
-        const slide = slideDaSelecao(sel)
+    alianca_ar: ({ sel, contextElem }) => {
+        const slide = slideDaSelecao(sel, contextElem)
         if (!emEditar() || !slide || typeof slide.index !== "number") return
         mandarSlideAoAr(slide.showId || get(activeShow)?.id || "", slide.index)
     },
-    alianca_so: ({ sel, menu }) => {
-        const slide = slideDaSelecao(sel)
+    alianca_so: ({ sel, menu, contextElem }) => {
+        const slide = slideDaSelecao(sel, contextElem)
         if (!emEditar() || !slide || typeof slide.index !== "number" || !menu.id) return
         mandarSlideAoAr(slide.showId || get(activeShow)?.id || "", slide.index, menu.id)
     },

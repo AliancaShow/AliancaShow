@@ -283,7 +283,7 @@
         <Actions {slide} {columns} {index} actions={layoutSlide.actions || {}} />
     {/if}
     <!-- content -->
-    <div class="slide context #{isLocked ? 'default' : $focusMode ? 'slideFocus' : name === null ? ($tela === 'editar' ? 'slideChildEditar' : 'slideChild') : $tela === 'editar' ? 'slideEditar' : 'slide'}" class:disabled={layoutSlide.disabled} class:afterEnd={endIndex !== null && index > endIndex} {style} role="none" on:click>
+    <div data-indice={index} class="slide context #{isLocked ? 'default' : $focusMode ? 'slideFocus' : name === null ? ($tela === 'editar' ? 'slideChildEditar' : 'slideChild') : $tela === 'editar' ? 'slideEditar' : 'slide'}" class:disabled={layoutSlide.disabled} class:afterEnd={endIndex !== null && index > endIndex} {style} role="none" on:click>
         <div class="hover overlay" />
         <!-- <DropArea id="slide" hoverTimeout={0} file> -->
         <div style="width: 100%;height: 100%;">
