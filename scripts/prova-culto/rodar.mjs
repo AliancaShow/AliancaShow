@@ -177,7 +177,14 @@ for (const secao of SECOES_RODAR) {
             else coord = l
         }
         const g = passo.gesto
-        if (g.clique && coord) await clicarEm(principal, coord.x, coord.y)
+        if (g.segurar && coord) {
+            // gesto continuo (limpar tudo da coluna No ar): pressiona, espera o tempo do gesto e solta; o botao nasce inerte por 1 s
+            await esperar(1100)
+            await principal.enviar("Input.dispatchMouseEvent", { type: "mouseMoved", x: coord.x, y: coord.y })
+            await principal.enviar("Input.dispatchMouseEvent", { type: "mousePressed", x: coord.x, y: coord.y, button: "left", clickCount: 1 })
+            await esperar(g.segurar)
+            await principal.enviar("Input.dispatchMouseEvent", { type: "mouseReleased", x: coord.x, y: coord.y, button: "left", clickCount: 1 })
+        } else if (g.clique && coord) await clicarEm(principal, coord.x, coord.y)
         else if (g.clique && !coord) falhas.push("clique sem alvo valido")
         else if (g.tecla) {
             if (MUTAR === "digito-troca" && passo.id === "A11-digito-2") await principal.ev('window.addEventListener("keydown", (e) => { if (e.key === "2") S.activePage.set("edit") }, true); return 1')
