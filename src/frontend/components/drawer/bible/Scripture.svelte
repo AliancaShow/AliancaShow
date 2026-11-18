@@ -10,6 +10,7 @@
     import { tela } from "../../../utils/aliancaTela"
     import { marcarBiblia } from "../../../utils/aliancaGaveta"
     import { gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
+    import { cliqueVaiSerEngolido } from "../../../utils/aliancaToque"
     import { wait } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { clone } from "../../helpers/array"
@@ -1102,6 +1103,7 @@
 
                                 <span
                                     {id}
+                                    data-item
                                     class:isActive
                                     on:click={(e) => toggleChapter(e, id)}
                                     on:contextmenu={() => {
@@ -1146,7 +1148,7 @@
                                     class:collection-verse={isCollection && $scriptureMode !== "grid"}
                                     data-title="{text}<br><br>{translateText('tooltip.scripture')}"
                                     draggable="true"
-                                    on:mousedown={(e) => openVerse(updateVersesSelection(e, content.id))}
+                                    on:mousedown={(e) => (cliqueVaiSerEngolido(e) ? null : openVerse(updateVersesSelection(e, content.id)))}
                                     on:click={(e) => openVerse(updateVersesSelection(e, content.id, true))}
                                     on:click={(e) => (!gavetaNaoToca() && isActiveInOutput && !e.ctrlKey && !e.metaKey ? playScripture() : false)}
                                     on:dblclick={(e) => (gavetaNaoToca() || (isActiveInOutput && !e.ctrlKey && !e.metaKey) ? false : playScripture())}
