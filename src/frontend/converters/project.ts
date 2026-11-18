@@ -8,7 +8,7 @@ import { history } from "../components/helpers/history"
 import { getExtension, getFileName, getMediaType, removeExtension } from "../components/helpers/media"
 import { checkName } from "../components/helpers/show"
 import { sendMain } from "../IPC/main"
-import { actions as actionsStores, activePage, activePopup, activeProject, activeShow, alertMessage, editingProjectTemplate, effects as effectsStores, focusMode, folders, media as mediaStores, overlays as overlayStores, projects, projectTemplates, projectView, recentFiles } from "../stores"
+import { actions as actionsStores, activePopup, activeProject, activeShow, alertMessage, editingProjectTemplate, effects as effectsStores, focusMode, folders, media as mediaStores, overlays as overlayStores, projects, projectTemplates, projectView, recentFiles } from "../stores"
 import { translateText } from "../utils/language"
 import { confirmCustom } from "../utils/popup"
 import { audioExtensions, mediaExtensions } from "../values/extensions"
@@ -142,7 +142,6 @@ export function addProjectItem(data: ProjectShowRef) {
     if (get(focusMode)) return
 
     // open project item
-    activePage.set("show")
     activeShow.set({ ...data, index: project.data.length - 1 })
 }
 

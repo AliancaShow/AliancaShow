@@ -12,8 +12,7 @@ const RAIZ = join(__dirname, "..", "..", "..")
 const ler = (rel: string) => readFileSync(join(RAIZ, rel), "utf8").replace(/\r\n/g, "\n")
 
 export const ARQUIVOS_DA_PILHA = [
-    "src/frontend/utils/aliancaPorModoLogica.ts",
-    "src/frontend/utils/aliancaLayoutEstado.ts",
+    "src/frontend/utils/aliancaTelaEfeitos.ts",
     "src/frontend/utils/aliancaDrawerTabsLogica.ts",
     "src/frontend/utils/aliancaAbasEditor.ts",
     "src/frontend/utils/aliancaFalha.ts",

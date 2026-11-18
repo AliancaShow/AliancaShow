@@ -1,6 +1,7 @@
 <script lang="ts">
     import { slide } from "svelte/transition"
-    import { activePage, os, settingsTab, statusIndicator } from "../../stores"
+    import { os, settingsTab, statusIndicator } from "../../stores"
+    import { trocarTela } from "../../utils/aliancaTela"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
 
@@ -24,7 +25,7 @@
             case "syncing":
             case "synced":
                 settingsTab.set("files")
-                activePage.set("settings")
+                trocarTela("settings", "botao-de-pagina")
                 break
         }
     }

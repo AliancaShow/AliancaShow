@@ -4,7 +4,9 @@
     // foco por Tab; o keydown global tira o foco de qualquer BUTTON). Ctrl+O continua como esta (shortcuts.ts).
     import { onDestroy } from "svelte"
     import { get } from "svelte/store"
-    import { activePage, drawSettings, drawTool, modoAlianca, outLocked, outputCache, outputDisplay, outputs, paintCache, settingsTab } from "../../stores"
+    import { activePage, drawSettings, drawTool, outLocked, outputCache, outputDisplay, outputs, paintCache, settingsTab } from "../../stores"
+    import { tela, trocarTela } from "../../utils/aliancaTela"
+    import { escFechou } from "../../utils/aliancaToque"
     import { algoNoAr } from "../../utils/aliancaModo"
     import { desenhoAtivo } from "../../utils/aliancaPilulaLogica"
     import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
@@ -24,7 +26,7 @@
         desligar: () => toggleOutputs(null, { state: false }),
         abrirConfig: () => {
             settingsTab.set("display_settings")
-            activePage.set("settings")
+            trocarTela("settings", "pilula-telao")
         },
         fecharMenu: () => {},
         ler: () => {
@@ -33,7 +35,7 @@
         },
         aoMudar: (s) => (estado = s)
     })
-    $: ($outputDisplay, $outputs, $drawTool, $drawSettings, $paintCache, $activePage, $modoAlianca, semTelaFisica, maquina.mundoMudou())
+    $: ($outputDisplay, $outputs, $drawTool, $drawSettings, $paintCache, $activePage, $tela, semTelaFisica, maquina.mundoMudou())
     onDestroy(() => maquina.destruir())
 
     // cronometro "Telao no ar · mm:ss": comeca quando a saida entra no ar e zera quando sai
@@ -104,10 +106,12 @@
         if (pergunta && e.key === "Escape") {
             e.preventDefault()
             e.stopImmediatePropagation()
+            escFechou()
             maquina.cancelar()
         } else if (menuAberto && e.key === "Escape") {
             e.preventDefault()
             e.stopImmediatePropagation()
+            escFechou()
             menuAberto = false
         }
     }

@@ -3,9 +3,11 @@
     // pagina), Importar e "Atalhos · Ajuda · Sobre" (abrem popup). Aberto por clique, fecha ao escolher, ao clicar fora e com Esc
     // (o Esc e SO do menu enquanto aberto: capturado antes de chegar aos atalhos do telao).
     import { onDestroy } from "svelte"
-    import { activePage, activePopup, activeProfile, profiles } from "../../stores"
+    import { activePopup, activeProfile, profiles } from "../../stores"
+    import { trocarTela } from "../../utils/aliancaTela"
     import { desenhoBloqueado } from "../../utils/aliancaDesenho"
     import { falhaAlta } from "../../utils/aliancaFalha"
+    import { escFechou } from "../../utils/aliancaToque"
 
     let aberto = false
     let raiz: HTMLElement
@@ -25,7 +27,7 @@
     function ir(p: "settings" | "stage" | "draw") {
         // Ferramentas da saida em Editar: os botoes seriam inertes e calados; a entrada recusa em voz alta (faixa de falha) e fica onde esta
         if (p === "draw" && desenhoBloqueado()) return
-        activePage.set(p)
+        trocarTela(p, "menu-app")
     }
     function escolher(i: Item) {
         aberto = false
@@ -43,6 +45,7 @@
         if (e.key === "Escape") {
             e.preventDefault()
             e.stopImmediatePropagation()
+            escFechou()
             aberto = false
         }
     }

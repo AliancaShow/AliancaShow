@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
-    import { activeEdit, activeFocus, activePage, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, modoAlianca, notFound, outLocked, outputs, outputSlideCache, popupData, shows, showsCache, slidesOptions, special, templates, textCache } from "../../stores"
+    import { activeEdit, activeFocus, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, notFound, outLocked, outputs, outputSlideCache, popupData, shows, showsCache, slidesOptions, special, templates, textCache } from "../../stores"
+    import { tela } from "../../utils/aliancaTela"
     import { dividirAberto } from "../../utils/aliancaDividir"
     import { temFundoQuebrado } from "../../utils/aliancaFundoQuebrado"
     import { indiceDaFoto } from "../../utils/aliancaFotoLogica"
@@ -365,7 +366,7 @@
     $: isLocked = currentShow?.locked || profile.global === "read" || profile[currentShow?.category || ""] === "read"
 
     // AliançaShow (Preparar F4): música "sem letra" (veio da lista da banda): o botão principal é "Colar letra"
-    $: semLetraAqui = $modoAlianca === "preparar" && !isLocked && showEstaSemLetra(showId, $shows, $categories, $showsCache, $textCache)
+    $: semLetraAqui = $tela === "editar" && !isLocked && showEstaSemLetra(showId, $shows, $categories, $showsCache, $textCache)
     $: artistaDaMusica = ((($showsCache[showId]?.meta || {}) as any).artist as string) || ""
     function colarLetra() {
         popupData.set({ modo: "preencher", showId })
@@ -377,7 +378,6 @@
 
         history({ id: "SLIDES" })
         activeEdit.set({ type: "show", slide: 0, items: [] })
-        activePage.set("edit")
     }
 
     // lazy loader
@@ -540,7 +540,7 @@
                             <T id="error.no_show" />
                         {/if}
                     </Center>
-                {:else if $modoAlianca === "preparar" && $dividirAberto === showId}
+                {:else if $tela === "editar" && $dividirAberto === showId}
                     <AliancaDividir {showId} />
                 {:else}
                     <div class="grid" class:auto={colunas !== null} style={$focusMode ? "" : "padding-bottom: 60px;"}>
@@ -559,7 +559,7 @@
                                             color={slide.color}
                                             output={activeSlides[i]}
                                             active={activeSlides[i] !== undefined}
-                                            selo={$modoAlianca === "preparar" && activeSlides[i] !== undefined ? (mudouNoAr[i] ? "no ar · mudou" : "no ar") : ""}
+                                            selo={$tela === "editar" && activeSlides[i] !== undefined ? (mudouNoAr[i] ? "no ar · mudou" : "no ar") : ""}
                                             {endIndex}
                                             list={!gridMode}
                                             columns={colunasDaGrade}

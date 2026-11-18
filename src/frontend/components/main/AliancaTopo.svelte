@@ -1,9 +1,8 @@
 <script lang="ts">
     // Leiaute v2: o topo (56 px). Marca com menu do app, pilula Sirvo, segmentado Mostrar | Editar, relogio e pilula do telao.
     // O segmentado e o unico gesto (com o "Editar" do botao direito) que troca Mostrar <-> Editar. Sem atalho de teclado, de proposito.
-    // Mostrar escreve: anteparo, pagina `show`, modo `culto` (a ordem de irAoCulto). Editar escreve pagina `edit` e modo `preparar`.
-    import { activePage, modoAlianca } from "../../stores"
-    import { armarAnteparo, irAoCulto } from "../../utils/aliancaPilula"
+    // Mostrar e Editar passam pela porta `trocarTela` (chegar em Mostrar arma o anteparo antes de escrever).
+    import { tela, trocarTela } from "../../utils/aliancaTela"
     import { marcadoDoSegmentado } from "../../utils/aliancaSegmentadoLogica"
     import Clock from "../system/Clock.svelte"
     import AliancaMenuApp from "./AliancaMenuApp.svelte"
@@ -12,18 +11,14 @@
 
     export let semTelaFisica = false
 
-    // a aba acesa segue o `modoAlianca` (o que o teclado obedece); pagina e modo discordando acende o contorno de alerta
-    let marcado: "mostrar" | "editar" | null = null
-    let cruzado = false
-    $: ({ marcado, cruzado } = marcadoDoSegmentado($activePage, $modoAlianca))
+    // a aba acesa e a da `tela` (a mesma regra que o teclado obedece)
+    $: marcado = marcadoDoSegmentado($tela)
 
     function irMostrar() {
-        irAoCulto()
+        trocarTela("show", "segmentado")
     }
     function irEditar() {
-        armarAnteparo()
-        activePage.set("edit")
-        modoAlianca.set("preparar")
+        trocarTela("edit", "segmentado")
     }
 </script>
 
@@ -32,7 +27,7 @@
     <AliancaSirvoPilula />
 
     <div class="centro">
-        <div class="seg" class:cruzado data-title={cruzado ? "A tela e o teclado estão em modos diferentes: a aba acesa é a do teclado." : ""} role="tablist" aria-label="O que o centro mostra" data-acao="segmentado">
+        <div class="seg" role="tablist" aria-label="O que o centro mostra" data-acao="segmentado">
             <button role="tab" class="aba" class:on={marcado === "mostrar"} aria-selected={marcado === "mostrar"} data-aba="mostrar" tabindex="-1" on:mousedown|preventDefault on:click={irMostrar}>Mostrar</button>
             <button role="tab" class="aba" class:on={marcado === "editar"} aria-selected={marcado === "editar"} data-aba="editar" tabindex="-1" on:mousedown|preventDefault on:click={irEditar}>Editar</button>
         </div>
@@ -57,9 +52,6 @@
         flex-grow: 1;
         display: flex;
         justify-content: center;
-    }
-    .seg.cruzado {
-        box-shadow: inset 0 0 0 1px var(--luz-laranja);
     }
     .seg {
         display: flex;

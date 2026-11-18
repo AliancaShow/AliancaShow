@@ -1,5 +1,5 @@
 // `drawerTabsData` por modo (fatia 0b): so a pasta e o filtro da F7 (media.activeSubTab e media.aliancaFiltro) sao de cada modo.
-// Todo o resto do store segue compartilhado como hoje (enabled, correcoes guiadas por dado, openedSubSubTab...), ver aliancaPorModoLogica.ts.
+// Todo o resto do store segue compartilhado como hoje (enabled, correcoes guiadas por dado, openedSubSubTab...).
 // Logica pura (sem stores).
 import { idDaAba } from "./aliancaPastasMidiaLogica"
 

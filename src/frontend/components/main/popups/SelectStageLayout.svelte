@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
-    import { activePage, activePopup, currentOutputSettings, popupData, stageShows } from "../../../stores"
+    import { activePopup, currentOutputSettings, popupData, stageShows } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { keysToID, sortByName } from "../../helpers/array"
     import T from "../../helpers/T.svelte"
     import SkeletonStageSlide from "../../stage/SkeletonStageSlide.svelte"
@@ -58,7 +59,7 @@
         const layoutId = uid()
         history({ id: "UPDATE", oldData: { id: layoutId }, location: { page: "stage", id: "stage" } })
         select(layoutId)
-        activePage.set("stage")
+        trocarTela("stage", "popup")
     }
 </script>
 

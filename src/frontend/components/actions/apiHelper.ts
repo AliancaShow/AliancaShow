@@ -693,7 +693,7 @@ export async function startScripture(data: API_scripture) {
         ref = { book: resolved.book, chapter: resolved.chapter, verses: [resolved.verses] }
     }
 
-    if (get(activePage) !== "edit") activePage.set("show")
+    // leiaute v2 (fatia 2): a API e o celular nao trocam a tela do operador
     if (data.id) setDrawerTabData("scripture", data.id) // use active if no ID
     activeDrawerTab.set("scripture")
 

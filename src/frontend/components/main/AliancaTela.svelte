@@ -6,12 +6,13 @@
     //
     // MOTOR (montado desde o primeiro dia e fora de qualquer {#if}): o Preview escondido (teclado do telao, temporizadores de slide),
     // FaixaDeFalha, AnteparoDeModo, ProfileChangerMenu e o disparo de show_opened. Nada disso tem markup visivel.
-    import { onMount } from "svelte"
+    import { onDestroy, onMount } from "svelte"
     import { customActionActivation } from "../actions/actions"
     import { isOutCleared } from "../helpers/output"
     import Preview from "../output/preview/Preview.svelte"
     import { activePage, activeProfile, activeShow, outputs, saved, showChangeProfileMenu, special } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
+    import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
     import Navigation from "../edit/Navigation.svelte"
@@ -27,6 +28,11 @@
     import AnteparoDeModo from "./AnteparoDeModo.svelte"
     import FaixaDeFalha from "./FaixaDeFalha.svelte"
     import ProfileChangerMenu from "./ProfileChangerMenu.svelte"
+
+    // as duas travas de gesto da fatia 2 (Esc que fechou algo segura o seguinte 700 ms; clique repetido no mesmo item < 400 ms e engolido). Ligadas
+    // AGORA (na criacao, antes dos filhos): o ouvinte de Esc tem de rodar na captura ANTES dos popovers, que tambem capturam.
+    const soltarTravas = ligarTravasDeToque()
+    onDestroy(soltarTravas)
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"

@@ -35,7 +35,7 @@ describe("a: sem assinatura de store no nível do módulo", () => {
     it("o reset do estado está numa função exportada (chamada pelo componente), não solta", () => {
         const t = ler("utils/aliancaBibliotecaEstado.ts")
         expect(t).toMatch(/export function iniciarEstadoDaBiblioteca\(\)/)
-        expect(t.indexOf("modoAlianca.subscribe")).toBeGreaterThan(t.indexOf("export function iniciarEstadoDaBiblioteca"))
+        expect(t.indexOf("tela.subscribe")).toBeGreaterThan(t.indexOf("export function iniciarEstadoDaBiblioteca"))
     })
 })
 

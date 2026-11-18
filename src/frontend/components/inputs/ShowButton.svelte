@@ -2,7 +2,8 @@
     import { getDocument, GlobalWorkerOptions } from "pdfjs-dist"
     import type { ClickEvent } from "../../../types/Main"
     import { AudioPlayer } from "../../audio/audioPlayer"
-    import { activeEdit, activeFocus, activePage, activeProject, activeShow, categories, editingProjectTemplate, effects, focusMode, modoAlianca, globalTags, media, notFound, outLocked, outputs, overlayCategories, overlays, playerVideos, playingAudio, projects, projectTemplates, refreshEditSlide, shows, showsCache, special, styles, textCache } from "../../stores"
+    import { activeEdit, activeFocus, activePage, activeProject, activeShow, categories, editingProjectTemplate, effects, focusMode, globalTags, media, notFound, outLocked, outputs, overlayCategories, overlays, playerVideos, playingAudio, projects, projectTemplates, refreshEditSlide, shows, showsCache, special, styles, textCache } from "../../stores"
+    import { tela } from "../../utils/aliancaTela"
     import { itemPrecisaConferir, marcarConferidoPorIndice } from "../../utils/aliancaConferir"
     import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, marcadoDeShow, ultimoDoCulto } from "../../utils/aliancaGaveta"
     import { gavetaNaoToca } from "../../utils/aliancaModo"
@@ -109,7 +110,7 @@
     $: conferir = !!projetoDoSirvo?.eventId && itemPrecisaConferir(show, projetoDoSirvo.eventId, $sirvoRoteiro, $special.aliancaConferidos)
     // AliançaShow (Preparar F4): música da lista da banda visitante que ainda não tem letra (nos dois modos; no Culto é só informativo)
     $: semLetra = isProject && type === "show" && showEstaSemLetra(show.id, $shows, $categories, $showsCache, $textCache)
-    $: mostrarTirar = isProject && podeTirar && index !== null && $modoAlianca === "preparar" && type !== "show_placeholder" && !($shows[show.id]?.private && type === "show")
+    $: mostrarTirar = isProject && podeTirar && index !== null && $tela !== "mostrar" && type !== "show_placeholder" && !($shows[show.id]?.private && type === "show")
     function tirarDaLista() {
         if (index === null) return
         deleteAction({ id: "show", data: [{ index }] })
@@ -117,7 +118,7 @@
 
     // AliançaShow (Preparar F6): na gaveta do Preparar o clique num show MARCA (e abre na grade, como sempre); ✓ no selo
     $: marcavel = !isProject && index === null && type === "show"
-    $: marcadoNaGaveta = marcavel && $modoAlianca === "preparar" && $chavesMarcadas.has("show:" + id)
+    $: marcadoNaGaveta = marcavel && $tela !== "mostrar" && $chavesMarcadas.has("show:" + id)
 
     // WIP partly duplicate of openShow() in show.ts
     let editActive = false

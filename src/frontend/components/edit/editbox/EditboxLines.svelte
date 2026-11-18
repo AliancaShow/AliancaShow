@@ -3,7 +3,8 @@
     import { uid } from "uid"
     import type { Item, Line } from "../../../../types/Show"
     import { splitCustomDynamicValues } from "../../../show/slides"
-    import { activeEdit, activePopup, activeShow, activeStage, contextActive, modoAlianca, overlays, quickSearchActive, redoHistory, refreshListBoxes, showsCache, special, stageShows, templates, topContextActive } from "../../../stores"
+    import { activeEdit, activePopup, activeShow, activeStage, contextActive, overlays, quickSearchActive, redoHistory, refreshListBoxes, showsCache, special, stageShows, templates, topContextActive } from "../../../stores"
+    import { tela } from "../../../utils/aliancaTela"
     import { cancelarEdicao, cortarNoCursor, guardarRetrato } from "../../../utils/aliancaTesoura"
     import { newToast } from "../../../utils/common"
     import { getNormalizedKey, isComposing, isFormattingKey } from "../../../utils/shortcuts"
@@ -150,7 +151,7 @@
             if (!e.target.closest(".quickEdit") && !$activeEdit.items.includes(index)) return
 
             // AliançaShow (Preparar F5): Ctrl+Enter quebra no cursor (como o ProPresenter); no Culto fica só o Alt+Enter
-            const ctrlEnter = $modoAlianca === "preparar" && (e.ctrlKey || e.metaKey) && !e.altKey
+            const ctrlEnter = $tela === "editar" && (e.ctrlKey || e.metaKey) && !e.altKey
             if (!e.altKey && !ctrlEnter) return
             if (ctrlEnter) e.preventDefault()
 
@@ -174,7 +175,7 @@
         let { firstLines, secondLines } = EditboxHelper.cutLinesInTwo({ sel, lines, currentIndex, textPos, start })
 
         // AliançaShow (Preparar F5): uma entrada de histórico só (o Ctrl+Z volta ao estado de antes da quebra)
-        if ($modoAlianca === "preparar") {
+        if ($tela === "editar") {
             cortarNoCursorDoPreparar(e, firstLines, secondLines)
             return
         }
@@ -321,7 +322,7 @@
     }
 
     // AliançaShow (Preparar F5): só a edição rápida da lista guarda o retrato e aceita o Esc que desfaz
-    const ehEdicaoRapida = () => $modoAlianca === "preparar" && plain && (ref.type || "show") === "show" && !!textElem?.closest(".quickEdit")
+    const ehEdicaoRapida = () => $tela === "editar" && plain && (ref.type || "show") === "show" && !!textElem?.closest(".quickEdit")
     function aoFocar() {
         if (ehEdicaoRapida()) guardarRetrato(ref.showId || $activeShow?.id || "", ref.id, index)
     }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Item, ItemType, Line, Slide } from "../../../types/Show"
     import type { TabsObj } from "../../../types/Tabs"
-    import { activeEdit, activeShow, copyPasteEdit, modoAlianca, overlays, selected, showsCache, storedEditMenuState, templates } from "../../stores"
+    import { activeEdit, activeShow, copyPasteEdit, overlays, selected, showsCache, storedEditMenuState, templates } from "../../stores"
     import { alvoDoRodape } from "../../utils/aliancaEditorLogica"
     import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
@@ -115,7 +115,7 @@
     // COPY
 
     // Preparar (8b): o rodape age sobre o ALVO (texto, caixa ou slide), nao sobre a aba; no Culto `aba` e a aba de sempre
-    $: organizado = $modoAlianca === "preparar"
+    $: organizado = true
     let tipoEdicao: "show" | "template" | "overlay" = "show"
     $: tipoEdicao = $activeEdit.type === "overlay" ? "overlay" : $activeEdit.type === "template" ? "template" : "show"
     $: escolhidos = $activeEdit.items.length

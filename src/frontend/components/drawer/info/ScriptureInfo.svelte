@@ -2,7 +2,8 @@
     import type { MediaStyle } from "../../../../types/Main"
     import type { BibleContent } from "../../../../types/Scripture"
     import type { Item } from "../../../../types/Show"
-    import { activeEdit, activePage, activeScripture, activeStyle, drawerTabsData, media, outputs, scriptureSettings, settingsTab, styles, templates } from "../../../stores"
+    import { activeEdit, activeScripture, activeStyle, drawerTabsData, media, outputs, scriptureSettings, settingsTab, styles, templates } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { setDefaultScriptureTemplates } from "../../../utils/createData"
     import { confirmCustom } from "../../../utils/popup"
     import { mediaExtensions } from "../../../values/extensions"
@@ -125,7 +126,7 @@
         if (styleScriptureTemplate) {
             activeStyle.set(styleId)
             settingsTab.set("styles")
-            activePage.set("settings")
+            trocarTela("settings", "botao-de-pagina")
             return
         }
 
@@ -136,7 +137,7 @@
         //     return a
         // })
         activeEdit.set({ type: "template", id: templateId, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "botao-de-pagina")
     }
 
     $: containsJesusWords = Object.values(biblesContent?.[0]?.verses?.[0] || {})?.find((text: any) => text?.includes('<span class="wj"') || text?.includes("<red") || text?.includes("color:red;") || text?.includes("!{"))

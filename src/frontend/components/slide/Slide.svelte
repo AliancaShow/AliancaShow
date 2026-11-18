@@ -3,7 +3,8 @@
     import type { MediaStyle } from "../../../types/Main"
     import type { Item, Media, Show, Slide, SlideData } from "../../../types/Show"
     import { removeTagsAndContent } from "../../show/slides"
-    import { activeEdit, activePage, activeTimers, editMode, effects, focusMode, fullColors, groups, media, outputs, overlays, playerVideos, refreshListBoxes, refreshSlideThumbnails, modoAlianca, slideNotesActive, slidesOptions, slideTimers, special, styles } from "../../stores"
+    import { activeEdit, activePage, activeTimers, editMode, effects, focusMode, fullColors, groups, media, outputs, overlays, playerVideos, refreshListBoxes, refreshSlideThumbnails, slideNotesActive, slidesOptions, slideTimers, special, styles } from "../../stores"
+    import { tela } from "../../utils/aliancaTela"
     import { wait } from "../../utils/common"
     import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
@@ -207,12 +208,12 @@
 
     function openNotes() {
         // Preparar (8a): a porta das notas e inerte, nao liga o painel de notas
-        if ($modoAlianca === "preparar") return
+        if ($tela === "editar") return
+        // leiaute v2 (fatia 2): Mostrar nao entra em Editar por este botao (so o segmentado e o "Editar" do botao direito): so marca as notas
         if ($editMode === "text_edit") editMode.set("default")
         slideNotesActive.set(true)
 
         activeEdit.set({ slide: index, items: [], showId })
-        activePage.set("edit")
     }
 
     $: if ($refreshListBoxes >= 0) {
@@ -430,7 +431,7 @@
                                 <div class="fill" style="width: {(slideTimer.time / slideTimer.max) * 100}%;background-color: {getOutputColor(output.color)};"></div>
                             </div>
                         {/if}
-                        {#if slide.notes && icons && $modoAlianca !== "preparar"}
+                        {#if slide.notes && icons && $tela !== "editar"}
                             <button class="notes" data-title={slide.notes} on:click={openNotes}>
                                 <Icon id="notes" white right />
                                 <span>{slide.notes.slice(0, 80)}{slide.notes.length > 80 ? "..." : ""}</span>

@@ -1,7 +1,8 @@
 <script lang="ts">
     // AliançaShow · Preparar, fatia 6: o contador das marcações da gaveta, dentro da faixa `.top`
     // (a altura da gaveta fechada não muda: o código depende do `<= 40`). `✓ N · Pôr em <culto> ▾ · Juntar N fotos · Limpar`.
-    import { activeProject, activePage, editingProjectTemplate, modoAlianca, projects, shows } from "../../stores"
+    import { activeProject, activePage, editingProjectTemplate, projects, shows } from "../../stores"
+    import { tela } from "../../utils/aliancaTela"
     import { desmarcar, ausentes, juntarFotos, limparMarcacoes, motivoSemCulto, nomeDoCultoAberto, porNoCulto } from "../../utils/aliancaGaveta"
     import { listaAberta, marcados } from "../../utils/aliancaGavetaEstado"
     import { chaveDe, contagem } from "../../utils/aliancaGavetaLogica"
@@ -9,7 +10,7 @@
     import { removeExtension } from "../helpers/media"
     import type { Marcado } from "../../utils/aliancaGavetaLogica"
 
-    $: visivel = $modoAlianca === "preparar" && $marcados.length > 0
+    $: visivel = $tela !== "mostrar" && $marcados.length > 0
     $: noEditor = $activePage === "edit"
     $: cont = contagem($marcados)
 

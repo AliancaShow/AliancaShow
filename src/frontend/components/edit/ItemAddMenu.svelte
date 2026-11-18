@@ -2,7 +2,7 @@
     import { fade } from "svelte/transition"
     import { uid } from "uid"
     import type { StageItem } from "../../../types/Stage"
-    import { activeEdit, activePage, activePopup, activeStage, dictionary, modoAlianca, selected, stageShows } from "../../stores"
+    import { activeEdit, activePage, activePopup, activeStage, dictionary, selected, stageShows } from "../../stores"
     import { itensDoMenuAdicionar } from "../../utils/aliancaEditorLogica"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
@@ -36,7 +36,7 @@
     $: slideTextItemsCount = Object.values(stageShow?.items || {}).filter((a) => a.type === "slide_text").length
 
     // Preparar (8a): Texto, Midia, Camera, Timer e Relogio a vista; o resto em "Mais". Palco e Culto ficam como estao.
-    $: itensDoMenu = isStage ? stageItems : $modoAlianca === "preparar" ? itensDoMenuAdicionar(slideItems) : slideItems
+    $: itensDoMenu = isStage ? stageItems : itensDoMenuAdicionar(slideItems)
     $: groupedItems = itensDoMenu.map((group) => {
         return {
             ...group,

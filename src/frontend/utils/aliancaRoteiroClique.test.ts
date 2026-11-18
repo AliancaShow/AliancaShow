@@ -18,7 +18,8 @@ vi.mock("./aliancaConferir", () => ({
     }
 }))
 
-import { activeEdit, activePage, activeProject, activeShow, refreshEditSlide, showsCache } from "../stores"
+import { activeEdit, activeProject, activeShow, refreshEditSlide, showsCache } from "../stores"
+import { trocarTela } from "./aliancaTela"
 import { ultimoDoCulto } from "./aliancaGavetaEstado"
 import { abrirItemDoRoteiro } from "./aliancaRoteiroClique"
 
@@ -31,7 +32,7 @@ beforeEach(() => {
     activeProject.set("p1")
     activeShow.set(null)
     activeEdit.set({ items: [] } as any)
-    activePage.set("show")
+    trocarTela("show", "segmentado")
     refreshEditSlide.set(false)
     showsCache.set({ musica: { layouts: {}, settings: {} } } as any)
     ultimoDoCulto.set(null as any)
@@ -80,7 +81,7 @@ describe("abrirItemDoRoteiro (o clique do ShowButton de antes)", () => {
         expect(get(activeEdit)).toMatchObject({ type: "show", slide: 0, showId: "musica" })
     })
     it("em Editar manda atualizar o slide do editor", () => {
-        activePage.set("edit")
+        trocarTela("edit", "segmentado")
         abrirItemDoRoteiro({ id: "musica", type: "show" }, 1)
         expect(get(refreshEditSlide)).toBe(true)
     })

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte"
-    import { activeEdit, activePage, activeProject, activeRename, dictionary, projectView } from "../../stores"
+    import { activeEdit, activeProject, activeRename, dictionary, projectView } from "../../stores"
     import { translateText } from "../../utils/language"
 
     export let value = ""
@@ -82,7 +82,6 @@
         if (id.includes("template") || id.includes("overlay") || id.includes("effect")) {
             let type: any = id.slice(0, id.indexOf("_"))
             activeEdit.set({ type, id: objectId, items: [] })
-            activePage.set("edit")
         }
     }
 

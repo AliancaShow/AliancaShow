@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import type { Popups } from "../../../../types/Main"
 import type { DrawerTabIds } from "../../../../types/Tabs"
-import { activeDrawerTab, activePage, activePopup, drawer, drawerTabsData } from "../../../stores"
+import { activeDrawerTab, activePopup, drawer, drawerTabsData } from "../../../stores"
 import { hexToRgb } from "../../helpers/color"
 
 // COLOR
@@ -83,8 +83,6 @@ const drawerPages: { [key: string]: DrawerTabIds } = {
     variables: "functions"
 }
 export function openDrawer(id: string, openPopup = false) {
-    activePage.set("show")
-
     // set sub tab
     const drawerPageId = drawerPages[id]
     if (!drawerPageId) return

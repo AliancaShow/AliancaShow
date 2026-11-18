@@ -6,7 +6,8 @@
     import { onMount } from "svelte"
     import { sanitizeVerseText } from "../../../../common/scripture/sanitizeVerseText"
     import { defaultBibleBookNames } from "../../../converters/bebliaBible"
-    import { activeEdit, activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected, modoAlianca } from "../../../stores"
+    import { activeEdit, activeScripture, activeTriggerFunction, customScriptureBooks, notFound, openScripture, outLocked, outputs, resized, scriptureHistory, scriptureMode, scriptures, scriptureSettings, selected } from "../../../stores"
+    import { tela } from "../../../utils/aliancaTela"
     import { marcarBiblia } from "../../../utils/aliancaGaveta"
     import { gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
     import { wait } from "../../../utils/common"
@@ -1256,7 +1257,7 @@
             <Icon size={isActiveInOutput ? 1.1 : 1.3} id={isActiveInOutput ? "refresh" : "play"} white={!isActiveInOutput} />
         </MaterialButton>
 
-        {#if $modoAlianca === "preparar"}
+        {#if $tela !== "mostrar"}
             <!-- Preparar F6: separa a seleção atual para levar ao culto (vira um show por referência no "Pôr no culto") -->
             <MaterialButton disabled={!activeReference?.verses?.[0]?.length} title="Marcar para o culto" on:click={marcarBiblia}>
                 <Icon size={1.3} id="check" white />

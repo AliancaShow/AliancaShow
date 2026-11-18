@@ -1,5 +1,6 @@
 <script lang="ts">
     import { activeEdit, activePage, activePopup, activeShow, activeStyle, alertMessage, categories, groups, settingsTab, showsCache, special, styles, templates } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
     import { allOutputsHasStyleTemplate, getFirstActiveOutput } from "../../helpers/output"
@@ -34,7 +35,7 @@
     function openStylePage() {
         activeStyle.set(outputStyleId)
         settingsTab.set("styles")
-        activePage.set("settings")
+        trocarTela("settings", "popup")
         // scroll to bottom
         setTimeout(() => {
             document.querySelector(".row")?.querySelector(".center")?.querySelector(".scroll")?.scrollTo(0, 1000)
@@ -45,7 +46,7 @@
 
     function editTemplate(templateId: string) {
         activeEdit.set({ type: "template", id: templateId, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "popup")
 
         activePopup.set(null)
     }

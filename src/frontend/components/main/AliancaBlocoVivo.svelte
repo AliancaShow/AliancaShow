@@ -4,6 +4,7 @@
     // As regras sao as de SirvoConduzir / SirvoBlocoConduzir (o Show pede, o Sirvo decide, o resultado chega pelo roteiro). Sem chave que
     // conduz, so o nome e o regressivo aparecem (o botao some). Texto do Sirvo so por interpolacao {...}, nunca {@html}.
     import { onDestroy } from "svelte"
+    import { escFechou } from "../../utils/aliancaToque"
     import { newToast } from "../../utils/common"
     import { pedirAoSirvo, porQueNaoConduz, sirvo, sirvoAgora, sirvoRoteiro, type FuncaoDeEscrita } from "../../utils/aliancaSirvo"
     import SirvoSegurar from "../show/SirvoSegurar.svelte"
@@ -52,6 +53,7 @@
         if (aberto && e.key === "Escape") {
             e.preventDefault()
             e.stopImmediatePropagation()
+            escFechou()
             aberto = false
         }
     }

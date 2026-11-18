@@ -2,7 +2,8 @@
     import { uid } from "uid"
     import type { OutData } from "../../../../types/Output"
     import type { Styles } from "../../../../types/Settings"
-    import { activePage, activePopup, activeStyle, currentOutputSettings, outputs, popupData, settingsTab, styles } from "../../../stores"
+    import { activePopup, activeStyle, currentOutputSettings, outputs, popupData, settingsTab, styles } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import Card from "../../drawer/Card.svelte"
     import { DEFAULT_ITEM_STYLE } from "../../edit/scripts/itemHelpers"
     import { clone, keysToID, sortByName } from "../../helpers/array"
@@ -58,7 +59,7 @@
         select(styleId)
         activeStyle.set(styleId)
         settingsTab.set("styles")
-        activePage.set("settings")
+        trocarTela("settings", "popup")
     }
 </script>
 

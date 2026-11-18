@@ -5,7 +5,8 @@
     import { Main } from "../../../../types/IPC/Main"
     import { ToMain } from "../../../../types/IPC/ToMain"
     import { destroyMain, receiveToMain, requestMain, sendMain } from "../../../IPC/main"
-    import { drawerTabsData, labelsDisabled, media, mediaFolders, mediaTags, modoAlianca, providerConnections, special } from "../../../stores"
+    import { drawerTabsData, labelsDisabled, media, mediaFolders, mediaTags, providerConnections, special } from "../../../stores"
+    import { tela } from "../../../utils/aliancaTela"
     import { criarPasta } from "../../../utils/aliancaPastasMidia"
     import { membros, pastas } from "../../../utils/aliancaPastasMidiaEstado"
     import { PASTA_RAIZ, PASTA_SIRVO, abaDaPasta, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
@@ -122,7 +123,7 @@
 
 <NavigationSections {sections} active={activeSubTab} on:rename={updateName}>
     <div slot="section_0" style="padding: 8px;">
-        {#if $modoAlianca === "preparar"}
+        {#if $tela !== "mostrar"}
             <MaterialButton style="width: 100%;" title="Nova pasta de mídia" variant="outlined" disabled={readOnly} on:click={novaPasta} small>
                 <Icon id="add" size={$labelsDisabled ? 0.9 : 1} white={$labelsDisabled} />
                 {#if !$labelsDisabled}Nova pasta{/if}

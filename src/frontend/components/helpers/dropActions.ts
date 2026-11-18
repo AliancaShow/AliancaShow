@@ -8,7 +8,7 @@ import type { DropData, Selected } from "../../../types/Main"
 import type { Item, Slide, SlideAction } from "../../../types/Show"
 import { sendMain } from "../../IPC/main"
 import { changeLayout, changeSlideGroups } from "../../show/slides"
-import { modoAlianca } from "../../stores"
+import { naoEMostrar } from "../../utils/aliancaTela"
 import { activeDrawerTab, activeEdit, activePage, activePopup, activeProject, activeShow, alertMessage, audioFolders, audioPlaylists, audioStreams, drawerTabsData, editingProjectTemplate, media, mediaFolders, overlays, playerVideos, projects, projectTemplates, scriptureSettings, shows, showsCache, slidesOptions, templates, timers } from "../../stores"
 import { newToast } from "../../utils/common"
 import { getAccess } from "../../utils/profile"
@@ -417,7 +417,7 @@ export const dropActions = {
 
         // AliancaShow F7: soltar um card (ou audio) numa PASTA de midia move a midia (so a etiqueta; so no Preparar, no Culto as pastas sao so para ver)
         if (typeof drop.data === "string" && drop.data.startsWith("pasta:") && (drag.id === "media" || drag.id === "audio")) {
-            if (get(modoAlianca) === "preparar") moverArrastados(drag.data, drop.data)
+            if (naoEMostrar()) moverArrastados(drag.data, drop.data)
             return
         }
 

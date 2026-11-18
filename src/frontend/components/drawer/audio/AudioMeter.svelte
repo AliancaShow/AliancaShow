@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
     import { AudioInputCapture } from "../../../audio/routing/audioInputCapture"
-    import { activeDrawerTab, activePage, audioChannelsData, drawer } from "../../../stores"
+    import { activeDrawerTab, audioChannelsData, drawer } from "../../../stores"
     import { dbToLinear, MIN_DB } from "../../../audio/dBUtils"
     import { DEFAULT_DRAWER_HEIGHT } from "../../../utils/common"
 
@@ -146,7 +146,6 @@
 
     function openAudioMix() {
         if (!preview) return
-        activePage.set("show")
         activeDrawerTab.set("audio")
 
         const minHeight = 40

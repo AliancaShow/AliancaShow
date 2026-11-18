@@ -111,7 +111,9 @@ import { _show } from "../helpers/shows"
 import { getMenuTagId, openTagManager, toggleSelectionTags, toggleTagFilter } from "../helpers/tags"
 import { clearSlide } from "../output/clear"
 import { defaultThemes } from "../settings/tabs/defaultThemes"
-import { activeProject, modoAlianca as modoAliancaStore } from "./../../stores"
+import { activeProject } from "./../../stores"
+import { emEditar, naoEMostrar } from "../../utils/aliancaTela"
+import { trocarTela } from "../../utils/aliancaTela"
 import { juntarFotos } from "../../utils/aliancaGaveta"
 import { ajusteProprio, alvosDoMenu, moverArrastados } from "../../utils/aliancaPastasMidia"
 import { cortarAoMeio, juntarSelecao } from "../../utils/aliancaTesoura"
@@ -145,7 +147,7 @@ const clickActions = {
     settings: () => {
         if (get(activePage) === "stage") settingsTab.set("connection")
         else if (get(activePage) === "settings") settingsTab.set("general")
-        activePage.set("settings")
+        trocarTela("settings", "botao-de-pagina")
     },
     quit: () => initializeClosing(),
     // view
@@ -264,16 +266,16 @@ const clickActions = {
     sort_media: (obj: ObjData) => sort(obj, "media"),
     // AliancaShow F7 (so Preparar): mover para pasta, e o ajuste proprio de fim/camada de video
     alianca_mover: (obj: ObjData) => {
-        if (get(modoAliancaStore) !== "preparar" || !obj.sel) return
+        if (!naoEMostrar() || !obj.sel) return
         moverArrastados(obj.sel.data, obj.menu.id || "")
     },
     alianca_fim: (obj: ObjData) => {
-        if (get(modoAliancaStore) !== "preparar" || !obj.sel) return
+        if (!naoEMostrar() || !obj.sel) return
         const id = obj.menu.id
         ajusteProprio(alvosDoMenu(obj.sel.data, "video"), { aliancaFim: id === "repetir" ? "repetir" : id === "parar" ? "parar" : null })
     },
     alianca_camada: (obj: ObjData) => {
-        if (get(modoAliancaStore) !== "preparar" || !obj.sel) return
+        if (!naoEMostrar() || !obj.sel) return
         const id = obj.menu.id
         ajusteProprio(alvosDoMenu(obj.sel.data, "video"), { videoType: id === "fundo" ? "background" : id === "frente" ? "foreground" : null })
     },
@@ -735,7 +737,7 @@ const clickActions = {
     createSlideshow: (obj: ObjData) => {
         const data = obj.sel?.data || []
         // AliançaShow (Preparar F6): no Preparar o "Criar apresentação" é o "Juntar fotos": avanço manual, sem abrir o show
-        if (get(modoAliancaStore) === "preparar") {
+        if (naoEMostrar()) {
             juntarFotos(data.filter((a) => a && (a.path || a.id)))
             return
         }
@@ -1232,7 +1234,7 @@ const clickActions = {
             const slide = obj.sel.data[0]
             if (!slide) return
             activeEdit.set({ slide: slide.index, items: [], showId: slide.showId })
-            activePage.set("edit")
+            trocarTela("edit", "botao-direito")
             setTimeout(() => selected.set({ id: null, data: [] }))
         }
     },
@@ -1245,18 +1247,18 @@ const clickActions = {
             if (!slide) return
             activeEdit.set({ slide: slide.index, items: [], showId: slide.showId || get(activeShow)?.id })
             editMode.set("default")
-            activePage.set("edit")
+            trocarTela("edit", "botao-direito")
             setTimeout(() => selected.set({ id: null, data: [] }))
         } else if (obj.sel.id === "media") {
             const path = obj.sel.data[0]?.path
             if (!path) return
             activeEdit.set({ type: "media", id: path, items: [] })
-            activePage.set("edit")
+            trocarTela("edit", "botao-direito")
             if (!get(activeShow) || (get(activeShow)!.type || "show") !== "show") activeShow.set({ id: path, type: getMediaType(getExtension(path)) })
         } else if (obj.sel.id === "camera") {
             const data = obj.sel.data[0]
             activeEdit.set({ type: "camera", id: data?.id, data, items: [] })
-            activePage.set("edit")
+            trocarTela("edit", "botao-direito")
         } else if (obj.sel.id === "player") {
             const id = obj.sel.data[0]
             const onlineTab = get(drawerTabsData).media?.openedSubSubTab?.online || "youtube"
@@ -1266,17 +1268,17 @@ const clickActions = {
             const path = obj.sel.data[0]?.path
             if (!path) return
             activeEdit.set({ type: "audio", id: path, items: [] })
-            activePage.set("edit")
+            trocarTela("edit", "botao-direito")
             if (!get(activeShow) || (get(activeShow)!.type || "show") !== "show") activeShow.set({ id: path, type: "audio" })
         } else if (obj.sel.id === "show_drawer") {
             const showId = obj.sel.data[0]?.id
             activeShow.set({ type: "show", id: showId })
             activeEdit.set({ type: "show", slide: 0, items: [], showId })
             if (get(activePage) === "edit") refreshEditSlide.set(true)
-            activePage.set("edit")
+            trocarTela("edit", "botao-direito")
         } else if (["overlay", "template", "effect"].includes(obj.sel.id || "")) {
             if (get(activePage) === "edit") refreshEditSlide.set(true)
-            activePage.set("edit")
+            trocarTela("edit", "botao-direito")
 
             // properly set content when edit set to same type as preview, but different id
             // e.g. overlay opened in preview, then edited, then trying to edit another overlay will reset to preview without timeout
@@ -1320,7 +1322,7 @@ const clickActions = {
         } else if (obj.contextElem?.classList.value.includes("output_button")) {
             currentOutputSettings.set(obj.contextElem.id)
             settingsTab.set("display_settings")
-            activePage.set("settings")
+            trocarTela("settings", "botao-de-pagina")
         } else if (obj.contextElem?.classList.value.includes("#edit_custom_action")) {
             activePopup.set("custom_action")
         }
@@ -1369,7 +1371,7 @@ const clickActions = {
 
         if (output.stageOutput) {
             activeStage.set({ id: output.stageOutput, items: [] })
-            activePage.set("stage")
+            trocarTela("stage", "botao-de-pagina")
             return
         }
 
@@ -1377,7 +1379,7 @@ const clickActions = {
 
         activeStyle.set(output.style)
         settingsTab.set("styles")
-        activePage.set("settings")
+        trocarTela("settings", "botao-de-pagina")
     },
     manage_groups: () => {
         // settingsTab.set("general")
@@ -1569,7 +1571,7 @@ const clickActions = {
         if (!obj.sel) return
 
         if (obj.sel.id === "show_drawer") {
-            activePage.set("show")
+            trocarTela("show", "botao-direito")
             const showId = obj.sel.data[0]?.id
             openShow(showId)
             return
@@ -1588,7 +1590,7 @@ const clickActions = {
         if (name) showRef.name = name
         activeShow.set(showRef)
 
-        activePage.set("show")
+        trocarTela("show", "botao-direito")
         if (get(focusMode)) focusMode.set(false)
     },
     play: (obj: ObjData) => {
@@ -1936,7 +1938,7 @@ const clickActions = {
             if (!Array.isArray(obj.sel?.data) || !obj.sel.data.length) return
 
             // AliançaShow (Preparar F5): corta ao meio ENTRE as linhas (acordes e linha vazia no lugar), uma entrada de histórico
-            if (get(modoAliancaStore) === "preparar") {
+            if (emEditar()) {
                 const showId = get(activeShow)?.id
                 const ref = getLayoutRef()
                 if (showId) cortarAoMeio(showId, obj.sel.data.map(({ index }) => ref[index]?.id).filter(Boolean))
@@ -1988,7 +1990,7 @@ const clickActions = {
             const selectedSlides = obj.sel.data // .sort((a, b) => a.index - b.index) [merge based on selected order]
 
             // AliançaShow (Preparar F5): junta slides vizinhos do mesmo grupo SEM tirar as outras ocorrências do layout
-            if (get(modoAliancaStore) === "preparar") {
+            if (emEditar()) {
                 const showId = get(activeShow)?.id
                 const ref = getLayoutRef()
                 if (showId && selectedSlides?.length) juntarSelecao(showId, selectedSlides.map(({ index }) => ref[index]?.id).filter(Boolean))

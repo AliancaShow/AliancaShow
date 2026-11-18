@@ -4,7 +4,8 @@
     import type { MediaStyle } from "../../../../types/Main"
     import type { ShowType } from "../../../../types/Show"
     import { addProjectItem } from "../../../converters/project"
-    import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, modoAlianca, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
+    import { activeShow, customMessageCredits, media, mediaOptions, mediaTags, outLocked, outputs, photoApiCredits, styles } from "../../../stores"
+    import { tela } from "../../../utils/aliancaTela"
     import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, gavetaNaoToca, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
     import { chaveDe } from "../../../utils/aliancaGavetaLogica"
     import { camadaNaHora, ehAbaDePasta, pastaDaMidia, resolverFim, tagsSemPasta } from "../../../utils/aliancaPastasMidiaLogica"
@@ -113,7 +114,7 @@
 
     // AliançaShow (Preparar F6): na gaveta do Preparar o clique MARCA o item para levar ao culto; nunca vai para o ar
     $: marcadoDaGaveta = marcadoDeArquivo({ path, name, type, contentProvider })
-    $: marcavel = $modoAlianca === "preparar" && !!marcadoDaGaveta
+    $: marcavel = $tela !== "mostrar" && !!marcadoDaGaveta
     $: estaMarcado = !!marcadoDaGaveta && $chavesMarcadas.has(chaveDe(marcadoDaGaveta))
 
     let wait = false
