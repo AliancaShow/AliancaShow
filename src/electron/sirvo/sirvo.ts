@@ -33,6 +33,8 @@ export function sirvoAmbiente(): keyof typeof AMBIENTES {
 // recusado aqui mesmo.
 const LEITURA = ["show_cultos", "show_rev", "show_roteiro"]
 // show_tirar_musicas / show_devolver_musica (F3): o operador tirou do projeto uma música que o Sirvo pôs
+/** a mensagem pro palco devolve o codigo do Postgres (42501 sem conduz, 54000 limite, P0002 culto): o Show traduz */
+const DO_PALCO = new Set(["show_enviar_mensagem_palco", "show_limpar_mensagem_palco"])
 const ESCRITA = ["show_iniciar", "show_encerrar", "show_reabrir", "show_avancar", "show_desfazer_bloco", "show_ajustar_duracao", "show_mover_bloco", "show_criar_bloco", "show_apagar_bloco", "show_editar_bloco", "show_tirar_musicas", "show_devolver_musica", "show_enviar_mensagem_palco", "show_limpar_mensagem_palco"]
 // O chat do culto (F4 v1, migration 0084 do Sirvo): só leitura, caminho próprio
 // no renderer (aliancaSirvoChat.ts). Fora da trava de escrita: ler o chat
@@ -193,7 +195,7 @@ async function executar(funcao: string, args: { [key: string]: any }): Promise<R
         // Numa escrita (e no chat), a recusa do Sirvo é a frase que o operador
         // precisa ler ("O bloco no ar não muda de lugar…"): repassa, curta e só texto.
         // o catálogo também devolve o código: 54000 / 413 (corpo grande demais) faz o Show tentar sem a letra
-        const pg = funcao === CATALOGO ? (resposta.status === 413 ? "413" : typeof codigo === "string" ? codigo : undefined) : DE_MATERIAL.has(funcao) && typeof codigo === "string" ? codigo : undefined
+        const pg = funcao === CATALOGO ? (resposta.status === 413 ? "413" : typeof codigo === "string" ? codigo : undefined) : (DE_MATERIAL.has(funcao) || DO_PALCO.has(funcao)) && typeof codigo === "string" ? codigo : undefined
         if ((escrita || escritaChat || DO_CHAT.has(funcao) || funcao === CATALOGO) && typeof corpo?.message === "string" && corpo.message) return { ok: false, codigo: "erro", mensagem: corpo.message.slice(0, 200), pg }
         return { ok: false, codigo: "erro", mensagem: `Sirvo respondeu ${resposta.status}.`, pg }
     } catch {

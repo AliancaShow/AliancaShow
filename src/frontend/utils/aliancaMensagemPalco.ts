@@ -4,7 +4,7 @@
 // proprio roteiro (`mensagem_palco`), que `pedirAoSirvo` rebusca na hora. Nada aqui escreve em `outputs`.
 import { get } from "svelte/store"
 import { falhaAlta } from "./aliancaFalha"
-import { MINUTOS_PADRAO, prepararMensagem } from "./aliancaMensagemPalcoLogica"
+import { MINUTOS_PADRAO, mensagemDeErro, minutosValidos, prepararMensagem } from "./aliancaMensagemPalcoLogica"
 import { pedirAoSirvo, porQueNaoConduz, sirvo } from "./aliancaSirvo"
 
 export type ResultadoMensagem = { ok: true } | { ok: false; mensagem: string }
@@ -21,15 +21,16 @@ function semCaminho(): string {
 export async function enviarMensagemPalco(bruto: string, minutos = MINUTOS_PADRAO): Promise<ResultadoMensagem> {
     const p = prepararMensagem(bruto)
     if (!p.ok) return { ok: false, mensagem: p.motivo }
+    if (!minutosValidos(minutos)) return { ok: false, mensagem: "A duração vai de 1 a 60 minutos." }
     const motivo = semCaminho()
     if (motivo) return { ok: false, mensagem: motivo }
     const r = await pedirAoSirvo("show_enviar_mensagem_palco", { p_event: get(sirvo).cultoId, p_texto: p.texto, p_minutos: minutos })
-    return r.ok ? { ok: true } : { ok: false, mensagem: r.mensagem }
+    return r.ok ? { ok: true } : { ok: false, mensagem: mensagemDeErro(r.pg, r.mensagem) }
 }
 
 export async function limparMensagemPalco(): Promise<ResultadoMensagem> {
     const motivo = semCaminho()
     if (motivo) return { ok: false, mensagem: motivo }
     const r = await pedirAoSirvo("show_limpar_mensagem_palco", { p_event: get(sirvo).cultoId })
-    return r.ok ? { ok: true } : { ok: false, mensagem: r.mensagem }
+    return r.ok ? { ok: true } : { ok: false, mensagem: mensagemDeErro(r.pg, r.mensagem) }
 }

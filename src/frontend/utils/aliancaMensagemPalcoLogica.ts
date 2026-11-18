@@ -24,3 +24,34 @@ export function mensagemViva(msg: { id: string; texto: string; ate: string } | n
     const ateMs = Date.parse(msg.ate)
     return Number.isFinite(ateMs) && ateMs > agoraMs ? { texto: msg.texto, ateMs } : null
 }
+
+/** as validades que o operador escolhe (minutos); a 3 e a padrao */
+export const DURACOES_MINUTOS = [1, 3, 5, 10] as const
+
+/** "m:ss" ate a mensagem sair (nunca negativo) */
+export function restanteTexto(ateMs: number, agoraMs: number): string {
+    const s = Math.max(0, Math.ceil((ateMs - agoraMs) / 1000))
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
+}
+
+/**
+ * A recusa do Sirvo em portugues claro, por codigo do Postgres (`pg`) — nunca a frase crua do banco.
+ * 42501 = sem "conduz" (ou chave recusada), 54000 = limite de escritas por minuto, P0002 = culto inexistente, 22023/23514 = texto/validade fora da regra.
+ * Sem codigo: a mensagem do proprio Show (ja em portugues: "Calma...", "Sem conexao...") passa como veio.
+ */
+export function mensagemDeErro(pg: string | undefined, mensagem: string): string {
+    switch (pg) {
+        case "42501":
+            return "O Sirvo recusou: esta chave não pode conduzir o culto (um admin liga “conduz” no Perfil)."
+        case "54000":
+            return "Muitas mensagens em pouco tempo. Espere um minuto e envie de novo."
+        case "P0002":
+            return "Esse culto não existe mais no Sirvo."
+        case "22023":
+        case "23514":
+        case "22001":
+            return "O Sirvo recusou o texto ou o tempo: confira (até 120 caracteres, de 1 a 60 min)."
+        default:
+            return mensagem || "O Sirvo não aceitou."
+    }
+}

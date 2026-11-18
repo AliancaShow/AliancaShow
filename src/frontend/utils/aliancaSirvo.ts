@@ -78,7 +78,7 @@ export type Roteiro = {
     material?: MaterialDoRoteiro[]
 }
 // os dois lados declaram todos os campos: o tsconfig do Show não é strict e não estreita a união por `ok`
-type Resposta = { ok: true; dados: any; codigo?: undefined } | { ok: false; codigo: string; mensagem: string; dados?: undefined }
+type Resposta = { ok: true; dados: any; codigo?: undefined; pg?: undefined } | { ok: false; codigo: string; mensagem: string; dados?: undefined; pg?: string }
 
 export type EstadoSirvo = {
     status: "sem_chave" | "conectando" | "conectado" | "caido" | "chave_invalida"
@@ -569,7 +569,7 @@ export function escolherCultoSirvo(eventId: string | null) {
 // show_enviar_mensagem_palco / show_limpar_mensagem_palco (leiaute v2, migration 0093 do Sirvo): a caixa "mensagem pro palco" (aliancaMensagemPalco.ts)
 export type FuncaoDeEscrita = "show_iniciar" | "show_encerrar" | "show_reabrir" | "show_avancar" | "show_desfazer_bloco" | "show_ajustar_duracao" | "show_mover_bloco" | "show_criar_bloco" | "show_apagar_bloco" | "show_editar_bloco" | "show_tirar_musicas" | "show_devolver_musica" | "show_enviar_mensagem_palco" | "show_limpar_mensagem_palco"
 /** `codigo` (só na recusa que veio do main): "rede" = não chegou; "ocupado" = tente daqui a pouco; sem código = o Show não pôde pedir agora (porQueNaoConduz) */
-export type RespostaPedido = { ok: true; dados: any } | { ok: false; mensagem: string; codigo?: string }
+export type RespostaPedido = { ok: true; dados: any } | { ok: false; mensagem: string; codigo?: string; /** codigo do Postgres, so nas funcoes que o pedem (mensagem pro palco) */ pg?: string }
 
 const forcarAte = new Map<string, number>()
 // A montagem diz se há uma ordem ALHEIA esperando "Aplicar" (registrada por
@@ -617,7 +617,7 @@ export async function pedirAoSirvo(funcao: FuncaoDeEscrita, args: { [key: string
             return { ok: true, dados: r.dados }
         }
         if (r.codigo === "chave_invalida") return { ok: false, mensagem: "A chave do Sirvo foi recusada.", codigo: r.codigo }
-        return { ok: false, mensagem: r.mensagem || "O Sirvo não aceitou.", codigo: r.codigo }
+        return { ok: false, mensagem: r.mensagem || "O Sirvo não aceitou.", codigo: r.codigo, pg: r.pg }
     } finally {
         // sempre: se a conexão foi refeita no meio, ninguém mais zeraria e os
         // botões ficariam presos em "Esperando o Sirvo responder…"
