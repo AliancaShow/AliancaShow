@@ -518,8 +518,9 @@
         border-radius: 0 !important;
     }
 
+    /* o slide em edicao: fio claro de 2 px, como o prototipo (o vermelho e so de "no ar") */
     .main.focused {
-        outline: 2px solid var(--secondary-opacity);
+        outline: 2px solid var(--luz-texto);
         outline-offset: -1px;
         z-index: 2;
     }
@@ -549,11 +550,11 @@
         outline: none;
     }
 
-    /* selos do prototipo: EDITADO (branco translucido) e NO AR (vermelho), no canto da faixa do nome */
+    /* selos do prototipo: EDITADO (branco translucido) e NO AR (vermelho), no canto de cima da miniatura (a faixa de baixo e do nome do grupo) */
     .selos {
         position: absolute;
-        right: 4px;
-        bottom: 2px;
+        right: 8px;
+        top: 8px;
         z-index: 5;
         display: flex;
         gap: 4px;

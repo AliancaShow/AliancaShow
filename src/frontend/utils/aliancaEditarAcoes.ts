@@ -3,7 +3,8 @@ import { customActionActivation } from "../components/actions/actions"
 import { getActiveOutputs, refreshOut, setOutput } from "../components/helpers/output"
 import { checkActionTrigger, updateOut } from "../components/helpers/showActions"
 import { _show } from "../components/helpers/shows"
-import { outLocked, outputs, showsCache } from "../stores"
+import { loadShows } from "../components/helpers/setShow"
+import { activeEdit, activeShow, outLocked, outputs, refreshEditSlide, showsCache } from "../stores"
 import { falhaAlta } from "./aliancaFalha"
 import { saidasParaMandar } from "./aliancaEditarSaidas"
 
@@ -42,4 +43,16 @@ export function mandarSlideAoAr(showId: string, index: number, outputId = ""): b
 export function saidasDoMenu(): { id: string; nome: string }[] {
     const todas = get(outputs) || {}
     return saidasParaMandar(getActiveOutputs(todas, false, true, true).map((id) => ({ id, ...(todas[id] as any) })))
+}
+
+/**
+ * Botao direito numa linha de show da biblioteca -> "Editar": abre o show no editor SEM pôr no roteiro (entra como "Aberto da biblioteca"). Quem chama troca a
+ * tela pela porta (`trocarTela("edit", "botao-direito")`). Nada aqui escreve em `outputs`.
+ */
+export function prepararEdicaoDoShow(showId: string): void {
+    activeShow.set({ type: "show", id: showId } as any)
+    activeEdit.set({ type: "show", slide: 0, items: [], showId } as any)
+    refreshEditSlide.set(true)
+    // o show pode nao estar carregado ainda (a lista da biblioteca e do indice): carrega, e o editor reage ao cache
+    void loadShows([showId])
 }

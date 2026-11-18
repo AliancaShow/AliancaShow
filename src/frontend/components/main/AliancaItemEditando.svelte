@@ -284,7 +284,7 @@
         left: 12px;
         right: 12px;
         top: 44px;
-        max-height: 320px;
+        max-height: 420px;
         overflow: auto;
         padding: 6px;
         border: 1px solid var(--luz-borda);

@@ -534,32 +534,25 @@
             <!-- rodape fixo (nao flutua sobre o conteudo): o estilo copiado vale para o alvo de cima -->
             <div class="rodape" data-acao="editar-rodape">
                 <span class="rotuloRodape">{rotuloRodape}</span>
-
-                {#if copiedStyleDifferent}
-                    <MaterialButton icon="paste" title="actions.paste" disabled={colando} on:click={() => pasteStyle()}>
-                        <T id="actions.paste" />
-                    </MaterialButton>
-                {/if}
-                {#if currentCopied && !copiedStyleDifferent}
-                    {#if isShow}
-                        <MaterialButton icon="paste" title="actions.to_all" disabled={colando} on:click={() => pasteStyle(true)}>
-                            <T id="actions.to_all" />
-                        </MaterialButton>
+                <div class="botoes">
+                    {#if copiedStyleDifferent}
+                        <button type="button" class="b" disabled={colando} on:click={() => pasteStyle()}>Colar estilo</button>
                     {/if}
-                {:else}
-                    <MaterialButton disabled={!currentItemStyle?.length} title="actions.copy" on:click={copyStyle}>
-                        <Icon id="copy" white={copiedStyleDifferent} />
-                        {#if !copiedStyleDifferent}<T id="actions.copy" />{/if}
-                    </MaterialButton>
-                    {#if podeAplicarEmTodos}
-                        <MaterialButton disabled={colando || !currentItemStyle?.length} title="Copia o estilo deste slide e aplica em todos os slides do show" on:click={aplicarEmTodos}>Aplicar em todos os slides</MaterialButton>
+                    {#if currentCopied && !copiedStyleDifferent}
+                        {#if isShow}
+                            <button type="button" class="b" disabled={colando} on:click={() => pasteStyle(true)}>Colar em todos os slides</button>
+                        {/if}
+                    {:else}
+                        <button type="button" class="b" disabled={!currentItemStyle?.length} on:click={copyStyle}>Copiar estilo</button>
                     {/if}
-                {/if}
-
-                {#if currentCopied}
-                    <MaterialButton icon="clear" title="clear.general: formats.clipboard" on:click={clearClipboard}></MaterialButton>
-                {:else if aba !== "item"}
-                    <MaterialButton icon="reset" title="actions.reset" disabled={colando} on:click={reset}></MaterialButton>
+                    {#if currentCopied}
+                        <button type="button" class="b" title="Esquecer o estilo copiado" on:click={clearClipboard}>Esquecer cópia</button>
+                    {:else if aba !== "item"}
+                        <button type="button" class="b" disabled={colando} title="Voltar ao estilo padrão" on:click={reset}>Restaurar</button>
+                    {/if}
+                </div>
+                {#if podeAplicarEmTodos && !currentCopied}
+                    <button type="button" class="b grande" disabled={colando || !currentItemStyle?.length} title="Copia o estilo deste slide e aplica em todos os slides do show" on:click={aplicarEmTodos}>Aplicar este estilo em todos os slides</button>
                 {/if}
             </div>
         {/if}
@@ -641,18 +634,41 @@
     .rodape {
         flex-shrink: 0;
         display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 4px;
-        padding: 8px 12px;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px 12px;
         border-top: 1px solid var(--luz-linha);
     }
+    .rodape .botoes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .rodape .b {
+        height: 36px;
+        padding: 0 8px;
+        border: 1px solid var(--luz-borda);
+        border-radius: 8px;
+        background: var(--luz-campo);
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .rodape .b.grande {
+        height: 40px;
+        font-size: 13px;
+    }
+    .rodape .b:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
     .rotuloRodape {
-        display: flex;
-        align-items: center;
-        padding: 0 10px;
-        font-size: 0.75em;
-        opacity: 0.7;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--luz-mudo);
         white-space: nowrap;
     }
 </style>

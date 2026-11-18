@@ -112,7 +112,7 @@ import { getMenuTagId, openTagManager, toggleSelectionTags, toggleTagFilter } fr
 import { clearSlide } from "../output/clear"
 import { defaultThemes } from "../settings/tabs/defaultThemes"
 import { activeProject } from "./../../stores"
-import { mandarSlideAoAr } from "../../utils/aliancaEditarAcoes"
+import { mandarSlideAoAr, prepararEdicaoDoShow } from "../../utils/aliancaEditarAcoes"
 import { emEditar, naoEMostrar } from "../../utils/aliancaTela"
 import { trocarTela } from "../../utils/aliancaTela"
 import { juntarFotos } from "../../utils/aliancaGaveta"
@@ -267,6 +267,12 @@ const clickActions = {
     sort_media: (obj: ObjData) => sort(obj, "media"),
     // AliancaShow F7 (so Preparar): mover para pasta, e o ajuste proprio de fim/camada de video
     // Leiaute v2, fatia 3 (so em Editar): mandar o slide da miniatura ao ar, em todas as telas ou so numa. Clique do mouse, nunca tecla.
+    alianca_editar: (obj: ObjData) => {
+        const id = obj.contextElem?.closest?.("[data-show]")?.getAttribute("data-show") || ""
+        if (!id) return
+        prepararEdicaoDoShow(id)
+        trocarTela("edit", "botao-direito")
+    },
     alianca_ar: (obj: ObjData) => {
         const slide = obj.sel?.id === "slide" ? obj.sel.data[0] : null
         if (!emEditar() || !slide || typeof slide.index !== "number") return
