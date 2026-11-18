@@ -49,7 +49,7 @@ export const LIVROS: Livro[] = [
     { n: 19, nome: "Salmos", abrevs: ["sl", "sal", "salmo", "ps"] },
     { n: 20, nome: "Provérbios", abrevs: ["pv", "pr", "prov"] },
     { n: 21, nome: "Eclesiastes", abrevs: ["ec", "ecl"] },
-    { n: 22, nome: "Cantares", abrevs: ["ct", "cant", "cantares de salomao"] },
+    { n: 22, nome: "Cantares", abrevs: ["ct", "cant", "cantaresdesalomao"] },
     { n: 23, nome: "Isaías", abrevs: ["is", "isa"] },
     { n: 24, nome: "Jeremias", abrevs: ["jr", "jer"] },
     { n: 25, nome: "Lamentações", abrevs: ["lm", "lam"] },
@@ -71,7 +71,7 @@ export const LIVROS: Livro[] = [
     { n: 41, nome: "Marcos", abrevs: ["mc", "mar", "marc"] },
     { n: 42, nome: "Lucas", abrevs: ["lc", "luc"] },
     { n: 43, nome: "João", abrevs: ["jo", "joa"] },
-    { n: 44, nome: "Atos", abrevs: ["at", "ato"] },
+    { n: 44, nome: "Atos", abrevs: ["at", "ato", "atosdosapostolos"] },
     { n: 45, nome: "Romanos", abrevs: ["rm", "rom"] },
     { n: 46, nome: "1 Coríntios", abrevs: ["1co", "1cor"] },
     { n: 47, nome: "2 Coríntios", abrevs: ["2co", "2cor"] },
@@ -129,18 +129,26 @@ export function lerReferencia(texto: string): ReferenciaBiblica | null {
     const t = String(texto ?? "")
         .trim()
         .replace(/\s+/g, " ")
-    const m = /^(?:([123])\s*[ºo°.]?\s*)?([A-Za-zÀ-ÿ]+)\.?\s*(\d{1,3})(?:\s*[:.,;]\s*|\s+)?(?:(\d{1,3})(?:\s*[-–a]\s*(\d{1,3}))?)?$/.exec(t)
+    // prefixo: 1/2/3 (com ordinal 1ª, 1º) ou algarismo romano (I, II, III; so com espaco depois, para o "Is" de Isaias nao virar "I s"); o nome pode ter ate 4 palavras
+    const m = /^(?:(?:([123])\s*[ºªo°.]?|([Ii]{1,3})[\s.])\s*)?([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,3})\.?\s*(\d{1,3})(?:\s*[:.,;]\s*|\s+)?(?:(\d{1,3})(?:\s*[-–a]\s*(\d{1,3})|((?:\s*,\s*\d{1,3})+))?)?$/.exec(t)
     if (!m) return null
-    const livro = acharLivro(m[1] ? Number(m[1]) : null, m[2])
+    const prefixo = m[1] ? Number(m[1]) : m[2] ? m[2].length : null
+    const livro = acharLivro(prefixo, m[3])
     if (!livro) return null
-    const capitulo = Number(m[3])
+    const capitulo = Number(m[4])
     if (!capitulo) return null
     let versiculos: [number, number] | null = null
-    if (m[4]) {
-        const a = Number(m[4])
+    if (m[5]) {
+        const a = Number(m[5])
         if (!a) return null
-        const b = m[5] ? Number(m[5]) : a
+        const b = m[6] ? Number(m[6]) : a
         versiculos = [a, b >= a ? b : a]
+        if (m[7]) {
+            // "Jo 3:16,17,18": so seguidos viram intervalo; com salto nao e uma referencia que este campo saiba abrir
+            const lista = [a, ...m[7].split(",").filter((x) => x.trim()).map(Number)]
+            if (lista.some((v, i) => i > 0 && v !== lista[i - 1] + 1)) return null
+            versiculos = [a, lista[lista.length - 1]]
+        }
     }
     return { livro: livro.n, nomeDoLivro: livro.nome, capitulo, versiculos }
 }
@@ -168,12 +176,15 @@ export function rotuloDaReferencia(r: ReferenciaBiblica): string {
     return `${r.nomeDoLivro} ${r.capitulo}:${a}${b > a ? "-" + b : ""}`
 }
 
+/** quantos versiculos de uma vez a busca abre (acima disso o resultado recusa com o motivo, nunca corta calado) */
+export const MAX_VERSICULOS = 40
+
 /** os numeros dos versiculos que o `openScripture` pede (`[[28]]`, `[[28,29,30]]`); capitulo inteiro = `[[1]]` e nao toca */
 export function versiculosParaAbrir(r: ReferenciaBiblica): number[][] {
     if (!r.versiculos) return [[1]]
     const [a, b] = r.versiculos
     const lista: number[] = []
-    for (let v = a; v <= b && lista.length < 40; v++) lista.push(v)
+    for (let v = a; v <= b && lista.length < MAX_VERSICULOS; v++) lista.push(v)
     return [lista]
 }
 

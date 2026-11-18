@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, MAX_VERSICULOS, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -37,6 +37,33 @@ describe("spotlight: referencia de versiculo", () => {
         expect(rotuloDaReferencia(lerReferencia("Sl 23")!)).toBe("Salmos 23")
         expect(versiculosParaAbrir(lerReferencia("Rm 8:28-30")!)).toEqual([[28, 29, 30]])
         expect(versiculosParaAbrir(lerReferencia("Sl 23")!)).toEqual([[1]])
+    })
+})
+
+describe("spotlight: formatos de referencia que a igreja digita", () => {
+    it("ordinal e algarismo romano: 1ª Co, I Co, II Tm", () => {
+        expect(lerReferencia("1ª Co 13:4")?.livro).toBe(46)
+        expect(lerReferencia("1º Co 13:4")?.livro).toBe(46)
+        expect(lerReferencia("I Co 13:4")?.livro).toBe(46)
+        expect(lerReferencia("II Tm 3:16")?.livro).toBe(55)
+        expect(lerReferencia("III Jo 4")?.livro).toBe(64)
+    })
+    it("o 'I' de Isaias nao e algarismo romano", () => {
+        expect(lerReferencia("Is 53:5")?.livro).toBe(23)
+        expect(lerReferencia("Isaías 9 6")?.livro).toBe(23)
+    })
+    it("versiculos seguidos por virgula: Jo 3:16,17 vira o intervalo 16-17; salto nao e referencia", () => {
+        expect(lerReferencia("Jo 3:16,17")?.versiculos).toEqual([16, 17])
+        expect(lerReferencia("Jo 3:16, 17, 18")?.versiculos).toEqual([16, 18])
+        expect(lerReferencia("Jo 3:16,18")).toBeNull()
+    })
+    it("nome por extenso com mais de uma palavra", () => {
+        expect(lerReferencia("Atos dos Apóstolos 2:1")?.livro).toBe(44)
+        expect(lerReferencia("Cantares de Salomão 2:1")?.livro).toBe(22)
+    })
+    it("intervalo acima do maximo nao abre calado: o limite e conhecido", () => {
+        expect(MAX_VERSICULOS).toBe(40)
+        expect(versiculosParaAbrir({ livro: 19, nomeDoLivro: "Salmos", capitulo: 119, versiculos: [1, 40] })[0]).toHaveLength(40)
     })
 })
 

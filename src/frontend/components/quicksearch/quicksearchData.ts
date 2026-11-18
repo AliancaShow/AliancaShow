@@ -4,6 +4,7 @@ import type { FileFolder } from "../../../types/Main"
 import type { ShowList } from "../../../types/Show"
 import { requestMain } from "../../IPC/main"
 import { drawerTabsData, scriptures, scripturesCache, textCache } from "../../stores"
+import { formatSearch } from "../../utils/search"
 import { buildBibleIndex, fastBibleSearch } from "../../utils/searchFast"
 import { getTextSnippet } from "./searchHighlight"
 import { sortByClosestMatch } from "../actions/apiHelper"
@@ -14,20 +15,27 @@ export function showResult(show: ShowList, rawSearchValue: string) {
     return { ...show, description: getTextSnippet(get(textCache)[show.id] || "", rawSearchValue) }
 }
 
-let mediaCache = new Map<string, any>()
-export async function getMediaResults(searchValue: string, folderPaths: string[]) {
+// guarda a PROMESSA (a varredura em voo e dividida entre as buscas seguidas) e vence depois de um tempo: arquivo copiado durante o culto aparece
+export const VALIDADE_VARREDURA_MS = 60_000
+type Varredura = { em: number; dados: Promise<{ [key: string]: FileFolder }> }
+const mediaCache = new Map<string, Varredura>()
+export async function getMediaResults(searchValue: string, folderPaths: string[], agora: number = Date.now()) {
     if (!searchValue || searchValue.length < 2) return []
 
     const key = `${folderPaths[0]}_${folderPaths.length}`
-    let data: { [key: string]: FileFolder } = mediaCache.get(key)
-    if (!data) {
-        data = (await requestMain(Main.READ_FOLDER, { path: folderPaths })) || {}
-        mediaCache.set(key, data)
+    let varredura = mediaCache.get(key)
+    if (!varredura || agora - varredura.em >= VALIDADE_VARREDURA_MS) {
+        const nova: Varredura = { em: agora, dados: Promise.resolve(requestMain(Main.READ_FOLDER, { path: folderPaths })).then((d) => d || {}) }
+        // se a leitura falhar nao fica guardada: a proxima busca tenta de novo
+        nova.dados.catch(() => mediaCache.get(key) === nova && mediaCache.delete(key))
+        mediaCache.set(key, nova)
+        varredura = nova
     }
+    const data = await varredura.dados
     const matches: any[] = []
 
     for (const [path, item] of Object.entries(data)) {
-        if (item.name?.toLowerCase().includes(searchValue)) {
+        if (formatSearch(item.name || "").includes(searchValue)) {
             const type = getMediaType(getExtension(path))
 
             matches.push({

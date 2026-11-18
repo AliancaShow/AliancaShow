@@ -18,7 +18,7 @@ import { listarBiblioteca, type LinhaDaBiblioteca } from "./aliancaBibliotecaLog
 import { prepararEdicaoDoShow } from "./aliancaEditarAcoes"
 import { falhaAlta } from "./aliancaFalha"
 import { alternarTelaCheia, salvarAgora } from "./aliancaJanela"
-import { acaoDaTecla, conferirLivro, filtrarAcoes, lerReferencia, MAXIMO_POR_SECAO, rotuloDaReferencia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, conferirLivro, filtrarAcoes, lerReferencia, MAX_VERSICULOS, MAXIMO_POR_SECAO, rotuloDaReferencia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "./aliancaTocarNoAr"
 import { telaAtual, trocarTela } from "./aliancaTela"
 import { newToast } from "./common"
@@ -132,6 +132,7 @@ export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
         // o numero do livro nao basta: Biblia com outra numeracao mostraria o texto de outro livro sob o rotulo "Romanos"
         const conferencia = conferirLivro(String(dadosDoLivro.name || ""), ref.livro)
         if (conferencia.resultado === "outro") return sem(`O livro ${ref.livro} da Bíblia ${biblia.nome} é "${conferencia.nome}", não ${ref.nomeDoLivro}`)
+        if (ref.versiculos && ref.versiculos[1] - ref.versiculos[0] + 1 > MAX_VERSICULOS) return sem(`São ${ref.versiculos[1] - ref.versiculos[0] + 1} versículos: o máximo de uma vez é ${MAX_VERSICULOS}. Peça um trecho menor.`)
         const dadosDoCapitulo = dadosDoLivro.chapters.find((c) => Number(c.number) === ref.capitulo)
         if (!dadosDoCapitulo) return sem(`${ref.nomeDoLivro} não tem o capítulo ${ref.capitulo}`)
         const temVersiculo = (v: number) => dadosDoCapitulo.verses.some((x) => Number(x.number) === v || (x.endNumber && v > Number(x.number) && v <= Number(x.endNumber)))
