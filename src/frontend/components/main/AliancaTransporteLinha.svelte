@@ -1,5 +1,5 @@
 <script lang="ts">
-    // Leiaute v2, fatia 7: uma linha de transporte (video ou audio). Nome em cima, controles embaixo: tocar/pausar, tempo decorrido, barra
+    // Leiaute v2, fatia 7: uma linha de transporte (video ou audio), UMA linha de 36 px: nome, tocar/pausar, tempo decorrido, barra
     // arrastavel, tempo que falta (clique troca por duracao total), repetir, mudo e volume. O que a fonte nao tem (repetir/mudo no audio)
     // chega `null` e o botao nao aparece. So apresentacao: quem liga ao player e o AliancaTransporte.
     import { createEventDispatcher } from "svelte"
@@ -59,11 +59,14 @@
 <style>
     .linha {
         display: flex;
-        flex-direction: column;
-        gap: 1px;
+        align-items: center;
+        gap: 6px;
         min-width: 0;
+        flex: 1 1 0;
     }
     .nome {
+        flex: 0 100 44px; /* cede primeiro: a barra de tempo vale mais que o nome numa coluna estreita (o nome continua na dica) */
+        min-width: 0;
         font-size: 11px;
         color: var(--luz-mudo);
         white-space: nowrap;
@@ -73,13 +76,14 @@
     .ctl {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
         min-width: 0;
+        flex: 1 1 0;
     }
     .ic {
         flex-shrink: 0;
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -106,7 +110,7 @@
         font-size: 11px;
         font-variant-numeric: tabular-nums;
         color: var(--luz-mudo);
-        min-width: 30px;
+        min-width: 26px;
         text-align: right;
     }
     button.t {
@@ -118,7 +122,7 @@
         text-align: left;
     }
     .vol {
-        flex: 0 0 52px;
+        flex: 0 0 40px;
         display: flex;
     }
 </style>

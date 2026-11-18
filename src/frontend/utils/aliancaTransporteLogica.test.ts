@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { arrastoVale, faixaAberta, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { arrastoVale, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -51,9 +51,13 @@ describe("timersNaFaixa", () => {
     it("nada ativo = nada", () => expect(timersNaFaixa(timers, [])).toEqual([]))
 })
 
-describe("faixaAberta", () => {
-    it("fechada sem nada", () => expect(faixaAberta({ video: false, audio: false, timers: 0, spotify: false })).toBe(false))
-    it.each([{ video: true }, { audio: true }, { timers: 1 }, { spotify: true }])("abre com %o", (p) => expect(faixaAberta({ video: false, audio: false, timers: 0, spotify: false, ...p })).toBe(true))
+describe("extrasDaFaixa (revisao da fatia 7, achado 3: a faixa tem uma linha so)", () => {
+    it.each([
+        [0, 0],
+        [1, 0],
+        [2, 1],
+        [5, 4]
+    ])("%s coisas -> +%s", (total, extras) => expect(extrasDaFaixa(total)).toBe(extras))
 })
 
 // Guarda de TEXTO (o DOM so existe no app): a faixa e a linha ficam fora da trava de clique repetido e fora da tela No ar (nao e camada).
@@ -65,12 +69,20 @@ describe("faixa de transporte (guarda de texto)", () => {
         expect(ler("components/main/AliancaTransporte.svelte")).toMatch(/class="faixa"[^>]*data-sem-trava/)
         expect(ler("components/main/AliancaTransporteLinha.svelte")).toMatch(/class="linha"[^>]*data-sem-trava/)
     })
-    it("mora no No ar, entre a tela e as outras telas, e nao e posicionada sobre ela", () => {
+    it("mora no No ar, entre a tela e as outras telas, e a caixa da faixa nao e posicionada sobre ela", () => {
         expect(ler("components/main/AliancaNoAr.svelte")).toMatch(/<AliancaCamadas \/>\s*<\/div>\s*<AliancaTransporte \/>\s*<AliancaOutrasTelas/)
-        expect(ler("components/main/AliancaTransporte.svelte")).not.toMatch(/position:\s*(absolute|fixed)/)
+        const css = ler("components/main/AliancaTransporte.svelte")
+        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    /* so a primeira linha"))
+        expect(caixa).not.toMatch(/position:\s*(absolute|fixed)/)
     })
-    it("nenhuma tecla nova: a faixa nao escuta o teclado", () => {
-        for (const a of ["AliancaTransporte", "AliancaTransporteLinha", "AliancaBarra"]) expect(ler(`components/main/${a}.svelte`)).not.toMatch(/on:keydown|svelte:window|svelte:body/)
+    it("altura fixa reservada: 36 px sempre, sem animacao de altura nem margem que muda (achado 3)", () => {
+        const css = ler("components/main/AliancaTransporte.svelte")
+        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    /* so a primeira linha"))
+        expect(caixa).toMatch(/height:\s*36px/)
+        expect(css).not.toMatch(/grid-template-rows|transition:[^;]*(height|margin)/)
+    })
+    it("nenhuma tecla nova: a faixa nao escuta o teclado (so o ponteiro, para fechar o painel)", () => {
+        for (const a of ["AliancaTransporte", "AliancaTransporteLinha", "AliancaBarra"]) expect(ler(`components/main/${a}.svelte`)).not.toMatch(/on:key(down|up|press)|svelte:body/)
     })
 })
 

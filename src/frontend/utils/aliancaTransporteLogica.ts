@@ -64,9 +64,7 @@ export function timersNaFaixa(timers: Record<string, TimerBruto>, ativos: { id: 
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
 }
 
-/** A faixa abre quando ha o que controlar. */
-export function faixaAberta(e: { video: boolean; audio: boolean; timers: number; spotify: boolean }): boolean {
-    return e.video || e.audio || e.timers > 0 || e.spotify
+/** Quantas coisas ficam atras do "+N": a faixa mostra uma linha so, as demais abrem num painel por cima. */
+export function extrasDaFaixa(total: number): number {
+    return Math.max(0, Math.floor(total) - 1)
 }
-
-export const MAX_TIMERS_VISIVEIS = 2
