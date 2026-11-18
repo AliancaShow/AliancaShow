@@ -158,7 +158,7 @@
         border-radius: 10px;
         box-shadow:
             inset 0 0 0 1px var(--luz-borda),
-            0 18px 40px rgba(0, 0, 0, 0.5);
+            var(--luz-sombra-pop);
         transform-origin: top left;
         animation: luz-surgir 120ms ease-out;
     }

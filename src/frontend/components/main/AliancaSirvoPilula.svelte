@@ -167,7 +167,7 @@
         border-radius: 12px;
         box-shadow:
             inset 0 0 0 1px var(--luz-borda),
-            0 18px 40px rgba(0, 0, 0, 0.5);
+            var(--luz-sombra-pop);
         backdrop-filter: var(--luz-vidro, none);
         transform-origin: top left;
         animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -200,7 +200,7 @@
         color: var(--luz-mudo);
     }
     .pop .chip.on {
-        background: rgba(94, 196, 141, 0.14);
+        background: var(--luz-verde-lavagem);
         color: var(--luz-verde);
     }
     .pop .estado {
@@ -233,7 +233,7 @@
         background: var(--luz-mudo);
     }
     .verde {
-        background: rgba(94, 196, 141, 0.14);
+        background: var(--luz-verde-lavagem);
         color: var(--luz-verde);
     }
     .verde .ponto {
@@ -241,7 +241,7 @@
         box-shadow: 0 0 0 3px rgba(94, 196, 141, 0.28);
     }
     .laranja {
-        background: rgba(235, 166, 64, 0.14);
+        background: var(--luz-laranja-lavagem);
         color: var(--luz-laranja);
     }
     .laranja .ponto {
@@ -250,7 +250,7 @@
     }
     .vermelho {
         background: rgba(242, 26, 39, 0.14);
-        color: #ff9aa0;
+        color: var(--luz-vermelho-claro);
     }
     .vermelho .ponto {
         background: var(--luz-vermelho);

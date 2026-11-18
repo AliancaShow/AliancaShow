@@ -293,7 +293,7 @@
         border: 1px solid var(--luz-borda);
         border-radius: 10px;
         background: var(--luz-pop);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+        box-shadow: var(--luz-sombra-pop);
         display: flex;
         flex-direction: column;
         gap: 2px;

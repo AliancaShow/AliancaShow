@@ -157,7 +157,7 @@
         color: var(--luz-vermelho);
     }
     .restante.estourou {
-        color: #ff9aa0;
+        color: var(--luz-vermelho-claro);
     }
     .relogio {
         width: 28px;
@@ -174,8 +174,8 @@
     }
     .relogio.on {
         border-color: var(--luz-vermelho);
-        background: rgba(242, 26, 39, 0.12);
-        color: #ff9aa0;
+        background: var(--luz-vermelho-lavagem);
+        color: var(--luz-vermelho-claro);
     }
     .pop {
         position: fixed;
@@ -189,7 +189,7 @@
         background: var(--luz-pop);
         border: 1px solid var(--luz-borda);
         border-radius: 12px;
-        box-shadow: inset 0 0 0 1px var(--luz-borda), 0 18px 40px rgba(0, 0, 0, 0.5);
+        box-shadow: inset 0 0 0 1px var(--luz-borda), var(--luz-sombra-pop);
         transform-origin: top left;
         animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
     }
