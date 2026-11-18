@@ -8,7 +8,7 @@
     import type { Unsubscriber } from "svelte/store"
     import { AudioPlayer } from "../../audio/audioPlayer"
     import { activePage, activeTimers, media, outLocked, outputs, playerVideos, playingAudio, timers } from "../../stores"
-    import { faixaAberta, MAX_TIMERS_VISIVEIS, timersNaFaixa } from "../../utils/aliancaTransporteLogica"
+    import { faixaAberta, MAX_TIMERS_VISIVEIS, prenderBusca, timersNaFaixa } from "../../utils/aliancaTransporteLogica"
     import { getAccess } from "../../utils/profile"
     import AudioMeter from "../drawer/audio/AudioMeter.svelte"
     import { getCurrentTimerValue, playPauseGlobal, resetTimer } from "../drawer/timers/timers"
@@ -105,7 +105,7 @@
         if (passoBusca) return
         passoBusca = setTimeout(() => {
             passoBusca = null
-            if (arrastandoVideo && caminho) VideoPlayer.seekTo(caminho, idSaida, ultimoArrasto)
+            if (arrastandoVideo && caminho) VideoPlayer.seekTo(caminho, idSaida, prenderBusca(ultimoArrasto, dadosVideo.duracao, $media[caminho]?.toTime))
         }, 150)
     }
     function soltarVideo(e: CustomEvent<number>) {
@@ -113,9 +113,10 @@
         passoBusca = null
         if (!arrastandoVideo) return
         arrastandoVideo = false
-        tempoVideo = e.detail
+        const alvo = prenderBusca(e.detail, dadosVideo.duracao, $media[caminho]?.toTime)
+        tempoVideo = alvo
         if (caminho) {
-            VideoPlayer.seekTo(caminho, idSaida, e.detail)
+            VideoPlayer.seekTo(caminho, idSaida, alvo)
             dadosVideo.pausado = pausadoAntes
             dadosVideo = dadosVideo
             if (!pausadoAntes) VideoPlayer.play(caminho, idSaida)
@@ -174,10 +175,11 @@
         arrastandoAudio = false
         const id = idAudio
         const pausado = pausadoAudio
-        tempoAudio = e.detail
+        const alvo = prenderBusca(e.detail, duracaoAudio, $media[id]?.toTime)
+        tempoAudio = alvo
         playingAudio.update((a) => {
             if (a[id]?.audio?.currentTime === undefined) return a
-            a[id].audio.currentTime = e.detail
+            a[id].audio.currentTime = alvo
             // o player toca ao mexer no tempo: se estava pausado, pausa de novo (o Audio.svelte antigo faz igual)
             if (pausado) setTimeout(() => a[id].audio.pause(), 20)
             return a

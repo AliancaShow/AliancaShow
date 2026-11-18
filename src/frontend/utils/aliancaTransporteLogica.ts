@@ -29,6 +29,21 @@ export function valorNaBarra(clienteX: number, esquerda: number, largura: number
     return Math.min(1, Math.max(0, (clienteX - esquerda) / largura)) * max
 }
 
+/** Folga antes do fim: buscar EXATAMENTE o fim dispara `ended` (o fundo some, a playlist pula). O antigo `input range` tambem nunca chegava la. */
+export const FOLGA_FIM = 0.25
+
+/** Ate onde a barra pode buscar: o fim do trecho (`toTime`, se houver) ou a duracao, menos a folga. Sem duracao, 0. */
+export function limiteBusca(duracao: number, toTime = 0): number {
+    const fim = toTime > 0 && (!(duracao > 0) || toTime < duracao) ? toTime : duracao
+    if (!(fim > 0)) return 0
+    return Math.max(0, fim - FOLGA_FIM)
+}
+
+/** O valor pedido pela barra, preso em [0, limiteBusca]. */
+export function prenderBusca(valor: number, duracao: number, toTime = 0): number {
+    return Math.min(Math.max(0, valor || 0), limiteBusca(duracao, toTime))
+}
+
 // Temporizadores que entram na linha: os que o FreeShow ja listava como "tocando" (Timers onlyPlaying). `sirvo_live` fica de fora: e o contador
 // do BLOCO no ar, que ja mora no Roteiro (bloco ao vivo); numa linha daqui ele manteria a faixa aberta o culto inteiro.
 export const TIPOS_NA_FAIXA = ["counter", "pco_live"]

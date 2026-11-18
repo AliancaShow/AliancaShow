@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { faixaAberta, fracao, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { faixaAberta, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -71,5 +71,29 @@ describe("faixa de transporte (guarda de texto)", () => {
     })
     it("nenhuma tecla nova: a faixa nao escuta o teclado", () => {
         for (const a of ["AliancaTransporte", "AliancaTransporteLinha", "AliancaBarra"]) expect(ler(`components/main/${a}.svelte`)).not.toMatch(/on:keydown|svelte:window|svelte:body/)
+    })
+})
+
+describe("busca nunca chega ao fim (revisao da fatia 7, achado 1)", () => {
+    it("o limite e o fim menos 0,25 s", () => {
+        expect(limiteBusca(10)).toBe(9.75)
+        expect(limiteBusca(10, 0)).toBe(9.75)
+    })
+    it("com `toTime` proprio, vale o fim do trecho", () => {
+        expect(limiteBusca(10, 6)).toBe(5.75)
+        expect(limiteBusca(10, 40)).toBe(9.75) // toTime alem da duracao: vale a duracao
+    })
+    it("sem duracao nao ha para onde buscar", () => {
+        expect(limiteBusca(0)).toBe(0)
+        expect(limiteBusca(NaN)).toBe(0)
+    })
+    it("arrastar alem da ponta direita prende antes do fim; o meio passa como veio", () => {
+        expect(prenderBusca(10, 10)).toBe(9.75)
+        expect(prenderBusca(99, 10, 6)).toBe(5.75)
+        expect(prenderBusca(4, 10)).toBe(4)
+        expect(prenderBusca(-3, 10)).toBe(0)
+    })
+    it("clipe curtissimo nao fica negativo", () => {
+        expect(prenderBusca(0.2, 0.1)).toBe(0)
     })
 })

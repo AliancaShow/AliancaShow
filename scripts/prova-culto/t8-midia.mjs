@@ -130,6 +130,18 @@ try {
     await arrastar('[data-transporte=video] .barra[aria-label="Posição"]', 0.8, 0.3)
     const d2 = await videoState()
     ok("D: pausado, arrastar leva ao ponto e CONTINUA pausado", d2.paused === true && d2.currentTime < 1.6, `paused=${d2.paused} t=${d2.currentTime}`)
+    // revisao da fatia 7, achado 1: arrastar ate (alem de) a ponta direita, SEM repetir, nao pode disparar o "acabou" que tira o video do telao
+    await clicarSel('[data-transporte=video] [data-acao=transporte-repetir]', "repetir desligado")
+    await esperar(300)
+    ok("D2: repetir desligado", (await videoState())?.loop === false)
+    await arrastar('[data-transporte=video] .barra[aria-label="Posição"]', 0.3, 1.4)
+    await esperar(1200)
+    const d3 = await videoState()
+    ok("D2: arrastar ate o fim nao limpa o video do telao", (await dom(`get(S.outputs).default.out.background?.path ?? null`)) === antes && d3 !== null, JSON.stringify(d3))
+    ok("D2: a busca parou antes do fim (duration - 0,25) e o video segue pausado", d3 && d3.paused === true && d3.currentTime < d3.duration - 0.2 && d3.currentTime > d3.duration - 0.3, `t=${d3?.currentTime} dur=${d3?.duration}`)
+    await clicarSel('[data-transporte=video] [data-acao=transporte-repetir]', "repetir ligado")
+    await esperar(300)
+    await arrastar('[data-transporte=video] .barra[aria-label="Posição"]', 1, 0.2)
     await clicarSel('[data-transporte=video] [data-acao=transporte-tocar]', "tocar")
     await esperar(400)
 
