@@ -275,6 +275,7 @@
         icon={thumbnail ? icon : null}
         white={type === "image"}
         showPlayOnHover={!marcavel}
+        soSeleciona
         {marcavel}
         marcado={estaMarcado}
         checkered={$mediaOptions.mode === "grid" && mediaStyle.fit !== "blur" && !failed}

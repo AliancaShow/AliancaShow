@@ -99,4 +99,10 @@ describe("a guarda da biblioteca (fatia 6)", () => {
         expect(t).toContain("_moveSelection(false, naoEMostrar())")
         expect(t).not.toMatch(/_moveSelection\((true|false), gavetaNaoToca\(\)\)/)
     })
+    it("revisao da fatia 6, achado 14: cartao e linha nao prometem tocar ao clicar (sem ▶ de hover nem a dica Reproduzir)", () => {
+        expect(ler("src/frontend/components/drawer/media/MediaCard.svelte")).toContain("soSeleciona")
+        const acoes = ler("src/frontend/components/drawer/pages/Actions.svelte")
+        expect(acoes).not.toContain("translateText('media.play')")
+        expect(acoes).toContain("botão direito")
+    })
 })

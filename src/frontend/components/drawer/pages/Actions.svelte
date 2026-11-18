@@ -101,7 +101,7 @@
                 <div class="action context #action{isReadOnly ? '_readonly' : ''}{showGrid ? ' grid-item' : ''}" data-tocavel>
                     <SelectElem id="action" data={action} style={showGrid ? "display: block; width: 100%; height: 100%;" : "display: flex; flex: 1;"} draggable>
                         <Button
-                            title="{translateText('media.play')}: <b>{action.name}</b>"
+                            title="<b>{action.name}</b>: ▶ ou botão direito, Mostrar agora"
                             outline={$runningActions.includes(action.id)}
                             bold={false}
                             dark
