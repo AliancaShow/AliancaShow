@@ -2,8 +2,10 @@
 // Nada aqui escreve em `outputs`. Fora da janela principal nao e chamada (a janela de saida nao monta `AliancaTela`).
 import { get } from "svelte/store"
 import { activePopup, contextActive, quickSearchActive, selected, topContextActive } from "../stores"
+import { dividirAberto } from "./aliancaDividir"
 import { falhaAlta } from "./aliancaFalha"
-import { tela } from "./aliancaTela"
+import { listaAberta } from "./aliancaGavetaEstado"
+import { emEditar, tela } from "./aliancaTela"
 import { chaveDoClique, criarEscSeguro, criarRepeticao, escEngolidoPorRepeticao } from "./aliancaToqueLogica"
 
 const esc = criarEscSeguro()
@@ -26,12 +28,34 @@ function algoParaFechar(): boolean {
     return !!(get(activePopup) || get(quickSearchActive) || get(contextActive) || get(topContextActive) || get(selected)?.id || campoComFoco())
 }
 
+/**
+ * Em Editar, a vista Dividir e a lista das marcacoes fecham com Esc. O Esc dessas vistas nao pode ser o mesmo que limpa o telao (`clearAll` nao as conhece):
+ * um toque = uma coisa. So quando nada mais esta aberto que o Esc fecharia antes (popup, menu, busca, selecao, campo com foco).
+ */
+function vistaDeEditarParaFechar(): "dividir" | "lista" | null {
+    if (!emEditar() || get(activePopup) || get(quickSearchActive) || get(contextActive) || get(topContextActive) || get(selected)?.id || campoComFoco()) return null
+    if (get(dividirAberto)) return "dividir"
+    if (get(listaAberta)) return "lista"
+    return null
+}
+
 function aoEsc(e: KeyboardEvent) {
     try {
         if (e.key !== "Escape") return
         const agora = performance.now()
         if (escEngolidoPorRepeticao(e) || esc.segura(agora)) {
             // dentro da espera (ou tecla segurada): o Esc nao faz NADA (nem limpa o telao, nem fecha outra coisa)
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            e.stopPropagation()
+            return
+        }
+        const vista = vistaDeEditarParaFechar()
+        if (vista) {
+            // fecha aqui mesmo e engole este Esc: o Preview nao chega a agendar o `clearAll`; o proximo espera os 700 ms
+            if (vista === "dividir") dividirAberto.set(null)
+            else listaAberta.set(false)
+            esc.fechou(agora)
             e.preventDefault()
             e.stopImmediatePropagation()
             e.stopPropagation()
