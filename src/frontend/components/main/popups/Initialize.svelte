@@ -53,7 +53,6 @@
 
 <div class="main">
     <p><T id="setup.good_luck" /></p>
-    <p style="opacity: 0.8;"><T id="setup.tips" /></p>
 
     <HRule />
 
