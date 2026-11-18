@@ -5,8 +5,10 @@ import { checkActionTrigger, updateOut } from "../components/helpers/showActions
 import { _show } from "../components/helpers/shows"
 import { loadShows } from "../components/helpers/setShow"
 import { activeEdit, activeShow, outLocked, outputs, refreshEditSlide, showsCache } from "../stores"
+import { newToast } from "./common"
 import { falhaAlta } from "./aliancaFalha"
 import { saidasQueMostram } from "./aliancaEditarLogica"
+import { SAIDA_TRAVADA } from "./aliancaEditarLogica"
 import { destinosDoEnvio, jaMostramOSlide, saidasParaMandar } from "./aliancaEditarSaidas"
 import { refotografarSaidas } from "./aliancaRefotografar"
 
@@ -18,7 +20,11 @@ import { refotografarSaidas } from "./aliancaRefotografar"
 export function mandarSlideAoAr(showId: string, index: number, saidas: string | string[] = []): boolean {
     const alvo = Array.isArray(saidas) ? saidas : saidas ? [saidas] : []
     try {
-        if (get(outLocked)) return false
+        if (get(outLocked)) {
+            // a saida travada nao recebe nada: diz isso em voz alta (o botao e o menu ficavam clicaveis e mudos)
+            newToast(SAIDA_TRAVADA)
+            return false
+        }
         const layout: string = get(showsCache)[showId]?.settings?.activeLayout || ""
         const ref = layout ? _show(showId).layouts([layout]).ref()[0] || [] : []
         if (!layout || !ref[index]) {

@@ -41,6 +41,7 @@ export function situacaoDoSlide(selos: { [posicao: number]: Selo }, posicao: num
 
 export const NOTA_LIVRE = "Clique no texto para editar. Salva sozinho."
 export const NOTA_NO_AR = "Este slide está no ar. Pode editar: o telão só muda quando você mandar pro ar de novo."
+export const SAIDA_TRAVADA = "Saída travada: destrave para mandar pro ar."
 export const FAIXA_DEFASADO = "O telão ainda mostra a versão anterior. Ela só troca quando você mandar pro ar de novo."
 
 /** a faixa nomeia a tela defasada quando ha mais de uma tela (`nomes` vazio = so uma tela: "O telão") */

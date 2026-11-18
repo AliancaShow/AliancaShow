@@ -3,10 +3,10 @@
     // (`edit/Editor.svelte`, o motor), a faixa de pendencia "O telao ainda mostra a versao anterior" com "Mandar pro ar" e a nota de uma linha.
     // Editar um slide que esta no ar e LIVRE: o telao mostra a foto do slide e so troca quando ele for mandado de novo. Fundo, sobreposicao e efeito sao lidos ao
     // vivo: la o aviso diz "muda no telao na hora". Nada aqui escreve em `outputs` a nao ser o botao "Mandar pro ar" (clique do mouse).
-    import { activeEdit, activePopup, activeShow, editMode, focusMode, groups, outputs, showsCache, styles, templates } from "../../stores"
+    import { activeEdit, activePopup, activeShow, editMode, focusMode, groups, outLocked, outputs, showsCache, styles, templates } from "../../stores"
     import { dividirAberto, abrirDividir, fecharDividir } from "../../utils/aliancaDividir"
     import { atualizarSlideNoAr } from "../../utils/aliancaEditarAcoes"
-    import { avisoAoVivo, faixaDefasada, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide } from "../../utils/aliancaEditarLogica"
+    import { SAIDA_TRAVADA, avisoAoVivo, faixaDefasada, notaDoCentro, saidasQueMostram, selosDoShow, situacaoDoSlide } from "../../utils/aliancaEditarLogica"
     import { zoomDoEditor } from "../../utils/aliancaEditarEstado"
     import { notasAtivas, timelineAtiva } from "../../utils/aliancaModo"
     import { getAccess } from "../../utils/profile"
@@ -127,7 +127,7 @@
 {#if situacao === "defasado"}
     <div class="faixa" role="status" data-acao="editar-pendencia">
         <span class="txt">{faixaDefasada(nomesDefasadas)}</span>
-        <button type="button" class="mandar" data-acao="editar-mandar-pro-ar" on:click={mandar}>Mandar pro ar</button>
+        <button type="button" class="mandar" data-acao="editar-mandar-pro-ar" disabled={$outLocked} title={$outLocked ? SAIDA_TRAVADA : ""} on:click={mandar}>{$outLocked ? "Saída travada" : "Mandar pro ar"}</button>
     </div>
 {:else if aoVivo}
     <div class="faixa aviso" role="status" data-acao="editar-aviso-ao-vivo"><span class="txt">{aoVivo}</span></div>
@@ -297,6 +297,10 @@
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
+    }
+    .mandar:disabled {
+        opacity: 0.5;
+        cursor: default;
     }
     .nota {
         flex-shrink: 0;
