@@ -52,3 +52,7 @@ describe("o aviso de notas do slide em Mostrar nao e controle morto (achado 2.2)
         expect(t).not.toMatch(/<button class="notes"/)
     })
 })
+
+describe("Esc: a repeticao de tecla e engolida na ligacao", () => {
+    it("aoEsc consulta escEngolidoPorRepeticao(e)", () => expect(ler("utils/aliancaToque.ts")).toMatch(/escEngolidoPorRepeticao\(e\) \|\| esc\.segura\(agora\)/))
+})

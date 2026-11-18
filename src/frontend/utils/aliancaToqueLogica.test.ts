@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CLIQUE_REPETIDO_MS, CLIQUE_REPETIDO_PX, ESC_SEGURA_MS, chaveDoClique, criarEscSeguro, criarRepeticao } from "./aliancaToqueLogica"
+import { escEngolidoPorRepeticao, CLIQUE_REPETIDO_MS, CLIQUE_REPETIDO_PX, ESC_SEGURA_MS, chaveDoClique, criarEscSeguro, criarRepeticao } from "./aliancaToqueLogica"
 
 describe("Esc que fechou algo segura o seguinte (700 ms)", () => {
     it("sem Esc que fechou: nada e segurado", () => {
@@ -122,5 +122,26 @@ describe("chaveDoClique: o clicavel mais interno, nunca o conteiner", () => {
     it("fora das regioes ou sem .context: fora da trava", () => {
         expect(chaveDoClique(no(["button"], no([".context"])))).toBeNull()
         expect(chaveDoClique(no(["button"], centro))).toBeNull()
+    })
+})
+
+describe("Esc: tecla segurada e esperas encadeadas (revisao da fatia 2, achado 6)", () => {
+    it("auto-repeticao e engolida sempre; o toque normal nao", () => {
+        expect(escEngolidoPorRepeticao({ repeat: true })).toBe(true)
+        expect(escEngolidoPorRepeticao({ repeat: false })).toBe(false)
+        expect(escEngolidoPorRepeticao({})).toBe(false)
+    })
+    it("menu fechado -> selecao desfeita -> limpar: so UMA espera (o terceiro Esc passa logo depois do segundo)", () => {
+        const e = criarEscSeguro()
+        e.fechou(0) // Esc 1 fecha o menu de contexto
+        expect(e.segura(710)).toBe(false) // Esc 2 passa (700 ms depois)
+        e.fechou(710) // ... e desseleciona: NAO arma outra espera
+        expect(e.segura(720)).toBe(false) // Esc 3 limpa o telao
+    })
+    it("um fechamento bem depois da rajada arma a espera de novo", () => {
+        const e = criarEscSeguro()
+        e.fechou(0)
+        e.fechou(5000)
+        expect(e.segura(5100)).toBe(true)
     })
 })

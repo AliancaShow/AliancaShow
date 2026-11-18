@@ -9,11 +9,19 @@
 export const ESC_SEGURA_MS = 700
 export const CLIQUE_REPETIDO_MS = 400
 
+/** tecla segurada (auto-repeticao): nunca encadeia, e engolida sempre (segurar Esc para sair de um campo nao limpa o telao quando a espera vence) */
+export function escEngolidoPorRepeticao(e: { repeat?: boolean }): boolean {
+    return !!e.repeat
+}
+
 export function criarEscSeguro(ms = ESC_SEGURA_MS) {
     let ate = 0
     return {
         /** algo foi fechado/desselecionado por um Esc: o proximo Esc espera */
         fechou(agora: number) {
+            // uma espera por RAJADA: um Esc que passa logo depois de a espera acabar (menu de contexto fechado, depois a selecao desfeita) nao arma
+            // outra, ou o telao levaria 3 toques e mais de 1,4 s para limpar (revisao da fatia 2, achado 6)
+            if (ate > 0 && agora >= ate && agora - ate < ms) return
             ate = agora + ms
         },
         /** true: este Esc esta dentro da espera e deve ser engolido */

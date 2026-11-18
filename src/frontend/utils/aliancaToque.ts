@@ -4,7 +4,7 @@ import { get } from "svelte/store"
 import { activePopup, contextActive, quickSearchActive, selected, topContextActive } from "../stores"
 import { falhaAlta } from "./aliancaFalha"
 import { tela } from "./aliancaTela"
-import { chaveDoClique, criarEscSeguro, criarRepeticao } from "./aliancaToqueLogica"
+import { chaveDoClique, criarEscSeguro, criarRepeticao, escEngolidoPorRepeticao } from "./aliancaToqueLogica"
 
 const esc = criarEscSeguro()
 const repeticao = criarRepeticao<Element>()
@@ -30,8 +30,8 @@ function aoEsc(e: KeyboardEvent) {
     try {
         if (e.key !== "Escape") return
         const agora = performance.now()
-        if (esc.segura(agora)) {
-            // dentro da espera: o Esc nao faz NADA (nem limpa o telao, nem fecha outra coisa)
+        if (escEngolidoPorRepeticao(e) || esc.segura(agora)) {
+            // dentro da espera (ou tecla segurada): o Esc nao faz NADA (nem limpa o telao, nem fecha outra coisa)
             e.preventDefault()
             e.stopImmediatePropagation()
             e.stopPropagation()
