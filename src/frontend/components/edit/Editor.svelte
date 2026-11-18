@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import type { TabsObj } from "../../../types/Tabs"
-    import { activeEdit, activePopup, activeShow, cloudUsers, drawer, drawerOpenedInEdit, editMode, focusMode, refreshEditSlide, showsCache } from "../../stores"
+    import { activeEdit, activePopup, activeShow, cloudUsers, editMode, focusMode, refreshEditSlide, showsCache } from "../../stores"
     import { notasAtivas, timelineAtiva } from "../../utils/aliancaModo"
     import { isActiveShowInUseByCloudUser } from "../../utils/cloudSync"
     import { getAccess } from "../../utils/profile"
@@ -10,7 +9,6 @@
     import FloatingInputs from "../input/FloatingInputs.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import Splash from "../main/Splash.svelte"
-    import Tabs from "../main/Tabs.svelte"
     import TextEditor from "../show/TextEditor.svelte"
     import AudioEditor from "./editors/AudioEditor.svelte"
     import CameraEditor from "./editors/CameraEditor.svelte"
@@ -20,7 +18,6 @@
     import SlideEditor from "./editors/SlideEditor.svelte"
     import TemplateEditor from "./editors/TemplateEditor.svelte"
     import ItemAddMenu from "./ItemAddMenu.svelte"
-    import { getSlideChords } from "./scripts/chords"
     import { getSlideText } from "./scripts/textStyle"
 
     $: currentShowId = $activeShow?.id || $activeEdit.showId || ""
@@ -30,8 +27,6 @@
 
     $: profile = getAccess("shows")
     $: isLocked = currentShow?.locked || Slide?.locked || profile.global === "read" || profile[currentShow?.category || ""] === "read"
-
-    $: chordCount = Slide ? getSlideChords(Slide).length : 0
 
     // no need to add chords on scripture/events
     $: chordsHidden = !!currentShow?.reference?.type
@@ -43,21 +38,9 @@
         setTimeout(() => refreshEditSlide.set(false), 100)
     }
 
-    // TODO: could add more tabs, like to edit slide layers (like background media)
-    $: editTabs = {
-        // Preparar (8a): a dica do Ctrl+Enter (quebra o slide no cursor) mora na aba Slide
-        default: { name: "tools.slide", icon: "slide", tooltip: "tools.slide - Ctrl+Enter quebra o slide no cursor" }, // example.default
-        ...(!chordsHidden && { chords: { name: "edit.chords", icon: "chords", data: chordCount > 0 ? chordCount : undefined, disabled: chordsDisabled } }),
-        text_edit: { name: "show.text", tooltip: "show.text [Ctrl+Shift+T]", icon: "text_edit" }
-    } as TabsObj
+    // leiaute v2 (fatia 3): as vistas (Slide, Acordes, Texto) e o zoom moram no cabecalho do centro (AliancaEditarCentro); a biblioteca nao fecha mais ao entrar aqui
 
     onMount(() => {
-        // close drawer
-        if (!$drawerOpenedInEdit) {
-            const minHeight = 40
-            if ($drawer.height > minHeight) drawer.set({ height: minHeight, stored: $drawer.height, autoclosed: true })
-        }
-
         // mainly for overlay preview
         if ($activeShow?.id && ($activeShow.type || "show") !== "show" && (!$activeEdit.id || $activeEdit.type === $activeShow.type)) {
             activeEdit.set({ id: $activeShow.id, type: $activeShow.type, items: [] } as any)
@@ -111,10 +94,6 @@
                         <MaterialButton variant="outlined" icon="check" on:click={() => (hideCloudConflict = true)} />
                     </p>
                 </div>
-            {/if}
-
-            {#if !$focusMode}
-                <Tabs tabs={editTabs} bind:active={$editMode} />
             {/if}
 
             <div class="content">

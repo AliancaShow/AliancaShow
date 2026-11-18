@@ -1,0 +1,132 @@
+import { describe, expect, it } from "vitest"
+import { mostrarMandarSo, saidasParaMandar } from "./aliancaEditarSaidas"
+import { avisoAoVivo, contagemDeSlides, empurrarAvulso, estaNoRoteiro, itemEmEdicao, MAX_AVULSOS, notaDoCentro, selosDoShow, situacaoDoSlide, tirarAvulso, type ItemEditavel } from "./aliancaEditarLogica"
+
+const ref = [{ id: "a" }, { id: "b" }, { id: "c" }]
+const slides = (itemsB: any[] = [1]) => ({ a: { items: [0] }, b: { items: itemsB }, c: { items: [2] } })
+const foto = (slideId: string, itens: any[], extra: any = {}) => ({ slideId, slide: { items: itens }, ...extra })
+
+describe("selos NO AR / EDITADO (a foto manda)", () => {
+    it("slide no ar igual a foto: NO AR, nao editado", () => {
+        const s = selosDoShow({ showId: "s", layout: "L", ref, slides: slides(), noAr: [{ id: "s", layout: "L", index: 1, foto: foto("b", [1]) }] })
+        expect(s).toEqual({ 1: { noAr: true, editado: false } })
+    })
+    it("itens diferentes da foto: EDITADO", () => {
+        const s = selosDoShow({ showId: "s", layout: "L", ref, slides: slides([1, 2]), noAr: [{ id: "s", layout: "L", index: 1, foto: foto("b", [1]) }] })
+        expect(s[1]).toEqual({ noAr: true, editado: true })
+    })
+    it("ajuste do slide (settings) tambem conta: o telao congela a cor/fundo do slide junto", () => {
+        const vivos = { ...slides(), b: { items: [1], settings: { color: "#f00" } } }
+        const s = selosDoShow({ showId: "s", layout: "L", ref, slides: vivos, noAr: [{ id: "s", layout: "L", index: 1, foto: foto("b", [1]) }] })
+        expect(s[1].editado).toBe(true)
+    })
+    it("o layout andou: a posicao e a do slide da foto, nao a do indice antigo", () => {
+        const novoRef = [{ id: "x" }, { id: "a" }, { id: "b" }]
+        const s = selosDoShow({ showId: "s", layout: "L", ref: novoRef, slides: { x: { items: [] }, a: { items: [0] }, b: { items: [1] } }, noAr: [{ id: "s", layout: "L", index: 1, foto: foto("b", [1], { ocorrencia: 0 }) }] })
+        expect(Object.keys(s)).toEqual(["2"])
+    })
+    it("outro show ou outro layout no ar: nada", () => {
+        expect(selosDoShow({ showId: "s", layout: "L", ref, slides: slides(), noAr: [{ id: "z", layout: "L", index: 1 }, { id: "s", layout: "M", index: 1 }] })).toEqual({})
+    })
+    it("sem foto (a saida le ao vivo): NO AR e nunca EDITADO", () => {
+        const s = selosDoShow({ showId: "s", layout: "L", ref, slides: slides([9]), noAr: [{ id: "s", layout: "L", index: 2 }] })
+        expect(s).toEqual({ 2: { noAr: true, editado: false } })
+    })
+    it("foto cujo slide sumiu do layout: sem selo", () => {
+        const s = selosDoShow({ showId: "s", layout: "L", ref, slides: slides(), noAr: [{ id: "s", layout: "L", index: 1, foto: foto("zzz", [1], { ocorrencia: 0 }) }] })
+        expect(s).toEqual({})
+    })
+    it("duas saidas no mesmo slide: basta uma defasada para avisar", () => {
+        const s = selosDoShow({
+            showId: "s",
+            layout: "L",
+            ref,
+            slides: slides([1, 2]),
+            noAr: [
+                { id: "s", layout: "L", index: 1, foto: foto("b", [1, 2]) },
+                { id: "s", layout: "L", index: 1, foto: foto("b", [1]) }
+            ]
+        })
+        expect(s[1].editado).toBe(true)
+    })
+})
+
+describe("situacao, nota e faixa", () => {
+    const selos = { 1: { noAr: true as const, editado: false }, 2: { noAr: true as const, editado: true } }
+    it("livre, no ar e defasado", () => {
+        expect(situacaoDoSlide(selos, 0)).toBe("livre")
+        expect(situacaoDoSlide(selos, 1)).toBe("no-ar")
+        expect(situacaoDoSlide(selos, 2)).toBe("defasado")
+        expect(situacaoDoSlide(selos, null)).toBe("livre")
+    })
+    it("a nota some quando a faixa aparece", () => {
+        expect(notaDoCentro("defasado")).toBe("")
+        expect(notaDoCentro("no-ar")).toContain("está no ar")
+        expect(notaDoCentro("livre")).toContain("Salva sozinho")
+    })
+})
+
+describe("o que muda no telao na hora (decisao 6)", () => {
+    it("sobreposicao, efeito e fundo no ar avisam; o que nao esta no ar nao", () => {
+        expect(avisoAoVivo({ tipo: "overlay", id: "o1", noAr: [{ overlays: ["o1"] }] })).toContain("na hora")
+        expect(avisoAoVivo({ tipo: "overlay", id: "o2", noAr: [{ overlays: ["o1"] }] })).toBe("")
+        expect(avisoAoVivo({ tipo: "effect", id: "e1", noAr: [{ effects: ["e1"] }] })).toContain("na hora")
+        expect(avisoAoVivo({ tipo: "media", id: "/a.mp4", noAr: [{ background: { path: "/a.mp4" } }] })).toContain("na hora")
+        expect(avisoAoVivo({ tipo: "media", id: "/b.mp4", noAr: [{ background: { path: "/a.mp4" } }] })).toBe("")
+    })
+    it("show nunca avisa 'na hora': a foto o congela", () => {
+        expect(avisoAoVivo({ tipo: "show", id: "s", noAr: [{ overlays: ["s"] }] })).toBe("")
+        expect(avisoAoVivo({ noAr: [] })).toBe("")
+    })
+})
+
+describe("o item em edicao e os avulsos", () => {
+    const item = (id: string): ItemEditavel => ({ chave: "show:" + id, tipo: "show", id, nome: id })
+    it("o ultimo vai para a frente, repetido nao duplica, guarda 5", () => {
+        let l: ItemEditavel[] = []
+        for (const id of ["a", "b", "c", "d", "e", "f"]) l = empurrarAvulso(l, item(id))
+        expect(l.map((i) => i.id)).toEqual(["f", "e", "d", "c", "b"])
+        expect(l).toHaveLength(MAX_AVULSOS)
+        expect(empurrarAvulso(l, item("c")).map((i) => i.id)).toEqual(["c", "f", "e", "d", "b"])
+        expect(tirarAvulso(l, "show:e").map((i) => i.id)).toEqual(["f", "d", "c", "b"])
+    })
+    it("so show esta 'no roteiro'", () => {
+        expect(estaNoRoteiro([{ id: "a", type: "show" }, { id: "m", type: "video" }], "show", "a")).toBe(true)
+        expect(estaNoRoteiro([{ id: "a" }], "show", "a")).toBe(true)
+        expect(estaNoRoteiro([{ id: "m", type: "video" }], "media", "m")).toBe(false)
+        expect(estaNoRoteiro([], "show", "a")).toBe(false)
+    })
+    it("itemEmEdicao: show pelo show aberto (reserva: o showId do editor); os outros pelo id", () => {
+        const nomeDe = (t: string, id: string) => `${t}/${id}`
+        expect(itemEmEdicao({ edit: { showId: "s1" }, show: { id: "s2", type: "show" }, nomeDe })).toMatchObject({ chave: "show:s2", nome: "show/s2" })
+        expect(itemEmEdicao({ edit: { showId: "s1" }, show: { id: "m", type: "video" }, nomeDe })).toMatchObject({ chave: "show:s1" })
+        expect(itemEmEdicao({ edit: {}, show: { id: "s2" }, nomeDe })?.id).toBe("s2")
+        expect(itemEmEdicao({ edit: { type: "overlay", id: "o" }, show: { id: "s2" }, nomeDe })).toMatchObject({ tipo: "overlay", id: "o" })
+        expect(itemEmEdicao({ edit: {}, show: { id: "m", type: "video" }, nomeDe })).toBeNull()
+        expect(itemEmEdicao({ edit: null, show: null, nomeDe })).toBeNull()
+    })
+    it("contagem", () => {
+        expect(contagemDeSlides(1)).toBe("1 slide")
+        expect(contagemDeSlides(6)).toBe("6 slides")
+    })
+})
+
+describe("saidas do 'Mandar so para'", () => {
+    it("so tela ligada; retorno (palco) e chave ficam fora", () => {
+        const l = saidasParaMandar([
+            { id: "1", name: "Telão", enabled: true },
+            { id: "2", name: "", enabled: true },
+            { id: "3", name: "Retorno", enabled: true, stageOutput: true },
+            { id: "4", name: "Chave", enabled: true, isKeyOutput: true },
+            { id: "5", name: "Desligada", enabled: false }
+        ])
+        expect(l).toEqual([
+            { id: "1", nome: "Telão" },
+            { id: "2", nome: "Saída 2" }
+        ])
+    })
+    it("com uma tela so o item nao aparece", () => {
+        expect(mostrarMandarSo([{ id: "1" }])).toBe(false)
+        expect(mostrarMandarSo([{ id: "1" }, { id: "2" }])).toBe(true)
+    })
+})

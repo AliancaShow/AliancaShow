@@ -1,9 +1,11 @@
 <script lang="ts">
     import { onMount } from "svelte"
-    import { activeEdit, activeShow, cachedShowsData, editColumns, showsCache } from "../../stores"
+    import { activeEdit, activeShow, cachedShowsData, editColumns, outputs, showsCache } from "../../stores"
+    import { selosDoShow } from "../../utils/aliancaEditarLogica"
     import T from "../helpers/T.svelte"
-    import { findMatchingOut } from "../helpers/output"
+    import { getActiveOutputs } from "../helpers/output"
     import { getShowCacheId } from "../helpers/show"
+    import { _show } from "../helpers/shows"
     import SkeletonSlide from "../slide/SkeletonSlide.svelte"
     import Slide from "../slide/Slide.svelte"
     import Autoscroll from "../system/Autoscroll.svelte"
@@ -13,6 +15,17 @@
     $: showId = $activeShow?.id || $activeEdit.showId || ""
     $: currentShow = $showsCache[showId]
     $: layoutSlides = $cachedShowsData[getShowCacheId(showId, currentShow)]?.layout || []
+
+    // Leiaute v2 (fatia 3): selos NO AR / EDITADO por posicao do layout (a conta esta em aliancaEditarLogica.ts; a foto e o que o telao mostra)
+    $: activeLayout = currentShow?.settings?.activeLayout || ""
+    let selos: ReturnType<typeof selosDoShow> = {}
+    $: selos = calcularSelos(currentShow, $outputs, activeLayout, showId)
+    function calcularSelos(..._deps: any[]) {
+        if (!showId || !currentShow || !activeLayout) return {}
+        const saidas = getActiveOutputs($outputs, false, true, true).map((id) => $outputs[id]?.out?.slide)
+        const ref = _show(showId).layouts([activeLayout]).ref()[0] || []
+        return selosDoShow({ showId, layout: activeLayout, ref, slides: currentShow.slides, noAr: saidas as any })
+    }
 
     let hasMounted = false
     onMount(() => {
@@ -136,7 +149,7 @@
                         {@const currentSlide = currentShow?.slides?.[slide.id]}
                         {#if hasMounted && (loaded || i < lazyLoader)}
                             {#if currentSlide}
-                                <Slide {showId} slide={currentSlide} show={currentShow} layoutSlide={slide} {layoutSlides} index={i} color={slide.color} active={findMatchingOut(slide.id) !== null} focused={$activeEdit.slide === i} noQuickEdit {altKeyPressed} columns={$editColumns} on:click={(e) => slideClick(e, i)} />
+                                <Slide {showId} slide={currentSlide} show={currentShow} layoutSlide={slide} {layoutSlides} index={i} color={slide.color} active={!!selos[i]} noAr={!!selos[i]} editado={!!selos[i]?.editado} focused={$activeEdit.slide === i} noQuickEdit {altKeyPressed} columns={$editColumns} on:click={(e) => slideClick(e, i)} />
                             {/if}
                         {:else}
                             <SkeletonSlide slide={currentSlide} index={i} color={slide.color} columns={$editColumns} active={$activeEdit.slide === i} on:click={(e) => slideClick(e, i)} />

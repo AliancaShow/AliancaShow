@@ -35,7 +35,6 @@ export const DOLAR_COLCHETE = ["components/helpers/historyStores.ts", "component
 export const CLASSES: Record<string, string> = {
     "components/context/menuClick.ts": "gesto: botao direito (Editar e abrir em Mostrar) e paginas do menu",
     "components/drawer/info/ScriptureInfo.svelte": "gesto: botao de pagina",
-    "components/edit/Navigation.svelte": "gesto, morre com o arquivo (fatia 3): voltar de Editar",
     "components/edit/tools/SlideStyle.svelte": "gesto: botao de pagina (editar o modelo)",
     "components/main/AliancaMenuApp.svelte": "gesto: menu do app",
     "components/main/AliancaSirvoPilula.svelte": "gesto: pilula Sirvo",

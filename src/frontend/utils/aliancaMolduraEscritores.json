@@ -25,12 +25,6 @@
                 "\"edit\", \"botao-de-pagina\""
             ]
         },
-        "components/edit/Navigation.svelte": {
-            "classe": "gesto, morre com o arquivo (fatia 3): voltar de Editar",
-            "chamadas": [
-                "\"show\", \"voltar-de-pagina\""
-            ]
-        },
         "components/edit/tools/SlideStyle.svelte": {
             "classe": "gesto: botao de pagina (editar o modelo)",
             "chamadas": [
