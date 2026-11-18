@@ -4,18 +4,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { get } from "svelte/store"
 import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, mensagemDeErro, mensagemViva, minutosValidos, prepararMensagem, restanteTexto } from "./aliancaMensagemPalcoLogica"
 
-const mocks = vi.hoisted(() => ({ motivo: "", chamadas: [] as any[], resposta: { ok: true, dados: { id: "m1", texto: "oi", ate: "2026-11-18T22:00:00Z" } } as any, cultoId: "evt-1" }))
+const mocks = vi.hoisted(() => ({ motivo: "", chamadas: [] as any[], resposta: { ok: true, dados: { id: "m1", texto: "oi", ate: "2026-11-18T22:00:00Z" } } as any, cultoId: "evt-1", respostas: [] as any[] }))
 vi.mock("./aliancaSirvo", async () => {
     const { writable } = await import("svelte/store")
     return {
         sirvo: writable({ status: "conectado", cultoId: "evt-1", podeConduzir: true, enviando: false }),
         porQueNaoConduz: () => mocks.motivo,
-        pedirAoSirvo: async (funcao: string, args: any) => {
-            mocks.chamadas.push({ funcao, args })
-            return mocks.resposta
+        pedirAoSirvo: async () => {
+            throw new Error("a mensagem pro palco nao passa mais pela fila do roteiro")
         }
     }
 })
+vi.mock("../IPC/main", () => ({
+    requestMain: async (_canal: string, { funcao, args }: any) => {
+        mocks.chamadas.push({ funcao, args })
+        const r = mocks.respostas.length ? mocks.respostas.shift() : mocks.resposta
+        return r
+    }
+}))
 
 describe("prepararMensagem", () => {
     it("recusa vazio e so espacos", () => {
@@ -133,9 +139,9 @@ describe("duracao, contagem e erros em portugues", () => {
     it("a recusa chega ao operador (envio e limpar), com a frase do Sirvo ou a nossa", async () => {
         const { enviarMensagemPalco, limparMensagemPalco } = await import("./aliancaMensagemPalco")
         mocks.resposta = { ok: false, mensagem: "Pedidos demais desta chave em um minuto. Espere um pouco.", codigo: "erro" }
-        expect(await enviarMensagemPalco("oi")).toEqual({ ok: false, mensagem: "Pedidos demais desta chave em um minuto. Espere um pouco." })
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: false, mensagem: "Pedidos demais desta chave em um minuto. Espere um pouco.", codigo: "erro" })
         mocks.resposta = { ok: false, mensagem: "Culto não encontrado no Sirvo.", codigo: "culto_inexistente" }
-        expect(await limparMensagemPalco()).toEqual({ ok: false, mensagem: mensagemDeErro("culto_inexistente", "") })
+        expect(await limparMensagemPalco()).toEqual({ ok: false, mensagem: mensagemDeErro("culto_inexistente", ""), codigo: "culto_inexistente" })
     })
 })
 
@@ -176,4 +182,42 @@ describe("M2: so a promessa quebrada acende a faixa de falha; o passageiro so fa
             expect(mocks.chamadas).toEqual([])
         })
     }
+})
+
+describe("M4: a mensagem tem fila propria, nao espera a trava do roteiro", () => {
+    beforeEach(async () => {
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).set({ ...estadoBom })
+        mocks.chamadas.length = 0
+        mocks.respostas.length = 0
+        mocks.resposta = { ok: true, dados: {} }
+    })
+    it("com outra escrita do roteiro em voo (enviando) a mensagem ainda sai, e nao liga a trava global", async () => {
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).update((e: any) => ({ ...e, enviando: true }))
+        const { enviarMensagemPalco, limparMensagemPalco } = await import("./aliancaMensagemPalco")
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: true })
+        expect(await limparMensagemPalco()).toEqual({ ok: true })
+        expect(mocks.chamadas.map((c) => c.funcao)).toEqual(["show_enviar_mensagem_palco", "show_limpar_mensagem_palco"])
+        expect(get(sirvo as any).enviando).toBe(true) // so a do roteiro; a nossa nunca mexeu
+    })
+    it("o 'Calma' do main (500 ms entre escritas) e tentado de novo uma vez, sem o operador ver", async () => {
+        mocks.respostas.push({ ok: false, codigo: "ocupado", mensagem: "Calma: um pedido de cada vez." }, { ok: true, dados: {} })
+        const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: true })
+        expect(mocks.chamadas.length).toBe(2)
+    })
+    it("duas vezes ocupado: devolve a frase, sem laco", async () => {
+        mocks.respostas.push({ ok: false, codigo: "ocupado", mensagem: "x" }, { ok: false, codigo: "ocupado", mensagem: "x" })
+        const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
+        const r: any = await enviarMensagemPalco("oi")
+        expect(r.ok).toBe(false)
+        expect(r.codigo).toBe("ocupado")
+        expect(mocks.chamadas.length).toBe(2)
+    })
+    it("o codigo do main segue junto (rede = nao sei se chegou)", async () => {
+        mocks.respostas.push({ ok: false, codigo: "rede", mensagem: "Não sei se o Sirvo recebeu — conferindo…" })
+        const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: false, mensagem: "Não sei se o Sirvo recebeu — conferindo…", codigo: "rede" })
+    })
 })
