@@ -20,7 +20,8 @@ const j = await abrir("principal")
 
 async function print(nome, w = 1920, h = 1080) {
     await esperar(700)
-    const r = JSON.parse(await j.avaliar(`const b=document.querySelector('[data-tela]').parentElement.getBoundingClientRect(); return JSON.stringify({x:b.left,y:b.top,w:b.width,h:b.height})`))
+    // o conteudo e o `main` (w x h): a janela tem 25 px de barra de menus em cima, fora do recorte (viewport = conteudo + 25)
+    const r = { x: 0, y: 25, w, h }
     const d = await j.enviar("Page.captureScreenshot", { format: "png", clip: { x: r.x, y: r.y, width: r.w, height: r.h, scale: 1 } })
     writeFileSync(join(saida, nome + ".png"), Buffer.from(d.result.data, "base64"))
     console.log("print", nome, JSON.stringify(r))
