@@ -25,9 +25,7 @@
     }
 
     $: allVisibleShows = currentShows.filter((a) => a && !a.private && profile[a.category || ""] !== "none")
-    $: unarchivedShows = allVisibleShows.filter((a) => a.category === null || !$categories[a.category]?.isArchive)
     // $: archivedShows = currentShows.filter((a) => a.category !== null && $categories[a.category]?.isArchive)
-    $: uncategorizedShowsLength = unarchivedShows.filter((a) => a.category === null || !$categories[a.category]).length
     // $: lockedShowsLength = allVisibleShows.filter((a) => a.locked).length
     // $: songNumberShowsLength = allVisibleShows.filter((a) => a.quickAccess?.number).length
 

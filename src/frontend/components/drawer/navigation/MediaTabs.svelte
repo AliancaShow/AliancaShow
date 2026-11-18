@@ -5,15 +5,15 @@
     import { Main } from "../../../../types/IPC/Main"
     import { ToMain } from "../../../../types/IPC/ToMain"
     import { destroyMain, receiveToMain, requestMain, sendMain } from "../../../IPC/main"
-    import { activeDrawerTab, drawerTabsData, media, mediaFolders, mediaTags, providerConnections, special } from "../../../stores"
+    import { activeDrawerTab, drawerTabsData, media, mediaFolders, providerConnections, special } from "../../../stores"
     import { tela } from "../../../utils/aliancaTela"
     import { criarPasta } from "../../../utils/aliancaPastasMidia"
     import { membros, pastas } from "../../../utils/aliancaPastasMidiaEstado"
-    import { PASTA_SIRVO, abaDaPasta, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
+    import { PASTA_SIRVO, abaDaPasta } from "../../../utils/aliancaPastasMidiaLogica"
     import { getAccess } from "../../../utils/profile"
     import { keysToID, sortObject } from "../../helpers/array"
     import { addDrawerFolder } from "../../helpers/dropActions"
-    import { countFolderMediaItems, getExtension, isMediaExtension } from "../../helpers/media"
+    import { countFolderMediaItems } from "../../helpers/media"
     import AliancaLinhaAdd from "./AliancaLinhaAdd.svelte"
     import NavigationSections from "./NavigationSections.svelte"
 
@@ -26,26 +26,19 @@
     $: foldersList = keysToID($mediaFolders)
     $: favoritesListLength = Object.values($media).filter((a) => !a.audio && a.favourite).length
 
-    let allCount = 0
-    let arquivosDaRaiz: string[] = []
     let folderLengths: { [key: string]: number } = {}
     $: if (foldersList.length) getCounts()
     async function getCounts() {
         const folderPaths = foldersList.map((a) => a.path || "")
         const data = keysToID((await requestMain(Main.READ_FOLDER, { path: folderPaths })) || {})
         const newFolderLengths: { [key: string]: number } = {}
-        allCount = 0
 
         folderPaths.forEach((folderPath) => {
             const count = countFolderMediaItems(folderPath, data)
             newFolderLengths[folderPath] = count.folder + count.video + count.image
-            allCount += count.video + count.image
         })
 
         folderLengths = newFolderLengths
-        arquivosDaRaiz = Object.values(data)
-            .filter((a: any) => !a.isFolder && isMediaExtension(getExtension(a.name)))
-            .map((a: any) => a.path)
     }
 
     // AliancaShow F7: as pastas (etiquetas). C6: sem o rotulo "Pastas de midia" e sem a linha "Midias" (clicar na raiz Midia e "todas as midias")
