@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition"
     import { selected } from "../../stores"
+    import "./aliancaMenusEditar" // registra os itens de Editar nos mapas de contextMenus.ts
     import { saidasDoMenu } from "../../utils/aliancaEditarAcoes"
     import { mostrarMandarSo } from "../../utils/aliancaEditarSaidas"
     import { tela } from "../../utils/aliancaTela"

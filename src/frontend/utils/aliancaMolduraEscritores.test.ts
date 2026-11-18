@@ -33,6 +33,7 @@ export const DOLAR_COLCHETE = ["components/helpers/historyStores.ts", "component
 
 /** a CLASSE de cada arquivo que chama a porta (secao 3 do plano). Arquivo novo sem classe reprova. */
 export const CLASSES: Record<string, string> = {
+    "components/context/aliancaMenusEditar.ts": "gesto: botao direito (Editar na linha de show da biblioteca)",
     "components/context/menuClick.ts": "gesto: botao direito (Editar e abrir em Mostrar) e paginas do menu",
     "components/drawer/info/ScriptureInfo.svelte": "gesto: botao de pagina",
     "components/edit/tools/SlideStyle.svelte": "gesto: botao de pagina (editar o modelo)",

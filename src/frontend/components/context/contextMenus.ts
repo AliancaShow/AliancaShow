@@ -116,11 +116,6 @@ export const contextMenuItems: { [key: string]: ContextMenuItem } = {
     alianca_mover: { label: "Mover para", icon: "folder", iconColor: "#979aff", items: ["LOAD_alianca_mover"], translate: false },
     alianca_fim: { label: "Ao terminar", icon: "loop", iconColor: "#979aff", items: ["LOAD_alianca_fim"], translate: false },
     alianca_camada: { label: "Camada", icon: "media", iconColor: "#979aff", items: ["LOAD_alianca_camada"], translate: false },
-    // Leiaute v2, fatia 3 (so em Editar): o botao direito na miniatura do slide. "Mandar so para" lista as telas (o monitor de retorno nao entra: decisao 5)
-    // Leiaute v2, fatia 3: o botao direito numa linha de show da biblioteca. Hoje so "Editar" (abre em Editar sem pôr no roteiro); o resto do menu e da fatia 6.
-    alianca_editar: { label: "Editar", icon: "edit", iconColor: "#97c7ff", translate: false },
-    alianca_ar: { label: "Mandar pro ar", icon: "play", iconColor: "#f21a27", translate: false },
-    alianca_so: { label: "Mandar só para", icon: "play", iconColor: "#f21a27", items: ["LOAD_alianca_so"], translate: false },
     // SHOWS
     lock_group: { label: "context.lockForChanges", icon: "lock", iconColor: "#ff5454" },
     remove: { label: "actions.remove", icon: "delete", iconColor: "#ff6b54" },
@@ -376,10 +371,6 @@ export const contextMenuLayouts: { [key: string]: string[] } = {
     // , "copy", "paste"
     slide: ["GROUP_edit", "slideGroups", "actions", "bind_to", "format", "remove_layers", "slide_transition", "disable", "SEPARATOR", "duplicate", "make_unique", "GROUP_slide_remove"],
     slideChild: ["GROUP_edit", "slideGroups", "actions", "bind_to", "format", "remove_layers", "slide_transition", "disable", "SEPARATOR", "duplicate", "make_unique", "GROUP_slide_remove"],
-    // Editar: Mandar pro ar e Mandar so para em cima; o resto do menu do slide continua (grupo, acoes, duplicar, excluir...)
-    slideEditar: ["alianca_ar", "alianca_so", "SEPARATOR", "slideGroups", "actions", "bind_to", "format", "remove_layers", "slide_transition", "disable", "SEPARATOR", "duplicate", "make_unique", "GROUP_slide_remove"],
-    slideChildEditar: ["alianca_ar", "alianca_so", "SEPARATOR", "slideGroups", "actions", "bind_to", "format", "remove_layers", "slide_transition", "disable", "SEPARATOR", "duplicate", "make_unique", "GROUP_slide_remove"],
-    show_drawer: ["alianca_editar"],
     slideFocus: ["editSlideText"],
     group: ["GROUP_rename_recolor", "lock_group", "SEPARATOR", "selectAll", "SEPARATOR", "duplicate", "delete_group"],
     global_group: ["manage_groups"],
