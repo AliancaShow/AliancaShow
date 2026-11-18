@@ -2,7 +2,7 @@
     // Leiaute v2, fatia 7: barra de tempo/volume da faixa de transporte. Nao e `<input type="range">`: aquele pede o foco (e o foco na barra
     // faria o espaco/setas do teclado do telao irem para ela) e o `mousedown` nao pode ser barrado sem travar o arrasto. Aqui o ponteiro e
     // capturado e o foco nunca sai de onde estava. `comecar` / `mover` / `soltar` levam o valor (0..max); quem usa decide o que escrever.
-    import { createEventDispatcher } from "svelte"
+    import { createEventDispatcher, onDestroy } from "svelte"
     import { fracao, valorNaBarra } from "../../utils/aliancaTransporteLogica"
 
     export let valor = 0
@@ -44,11 +44,19 @@
         }
         dispatch("soltar", ler(e))
     }
+    // o arrasto acaba sem `pointerup`: cancelado (o `clientX` dele nao vale), captura perdida, ou a barra desmontou com o botao apertado
+    // (o fundo foi limpo, o audio acabou). Solta no ultimo ponto bom, para quem a escuta nunca ficar com a flag presa.
+    function soltarSemPonto() {
+        if (!arrastando) return
+        arrastando = false
+        dispatch("soltar", seguro)
+    }
+    onDestroy(soltarSemPonto)
     $: mostrado = arrastando ? seguro : valor
     $: pct = fracao(mostrado, max) * 100
 </script>
 
-<div bind:this={el} class="barra" class:desligada class:arrastando role="slider" tabindex="-1" aria-label={rotulo} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(mostrado)} aria-disabled={desligada} data-title={rotulo} style="--cor: {cor}" on:pointerdown={baixo} on:pointermove={mexer} on:pointerup={soltar} on:pointercancel={soltar}>
+<div bind:this={el} class="barra" class:desligada class:arrastando role="slider" tabindex="-1" aria-label={rotulo} aria-valuemin={0} aria-valuemax={max} aria-valuenow={Math.round(mostrado)} aria-disabled={desligada} data-title={rotulo} style="--cor: {cor}" on:pointerdown={baixo} on:pointermove={mexer} on:pointerup={soltar} on:pointercancel={soltarSemPonto} on:lostpointercapture={soltarSemPonto}>
     <div class="trilho"><div class="cheio" style="width: {pct}%" /></div>
     <div class="bolinha" style="left: {pct}%" />
 </div>

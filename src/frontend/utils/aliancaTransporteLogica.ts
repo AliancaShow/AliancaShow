@@ -44,6 +44,12 @@ export function prenderBusca(valor: number, duracao: number, toTime = 0): number
     return Math.min(Math.max(0, valor || 0), limiteBusca(duracao, toTime))
 }
 
+/** O arrasto guarda em que arquivo/saida comecou; se o fundo trocou no meio, ele morre (a busca cairia no video novo). */
+export type ArrastoMidia = { caminho: string; saida: string }
+export function arrastoVale(a: ArrastoMidia | null, caminho: string, saida: string): boolean {
+    return !!a && !!caminho && a.caminho === caminho && a.saida === saida
+}
+
 // Temporizadores que entram na linha: os que o FreeShow ja listava como "tocando" (Timers onlyPlaying). `sirvo_live` fica de fora: e o contador
 // do BLOCO no ar, que ja mora no Roteiro (bloco ao vivo); numa linha daqui ele manteria a faixa aberta o culto inteiro.
 export const TIPOS_NA_FAIXA = ["counter", "pco_live"]

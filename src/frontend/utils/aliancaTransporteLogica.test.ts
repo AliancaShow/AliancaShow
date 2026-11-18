@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { faixaAberta, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { arrastoVale, faixaAberta, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -95,5 +95,20 @@ describe("busca nunca chega ao fim (revisao da fatia 7, achado 1)", () => {
     })
     it("clipe curtissimo nao fica negativo", () => {
         expect(prenderBusca(0.2, 0.1)).toBe(0)
+    })
+})
+
+describe("arrasto preso ao arquivo em que comecou (revisao da fatia 7, achado 2)", () => {
+    const a = { caminho: "/v/a.mp4", saida: "default" }
+    it("vale enquanto o mesmo arquivo segue na mesma saida", () => {
+        expect(arrastoVale(a, "/v/a.mp4", "default")).toBe(true)
+    })
+    it("morre se outro video entra, se a saida muda ou se o fundo some", () => {
+        expect(arrastoVale(a, "/v/b.mp4", "default")).toBe(false)
+        expect(arrastoVale(a, "/v/a.mp4", "outra")).toBe(false)
+        expect(arrastoVale(a, "", "default")).toBe(false)
+    })
+    it("sem arrasto nao vale nada", () => {
+        expect(arrastoVale(null, "/v/a.mp4", "default")).toBe(false)
     })
 })

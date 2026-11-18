@@ -8,7 +8,7 @@
     import type { Unsubscriber } from "svelte/store"
     import { AudioPlayer } from "../../audio/audioPlayer"
     import { activePage, activeTimers, media, outLocked, outputs, playerVideos, playingAudio, timers } from "../../stores"
-    import { faixaAberta, MAX_TIMERS_VISIVEIS, prenderBusca, timersNaFaixa } from "../../utils/aliancaTransporteLogica"
+    import { arrastoVale, faixaAberta, MAX_TIMERS_VISIVEIS, prenderBusca, timersNaFaixa, type ArrastoMidia } from "../../utils/aliancaTransporteLogica"
     import { getAccess } from "../../utils/profile"
     import AudioMeter from "../drawer/audio/AudioMeter.svelte"
     import { getCurrentTimerValue, playPauseGlobal, resetTimer } from "../drawer/timers/timers"
@@ -62,6 +62,9 @@
         })
     }
     onDestroy(() => {
+        // desmontou com o botao apertado: o vídeo que tocava antes do arrasto volta a tocar (a barra pausou ao começar)
+        if (arrastoVideo && !pausadoAntes) VideoPlayer.play(arrastoVideo.caminho, arrastoVideo.saida)
+        arrastoVideo = null
         if (escutaVideo) escutaVideo()
         clearInterval(relogio)
         clearInterval(passoAudio)
@@ -88,11 +91,22 @@
         dadosVideo = dadosVideo
         VideoPlayer.toggleMute(caminho, idSaida)
     }
-    // arrastar a barra: pausa enquanto arrasta (como o VideoSlider), busca em passos de 150 ms e volta a tocar ao soltar
+    // arrastar a barra: pausa enquanto arrasta (como o VideoSlider), busca em passos de 150 ms e volta a tocar ao soltar.
+    // O arrasto guarda o arquivo e a saida em que comecou: se o fundo trocar no meio (outro video entra, Esc limpa), ele e abandonado
+    // em vez de buscar no video novo; e a flag nunca fica presa (o tempo para de seguir o player enquanto ela esta ligada).
     let passoBusca: ReturnType<typeof setTimeout> | null = null
     let ultimoArrasto = 0
+    let arrastoVideo: ArrastoMidia | null = null
+    $: if (arrastoVideo && !arrastoVale(arrastoVideo, caminho, idSaida)) abandonarVideo()
+    function abandonarVideo() {
+        if (passoBusca) clearTimeout(passoBusca)
+        passoBusca = null
+        arrastoVideo = null
+        arrastandoVideo = false
+    }
     function comecarVideo() {
         if (!caminho) return
+        arrastoVideo = { caminho, saida: idSaida }
         arrastandoVideo = true
         pausadoAntes = dadosVideo.pausado
         dadosVideo.pausado = true
@@ -100,27 +114,30 @@
         VideoPlayer.pause(caminho, idSaida)
     }
     function moverVideo(e: CustomEvent<number>) {
+        if (!arrastoVideo) return
         ultimoArrasto = e.detail
         tempoVideo = e.detail
         if (passoBusca) return
         passoBusca = setTimeout(() => {
             passoBusca = null
-            if (arrastandoVideo && caminho) VideoPlayer.seekTo(caminho, idSaida, prenderBusca(ultimoArrasto, dadosVideo.duracao, $media[caminho]?.toTime))
+            if (arrastoVideo && arrastoVale(arrastoVideo, caminho, idSaida)) VideoPlayer.seekTo(arrastoVideo.caminho, arrastoVideo.saida, prenderBusca(ultimoArrasto, dadosVideo.duracao, $media[arrastoVideo.caminho]?.toTime))
         }, 150)
     }
     function soltarVideo(e: CustomEvent<number>) {
         if (passoBusca) clearTimeout(passoBusca)
         passoBusca = null
-        if (!arrastandoVideo) return
+        const a = arrastoVideo
+        arrastoVideo = null
         arrastandoVideo = false
-        const alvo = prenderBusca(e.detail, dadosVideo.duracao, $media[caminho]?.toTime)
+        if (!a) return
+        // o fundo mudou no meio do arrasto: nada a buscar nem a retomar (o video novo nao e o que o operador estava procurando)
+        if (!arrastoVale(a, caminho, idSaida)) return
+        const alvo = prenderBusca(e.detail, dadosVideo.duracao, $media[a.caminho]?.toTime)
         tempoVideo = alvo
-        if (caminho) {
-            VideoPlayer.seekTo(caminho, idSaida, alvo)
-            dadosVideo.pausado = pausadoAntes
-            dadosVideo = dadosVideo
-            if (!pausadoAntes) VideoPlayer.play(caminho, idSaida)
-        }
+        VideoPlayer.seekTo(a.caminho, a.saida, alvo)
+        dadosVideo.pausado = pausadoAntes
+        dadosVideo = dadosVideo
+        if (!pausadoAntes) VideoPlayer.play(a.caminho, a.saida)
     }
     // o volume e o do arquivo (`media[caminho].volume`, o mesmo que o painel de informacoes da midia escreve)
     $: volumeVideo = $media[caminho]?.volume ?? 1
@@ -165,15 +182,24 @@
         if ($outLocked || !idAudio) return
         AudioPlayer.start(idAudio, { name: tocandoAudio?.name || "" }, { pauseIfPlaying: true, startAt: tempoAudio })
     }
+    let arrastoAudio = ""
+    $: if (arrastoAudio && arrastoAudio !== idAudio) {
+        arrastoAudio = ""
+        arrastandoAudio = false
+    }
     function comecarAudio() {
+        if (!idAudio) return
+        arrastoAudio = idAudio
         arrastandoAudio = true
     }
     function moverAudio(e: CustomEvent<number>) {
-        tempoAudio = e.detail
+        if (arrastoAudio) tempoAudio = e.detail
     }
     function soltarAudio(e: CustomEvent<number>) {
+        const id = arrastoAudio
+        arrastoAudio = ""
         arrastandoAudio = false
-        const id = idAudio
+        if (!id || id !== idAudio) return
         const pausado = pausadoAudio
         const alvo = prenderBusca(e.detail, duracaoAudio, $media[id]?.toTime)
         tempoAudio = alvo

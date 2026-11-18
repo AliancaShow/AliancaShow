@@ -14,7 +14,7 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar, mover } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, mover, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-7"
 mkdirSync(saida, { recursive: true })
@@ -144,6 +144,28 @@ try {
     await arrastar('[data-transporte=video] .barra[aria-label="Posição"]', 1, 0.2)
     await clicarSel('[data-transporte=video] [data-acao=transporte-tocar]', "tocar")
     await esperar(400)
+
+    // revisao da fatia 7, achado 2: Esc no MEIO do arrasto (o fundo e limpo e a linha desmonta com o botao apertado) nao pode prender o tempo em 0:00
+    {
+        const r = await dom(`(()=>{const r=document.querySelector('[data-transporte=video] .barra[aria-label="Posição"]').getBoundingClientRect(); return {x:r.x,w:r.width,y:r.y+r.height/2}})()`)
+        await mover(j, r.x + r.w * 0.3, r.y)
+        await j.enviar("Input.dispatchMouseEvent", { type: "mousePressed", x: r.x + r.w * 0.3, y: r.y, button: "left", clickCount: 1 })
+        await j.enviar("Input.dispatchMouseEvent", { type: "mouseMoved", x: r.x + r.w * 0.5, y: r.y, button: "left", buttons: 1 })
+        await esperar(200)
+        await tecla(j, "Escape")
+        await esperar(700)
+        await j.enviar("Input.dispatchMouseEvent", { type: "mouseReleased", x: r.x + r.w * 0.5, y: r.y, button: "left", clickCount: 1 })
+        await esperar(300)
+        ok("D3: Esc no meio do arrasto limpou o fundo e fechou a linha", (await dom(`get(S.outputs).default.out.background?.path ?? null`)) === null && (await dom(`!document.querySelector('[data-transporte=video]')`)) === true)
+        await j.ev(`const O=await import(U("components/helpers/output")); O.setOutput("background",{path:${JSON.stringify(VIDEO)},type:"video",name:"v1.mp4"}); await esp(1000); return 1`)
+        const t1 = await dom(`document.querySelector('[data-transporte=video] [data-transporte-decorrido]')?.innerText`)
+        await esperar(700)
+        const t2 = await dom(`document.querySelector('[data-transporte=video] [data-transporte-decorrido]')?.innerText`)
+        const sv = await videoState()
+        ok("D3: o proximo video segue o tempo (nao fica preso em 0:00) e esta tocando", sv && sv.paused === false && (t1 !== "0:00" || t2 !== "0:00"), `${t1} -> ${t2} ${JSON.stringify(sv)}`)
+        await clicarSel('[data-transporte=video] [data-acao=transporte-repetir]', "repetir")
+        await esperar(300)
+    }
 
     // ---- E. mudo e volume
     await clicarSel('[data-transporte=video] [data-acao=transporte-mudo]', "mudo")
