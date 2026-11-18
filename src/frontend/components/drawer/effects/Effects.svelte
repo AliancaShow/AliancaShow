@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { onMount } from "svelte"
     import { activeEdit, activePage, activeShow, effects, mediaOptions, outLocked, outputs, styles } from "../../../stores"
     import { addProjectItem } from "../../../converters/project"

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, marcadoDeArquivo } from "../../../utils/aliancaGaveta"
     import { chaveDe } from "../../../utils/aliancaGavetaLogica"
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca, podeMarcar } from "../../../utils/aliancaGavetaToque"
     import { AudioPlayer } from "../../../audio/audioPlayer"
     import { AudioPlaylist } from "../../../audio/audioPlaylist"
     import { addProjectItem } from "../../../converters/project"
@@ -63,6 +63,7 @@
         on:click={(e) => {
             if (gavetaNaoToca()) {
                 if (e.ctrlKey || e.metaKey || e.shiftKey) return
+                if (!podeMarcar()) return
                 const m = marcadoDeArquivo({ path, name })
                 if (m) cliqueDeMarcar(m)
                 return
@@ -75,6 +76,7 @@
         on:dblclick={(e) => {
             if (e.ctrlKey || e.metaKey || e.shiftKey) return
             if (gavetaNaoToca()) {
+                if (!podeMarcar()) return
                 const m = marcadoDeArquivo({ path, name })
                 if (m) duploCliqueDeMarcar(m)
                 return

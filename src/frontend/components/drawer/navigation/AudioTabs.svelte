@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { onDestroy } from "svelte"
     import { uid } from "uid"
     import { Main } from "../../../../types/IPC/Main"

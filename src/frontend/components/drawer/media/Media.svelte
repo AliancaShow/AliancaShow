@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gavetaNaoToca } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { get } from "svelte/store"
     import { uid } from "uid"
     import type { ContentProviderId } from "../../../../electron/contentProviders/base/types"

@@ -6,7 +6,7 @@
     import { tela } from "../../utils/aliancaTela"
     import { itemPrecisaConferir, marcarConferidoPorIndice } from "../../utils/aliancaConferir"
     import { chavesMarcadas, cliqueDeMarcar, duploCliqueDeMarcar, marcadoDeShow, ultimoDoCulto } from "../../utils/aliancaGaveta"
-    import { gavetaNaoToca } from "../../utils/aliancaModo"
+    import { gavetaNaoToca, podeMarcar } from "../../utils/aliancaGavetaToque"
     import { sirvoRoteiro } from "../../utils/aliancaSirvo"
     import { showEstaSemLetra } from "../../utils/aliancaSemLetraLogica"
     import { translateText } from "../../utils/language"
@@ -125,7 +125,7 @@
     function click(e: ClickEvent) {
         const { ctrl, shift, target } = e.detail
         // marcar vem antes do "já está ativo": o show aberto também se marca
-        if (marcavel && !ctrl && !shift && !editActive && !target.closest("input") && gavetaNaoToca()) cliqueDeMarcar(marcadoDeShow(id))
+        if (marcavel && !ctrl && !shift && !editActive && !target.closest("input") && podeMarcar()) cliqueDeMarcar(marcadoDeShow(id))
         // "Pôr no culto" entra depois do último item que o operador selecionou na lista do culto
         if (isProject && index !== null && $activeProject && !ctrl && !shift && !target.closest("input")) ultimoDoCulto.set({ projetoId: $activeProject, index: index as number, id })
         // AliançaShow (Preparar F3): abrir o item é conferir (antes do "já está ativo": reabrir o mesmo também vale)
@@ -176,7 +176,7 @@
         if (type === "show_placeholder") return
         // AliançaShow (Preparar F6): no Preparar o duplo clique nunca vai para o ar (nem na gaveta nem na lista do culto); na gaveta só garante a marcação
         if (gavetaNaoToca()) {
-            if (marcavel && !editActive && !e.detail.target.closest("input")) duploCliqueDeMarcar(marcadoDeShow(id))
+            if (marcavel && podeMarcar() && !editActive && !e.detail.target.closest("input")) duploCliqueDeMarcar(marcadoDeShow(id))
             return
         }
         if (editActive || $outLocked || e.detail.target.closest("input")) return

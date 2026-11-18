@@ -1,6 +1,7 @@
 <script lang="ts">
     import { actions, actionTags, activeActionTagFilter, activePopup, labelsDisabled, popupData, runningActions, special, timelineRecordingAction } from "../../../stores"
-    import { gavetaNaoToca, teclaIgnorada } from "../../../utils/aliancaModo"
+    import { teclaIgnorada } from "../../../utils/aliancaModo"
+    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import { getActionIcon, runAction } from "../../actions/actions"
