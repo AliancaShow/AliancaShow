@@ -4,6 +4,7 @@ import { clearAudio } from "../../audio/audioFading"
 import { AudioPlayer } from "../../audio/audioPlayer"
 import { activeEdit, activePage, activePopup, activeStage, contextActive, customMessageCredits, drawSettings, focusMode, lockedOverlays, outLocked, outputCache, outputs, outputSlideCache, overlays, overlayTimers, playingAudio, playingMetronome, selected, slideTimers, topContextActive } from "../../stores"
 import { destinoRecusaTecla } from "../../utils/aliancaModo"
+import { semDesvio } from "../../utils/aliancaSoRetorno"
 import { customActionActivation } from "../actions/actions"
 import { startMetronome } from "../drawer/audio/metronome"
 import { clone } from "../helpers/array"
@@ -138,12 +139,13 @@ export function clearOverlay(overlayId: string) {
         if (!Array.isArray(get(lockedOverlays))) lockedOverlays.set([])
         else lockedOverlays.set(get(lockedOverlays).filter((id) => id !== overlayId))
 
-        setOutput("overlays", outOverlays, false, output.id)
+        // AliancaShow (8b): limpar (mesmo parcial) fala com o telao: nunca e "envio" do modo so retorno
+        semDesvio(() => setOutput("overlays", outOverlays, false, output.id))
 
         // clear effects
         let outEffects: string[] = output?.out?.effects || []
         outEffects = outEffects.filter((id) => id !== overlayId)
-        setOutput("effects", outEffects, false, output.id)
+        semDesvio(() => setOutput("effects", outEffects, false, output.id))
     })
 }
 
@@ -154,7 +156,7 @@ export function clearOverlays(specificOutputId = "") {
     outputIds.forEach((outputId) => {
         let outOverlays = clone(get(outputs)[outputId]?.out?.overlays || [])
         outOverlays = outOverlays.filter((id) => get(overlays)[id]?.locked)
-        setOutput("overlays", outOverlays, false, outputId)
+        semDesvio(() => setOutput("overlays", outOverlays, false, outputId)) // AliancaShow (8b): limpar nunca e desviado
         lockedOverlays.set(outOverlays)
 
         // effects

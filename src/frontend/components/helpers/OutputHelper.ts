@@ -15,6 +15,7 @@ import { checkActionTrigger, getFewestOutputLines, getItemWithMostLines, playPdf
 import { _show } from "./shows"
 import { runActionId } from "../actions/actions"
 import { indiceDaFoto } from "../../utils/aliancaFoto"
+import { saidaDeLeitura } from "../../utils/aliancaSoRetorno"
 
 type Options = { isSpace: boolean; slideLayers: boolean; playNext: boolean }
 
@@ -522,7 +523,8 @@ export class OutputHelper {
     }
 
     private static getOut(outputId: string) {
-        const currentOutput = get(outputs)[outputId] || {}
+        // AliancaShow (8b): no modo "so retorno" a posicao atual (setas/Espaco/celular) e a do retorno; desligado devolve o proprio `outputId`
+        const currentOutput = get(outputs)[saidaDeLeitura(outputId)] || {}
         let out = currentOutput.out ? { ...currentOutput.out } : {}
 
         if (this.pendingSlides[outputId]) {

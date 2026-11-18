@@ -1,5 +1,6 @@
 <script lang="ts">
     import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import { get } from "svelte/store"
     import { uid } from "uid"
     import type { ContentProviderId } from "../../../../electron/contentProviders/base/types"
@@ -503,7 +504,7 @@
                 const videoType = getMediaLayerType(file.path, mediaStyle)
 
                 // clear slide text
-                if (videoType === "foreground") clearSlide()
+                if (videoType === "foreground" && !soRetornoLigado()) clearSlide()
 
                 const type = getMediaType(getExtension(file.path))
                 setOutput("background", { path: file.path, ...mediaStyle, type, loop: false, muted: false })

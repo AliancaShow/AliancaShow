@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { MARCA, devolverFonte, idsDeRetorno, porQueNaoLigar, temMarca, trocarFonte } from "./aliancaSoRetornoLogica"
+import { MARCA, descreverRetorno, devolverFonte, ehEnvio, idDeLeitura, idsDeRetorno, outVazio, porQueNaoLigar, roteamento, slideDoTelao, temMarca, trocarFonte } from "./aliancaSoRetornoLogica"
 
 describe("idsDeRetorno", () => {
     it("so saida habilitada com stageOutput", () => {
@@ -10,10 +10,9 @@ describe("idsDeRetorno", () => {
 })
 
 describe("porQueNaoLigar", () => {
-    it("sem retorno: o motivo escrito; sem a saida respeitando o modo: o motivo; senao vazio", () => {
-        expect(porQueNaoLigar([], true)).toContain("Nenhum monitor de retorno")
-        expect(porQueNaoLigar(["b"], false)).toContain("output.ts")
-        expect(porQueNaoLigar(["b"], true)).toBe("")
+    it("sem retorno: o motivo escrito; com retorno: vazio", () => {
+        expect(porQueNaoLigar([])).toContain("Nenhum monitor de retorno")
+        expect(porQueNaoLigar(["b"])).toBe("")
     })
 })
 
@@ -43,5 +42,45 @@ describe("trocarFonte / devolverFonte", () => {
             { id: "z", layout: "nada" }
         ])
         expect(layouts).toEqual(copia)
+    })
+})
+
+describe("roteamento (o ponto unico do desvio)", () => {
+    it("desligado, dentro de semDesvio ou limpeza: nunca desvia", () => {
+        expect(roteamento(false, 0, ["r"], { id: "x" }).desvia).toBe(false)
+        expect(roteamento(true, 1, ["r"], { id: "x" }).desvia).toBe(false)
+        expect(roteamento(true, 0, ["r"], null).desvia).toBe(false)
+        expect(roteamento(true, 0, ["r"], []).desvia).toBe(false)
+        expect(roteamento(true, 0, ["r"], undefined).desvia).toBe(false)
+    })
+    it("ligado e envio: so os retornos, e a lista vazia continua sendo desvio (descarta, nunca vai ao telao)", () => {
+        expect(roteamento(true, 0, ["r"], { id: "x" })).toEqual({ desvia: true, ids: ["r"] })
+        expect(roteamento(true, 0, ["r"], "overlay1")).toEqual({ desvia: true, ids: ["r"] })
+        expect(roteamento(true, 0, [], { id: "x" })).toEqual({ desvia: true, ids: [] })
+    })
+    it("ehEnvio", () => {
+        expect(ehEnvio({})).toBe(true)
+        expect(ehEnvio(["a"])).toBe(true)
+        expect(ehEnvio([])).toBe(false)
+        expect(ehEnvio(null)).toBe(false)
+    })
+})
+
+describe("leitura, semente e descricao", () => {
+    it("as setas leem do retorno so no modo", () => {
+        expect(idDeLeitura(true, ["r"], "telao")).toBe("r")
+        expect(idDeLeitura(false, ["r"], "telao")).toBe("telao")
+        expect(idDeLeitura(true, [], "telao")).toBe("telao")
+    })
+    it("slideDoTelao: a saida normal ativa, nunca o retorno", () => {
+        const outs = { r: { enabled: true, stageOutput: "L", out: { slide: { id: "retorno" } } }, t: { enabled: true, active: true, out: { slide: { id: "a", index: 2 } } } }
+        expect(slideDoTelao(outs)).toEqual({ id: "a", index: 2 })
+        expect(slideDoTelao({ t: { enabled: true, out: {} } })).toBe(null)
+    })
+    it("outVazio zera tudo e descreverRetorno diz o que ha", () => {
+        expect(outVazio()).toEqual({ slide: null, background: null, overlays: [], effects: [], transition: null })
+        const outs = { r: { enabled: true, stageOutput: "L", out: { slide: { id: "s1", index: 0 } } } }
+        expect(descreverRetorno(outs, () => "Grande e o Senhor")).toBe("Grande e o Senhor · slide 1")
+        expect(descreverRetorno({ r: { enabled: true, stageOutput: "L", out: {} } }, () => "")).toBe("nada")
     })
 })

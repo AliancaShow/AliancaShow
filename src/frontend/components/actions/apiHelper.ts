@@ -1,4 +1,5 @@
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist"
+import { semDesvio, soRetornoLigado } from "../../utils/aliancaSoRetorno"
 import { get } from "svelte/store"
 import { STAGE } from "../../../types/Channels"
 import type { History } from "../../../types/History"
@@ -166,7 +167,7 @@ export async function startProjectItemByName(name: string) {
         let out = { path: item.id, muted: shouldBeMuted, loop: shouldLoop, startAt: 0, type: item.type, ...(typeof item.loop === "boolean" ? { loopDoItem: item.loop } : {}), ...mediaStyle }
 
         // clear slide
-        if (videoType === "foreground" || (videoType !== "background" && (item.type === "image" || !shouldLoop))) clearSlide()
+        if (!soRetornoLigado() && (videoType === "foreground" || (videoType !== "background" && (item.type === "image" || !shouldLoop)))) clearSlide()
 
         setOutput("background", out)
     } else if (item.type === "pdf") {
@@ -179,7 +180,7 @@ export async function startProjectItemByName(name: string) {
 
         let name = item.name || removeExtension(getFileName(item.id))
         setOutput("slide", { type: "pdf", id: item.id, page: 0, pages, name })
-        clearBackground()
+        if (!soRetornoLigado()) clearBackground()
     } else if (item.type === "audio") AudioPlayer.start(item.id, { name: item.name || "" })
     else if (item.type === "overlay") setOutput("overlays", item.id, false, "", true)
     else if (item.type === "player") setOutput("background", { id: item.id, type: "player" })
@@ -711,7 +712,7 @@ export function playMedia(data: API_media) {
     if (extension === "pdf") {
         const name = removeExtension(getFileName(data.path))
         setOutput("slide", { type: "pdf", id: data.path, page: data.index || 0, pages: data.data?.pageCount ?? 1, name })
-        clearBackground()
+        if (!soRetornoLigado()) clearBackground()
         return
     }
 
@@ -758,10 +759,10 @@ export function toggleMediaLoop() {
     if (caminho && VideoPlayer.getPlaying(caminho, [activeOutput.id])) {
         VideoPlayer.toggleLoop(caminho, activeOutput.id)
         const agora = !!VideoPlayer.getPlaying(caminho, [activeOutput.id])?.loop
-        setOutput("background", { ...currentBg, loop: agora })
+        semDesvio(() => setOutput("background", { ...currentBg, loop: agora }))
         return
     }
-    setOutput("background", { ...currentBg, loop: !isLooping })
+    semDesvio(() => setOutput("background", { ...currentBg, loop: !isLooping }))
 }
 
 export function getMediaLoopState(): boolean {
@@ -782,7 +783,7 @@ export function toggleMediaMute() {
     if (!currentBg) return
 
     const isMuted = currentBg.muted !== false
-    setOutput("background", { ...currentBg, muted: !isMuted })
+    semDesvio(() => setOutput("background", { ...currentBg, muted: !isMuted }))
 }
 
 // AUDIO

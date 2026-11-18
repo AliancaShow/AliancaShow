@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getDocument, GlobalWorkerOptions } from "pdfjs-dist"
+    import { soRetornoLigado } from "../../utils/aliancaSoRetorno"
     import type { ClickEvent } from "../../../types/Main"
     import { AudioPlayer } from "../../audio/audioPlayer"
     import { activeEdit, activeFocus, activePage, activeProject, activeShow, categories, editingProjectTemplate, effects, focusMode, globalTags, media, notFound, outLocked, outputs, overlayCategories, overlays, playerVideos, playingAudio, projects, projectTemplates, refreshEditSlide, shows, showsCache, special, styles, textCache } from "../../stores"
@@ -208,7 +209,7 @@
             let out = { path: located.path, muted: shouldBeMuted, loop: shouldLoop, startAt: 0, type, ...(typeof show.loop === "boolean" ? { loopDoItem: show.loop } : {}), ...mediaStyle }
 
             // clear slide
-            if (videoType === "foreground" || (videoType !== "background" && (type === "image" || !shouldLoop))) clearSlide()
+            if (!soRetornoLigado() && (videoType === "foreground" || (videoType !== "background" && (type === "image" || !shouldLoop)))) clearSlide()
 
             setOutput("background", out)
         } else if (type === "pdf") {
@@ -222,7 +223,7 @@
 
             let name = show.name || removeExtension(getFileName(id))
             setOutput("slide", { type: "pdf", id, page: 0, pages, name })
-            clearBackground()
+            if (!soRetornoLigado()) clearBackground()
 
             if (show.data?.timer) startFolderTimer(id, { type: "pdf", path: "" })
         } else if (type === "audio") AudioPlayer.start(id, { name: show.name })

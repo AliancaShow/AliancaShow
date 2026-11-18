@@ -1,5 +1,6 @@
 <script lang="ts">
     import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import type { Category } from "../../../../types/Tabs"
     import { activeFocus, activePlayerTagFilter, activeShow, focusMode, outLocked, outputs, playerTags, playerVideos } from "../../../stores"
     import { translateText } from "../../../utils/language"
@@ -76,13 +77,13 @@
     function tocar(video: any) {
         if (gavetaNaoToca() || $outLocked) return
 
-        if (findMatchingOut(video.rid, $outputs)) {
+        if (!soRetornoLigado() && findMatchingOut(video.rid, $outputs)) {
             clearBackground()
             return
         }
 
         // set as "foreground" type (clear slide & ignore "background" layer)
-        clearSlide()
+        if (!soRetornoLigado()) clearSlide()
         setOutput("background", { id: video.rid, type: "player", muted: false, loop: false, startAt: 0, ignoreLayer: true })
     }
 </script>

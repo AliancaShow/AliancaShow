@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getDocument, GlobalWorkerOptions, type PDFDocumentLoadingTask } from "pdfjs-dist"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import { onDestroy, onMount } from "svelte"
     import { Main } from "../../../../types/IPC/Main"
     import { sendMain } from "../../../IPC/main"
@@ -46,7 +47,7 @@
         let name = show.name || removeExtension(getFileName(path))
         setOutput("slide", { type: "pdf", id: path, page, pages: pageCount, name })
 
-        clearBackground()
+        if (!soRetornoLigado()) clearBackground()
 
         if (timer) startFolderTimer(path, { type: "pdf", path: "" })
     }

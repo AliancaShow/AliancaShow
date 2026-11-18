@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
+    import { soRetornoLigado } from "../../utils/aliancaSoRetorno"
     import { activeEdit, activeFocus, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, notFound, outLocked, outputs, outputSlideCache, showsCache, slidesOptions, special, templates } from "../../stores"
     import { temFundoQuebrado } from "../../utils/aliancaFundoQuebrado"
     import { indiceDaFoto } from "../../utils/aliancaFotoLogica"
@@ -149,7 +150,7 @@
             updateOut(showId, index, slideRef, !e.altKey)
 
             // force update output if index is the same as previous
-            if (activeSlides[index]) refreshOut(true, true)
+            if (activeSlides[index] && !soRetornoLigado()) refreshOut(true, true)
         })
 
         // set to active in focus mode

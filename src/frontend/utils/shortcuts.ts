@@ -1,4 +1,5 @@
 import { get } from "svelte/store"
+import { soRetornoLigado } from "./aliancaSoRetorno"
 import { OUTPUT } from "../../types/Channels"
 import { Main } from "../../types/IPC/Main"
 import type { ShowType } from "../../types/Show"
@@ -520,7 +521,7 @@ export async function togglePlayingMedia(e: Event | null = null, back = false, a
         const shouldBeMuted = typeof projectItem?.muted === "boolean" ? projectItem.muted : videoType === "background" ? true : false
 
         // clear slide
-        if (videoType === "foreground" || (videoType !== "background" && (type === "image" || !shouldLoop))) clearSlide()
+        if (!soRetornoLigado() && (videoType === "foreground" || (videoType !== "background" && (type === "image" || !shouldLoop)))) clearSlide()
 
         const located = await getMedia(item.id)
         if (!located) return

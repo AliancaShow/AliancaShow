@@ -1,5 +1,6 @@
 <script lang="ts">
     import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import { onMount } from "svelte"
     import { Main } from "../../../../types/IPC/Main"
     import { requestMain } from "../../../IPC/main"
@@ -35,7 +36,7 @@
     // o clique so seleciona; o ▶ (e o "Mostrar agora") manda a janela ao fundo da saida (revisao da fatia 6, achado 4)
     function tocar(window: { id: string }) {
         if (gavetaNaoToca() || $outLocked) return
-        if (currentOutput?.out?.background?.id === window.id) clearBackground()
+        if (!soRetornoLigado() && currentOutput?.out?.background?.id === window.id) clearBackground()
         else setOutput("background", { id: window.id, type: "screen" })
     }
 </script>

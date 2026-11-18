@@ -1,4 +1,5 @@
 import { falhaAlta } from "../../utils/aliancaFalha"
+import { soRetornoLigado } from "../../utils/aliancaSoRetorno"
 import { get } from "svelte/store"
 import { uid } from "uid"
 import { EXPORT, OUTPUT } from "../../../types/Channels"
@@ -1624,7 +1625,7 @@ const clickActions = {
 
         // clear slide text
         // if (get(projects)[get(activeProject) || ""]?.shows?.find((a) => a.id === path)) clearSlide()
-        if (videoType === "foreground") clearSlide()
+        if (videoType === "foreground" && !soRetornoLigado()) clearSlide()
 
         const type = getMediaType(getExtension(path))
         setOutput("background", { path, ...mediaStyle, type, loop: false, muted: false })

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import { onDestroy } from "svelte"
     import { NDI } from "../../../../types/Channels"
     import { outLocked, outputs, special } from "../../../stores"
@@ -31,7 +32,7 @@
     // o clique so seleciona; o ▶ (e o "Mostrar agora") manda a entrada NDI ao fundo da saida (revisao da fatia 6, achado 4)
     function tocar(screen: { id: string }) {
         if (gavetaNaoToca() || $outLocked) return
-        if (currentOutput?.out?.background?.id === screen.id) clearBackground()
+        if (!soRetornoLigado() && currentOutput?.out?.background?.id === screen.id) clearBackground()
         else setOutput("background", { id: screen.id, type: "ndi" })
     }
 

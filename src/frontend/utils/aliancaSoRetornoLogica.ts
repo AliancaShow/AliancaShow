@@ -14,14 +14,36 @@ export function idsDeRetorno(outs: { [id: string]: SaidaMinima } | null | undefi
         .map(([id]) => id)
 }
 
-/**
- * Por que o botao nao pode ligar ("" = pode).
- * `saidaRespeita`: o `setOutput` desta versao consulta o modo? (so depois do ajuste aprovado em output.ts; sem ele ligar seria mentira)
- */
-export function porQueNaoLigar(retornos: string[], saidaRespeita: boolean): string {
+/** Por que o botao nao pode ligar ("" = pode) */
+export function porQueNaoLigar(retornos: string[]): string {
     if (!retornos.length) return "Nenhum monitor de retorno ligado. Configure em Telas e monitor de retorno."
-    if (!saidaRespeita) return "Ainda não ligado à saída: falta o ajuste em output.ts (aguardando aprovação)."
     return ""
+}
+
+/** o pedido ao `setOutput` VAI AO AR? (limpeza = dado nulo/vazio nunca e desviada: Esc e Limpar atuam no telao) */
+export const ehEnvio = (data: unknown): boolean => data !== null && data !== undefined && !(Array.isArray(data) && !data.length)
+
+/**
+ * O destino do envio. `desvia: false` = comportamento de sempre (o `setOutput` nao muda nada). Com `desvia: true` o destino sao SO os retornos
+ * (`ids`, que pode vir vazio: o retorno sumiu e o envio e descartado, nunca cai no telao).
+ */
+export function roteamento(modo: boolean, desvio: number, retornos: string[], data: unknown): { desvia: boolean; ids: string[] } {
+    if (!modo || desvio > 0 || !ehEnvio(data)) return { desvia: false, ids: [] }
+    return { desvia: true, ids: retornos }
+}
+
+/** de que saida as setas leem "o slide atual": no modo, do retorno */
+export const idDeLeitura = (modo: boolean, retornos: string[], id: string): string => (modo && retornos.length ? retornos[0] : id)
+
+/** o `out` de um retorno vazio (tudo o que o modo escreveu sai; o telao nunca passa por aqui) */
+export const outVazio = () => ({ slide: null, background: null, overlays: [], effects: [], transition: null })
+
+/** o slide que o telao mostra agora (o retorno e semeado com ele ao ligar: o monitor do pastor nao apaga) */
+export function slideDoTelao(outs: { [id: string]: any } | null | undefined): any {
+    const normais = Object.values(outs || {}).filter((o: any) => !!o && o.enabled === true && !o.stageOutput && !o.isKeyOutput)
+    const ativas = normais.filter((o: any) => o.active === true)
+    for (const o of (ativas.length ? ativas : normais) as any[]) if (o.out?.slide) return o.out.slide
+    return null
 }
 
 export const MARCA = "aliancaSoRetorno"
@@ -49,6 +71,18 @@ export function devolverFonte(stageShows: Layouts): Layouts {
         novo[id] = { ...(l as any), settings: marca.antes ? { ...resto, output: marca.antes } : resto }
     }
     return novo
+}
+
+/** o que o retorno mostra, em palavras curtas (a coluna "No ar" avisa enquanto o modo esta ligado: o operador nao manda as cegas) */
+export function descreverRetorno(outs: { [id: string]: any } | null | undefined, nomeDoShow: (id: string) => string): string {
+    const id = idsDeRetorno(outs as any)[0]
+    const out = (id && outs?.[id]?.out) || {}
+    if (out.slide?.id) {
+        const nome = nomeDoShow(out.slide.id) || (out.slide.type === "pdf" ? "PDF" : "slide")
+        return `${nome}${typeof out.slide.index === "number" ? " · slide " + (out.slide.index + 1) : ""}`
+    }
+    if (out.background) return "mídia"
+    return "nada"
 }
 
 /** o que o modo diz na faixa e na pilula */
