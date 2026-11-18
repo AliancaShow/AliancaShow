@@ -50,11 +50,8 @@ describe("modo foco: as portas (D6)", () => {
         expect(corpo).not.toContain("activePage.set")
         expect(corpo).not.toContain("activeShow.set")
     })
-    it("quicksearch.ts: menubarItems sem focus_mode", () => {
-        const src = ler("src/frontend/components/quicksearch/quicksearch.ts")
-        const i = src.indexOf("menubarItems")
-        expect(i).toBeGreaterThan(0)
-        expect(src.slice(i)).not.toMatch(/id:\s*"focus_mode"/)
+    it("Spotlight (Ctrl+K): as acoes do app nao tem focus_mode", () => {
+        expect(ler("src/frontend/utils/aliancaSpotlightLogica.ts")).not.toContain("focus_mode")
     })
     it("popups/Shortcuts.svelte sem actions.focus_mode", () => {
         expect(ler("src/frontend/components/main/popups/Shortcuts.svelte")).not.toContain("actions.focus_mode")

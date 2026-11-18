@@ -197,7 +197,7 @@
     <div class="lista"><p class="vazio">Nenhum culto aberto. Escolha o dia acima.</p></div>
 {/if}
 
-<button class="trazer" data-acao="adicionar-ao-roteiro" tabindex="-1" on:mousedown|preventDefault on:click={() => quickSearchActive.set(true)}>＋ Adicionar ao roteiro</button>
+<button class="trazer" data-acao="adicionar-ao-roteiro" tabindex="-1" on:mousedown|preventDefault on:click={() => quickSearchActive.set(true)}>＋ Adicionar ao roteiro <span class="atalhoK">· Ctrl+K</span></button>
 
 <style>
     .aoVivo {
@@ -373,5 +373,8 @@
         font-size: 13px;
         color: var(--luz-texto);
         cursor: pointer;
+    }
+    .atalhoK {
+        color: var(--luz-mudo);
     }
 </style>

@@ -13,7 +13,7 @@
     import Recorder from "./components/main/Recorder.svelte"
     import Toast from "./components/main/Toast.svelte"
     import TooltipManager from "./components/main/TooltipManager.svelte"
-    import QuickSearch from "./components/quicksearch/QuickSearch.svelte"
+    import AliancaSpotlight from "./components/main/AliancaSpotlight.svelte"
     import Center from "./components/system/Center.svelte"
     import { activeProfile, activeTimers, closeAd, currentWindow, disabledServers, events, language, loaded, localeDirection, outputDisplay, outputs, profiles, theme, themes, timers } from "./stores"
     import { focusArea, logerror, mainClick, toggleRemoteStream } from "./utils/common"
@@ -74,7 +74,7 @@
             <MainOutput />
         {:else if $loaded}
             <Popup />
-            <QuickSearch />
+            <AliancaSpotlight />
             <Toast />
             <Recorder />
             <ProgressPanel />

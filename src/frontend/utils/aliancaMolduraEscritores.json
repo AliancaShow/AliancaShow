@@ -119,25 +119,6 @@
                 "\"settings\", \"botao-de-pagina\""
             ]
         },
-        "components/quicksearch/quicksearch.ts": {
-            "classe": "gesto, morre com o QuickSearch (fatia 5)",
-            "chamadas": [
-                "\"settings\", \"spotlight\"",
-                "\"settings\", \"spotlight\"",
-                "\"settings\", \"spotlight\"",
-                "\"stage\", \"spotlight\"",
-                "\"show\", \"spotlight\"",
-                "\"show\", \"spotlight\"",
-                "\"show\", \"spotlight\"",
-                "id as any, \"spotlight\"",
-                "\"show\", \"spotlight\"",
-                "\"settings\", \"spotlight\"",
-                "\"settings\", \"spotlight\"",
-                "\"settings\", \"spotlight\"",
-                "\"show\", \"spotlight\"",
-                "\"show\", \"spotlight\""
-            ]
-        },
         "components/settings/SettingsTabs.svelte": {
             "classe": "gesto, morre com o arquivo (fatia 4)",
             "chamadas": [
@@ -174,6 +155,14 @@
             "classe": "gesto: chips que levam a Mostrar",
             "chamadas": [
                 "\"show\", \"chip\""
+            ]
+        },
+        "utils/aliancaSpotlight.ts": {
+            "classe": "gesto: busca Spotlight (Ctrl+K): Configuracoes, Telas e abrir o que vive em Mostrar quando a busca abre numa pagina do menu",
+            "chamadas": [
+                "\"show\", \"spotlight\"",
+                "\"settings\", \"spotlight\"",
+                "\"stage\", \"spotlight\""
             ]
         }
     },

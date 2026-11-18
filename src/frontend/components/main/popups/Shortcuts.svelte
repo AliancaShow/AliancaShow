@@ -14,7 +14,7 @@
         "actions.toggle_drawer": `${ctrl} + d`,
         "actions.export": `${ctrl} + e`,
         "main.search": `${ctrl} + f`,
-        "main.quick_search": `${ctrl} + g`,
+        "main.quick_search": `${ctrl} + k`,
         "popup.history": `${ctrl} + h`,
         "edit._title_italic": `${ctrl} + i`,
         "actions.import": `${ctrl} + i`,
