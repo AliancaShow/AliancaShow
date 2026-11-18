@@ -80,8 +80,9 @@
             <div class="filhos">
                 {#if r.id === "ferramentas"}
                     {#each filhosFerramentas as f (f.id)}
-                        <button class="fil" class:on={aba === f.id} data-no={f.id} tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho(f.id, f.id === "overlays" || f.id === "templates" ? "all" : "")}>{f.nome}</button>
-                        {#if aba === f.id && f.id === "functions"}<div class="neto"><Navigation id="functions" /></div>{/if}
+                        <button class="fil" class:on={aba === f.id} data-no={f.id} tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho(f.id)}>{f.nome}</button>
+                        <!-- Funcoes (acoes, variaveis, temporizadores) e Sobreposicoes (efeitos, categorias) guardam sub-abas de verdade: abertas, mostram as delas embaixo -->
+                        {#if aba === f.id && (f.id === "functions" || f.id === "overlays")}<div class="neto"><Navigation id={f.id} /></div>{/if}
                     {/each}
                 {:else}
                     <Navigation id={r.id} />

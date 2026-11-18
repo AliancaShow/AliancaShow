@@ -28,7 +28,7 @@ describe("arvore da biblioteca (C6)", () => {
         expect(sanearNaCarga(undefined)).toBe("shows")
         expect(sanearNaCarga("audio")).toBe("audio")
         expect(sanearSubAba("media", "pasta:raiz")).toBe("all")
-        expect(sanearSubAba("overlays", "effects")).toBe("all")
+        expect(sanearSubAba("overlays", "effects")).toBe("effects")
         expect(sanearSubAba("shows", "unlabeled")).toBe("unlabeled")
         expect(sanearSubAba("media", "pasta:f1")).toBe("pasta:f1")
     })

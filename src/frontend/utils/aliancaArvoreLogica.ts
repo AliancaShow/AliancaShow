@@ -51,13 +51,12 @@ export function sanearNaCarga(aba: string | null | undefined): DrawerTabIds {
 }
 
 /**
- * Sub-aba salva de antes da C6: "Mídias" (a pasta-raiz, `pasta:raiz`) virou o proprio "tudo" de Midia; "Efeitos" de Sobreposicoes nao tem mais linha.
+ * Sub-aba salva de antes da C6: "Mídias" (a pasta-raiz, `pasta:raiz`) virou o proprio "tudo" de Midia; (Sobreposicoes continua com as sub-abas dela quando aberta).
  * `unlabeled` (Sem etiqueta) continua valendo: agora e o filtro "Sem categoria" do cabecalho da lista. O resto passa como esta.
  */
 export function sanearSubAba(aba: string, sub: string | null | undefined): string {
     if (!sub) return sub ?? ""
     if (aba === "media" && sub === "pasta:raiz") return "all"
-    if (aba === "overlays" && (sub === "effects" || sub === "unlabeled")) return "all"
     if (aba === "templates" && sub === "unlabeled") return "all"
     return sub
 }
