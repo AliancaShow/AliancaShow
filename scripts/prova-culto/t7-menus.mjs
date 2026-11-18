@@ -168,6 +168,11 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
         const arI = await noAr()
         const fav = await dom(`!!get(S.media)[${JSON.stringify(caminho)}]?.favourite`)
         ok("D2b Mostrar agora com o botao direito no icone do cartao: a midia vai ao ar e o favorito nao e tirado", arI.some((x) => x.b) && fav, JSON.stringify({ arI, fav }))
+        // achado 9: repetir (passado o engolidor) nao tira do ar
+        await esperar(600)
+        await direito(est.x, est.y)
+        await clicarItem("Mostrar agora")
+        ok("D2c Mostrar agora num item que ja esta no ar nao o tira do ar (idempotente)", (await noAr()).some((x) => x.b))
       } else ok("D2b o cartao tem o icone de favorito", false, est.motivo)
       await j.ev(`S.media.update(a=>{a[${JSON.stringify(caminho)}]={...a[${JSON.stringify(caminho)}],favourite:false}; return a}); await esp(300); return 1`)
       await limpar() }

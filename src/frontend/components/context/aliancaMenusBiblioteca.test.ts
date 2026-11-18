@@ -86,4 +86,10 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         expect(reg).toContain("const item = alvoDoItem(contextElem)")
         expect(reg).not.toMatch(/dispararNoAlvo\(alvo,/)
     })
+    it("revisao da fatia 6, achado 9: Mostrar agora num cartao que ja esta no ar (.main.active) nao refaz o clique (que alterna e tira do ar)", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).toMatch(/closest\("\.main\.active"\)[\s\S]{0,80}newToast\("Já está no ar"\)[\s\S]*dispararNoAlvo\(item, "click"\)/)
+        const card = readFileSync(join(__dirname, "../drawer/Card.svelte"), "utf8")
+        expect(card).toContain("class:active")
+    })
 })

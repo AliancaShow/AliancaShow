@@ -193,6 +193,9 @@ function mostrarAgora(classe: string, contextElem: HTMLElement | null) {
         void playScripture()
         return
     }
+    // idempotente (revisao da fatia 6, achado 9): o clique do cartao ALTERNA (no ar -> tira); "Mostrar agora" repetido nao pode tirar do ar o que
+    // o operador acabou de mandar. O cartao (Card.svelte) marca `.main.active` quando o item esta numa saida.
+    if (item?.closest(".main.active")) return void newToast("Já está no ar")
     // o clique vai no ITEM (o cartao, a linha), nunca no elemento mais interno sob o ponteiro: um botao direito em cima da estrela/tag/filtro do
     // cartao refazia o clique do ICONE (tirava o favorito) e nada ia ao ar (revisao da fatia 6, achado 6)
     dispararNoAlvo(item, "click")
