@@ -164,12 +164,15 @@ export function updateSettings(data: any) {
     sendMain(Main.START, { ports: customPorts, max: data.maxConnections === undefined ? 10 : data.maxConnections, disabled, data: get(serverData) })
 
     // theme
-    let currentTheme = get(themes)[data.theme]
+    // leiaute v2 (uma aparencia so): o tema SALVO nao vale mais. As pecas de upstream dentro da tela nova (Configuracoes, editor, popups, cartoes)
+    // leem --primary/--text/--secondary: um perfil com tema claro ou personalizado vazaria um painel claro dentro da casca escura, e a aba Tema
+    // (onde se trocava) saiu. Sempre o tema padrao; a chave `theme` salva nao e apagada nem lida aqui.
+    let currentTheme = get(themes).default
     if (currentTheme?.colors) {
         // update colors (pre 0.9.2 or 1.4.9)
         const pre092 = currentTheme.colors.secondary?.toLowerCase() === "#e6349c"
         const pre149 = currentTheme.colors.primary?.toLowerCase() === "#292c36"
-        if (data.theme === "default" && (pre092 || pre149)) {
+        if (pre092 || pre149) {
             themes.update((a) => {
                 a.default = clone(defaultThemes.default)
                 currentTheme = a.default

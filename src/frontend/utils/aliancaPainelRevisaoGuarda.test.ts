@@ -29,3 +29,23 @@ describe("1.4: limpar sobreposicao respeita as travadas", () => {
         expect(t).toMatch(/sobreposicaoLimpa: isOutCleared\("overlays", \$outputs, false\)/)
     })
 })
+
+describe("2.1: Ferramentas da saida nao abrem em Editar (nada de pagina inerte calada)", () => {
+    it("o menu do app recusa a pagina draw via desenhoBloqueado() (faixa de falha) e fica onde esta", () => {
+        const t = ler("components/main/AliancaMenuApp.svelte")
+        expect(t).toMatch(/if \(p === "draw" && desenhoBloqueado\(\)\) return/)
+    })
+    it("desenhoBloqueado acende a falha `desenho-no-preparar` quando o modo e Preparar", () => {
+        const t = ler("utils/aliancaDesenho.ts")
+        expect(t).toMatch(/gavetaNaoToca\(\)/)
+        expect(t).toMatch(/falhaAlta\("desenho-no-preparar"/)
+    })
+})
+
+describe("2.2: o tema salvo do FreeShow nao vaza para as pecas antigas", () => {
+    it("a carga aplica SEMPRE o tema padrao (nao le `themes[data.theme]`)", () => {
+        const t = ler("utils/updateSettings.ts")
+        expect(t).toMatch(/let currentTheme = get\(themes\)\.default/)
+        expect(t).not.toMatch(/get\(themes\)\[data\.theme\]/)
+    })
+})

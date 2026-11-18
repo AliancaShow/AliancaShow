@@ -4,6 +4,7 @@
     // (o Esc e SO do menu enquanto aberto: capturado antes de chegar aos atalhos do telao).
     import { onDestroy } from "svelte"
     import { activePage, activePopup, activeProfile, profiles } from "../../stores"
+    import { desenhoBloqueado } from "../../utils/aliancaDesenho"
     import { falhaAlta } from "../../utils/aliancaFalha"
 
     let aberto = false
@@ -22,6 +23,8 @@
 
     // a pagina chega por argumento (a guarda de escritores nao aceita o literal "draw"): a lista nomeada de dinamicos conhece `p`
     function ir(p: "settings" | "stage" | "draw") {
+        // Ferramentas da saida em Editar: os botoes seriam inertes e calados; a entrada recusa em voz alta (faixa de falha) e fica onde esta
+        if (p === "draw" && desenhoBloqueado()) return
         activePage.set(p)
     }
     function escolher(i: Item) {
