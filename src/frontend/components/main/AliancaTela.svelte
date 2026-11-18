@@ -14,6 +14,7 @@
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
+    import AliancaRoteiro from "./AliancaRoteiro.svelte"
     import AliancaBibliotecaPainel from "./AliancaBibliotecaPainel.svelte"
     import AliancaCorpoPagina from "./AliancaCorpoPagina.svelte"
     import AliancaDivisoria from "./AliancaDivisoria.svelte"
@@ -99,7 +100,7 @@
             <div class="area">
                 <div class="faixa">
                     <section class="painel col" data-regiao="roteiro" style="width: {valores.esq}px">
-                        <!-- AQUI:roteiro -->
+                        <AliancaRoteiro />
                     </section>
                     <AliancaDivisoria eixo="v" on:pegar={pegar("esq")} />
                     <section class="painel centro" data-regiao="centro">

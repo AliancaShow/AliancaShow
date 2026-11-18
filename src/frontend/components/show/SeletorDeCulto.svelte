@@ -20,6 +20,7 @@
     import { abaLateral } from "../../utils/aliancaBibliotecaEstado"
     import { quantosDoOperador } from "../../utils/aliancaSirvoProjeto"
     import { CARENCIA_ABERTURA_MS, CARENCIA_MUDANCA_MS, OCIOSO_MS, POPOVER_SEM_CONTAGEM, TETO_TECLA_MS, assinaturaDasOpcoes, camadaPodeSair, decidirTecla, dentroDaCarencia, estadoDoBotaoDia, hojeLocalISO, indiceInicial, larguraDoLayout, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, posicaoDoPopover } from "../../utils/aliancaSeletorLogica"
+    import { history } from "../helpers/history"
     import { openProject } from "./project"
 
     export let tree: Tree[] = []
@@ -294,6 +295,14 @@
         else if (aberto === "agenda") dispatch("agenda", id)
     }
 
+    function criarAvulso() {
+        if (fase !== "aberto" || dentroDaCarencia(performance.now(), ateCarencia)) return
+        const pasta = (abas as { id: string; nome: string; pasta?: string }[]).find((a) => a.id === agendaAtiva)?.pasta
+        const pai = pasta ? Object.entries(pastasVivas).find(([, f]) => f.parent === "/" && f.name === pasta)?.[0] : undefined
+        history({ id: "UPDATE", newData: { replace: { parent: pai || "/" } }, location: { page: "show", id: "project" } })
+        irParaInerte()
+    }
+
     function clicarOpcao(id: string) {
         if (fase !== "aberto" || dentroDaCarencia(performance.now(), ateCarencia)) return
         escolher(id)
@@ -394,6 +403,9 @@
                                 {/each}
                             </div>
                         {/each}
+                        <!-- leiaute v2: culto avulso (o `newProject` de menuClick). Cria na pasta da agenda escolhida, ou na raiz em Todos. -->
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div class="op avulso" role="option" tabindex="-1" aria-selected="false" data-opcao="culto-avulso" on:click={criarAvulso}>＋ Culto avulso</div>
                     {/if}
                 </div>
             </div>
