@@ -18,9 +18,14 @@ const j = await abrir("principal")
 const dom = (expr) => j.ev(`return ${expr}`)
 async function print(nome) {
     await esperar(600)
-    const d = await j.enviar("Page.captureScreenshot", { format: "png", clip: { x: 0, y: 0, width: 1920, height: 1080, scale: 1 } })
-    writeFileSync(join(saida, nome + ".png"), Buffer.from(d.result.data, "base64"))
-    console.log("print", nome)
+    // o print e so evidencia: com um <video> na tela o CDP as vezes nao devolve a captura (30 s); isso nao reprova a prova
+    try {
+        const d = await j.enviar("Page.captureScreenshot", { format: "png", clip: { x: 0, y: 0, width: 1920, height: 1080, scale: 1 } })
+        writeFileSync(join(saida, nome + ".png"), Buffer.from(d.result.data, "base64"))
+        console.log("print", nome)
+    } catch (e) {
+        console.log("print", nome, "(sem captura: " + String(e && e.message).slice(0, 60) + ")")
+    }
 }
 const PERFIL = process.env.FS_PERFIL_DIR ? process.env.FS_PERFIL_DIR.split("\\").join("/") : "C:/Users/andre.zagato/Documents/ProjetosPessoais/aliancashow/bancada/prova-perfil-9223"
 const VIDEO = `${PERFIL}/midia/v1.mp4`

@@ -114,7 +114,7 @@
     {:else}
         <div class="corpo">
             <div class="area">
-                <div class="faixa">
+                <div class="faixaCima">
                     <section class="painel col" data-regiao="roteiro" style="width: {valores.esq}px">
                         {#if pagina === "edit"}<AliancaItemEditando />{:else}<AliancaRoteiro />{/if}
                     </section>
@@ -124,7 +124,7 @@
                     </section>
                 </div>
                 <AliancaDivisoria eixo="h" on:pegar={pegar("bib")} />
-                <section class="painel bib" data-regiao="biblioteca" style="height: {valores.bib}px">
+                <section class="painel bibliotecaPainel" data-regiao="biblioteca" style="height: {valores.bib}px">
                     <AliancaBibliotecaPainel esq={valores.esq} />
                 </section>
             </div>
@@ -193,7 +193,7 @@
         display: flex;
         flex-direction: column;
     }
-    .faixa {
+    .faixaCima {
         flex: 1;
         /* cabine 18/nov (A10): a faixa de cima NUNCA colapsa, mesmo que a altura medida (`h`) esteja velha: o cabecalho do roteiro (AO VIVO, ROTEIRO,
            seletor, ＋ Adicionar) saia empilhado em cima da biblioteca. O minimo e o mesmo de `prender` (FAIXA_MIN_ALTURA); quem cede e a biblioteca. */
@@ -223,7 +223,7 @@
         min-width: 0;
         overflow: hidden;
     }
-    .bib {
+    .bibliotecaPainel {
         /* cede ate o minimo da divisoria (LIMITES.bib[0]) quando a faixa de cima precisa do espaco */
         flex-shrink: 1;
         min-height: 140px;
