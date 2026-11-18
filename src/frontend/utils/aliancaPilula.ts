@@ -5,10 +5,11 @@ import { derived, get } from "svelte/store"
 import { tick } from "svelte"
 import { loadShows } from "../components/helpers/setShow"
 import { swichProjectItem } from "../components/helpers/showActions"
-import { activeEdit, activePage, activeProject, activeShow, categories, drawSettings, drawTool, editingProjectTemplate, modoAlianca, paintCache, projects, shows, showsCache, special, textCache } from "../stores"
+import { activeEdit, activeProject, activeShow, categories, drawSettings, drawTool, editingProjectTemplate, paintCache, projects, shows, showsCache, special, textCache } from "../stores"
 import { itemPrecisaConferir, marcarConferidoPorIndice } from "./aliancaConferir"
 import { abaLateral } from "./aliancaBibliotecaEstado"
 import { falhaAlta } from "./aliancaFalha"
+import { trocarTela } from "./aliancaTela"
 import { ultimoDoCulto } from "./aliancaGaveta"
 import { chipChat, chipDesenho, chipRoteiro, desenhoAtivo, dicaDaPilula, naoChegou, pilulaClicavel, primeiroPendente, textoDaPilula, ANTEPARO_MS, type Chip } from "./aliancaPilulaLogica"
 import { sirvo, sirvoAvisos, sirvoRoteiro } from "./aliancaSirvo"
@@ -88,18 +89,10 @@ export async function abrirPrimeiroPendente(): Promise<void> {
 
 // ---------------------------------------------------------------- chips e anteparo
 
-let ate = 0
-/** o gesto que COMECAR nos proximos ANTEPARO_MS sobre a barra (fora do seletor de modo) e engolido inteiro. Sem store, sem timer. */
-export function armarAnteparo(): void {
-    ate = performance.now() + ANTEPARO_MS
-}
-export function anteparoAte(): number {
-    return ate
-}
+// o anteparo mora em aliancaTela.ts (fatia 2): toda chegada em Mostrar o arma pela porta `trocarTela`
+export { armarAnteparo, anteparoAte } from "./aliancaTela"
 
 /** clique em qualquer chip: arma o anteparo PRIMEIRO, depois a pagina, depois o modo. O chip so le: nao dispensa, nao marca lido, nao abre `draw`. */
 export function irAoCulto(): void {
-    armarAnteparo()
-    activePage.set("show")
-    modoAlianca.set("culto")
+    trocarTela("show", "chip")
 }

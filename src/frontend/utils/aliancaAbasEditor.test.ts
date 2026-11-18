@@ -4,7 +4,6 @@ import { _zerarFalhas, falhas } from "./aliancaFalha"
 
 // A gaveta esta em "shows" e o editor esconde essa aba: iniciarAbasDoEditor troca para outra, e o `set` da aba lanca.
 vi.mock("../stores", () => {
-    const modoAlianca = writable("preparar")
     const activePage = writable("show")
     const activeEdit = writable<any>({ type: "show" })
     const activeDrawerTab = {
@@ -14,7 +13,7 @@ vi.mock("../stores", () => {
         },
         update: () => {}
     }
-    return { modoAlianca, activePage, activeEdit, activeDrawerTab, currentWindow: writable(null), drawerTabsData: { culto: writable({}) } }
+    return { activePage, activeEdit, activeDrawerTab, currentWindow: writable(null), drawerTabsData: writable({}) }
 })
 vi.mock("./aliancaPastasMidiaEstado", () => ({ pastas: writable([]) }))
 

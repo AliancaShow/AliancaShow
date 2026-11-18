@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { SettingsTabs } from "../../../types/Tabs"
-    import { activePage, activeProfile, focusMode, modoAlianca, profiles, settingsTab } from "../../stores"
+    import { activeProfile, focusMode, profiles, settingsTab } from "../../stores"
+    import { trocarTela } from "../../utils/aliancaTela"
     import { clone } from "../helpers/array"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
@@ -42,7 +43,7 @@
 <svelte:window on:keydown={keydown} />
 
 {#if $focusMode}
-    <Button on:click={() => activePage.set("show")} center dark>
+    <Button on:click={() => trocarTela("show", "voltar-de-pagina")} center dark>
         <Icon id="back" right />
         <T id="actions.back" />
     </Button>
@@ -55,13 +56,11 @@
             <p style="margin: 5px;"><T id="settings.{tab}" /></p>
         </Button>
     {/each}
-    <!-- 1b, D7: no Preparar o Monitor de retorno (as telas do palco) mora aqui; a moldura de `stage` volta para Configuracoes -->
-    {#if $modoAlianca === "preparar"}
-        <Button id="button" on:click={() => activePage.set("stage")} bold={false}>
-            <Icon id="stage" right />
-            <p style="margin: 5px;">Monitor de retorno</p>
-        </Button>
-    {/if}
+    <!-- 1b, D7 (regra B da fatia 2: sempre): o Monitor de retorno (as telas do palco) mora aqui; a moldura de `stage` volta para Configuracoes -->
+    <Button id="button" on:click={() => trocarTela("stage", "botao-de-pagina")} bold={false}>
+        <Icon id="stage" right />
+        <p style="margin: 5px;">Monitor de retorno</p>
+    </Button>
 </div>
 
 <style>

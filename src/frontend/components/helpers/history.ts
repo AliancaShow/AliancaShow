@@ -198,12 +198,8 @@ export function history(obj: History, shouldUndo: null | boolean = null) {
     // TODO: go to location
     if (obj.location!.page === "drawer") {
         // TODO: open drawer
-    } else if (obj.location!.page !== "none") {
-        // this makes more sense
-        if ((get(activePage) === "show" || get(activePage) === "edit") && (obj.location!.page === "show" || obj.location!.page === "edit")) {
-            // dont do anything
-        } else activePage.set(obj.location!.page)
     }
+    // leiaute v2 (fatia 2): desfazer/refazer NUNCA navega (nem para a pagina do item desfeito): o operador fica na tela em que esta
 
     // }
 

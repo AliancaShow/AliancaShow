@@ -1,6 +1,6 @@
 <script lang="ts">
     import { drawSettings, drawTool, paintCache } from "../../stores"
-    import { gavetaNaoToca } from "../../utils/aliancaModo"
+    import { desenhoBloqueado } from "../../utils/aliancaDesenho"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
     import { clone } from "../helpers/array"
@@ -63,7 +63,7 @@
     $: tool = $drawTool
 
     const update = (value: any, key: string) => {
-        if (gavetaNaoToca()) return
+        if (desenhoBloqueado()) return
         drawSettings.update((a) => {
             a[tool][key] = value
             return a
@@ -71,7 +71,7 @@
     }
 
     function reset() {
-        if (gavetaNaoToca()) return
+        if (desenhoBloqueado()) return
         drawSettings.update((a) => {
             a[tool] = clone(defaults[tool] || {})
             return a
@@ -81,7 +81,7 @@
     // $: if (!Object.keys($drawSettings[tool] || {}).length) reset()
     $: if (tool) adddMissingSettings()
     function adddMissingSettings() {
-        if (gavetaNaoToca()) return
+        if (desenhoBloqueado()) return
         drawSettings.update((a) => {
             if (!a[tool]) a[tool] = clone(defaults[tool])
             else {

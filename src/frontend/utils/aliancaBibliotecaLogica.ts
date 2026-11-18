@@ -121,3 +121,11 @@ export function motivoSemEditar(e: { carregado: boolean; bloqueado: boolean; ace
     if (a.global === "read" || a[e.categoria || ""] === "read") return "O perfil só pode ler este show"
     return null
 }
+
+/**
+ * A biblioteca (busca, aba, filtros) so volta ao inicio quando se CHEGA em Mostrar vindo de Editar. Ir de Mostrar a uma pagina do menu e voltar
+ * nao zera o que o operador digitou. `anteriorNaoPagina` e a ultima tela que nao era pagina do menu (ou null na primeira chegada).
+ */
+export function chegadaZeraBiblioteca(anteriorNaoPagina: "mostrar" | "editar" | null, agora: "mostrar" | "editar" | "pagina"): boolean {
+    return agora === "mostrar" && anteriorNaoPagina !== "mostrar"
+}

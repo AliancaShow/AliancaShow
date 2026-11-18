@@ -3,7 +3,8 @@
     import { OUTPUT } from "../../../../types/Channels"
     import { Main } from "../../../../types/IPC/Main"
     import { requestMain } from "../../../IPC/main"
-    import { activePage, activePopup, currentOutputSettings, outputs, settingsTab } from "../../../stores"
+    import { activePopup, currentOutputSettings, outputs, settingsTab } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { triggerClickOnEnterSpace } from "../../../utils/clickable"
     import { send } from "../../../utils/request"
     import { clone, keysToID } from "../../helpers/array"
@@ -75,7 +76,7 @@
     function openOutput(outputId: string) {
         currentOutputSettings.set(outputId)
         settingsTab.set("display_settings")
-        activePage.set("settings")
+        trocarTela("settings", "popup")
         activePopup.set(null)
     }
 </script>

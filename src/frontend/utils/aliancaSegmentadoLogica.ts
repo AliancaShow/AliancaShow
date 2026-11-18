@@ -1,11 +1,8 @@
-// Segmentado Mostrar | Editar (leiaute v2): qual aba aparece acesa. A fonte e o `modoAlianca`, a MESMA que o teclado obedece
-// (`tecladoPodeMexerNaSaida`): o indicador nunca pode estar aceso diferente do teclado. Se a pagina em tela discorda do modo (estado cruzado,
-// declarado em P3: duplo clique no slide, QuickSearch, desfazer...), a aba segue o modo e o segmentado ganha um contorno de alerta.
+// Segmentado Mostrar | Editar (leiaute v2): qual aba aparece acesa. A fonte e a `tela` (derivada de `activePage`), a MESMA que o teclado obedece
+// (`tecladoLivre`): o indicador nunca pode estar aceso diferente do teclado. Fatia 2: nao existe mais "estado cruzado" (pagina e modo
+// discordando) porque so existe a pagina. Em paginas do menu (Configuracoes, Monitor de retorno, Desenho) nenhuma aba acende.
 export type Marcado = "mostrar" | "editar" | null
 
-export function marcadoDoSegmentado(pagina: string, modo: string): { marcado: Marcado; cruzado: boolean } {
-    if (pagina !== "show" && pagina !== "edit") return { marcado: null, cruzado: false }
-    const marcado: Marcado = modo === "preparar" ? "editar" : "mostrar"
-    const daPagina: Marcado = pagina === "edit" ? "editar" : "mostrar"
-    return { marcado, cruzado: marcado !== daPagina }
+export function marcadoDoSegmentado(tela: string): Marcado {
+    return tela === "mostrar" ? "mostrar" : tela === "editar" ? "editar" : null
 }

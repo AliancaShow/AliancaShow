@@ -482,10 +482,13 @@
     {/if}
 
     {#if playingInOutput}
-        <MediaControls {currentOutput} {outputId} big />
+        <!-- controles de transporte: o operador aperta varias vezes de proposito (fora da trava de clique repetido) -->
+        <div data-sem-trava style="display: contents;">
+            <MediaControls {currentOutput} {outputId} big />
+        </div>
     {:else}
         <FloatingInputs arrow={type === "video"} let:open>
-            <div slot="menu" style="display: flex;min-width: 500px;">
+            <div slot="menu" data-sem-trava style="display: flex;min-width: 500px;">
                 <MaterialButton
                     title={videoData.paused ? "media.play" : "media.pause"}
                     on:click={() => {

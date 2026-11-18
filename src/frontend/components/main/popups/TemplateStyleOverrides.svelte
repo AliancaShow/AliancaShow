@@ -1,7 +1,8 @@
 <script lang="ts">
     import { uid } from "uid"
     import type { Template, TemplateStyleOverride } from "../../../../types/Show"
-    import { activeEdit, activePage, activePopup, globalRegexes, popupData, templates } from "../../../stores"
+    import { activeEdit, activePopup, globalRegexes, popupData, templates } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { translateText } from "../../../utils/language"
     import { TemplateHelper } from "../../../utils/templates"
     import { DEFAULT_ITEM_STYLE } from "../../edit/scripts/itemHelpers"
@@ -80,7 +81,7 @@
 
     function editTemplate(templateId?: string) {
         activeEdit.set({ type: "template", id: templateId, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "popup")
         activePopup.set(null)
     }
 

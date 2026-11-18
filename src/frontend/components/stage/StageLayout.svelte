@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, setContext } from "svelte"
-    import { activePage, activeStage, allOutputs, currentOutputSettings, outputs, settingsTab, stageShows, toggleOutputEnabled } from "../../stores"
+    import { activeStage, allOutputs, currentOutputSettings, outputs, settingsTab, stageShows, toggleOutputEnabled } from "../../stores"
+    import { trocarTela } from "../../utils/aliancaTela"
     import { getAccess } from "../../utils/profile"
     import ItemAddMenu from "../edit/ItemAddMenu.svelte"
     import { getSortedStageItems, shouldItemBeShown } from "../edit/scripts/itemHelpers"
@@ -138,7 +139,7 @@
             let id = enableStageOutput({ stageOutput: stageLayoutId, name: layout?.name || "" })
             currentOutputSettings.set(id)
             settingsTab.set("display_settings")
-            activePage.set("settings")
+            trocarTela("settings", "botao-de-pagina")
         }, 100)
     }
 </script>

@@ -2,7 +2,7 @@
     import { onDestroy, onMount } from "svelte"
     import { Main } from "../../../../types/IPC/Main"
     import { destroyMain, receiveMain, requestMain, sendMain } from "../../../IPC/main"
-    import { activePage, activePopup, deletedShows, popupData, shows, showsCache } from "../../../stores"
+    import { activePopup, deletedShows, popupData, shows, showsCache } from "../../../stores"
     import T from "../../helpers/T.svelte"
     import InputRow from "../../input/InputRow.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
@@ -53,7 +53,6 @@
     function deleteEmptyShows() {
         sendMain(Main.DELETE_SHOWS, { shows: emptyShows })
         // emptyShows = []
-        activePage.set("show")
     }
 
     let duplicatedShows: { ids: string[] }[] = []

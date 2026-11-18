@@ -1,22 +1,24 @@
 import { derived, get, writable } from "svelte/store"
-import { activeEdit, activeStage, modoAlianca, outputs, slideNotesActive, special } from "../stores"
-import { notasLigadas, timelineLigada } from "./aliancaEditorLogica"
+import { activeEdit, activeStage, outputs, slideNotesActive, special } from "../stores"
+import { modoDaTela, notasLigadas, timelineLigada } from "./aliancaEditorLogica"
+import { naoEMostrar, telaAtual, tela } from "./aliancaTela"
+import { tecladoVivo } from "./aliancaTecladoLogica"
 
-// Modo Culto | Preparar (AliancaShow).
-// No Preparar nenhuma TECLA mexe no telao: limpar/avancar so no Culto.
+// Regra unica da TELA (fatia 2; antes Modo Culto | Preparar).
+// Em Editar nenhuma TECLA mexe no telao. Em Mostrar e nas paginas do menu o teclado da saida vive (decisao provisoria, aliancaTecladoLogica.ts).
 // Clique na tela, celular, MIDI e API nao passam por aqui (sao gestos deliberados de quem/onde manda).
 
-/** Uma unica regra: o teclado so mexe na saida fora do Preparar. */
-export function tecladoPodeMexerNaSaida(): boolean {
-    return get(modoAlianca) !== "preparar"
+/** Uma unica regra: o teclado so mexe na saida em Mostrar (regra A do plano). */
+export function tecladoPodeMexerNaSaida(alvo?: any): boolean {
+    return tecladoVivo(telaAtual(), ehCampoDeTexto(alvo))
 }
 
 /**
- * Preparar, fatia 6: na GAVETA nenhum gesto (clique, duplo clique, Enter) vai para o ar. O clique marca o item
- * para levar ao culto. Uma regra so, chamada no topo de cada porta da gaveta.
+ * Na GAVETA/biblioteca nenhum gesto (clique, duplo clique, Enter) vai para o ar fora de Mostrar. O clique marca o item
+ * para levar ao culto. Uma regra so, chamada no topo de cada porta da gaveta (regra D: vira "sempre" na fatia 6).
  */
 export function gavetaNaoToca(): boolean {
-    return get(modoAlianca) === "preparar"
+    return naoEMostrar()
 }
 
 /**
@@ -24,8 +26,8 @@ export function gavetaNaoToca(): boolean {
  * a flag gravada em disco (`special.slideTimelineActive`, `slideNotesActive`) nunca e mexida, entao o Culto volta como estava.
  * Sem isso, uma timeline deixada ligada gravaria keyframe no lugar do valor num editor que nem mostra a timeline.
  */
-export const timelineAtiva = derived([special, modoAlianca], ([$special, $modo]) => timelineLigada($special?.slideTimelineActive, $modo))
-export const notasAtivas = derived([slideNotesActive, modoAlianca], ([$notas, $modo]) => notasLigadas($notas, $modo))
+export const timelineAtiva = derived([special, tela], ([$special, $tela]) => timelineLigada($special?.slideTimelineActive, modoDaTela($tela)))
+export const notasAtivas = derived([slideNotesActive, tela], ([$notas, $tela]) => notasLigadas($notas, modoDaTela($tela)))
 
 /** Cada tecla ignorada incrementa; a faixa/seletor piscam quando muda. */
 export const avisoTecla = writable(0)
@@ -36,7 +38,7 @@ export const avisoTecla = writable(0)
  * Ctrl+C etc. passam em silencio. Sem `e` (origem sem evento): avisa sempre.
  */
 export function teclaIgnorada(e?: { key: string; ctrlKey?: boolean; metaKey?: boolean; altKey?: boolean; target?: any }): boolean {
-    if (tecladoPodeMexerNaSaida()) return false
+    if (tecladoPodeMexerNaSaida(e?.target)) return false
     if (!e || teclaMexeriaNaSaida(e)) avisoTecla.update((n) => n + 1)
     return true
 }

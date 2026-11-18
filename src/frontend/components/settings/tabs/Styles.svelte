@@ -1,7 +1,8 @@
 <script lang="ts">
     import { uid } from "uid"
     import type { AspectRatio, Resolution, Styles } from "../../../../types/Settings"
-    import { activeDrawerTab, activeEdit, activePage, activeStyle, outputs, styles, templates } from "../../../stores"
+    import { activeDrawerTab, activeEdit, activeStyle, outputs, styles, templates } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { translateText } from "../../../utils/language"
     import { transitionTypes } from "../../../utils/transitions"
     import { mediaExtensions } from "../../../values/extensions"
@@ -101,7 +102,7 @@
     $: bgImage = currentStyle.backgroundImage
     function editBackgroundImage() {
         activeEdit.set({ type: "media", id: bgImage, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "botao-de-pagina")
     }
 
     $: transitionLabel = textTransitionData?.name || ""
@@ -124,7 +125,7 @@
     function editTemplate(id: string) {
         activeDrawerTab.set("templates")
         activeEdit.set({ type: "template", id, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "botao-de-pagina")
     }
     function updateScriptureTemplate(e) {
         const type = e.detail?.type || ""

@@ -3,7 +3,9 @@
     // Clicavel so com problema (laranja/vermelho): o clique abre Configuracoes na conexao, como o indicador de antes. Sem chave (`sem_chave`) a pilula
     // NAO some: fica apagada ("○ Sirvo") e o clique abre um popover que explica e leva as Configuracoes do Sirvo.
     import { onDestroy } from "svelte"
-    import { activePage, settingsTab } from "../../stores"
+    import { settingsTab } from "../../stores"
+    import { trocarTela } from "../../utils/aliancaTela"
+    import { escFechou } from "../../utils/aliancaToque"
     import { dicaSegura } from "../../utils/aliancaDica"
     import { sirvo } from "../../utils/aliancaSirvo"
     import { calcular } from "../../utils/aliancaSirvoPilulaLogica"
@@ -36,7 +38,7 @@
     function abrirConexao() {
         if (!visual?.clicavel) return
         settingsTab.set("connection")
-        activePage.set("settings")
+        trocarTela("settings", "pilula-sirvo")
     }
 
     // sem chave: popover de explicacao (fecha por clique fora ou Esc; o Esc e engolido para nao limpar o telao)
@@ -44,7 +46,7 @@
     function irParaConfig() {
         semChaveAberto = false
         settingsTab.set("connection")
-        activePage.set("settings")
+        trocarTela("settings", "pilula-sirvo")
     }
     function fora(e: MouseEvent) {
         if (semChaveAberto && !(e.target as HTMLElement)?.closest?.(".semChaveRaiz")) semChaveAberto = false
@@ -53,6 +55,7 @@
         if (semChaveAberto && e.key === "Escape") {
             e.preventDefault()
             e.stopImmediatePropagation()
+            escFechou()
             semChaveAberto = false
         }
     }

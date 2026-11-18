@@ -1,10 +1,10 @@
 import { derived, get } from "svelte/store"
 import type { DrawerTabIds } from "../../types/Tabs"
-import { activeDrawerTab, activeEdit, activePage, modoAlianca } from "../stores"
+import { activeDrawerTab, activeEdit, activePage } from "../stores"
+import { tela } from "./aliancaTela"
 import { drawerTabs } from "../values/tabs"
 import { abaAoEntrarNoEditor } from "./aliancaGavetaLogica"
 import { falhaAlta } from "./aliancaFalha"
-import { valorPorModo } from "./aliancaLayoutEstado"
 // FVB:INICIO
 import { abaLateral } from "./aliancaBibliotecaEstado"
 import { abasEscondidasNaBiblioteca } from "./aliancaBibliotecaLogica"
@@ -17,13 +17,14 @@ import { abasEscondidasNaBiblioteca } from "./aliancaBibliotecaLogica"
 
 const TODAS = Object.keys(drawerTabs)
 
-export const abasEscondidas = derived([modoAlianca, activePage, activeEdit, abaLateral], ([$modo, $pagina, $edit, $aba]) => new Set(abasEscondidasNaBiblioteca(TODAS, { preparar: $modo === "preparar", naBiblioteca: $aba === "biblioteca" && $pagina === "show", noEditor: $pagina === "edit", tipoEditado: ($edit as any)?.type })))
+export const abasEscondidas = derived([tela, activePage, activeEdit, abaLateral], ([$tela, $pagina, $edit, $aba]) => new Set(abasEscondidasNaBiblioteca(TODAS, { preparar: $tela === "editar", naBiblioteca: $aba === "biblioteca" && $pagina === "show", noEditor: $pagina === "edit", tipoEditado: ($edit as any)?.type })))
 
 export const abaEscondidaNoEditor = (id: string): boolean => get(abasEscondidas).has(id)
 
 let iniciado = false
-// a aba de antes de entrar no editor e POR MODO
-const anterior = valorPorModo<DrawerTabIds | null>(null)
+// a aba de antes de entrar no editor
+let anteriorAba: DrawerTabIds | null = null
+const anterior = { ler: () => anteriorAba, gravar: (v: DrawerTabIds | null) => (anteriorAba = v) }
 
 export function iniciarAbasDoEditor() {
     if (iniciado) return

@@ -35,9 +35,9 @@ export async function irParaModo(j, nome) {
 
 /** show aberto, no Culto, sem popup, gaveta como a prova (so preparo por store, fora de qualquer gesto medido) */
 export async function prepararCulto(j) {
-    await j.ev(`S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
+    await j.ev(`S.activePopup.set(null); MODO("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
 const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(ID_SHOW)}]);
-S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); S.activePage.set("show"); S.drawer.set({height:300,stored:null}); S.activeDrawerTab.set("shows"); document.activeElement?.blur?.(); await esp(900); return 1`)
+S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); T.trocarTela("show", "segmentado"); S.drawer.set({height:300,stored:null}); S.activeDrawerTab.set("shows"); document.activeElement?.blur?.(); await esp(900); return 1`)
 }
 
 /** recarrega o app (a faixa de falha e o estado da sessao somem) */
@@ -70,7 +70,7 @@ export async function ligarSaidaNoCulto(j) {
 /** desliga a saida pelo botao do Culto (dois cliques: o 2o entre 1 s e 1,8 s do 1o) */
 export async function desligarSaidaNoCulto(j) {
     if (!(await j.ev(`return !!get(S.outputDisplay)`))) return
-    await j.ev(`S.modoAlianca.set("culto"); S.activePage.set("show"); await esp(500); return 1`)
+    await j.ev(`MODO("culto"); T.trocarTela("show", "segmentado"); await esp(500); return 1`)
     const b = await localizar(j, `document.querySelector("#output_window_button")`)
     await clicarEm(j, b.x, b.y)
     await esperar(1100)

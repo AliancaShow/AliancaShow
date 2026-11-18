@@ -192,7 +192,6 @@ export const mainResponses: MainResponses = {
         // close opened
         activeEdit.set({ items: [] })
         activeShow.set(null)
-        activePage.set("show")
         if (get(activePopup) === "initialize") activePopup.set(null)
 
         newToast("settings.restore_finished")

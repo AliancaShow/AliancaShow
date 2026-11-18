@@ -1,142 +1,189 @@
 {
-    "IPC/responsesMain.ts": [
-        "\"show\""
-    ],
-    "components/actions/apiHelper.ts": [
-        "\"show\""
-    ],
-    "components/context/menuClick.ts": [
-        "\"settings\"",
-        "\"edit\"",
-        "\"edit\"",
-        "\"edit\"",
-        "\"edit\"",
-        "\"edit\"",
-        "\"edit\"",
-        "\"edit\"",
-        "\"settings\"",
-        "\"stage\"",
-        "\"settings\"",
-        "\"show\"",
-        "\"show\""
-    ],
-    "components/drawer/audio/AudioMeter.svelte": [
-        "\"show\""
-    ],
-    "components/drawer/info/ScriptureInfo.svelte": [
-        "\"settings\"",
-        "\"edit\""
-    ],
-    "components/edit/Navigation.svelte": [
-        "\"show\""
-    ],
-    "components/edit/scripts/edit.ts": [
-        "\"show\""
-    ],
-    "components/edit/tools/SlideStyle.svelte": [
-        "\"edit\"",
-        "\"edit\""
-    ],
-    "components/helpers/history.ts": [
-        "obj.location!.page"
-    ],
-    "components/inputs/HiddenInput.svelte": [
-        "\"edit\""
-    ],
-    "components/main/AliancaMenuApp.svelte": [
-        "p"
-    ],
-    "components/main/AliancaSirvoPilula.svelte": [
-        "\"settings\"",
-        "\"settings\""
-    ],
-    "components/main/AliancaTelaoPilula.svelte": [
-        "\"settings\""
-    ],
-    "components/main/AliancaTopo.svelte": [
-        "\"edit\""
-    ],
-    "components/main/StatusIndicator.svelte": [
-        "\"settings\""
-    ],
-    "components/main/popups/CleaningUtility.svelte": [
-        "\"show\""
-    ],
-    "components/main/popups/MetadataDisplay.svelte": [
-        "\"edit\""
-    ],
-    "components/main/popups/OutputSelector.svelte": [
-        "\"settings\""
-    ],
-    "components/main/popups/ResetAll.svelte": [
-        "\"show\""
-    ],
-    "components/main/popups/SelectStageLayout.svelte": [
-        "\"stage\""
-    ],
-    "components/main/popups/SelectStyle.svelte": [
-        "\"settings\""
-    ],
-    "components/main/popups/TemplateInfo.svelte": [
-        "\"settings\"",
-        "\"edit\""
-    ],
-    "components/main/popups/TemplateStyleOverrides.svelte": [
-        "\"edit\""
-    ],
-    "components/output/preview/MultiOutputs.svelte": [
-        "\"settings\""
-    ],
-    "components/quicksearch/quicksearch.ts": [
-        "\"settings\"",
-        "\"settings\"",
-        "\"settings\"",
-        "\"stage\"",
-        "\"show\"",
-        "\"show\"",
-        "\"show\"",
-        "id as any",
-        "\"show\"",
-        "\"settings\"",
-        "\"settings\"",
-        "\"settings\"",
-        "\"show\"",
-        "\"show\""
-    ],
-    "components/settings/SettingsTabs.svelte": [
-        "\"show\"",
-        "\"stage\""
-    ],
-    "components/settings/tabs/Connection.svelte": [
-        "\"show\""
-    ],
-    "components/settings/tabs/Outputs.svelte": [
-        "\"stage\""
-    ],
-    "components/settings/tabs/Styles.svelte": [
-        "\"edit\"",
-        "\"edit\""
-    ],
-    "components/show/Slides.svelte": [
-        "\"edit\""
-    ],
-    "components/slide/Slide.svelte": [
-        "\"edit\""
-    ],
-    "components/stage/StageLayout.svelte": [
-        "\"settings\""
-    ],
-    "converters/project.ts": [
-        "\"show\""
-    ],
-    "utils/aliancaBiblioteca.ts": [
-        "\"edit\""
-    ],
-    "utils/aliancaPilula.ts": [
-        "\"show\""
-    ],
-    "utils/shortcuts.ts": [
-        "\"show\"",
-        "\"edit\""
-    ]
+    "portas": {
+        "components/context/menuClick.ts": {
+            "classe": "gesto: botao direito (Editar e abrir em Mostrar) e paginas do menu",
+            "chamadas": [
+                "\"settings\", \"botao-de-pagina\"",
+                "\"edit\", \"botao-direito\"",
+                "\"edit\", \"botao-direito\"",
+                "\"edit\", \"botao-direito\"",
+                "\"edit\", \"botao-direito\"",
+                "\"edit\", \"botao-direito\"",
+                "\"edit\", \"botao-direito\"",
+                "\"edit\", \"botao-direito\"",
+                "\"settings\", \"botao-de-pagina\"",
+                "\"stage\", \"botao-de-pagina\"",
+                "\"settings\", \"botao-de-pagina\"",
+                "\"show\", \"botao-direito\"",
+                "\"show\", \"botao-direito\""
+            ]
+        },
+        "components/drawer/info/ScriptureInfo.svelte": {
+            "classe": "gesto: botao de pagina",
+            "chamadas": [
+                "\"settings\", \"botao-de-pagina\"",
+                "\"edit\", \"botao-de-pagina\""
+            ]
+        },
+        "components/edit/Navigation.svelte": {
+            "classe": "gesto, morre com o arquivo (fatia 3): voltar de Editar",
+            "chamadas": [
+                "\"show\", \"voltar-de-pagina\""
+            ]
+        },
+        "components/edit/tools/SlideStyle.svelte": {
+            "classe": "gesto: botao de pagina (editar o modelo)",
+            "chamadas": [
+                "\"edit\", \"botao-de-pagina\"",
+                "\"edit\", \"botao-de-pagina\""
+            ]
+        },
+        "components/main/AliancaMenuApp.svelte": {
+            "classe": "gesto: menu do app",
+            "chamadas": [
+                "p, \"menu-app\""
+            ]
+        },
+        "components/main/AliancaSirvoPilula.svelte": {
+            "classe": "gesto: pilula Sirvo",
+            "chamadas": [
+                "\"settings\", \"pilula-sirvo\"",
+                "\"settings\", \"pilula-sirvo\""
+            ]
+        },
+        "components/main/AliancaTelaoPilula.svelte": {
+            "classe": "gesto: pilula do telao",
+            "chamadas": [
+                "\"settings\", \"pilula-telao\""
+            ]
+        },
+        "components/main/AliancaTopo.svelte": {
+            "classe": "gesto: segmentado Mostrar | Editar",
+            "chamadas": [
+                "\"show\", \"segmentado\"",
+                "\"edit\", \"segmentado\""
+            ]
+        },
+        "components/main/StatusIndicator.svelte": {
+            "classe": "gesto: botao de pagina",
+            "chamadas": [
+                "\"settings\", \"botao-de-pagina\""
+            ]
+        },
+        "components/main/popups/MetadataDisplay.svelte": {
+            "classe": "gesto: botao de pagina (popup)",
+            "chamadas": [
+                "\"edit\", \"popup\""
+            ]
+        },
+        "components/main/popups/OutputSelector.svelte": {
+            "classe": "gesto: botao de pagina (popup)",
+            "chamadas": [
+                "\"settings\", \"popup\""
+            ]
+        },
+        "components/main/popups/SelectStageLayout.svelte": {
+            "classe": "gesto: botao de pagina (popup)",
+            "chamadas": [
+                "\"stage\", \"popup\""
+            ]
+        },
+        "components/main/popups/SelectStyle.svelte": {
+            "classe": "gesto: botao de pagina (popup)",
+            "chamadas": [
+                "\"settings\", \"popup\""
+            ]
+        },
+        "components/main/popups/TemplateInfo.svelte": {
+            "classe": "gesto: botao de pagina (popup)",
+            "chamadas": [
+                "\"settings\", \"popup\"",
+                "\"edit\", \"popup\""
+            ]
+        },
+        "components/main/popups/TemplateStyleOverrides.svelte": {
+            "classe": "gesto: botao de pagina (popup)",
+            "chamadas": [
+                "\"edit\", \"popup\""
+            ]
+        },
+        "components/output/preview/MultiOutputs.svelte": {
+            "classe": "gesto, morre com o arquivo",
+            "chamadas": [
+                "\"settings\", \"botao-de-pagina\""
+            ]
+        },
+        "components/quicksearch/quicksearch.ts": {
+            "classe": "gesto, morre com o QuickSearch (fatia 5)",
+            "chamadas": [
+                "\"settings\", \"spotlight\"",
+                "\"settings\", \"spotlight\"",
+                "\"settings\", \"spotlight\"",
+                "\"stage\", \"spotlight\"",
+                "\"show\", \"spotlight\"",
+                "\"show\", \"spotlight\"",
+                "\"show\", \"spotlight\"",
+                "id as any, \"spotlight\"",
+                "\"show\", \"spotlight\"",
+                "\"settings\", \"spotlight\"",
+                "\"settings\", \"spotlight\"",
+                "\"settings\", \"spotlight\"",
+                "\"show\", \"spotlight\"",
+                "\"show\", \"spotlight\""
+            ]
+        },
+        "components/settings/SettingsTabs.svelte": {
+            "classe": "gesto, morre com o arquivo (fatia 4)",
+            "chamadas": [
+                "\"show\", \"voltar-de-pagina\"",
+                "\"stage\", \"botao-de-pagina\""
+            ]
+        },
+        "components/settings/tabs/Outputs.svelte": {
+            "classe": "gesto: botao de pagina",
+            "chamadas": [
+                "\"stage\", \"botao-de-pagina\""
+            ]
+        },
+        "components/settings/tabs/Styles.svelte": {
+            "classe": "gesto: botao de pagina (editar o modelo)",
+            "chamadas": [
+                "\"edit\", \"botao-de-pagina\"",
+                "\"edit\", \"botao-de-pagina\""
+            ]
+        },
+        "components/stage/StageLayout.svelte": {
+            "classe": "gesto: botao de pagina",
+            "chamadas": [
+                "\"settings\", \"botao-de-pagina\""
+            ]
+        },
+        "utils/aliancaBiblioteca.ts": {
+            "classe": "gesto: Editar da biblioteca",
+            "chamadas": [
+                "\"edit\", \"biblioteca-editar\""
+            ]
+        },
+        "utils/aliancaPilula.ts": {
+            "classe": "gesto: chips que levam a Mostrar",
+            "chamadas": [
+                "\"show\", \"chip\""
+            ]
+        }
+    },
+    "retirados": {
+        "IPC/responsesMain.ts": "remota: processo principal (restaurar); a acao acontece, a tela nao troca",
+        "components/actions/apiHelper.ts": "remota: API e celular",
+        "components/drawer/audio/AudioMeter.svelte": "colateral: abrir o mixer levava a Mostrar",
+        "components/edit/scripts/edit.ts": "colateral: abrir a gaveta levava a Mostrar (a biblioteca agora fica sempre aberta)",
+        "components/helpers/history.ts": "colateral: desfazer/refazer nunca navega",
+        "components/inputs/HiddenInput.svelte": "colateral: renomear leva ao editor",
+        "components/main/popups/CleaningUtility.svelte": "colateral: limpeza de shows",
+        "components/main/popups/ResetAll.svelte": "colateral: reiniciar tudo",
+        "components/settings/tabs/Connection.svelte": "colateral: sincronizar provedor de conteudo",
+        "components/show/Slides.svelte": "colateral: criar slide levava ao editor",
+        "components/slide/Slide.svelte": "colateral (decisao 4: duplo clique/notas no slide nao abre o editor)",
+        "converters/project.ts": "colateral: converter projeto abria o item",
+        "utils/shortcuts.ts": "atalho de troca: Ctrl+Shift+T nao troca mais de tela (alterna a edicao de texto dentro de Editar)"
+    }
 }

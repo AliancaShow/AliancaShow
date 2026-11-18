@@ -5,6 +5,9 @@
 
 export type ModoAlianca = "culto" | "preparar"
 
+/** fatia 2: o argumento `modo` das funcoes abaixo vem da `tela` (editar = preparar). So a vocabulario do argumento ficou; o store `modoAlianca` saiu. */
+export const modoDaTela = (tela: string): ModoAlianca => (tela === "editar" ? "preparar" : "culto")
+
 /** Quem renderiza o EditTools (painel de estilo) na coluna da direita. Espelha o MainLayout. */
 export function editToolsRenderizado(e: { pagina: string; tipoEdicao?: string; showExiste: boolean; focusMode: boolean; editMode: string }): boolean {
     if (e.pagina !== "edit") return false

@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Item } from "../../../../types/Show"
-    import { activeDrawerTab, activeEdit, activePage, activeShow, showsCache, templates } from "../../../stores"
+    import { activeDrawerTab, activeEdit, activeShow, showsCache, templates } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { mediaExtensions } from "../../../values/extensions"
     import { clone } from "../../helpers/array"
     import { history } from "../../helpers/history"
@@ -47,13 +48,13 @@
     function editTemplate(id: string) {
         activeDrawerTab.set("templates")
         activeEdit.set({ type: "template", id, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "botao-de-pagina")
     }
 
     $: bgImage = settings.backgroundImage
     function editBackgroundImage() {
         activeEdit.set({ type: "media", id: bgImage, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "botao-de-pagina")
     }
 
     export let allSlideItems: Item[]

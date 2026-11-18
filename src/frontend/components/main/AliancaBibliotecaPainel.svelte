@@ -11,6 +11,7 @@
     import { executarComandoNovo } from "../../utils/aliancaBiblioteca"
     import { buscaDaBiblioteca, soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
     import { teclaIgnorada } from "../../utils/aliancaModo"
+    import { escFechou } from "../../utils/aliancaToque"
     import { getLayoutRef } from "../helpers/show"
     import { history } from "../helpers/history"
     import { loadShows } from "../helpers/setShow"
@@ -71,7 +72,10 @@
             activeShow.set({ ...match, index: novoIndice })
             searchValue = ""
         } else if (e.key === "Escape") {
-            if (document.activeElement === campo && !searchValue.length) campo.blur()
+            if (document.activeElement === campo && !searchValue.length) {
+                escFechou()
+                campo.blur()
+            }
         }
     }
     $: if ($activeTriggerFunction === "drawer_search") campo?.focus()

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import type { MediaStyle } from "../../../../types/Main"
-    import { activeEdit, activePopup, activeShow, alertMessage, editMode, focusMode, media, modoAlianca, outputs, overlays, playerVideos, resized, showsCache, slideNotesActive, special, styles } from "../../../stores"
+    import { activeEdit, activePopup, activeShow, alertMessage, editMode, focusMode, media, outputs, overlays, playerVideos, resized, showsCache, slideNotesActive, special, styles } from "../../../stores"
     import { notasAtivas, timelineAtiva } from "../../../utils/aliancaModo"
     import { notasVisiveis } from "../../../utils/aliancaEditorLogica"
     import { transposeText } from "../../../utils/chordTranspose"
@@ -301,7 +301,7 @@
     let bottomHeight = 40
 
     $: notes = Slide?.notes?.replaceAll("\n", "&nbsp;")
-    $: notesVisible = notasVisiveis(!!notes, $modoAlianca) // Preparar: sem faixa de notas
+    $: notesVisible = notasVisiveis(!!notes, "preparar") // Preparar: sem faixa de notas
 
     $: widthOrHeight = getStyleResolution(resolution, width, height, "fit", { zoom })
 

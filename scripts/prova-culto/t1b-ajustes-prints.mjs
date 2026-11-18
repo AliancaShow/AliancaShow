@@ -27,7 +27,7 @@ if (modo === "pilula" || modo === "sem-chip") {
     else r.ok("sem chip o tudo pronto volta", b.pilula === "tudo pronto ✓" && b.chips.length === 0, JSON.stringify(b))
     await foto({ x: 0, y: 0, width: 1365, height: 120 })
 } else if (modo === "monitor") {
-    await j.ev(`S.activePage.set("settings"); await esp(700); return 1`)
+    await j.ev(`T.trocarTela("settings", "menu-app"); await esp(700); return 1`)
     const bt = await localizar(j, `[...document.querySelectorAll("button")].find(b=>b.innerText.trim()==="Monitor de retorno")`)
     r.ok("o item 'Monitor de retorno' existe em Configuracoes", bt.ok, bt.motivo || "")
     const ret = await j.ev(`const b=[...document.querySelectorAll("button")].find(b=>b.innerText.trim()==="Monitor de retorno"); const p=b.querySelector("p"); const R=b.getBoundingClientRect(); return {x:R.x,y:R.y,w:R.width,h:R.height, cortado:p.scrollWidth>p.clientWidth||b.scrollWidth>b.clientWidth, texto:p.innerText}`)

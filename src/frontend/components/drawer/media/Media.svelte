@@ -7,7 +7,8 @@
     import type { ClickEvent, FileFolder } from "../../../../types/Main"
     import { requestMain } from "../../../IPC/main"
     import { addProjectItem } from "../../../converters/project"
-    import { activeDrawerTab, activeEdit, activeFocus, activeMediaTagFilter, activePopup, activeShow, audioFolders, cloudSyncData, drawerTabsData, focusMode, labelsDisabled, media, mediaFolders, mediaOptions, mediaTags, modoAlianca, openedMediaFolders, outLocked, outputs, popupData, providerConnections, selectAllMedia, selected, sorted, special, styles } from "../../../stores"
+    import { activeDrawerTab, activeEdit, activeFocus, activeMediaTagFilter, activePopup, activeShow, audioFolders, cloudSyncData, drawerTabsData, focusMode, labelsDisabled, media, mediaFolders, mediaOptions, mediaTags, openedMediaFolders, outLocked, outputs, popupData, providerConnections, selectAllMedia, selected, sorted, special, styles } from "../../../stores"
+    import { tela } from "../../../utils/aliancaTela"
     import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { membros, pastaParaConfigurar } from "../../../utils/aliancaPastasMidiaEstado"
     import { PASTA_RAIZ, PASTA_SIRVO, ehAbaDePasta, idDaAba, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
@@ -628,7 +629,7 @@
     <div class="pastaTopo" data-pasta-topo>
         <span class="pastaNome">{active === PASTA_SIRVO ? "Do Sirvo" : tagDaPasta?.name || "Pasta"}</span>
         <span class="pastaResumo">{active === PASTA_SIRVO ? "só para ver" : resumoDaPasta}</span>
-        {#if $modoAlianca === "preparar" && pastaId && tagDaPasta}
+        {#if $tela !== "mostrar" && pastaId && tagDaPasta}
             <button type="button" class="pastaGear" class:ligado={cfgAberta} data-pasta-gear title="Comportamento da pasta" on:click={() => (cfgAberta = !cfgAberta)}>
                 <Icon id="settings" size={1.1} white />
             </button>
@@ -640,7 +641,7 @@
 
 <div class="scroll" style="flex: 1;overflow-y: auto;{ehPastaView ? 'padding-bottom: 56px;' : ''}" bind:this={scrollElem}>
     <!-- o painel da pasta rola junto com a grade: numa gaveta baixa o rodape dele nao fica escondido atras do zoom -->
-    {#if ehPastaView && cfgAberta && $modoAlianca === "preparar" && pastaId && tagDaPasta}
+    {#if ehPastaView && cfgAberta && $tela !== "mostrar" && pastaId && tagDaPasta}
         <AliancaPastaCfg {pastaId} />
     {/if}
     <div class="grid" class:list={$mediaOptions.mode === "list"} style="height: 100%;" bind:clientWidth={larguraGrade}>

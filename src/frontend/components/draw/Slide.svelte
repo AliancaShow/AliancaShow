@@ -1,6 +1,6 @@
 <script lang="ts">
     import { draw, drawSettings, drawTool, outputs } from "../../stores"
-    import { gavetaNaoToca } from "../../utils/aliancaModo"
+    import { desenhoBloqueado } from "../../utils/aliancaDesenho"
     import { getFirstActiveOutput, getOutputResolution } from "../helpers/output"
     import Output from "../output/Output.svelte"
     import { getStyleResolution } from "../slide/getStyleResolution"
@@ -20,7 +20,7 @@
     let initial: ["x" | "y", number] = ["y", 0]
     let parent: HTMLElement | undefined
     function onMouseMove(e: any) {
-        if (gavetaNaoToca()) return
+        if (desenhoBloqueado()) return
         let slide = e.target.closest(".slide")
 
         if ($drawTool === "zoom" && $drawSettings[$drawTool]?.hold) {
@@ -71,7 +71,7 @@
     }
 
     const wheel = (e: any) => {
-        if (gavetaNaoToca()) return
+        if (desenhoBloqueado()) return
         if (draw === null || !$drawSettings[$drawTool]?.size || e.target.closest(".parent") !== parent || !e.target.closest(".slide")) return
 
         drawSettings.update((a) => {
@@ -96,7 +96,7 @@
 
 <svelte:window
     on:mouseup={() => {
-        if (gavetaNaoToca()) return
+        if (desenhoBloqueado()) return
         if ($drawSettings[$drawTool]?.hold && $drawTool !== "zoom") draw.set(null)
     }}
     on:mousemove={onMouseMove}

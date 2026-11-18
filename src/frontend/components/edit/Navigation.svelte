@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ClickEvent } from "../../../types/Main"
-    import { activeEdit, activePage, activeShow, editHistory, editMode, effects, focusMode, labelsDisabled, modoAlianca, overlays, refreshEditSlide, shows, templates } from "../../stores"
+    import { activeEdit, activeShow, editHistory, editMode, effects, focusMode, labelsDisabled, overlays, refreshEditSlide, shows, templates } from "../../stores"
+    import { trocarTela } from "../../utils/aliancaTela"
     import { mostrarRecentes } from "../../utils/aliancaEditorLogica"
     import { getAccess } from "../../utils/profile"
     import Icon from "../helpers/Icon.svelte"
@@ -122,7 +123,7 @@
     }
 
     // Preparar (8a): num show, o modo Texto continua com os slides a esquerda (so template/overlay usam "recentes")
-    $: recentes = mostrarRecentes({ modo: $modoAlianca, editId: $activeEdit.id || "", showAberto: !!currentShowId && !!$shows[currentShowId], temHistorico: $editHistory.length > 0, editMode: $editMode })
+    $: recentes = mostrarRecentes({ modo: "preparar", editId: $activeEdit.id || "", showAberto: !!currentShowId && !!$shows[currentShowId], temHistorico: $editHistory.length > 0, editMode: $editMode })
 
     let profile = getAccess("shows")
     $: isLocked = $shows[currentShowId]?.locked || profile.global === "read" || profile[$shows[currentShowId]?.category || ""] === "read"
@@ -131,7 +132,7 @@
 <svelte:window on:keydown={handleKeyDown} />
 
 {#if $focusMode}
-    <Button on:click={() => activePage.set("show")} center dark>
+    <Button on:click={() => trocarTela("show", "voltar-de-pagina")} center dark>
         <Icon id="back" right />
         <T id="actions.back" />
     </Button>

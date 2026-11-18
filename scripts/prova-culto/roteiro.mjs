@@ -9,10 +9,10 @@
 export const VERSAO = 2
 export const ID_SHOW = "impulso_aos_teus_pes"
 
-export const ABRE_SHOW = `S.activePopup.set(null); S.modoAlianca.set("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
+export const ABRE_SHOW = `S.activePopup.set(null); MODO("culto"); S.editMode.set("default"); S.activeEdit.set({items:[]}); S.drawerOpenedInEdit.set(false);
 S.outputs.update(a=>{a.default.out={};return a});
 const {loadShows}=await import(U("components/helpers/setShow")); await loadShows([${JSON.stringify(ID_SHOW)}]);
-S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); S.activePage.set("show");
+S.activeShow.set({id:${JSON.stringify(ID_SHOW)},type:"show"}); T.trocarTela("show", "segmentado");
 S.drawer.set({height:300,stored:null}); S.resized.update(a=>({...a,leftPanel:290,rightPanel:290,leftPanelDrawer:290,rightPanelDrawer:290})); S.activeDrawerTab.set("shows");
 document.activeElement?.blur?.(); await esp(900)`
 
@@ -39,13 +39,13 @@ export const SECOES = [
             { id: "A07-page-up", gesto: { tecla: "PageUp" }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "A08-home", gesto: { tecla: "Home" }, efeito: { fluxo: "outputs", n: 1 } },
             { id: "A09-end", gesto: { tecla: "End" }, efeito: { fluxo: "outputs", n: 1 } },
-            { id: "A10-digito-1", antes: "S.activePage.set('show'); await esp(300)", gesto: { tecla: "1" }, semEfeito: "ja esta na pagina Mostrar: o digito 1 nao troca nada (a fatia 1b declara a diferenca)" },
-            { id: "A11-digito-2", antes: "S.activePage.set('show'); await esp(300)", gesto: { tecla: "2" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A12-digito-3", antes: "S.activePage.set('show'); await esp(300)", gesto: { tecla: "3" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A13-digito-4", antes: "S.activePage.set('show'); await esp(300)", gesto: { tecla: "4" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A14-digito-5", antes: "S.activePage.set('show'); await esp(300)", gesto: { tecla: "5" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A15-digito-6", antes: "S.activePage.set('show'); await esp(300)", gesto: { tecla: "6" }, efeito: { fluxo: "estado", n: 1 } },
-            { id: "A16-escape", antes: "S.activePage.set('show'); await esp(300)", gesto: { tecla: "Escape" }, efeito: { fluxo: "outputs", n: 1 } }
+            { id: "A10-digito-1", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "1" }, semEfeito: "ja esta na pagina Mostrar: o digito 1 nao troca nada (a fatia 1b declara a diferenca)" },
+            { id: "A11-digito-2", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "2" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A12-digito-3", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "3" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A13-digito-4", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "4" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A14-digito-5", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "5" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A15-digito-6", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "6" }, efeito: { fluxo: "estado", n: 1 } },
+            { id: "A16-escape", antes: "T.trocarTela('show', 'segmentado'); await esp(300)", gesto: { tecla: "Escape" }, efeito: { fluxo: "outputs", n: 1 } }
         ]
     },
     {

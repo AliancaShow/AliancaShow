@@ -12,6 +12,9 @@ const RAIZ = join(__dirname, "..", "..", "..")
 const ler = (rel: string) => readFileSync(join(RAIZ, rel), "utf8").replace(/\r\n/g, "\n")
 
 const GUARDA = "if (gavetaNaoToca()) return"
+// as portas de components/draw usam `desenhoBloqueado()` (revisao da fatia 2): `gavetaNaoToca` e `tela != mostrar`, que e verdadeira na propria pagina draw
+const GUARDA_DESENHO = "if (desenhoBloqueado()) return"
+const guardaDe = (arquivo: string) => (arquivo.includes("/components/draw/") ? GUARDA_DESENHO : GUARDA)
 
 export const PORTAS: { arquivo: string; abre: string; nome: string }[] = [
     { arquivo: "src/frontend/components/bible/BiblePage.svelte", abre: "function sendToOutput() {", nome: "BiblePage sendToOutput" },
@@ -50,7 +53,7 @@ export function problemasDaSegundaCamada(textos: Record<string, string>): string
             .slice(1)
             .map((l) => l.trim())
             .find((l) => l !== "")
-        if (primeira !== GUARDA) erros.push(`${p.nome}: a primeira instrucao nao e "${GUARDA}" (achei: ${primeira})`)
+        if (primeira !== guardaDe(p.arquivo)) erros.push(`${p.nome}: a primeira instrucao nao e "${guardaDe(p.arquivo)}" (achei: ${primeira})`)
     }
     for (const e of ESCRITAS) {
         const n = (textos[e.arquivo]?.match(e.re) || []).length
@@ -70,8 +73,9 @@ describe("segunda camada na origem (D8)", () => {
     it("draw/Paint.svelte nao foi tocado (roda dentro da saida)", () => {
         expect(ler("src/frontend/components/draw/Paint.svelte")).not.toContain("gavetaNaoToca")
     })
-    it("os arquivos importam gavetaNaoToca de aliancaModo", () => {
-        for (const arq of new Set(PORTAS.map((p) => p.arquivo))) expect(REAL[arq], arq).toMatch(/import \{ gavetaNaoToca \} from "..\/..\/utils\/aliancaModo"/)
+    it("os arquivos importam a guarda certa (BiblePage: gavetaNaoToca; draw: desenhoBloqueado)", () => {
+        for (const arq of new Set(PORTAS.map((p) => p.arquivo)))
+            expect(REAL[arq], arq).toMatch(guardaDe(arq) === GUARDA ? /import \{ gavetaNaoToca \} from "..\/..\/utils\/aliancaModo"/ : /import \{ desenhoBloqueado \} from "..\/..\/utils\/aliancaDesenho"/)
     })
     describe("mutacoes (texto injetado)", () => {
         it("tirar a guarda de BiblePage reprova", () => {
@@ -80,7 +84,7 @@ describe("segunda camada na origem (D8)", () => {
         })
         it("guarda que nao e a primeira instrucao reprova", () => {
             const a = "src/frontend/components/draw/Slide.svelte"
-            const t = { ...REAL, [a]: REAL[a].replace(`function onMouseMove(e: any) {\n        ${GUARDA}\n`, `function onMouseMove(e: any) {\n        let x = 1\n        ${GUARDA}\n`) }
+            const t = { ...REAL, [a]: REAL[a].replace(`function onMouseMove(e: any) {\n        ${GUARDA_DESENHO}\n`, `function onMouseMove(e: any) {\n        let x = 1\n        ${GUARDA_DESENHO}\n`) }
             expect(problemasDaSegundaCamada(t).join()).toContain("Slide onMouseMove")
         })
         it("escrita nova em DrawSettings reprova", () => {

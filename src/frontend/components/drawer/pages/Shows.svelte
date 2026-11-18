@@ -3,7 +3,8 @@
     // import VirtualList from "@sveltejs/svelte-virtual-list"
     // import VirtualList from "./VirtualList2.svelte"
     import type { ShowList } from "../../../../types/Show"
-    import { activeEdit, activeFocus, activePopup, activeProfile, activeProject, activeShow, activeTagFilter, categories, drawer, focusedArea, focusMode, labelsDisabled, modoAlianca, popupData, shows, sorted, sortedShowsList } from "../../../stores"
+    import { activeEdit, activeFocus, activePopup, activeProfile, activeProject, activeShow, activeTagFilter, categories, drawer, focusedArea, focusMode, labelsDisabled, popupData, shows, sorted, sortedShowsList } from "../../../stores"
+    import { tela } from "../../../utils/aliancaTela"
     import { translateText } from "../../../utils/language"
     import { getAccess } from "../../../utils/profile"
     import { formatSearch, showSearch } from "../../../utils/search"
@@ -191,7 +192,7 @@
 
         const { ctrl } = e.detail
         // AliançaShow (Preparar F4): no Preparar, o "+ Novo" abre "Nova música" (nome, cantor e a letra colada); o ctrl+clique e o Culto seguem como sempre
-        if (!ctrl && $modoAlianca === "preparar") {
+        if (!ctrl && $tela !== "mostrar") {
             popupData.set({ modo: "nova" })
             activePopup.set("alianca_letra")
             return

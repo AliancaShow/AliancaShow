@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Resolution } from "../../../types/Settings"
-    import { mediaOptions, modoAlianca, outputs, styles } from "../../stores"
+    import { mediaOptions, outputs, styles } from "../../stores"
+    import { tela } from "../../utils/aliancaTela"
     import { triggerClickOnEnterSpace } from "../../utils/clickable"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
@@ -30,7 +31,7 @@
     // no Preparar nenhum card da gaveta toca: o ▶ ao passar o mouse só aparece no Culto
     // (quem toca fora da gaveta, como a pasta aberta no centro, passa tocaNoPreparar)
     export let tocaNoPreparar = false
-    $: tocaAoClicar = showPlayOnHover && (tocaNoPreparar || $modoAlianca !== "preparar")
+    $: tocaAoClicar = showPlayOnHover && (tocaNoPreparar || $tela === "mostrar")
     export let marcado = false
     export let checkered = false
     export let mode: "grid" | "list" | "lyrics" = "grid"

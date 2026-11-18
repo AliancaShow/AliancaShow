@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { activePage, activeStyle, audioChannelsData, dictionary, outputs, rtmpStatus, selected, settingsTab, styles, templates, toggleOutputEnabled } from "../../../stores"
+    import { activeStyle, audioChannelsData, dictionary, outputs, rtmpStatus, selected, settingsTab, styles, templates, toggleOutputEnabled } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { translateText } from "../../../utils/language"
     import AudioMeter from "../../drawer/audio/AudioMeter.svelte"
     import { openDrawer } from "../../edit/scripts/edit"
@@ -34,7 +35,7 @@
             const output = $outputs[outputId]
             activeStyle.set(output?.style || "")
             settingsTab.set("styles")
-            activePage.set("settings")
+            trocarTela("settings", "botao-de-pagina")
             return
         }
 

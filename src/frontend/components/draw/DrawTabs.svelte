@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { DrawTools } from "../../../types/Draw"
     import { drawTool } from "../../stores"
-    import { gavetaNaoToca } from "../../utils/aliancaModo"
+    import { desenhoBloqueado } from "../../utils/aliancaDesenho"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
     import Button from "../inputs/Button.svelte"
@@ -9,7 +9,7 @@
     const tools: DrawTools[] = ["focus", "pointer", "particles", "zoom", "fill", "paint"]
 
     function keydown(e: KeyboardEvent) {
-        if (gavetaNaoToca()) return
+        if (desenhoBloqueado()) return
         if (e.target?.closest?.(".edit") || e.ctrlKey || e.metaKey) return
 
         let nextTab = -1
@@ -33,7 +33,7 @@
         <Button
             id="button"
             on:click={() => {
-                if (gavetaNaoToca()) return
+                if (desenhoBloqueado()) return
                 drawTool.set(tool)
             }}
             active={$drawTool === tool}

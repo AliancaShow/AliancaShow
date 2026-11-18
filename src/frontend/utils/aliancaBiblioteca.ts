@@ -1,7 +1,8 @@
 import { get } from "svelte/store"
 import { history } from "../components/helpers/history"
 import { openShow } from "../components/helpers/show"
-import { activeEdit, activePage, activePopup, activeProject, activeShow, modoAlianca, popupData, projects, shows } from "../stores"
+import { activeEdit, activePopup, activeProject, activeShow, popupData, projects, shows } from "../stores"
+import { emEditar, tela, trocarTela } from "./aliancaTela"
 import { montarApresentacaoDeMidias } from "./aliancaApresentacao"
 import { abaLateral, tipoDaBiblioteca } from "./aliancaBibliotecaEstado"
 import { edicaoDoShow, inserirShowNoFim, itemParaVoltar, toqueRepetido, type ComandoNovo } from "./aliancaBibliotecaLogica"
@@ -71,7 +72,7 @@ export function criarApresentacaoEmBranco(): string | null {
 export function abrirEditorDoShow(showId: string) {
     fecharDividir()
     activeEdit.set(edicaoDoShow(get(activeEdit) as any, showId) as any)
-    activePage.set("edit")
+    trocarTela("edit", "biblioteca-editar")
 }
 
 let voltaIniciada = false
@@ -84,16 +85,18 @@ let voltaIniciada = false
 export function iniciarVoltaAoRoteiro() {
     if (voltaIniciada) return
     voltaIniciada = true
-    let anterior = get(modoAlianca)
+    // a ultima tela que NAO e pagina do menu (Configuracoes no meio do caminho nao conta como "sair de Editar")
+    let anterior: "mostrar" | "editar" = get(tela) === "editar" ? "editar" : "mostrar"
     let ultimo: { index: number; id: string } | null = null
     const lembrar = (a: any) => {
         const itens = get(projects)[get(activeProject) || ""]?.shows || []
-        if (get(modoAlianca) === "preparar" && typeof a?.index === "number" && itens[a.index]?.id === a.id) ultimo = { index: a.index, id: a.id }
+        if (emEditar() && typeof a?.index === "number" && itens[a.index]?.id === a.id) ultimo = { index: a.index, id: a.id }
     }
     activeShow.subscribe(lembrar)
-    modoAlianca.subscribe((modo) => {
-        const veioDoPreparar = anterior === "preparar" && modo === "culto"
-        anterior = modo
+    tela.subscribe((t) => {
+        if (t === "pagina") return
+        const veioDoPreparar = anterior === "editar" && t === "mostrar"
+        anterior = t
         if (!veioDoPreparar) return
         const itens = get(projects)[get(activeProject) || ""]?.shows || []
         const i = itemParaVoltar({ aberto: get(activeShow) as any, itens, ultimo })

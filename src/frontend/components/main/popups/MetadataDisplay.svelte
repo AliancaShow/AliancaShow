@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Metadata } from "../../../../types/Settings"
-    import { activeEdit, activePage, activePopup, categories, currentMetadataPopupData, popupData, styles, templates } from "../../../stores"
+    import { activeEdit, activePopup, categories, currentMetadataPopupData, popupData, styles, templates } from "../../../stores"
+    import { trocarTela } from "../../../utils/aliancaTela"
     import { translateText } from "../../../utils/language"
     import { clone } from "../../helpers/array"
     import Icon from "../../helpers/Icon.svelte"
@@ -110,7 +111,7 @@
     function editTemplate(id: string) {
         // activeDrawerTab.set("templates")
         activeEdit.set({ type: "template", id, items: [] })
-        activePage.set("edit")
+        trocarTela("edit", "popup")
         activePopup.set(null)
     }
 

@@ -23,7 +23,7 @@ await injetarChips(j)
 await instalarContagem(j)
 
 const CHIP = (id) => `document.querySelector('.prepararBarra .chip[data-chip="${id}"]')`
-const estadoFinal = (j) => j.ev(`return {pagina:get(S.activePage), modo:get(S.modoAlianca), foco:document.activeElement?.tagName, anteparo:!!document.querySelector(".anteparo"), avisos:(await import(U("utils/aliancaSirvo"))).sirvoAvisos&&0, linhas:get((await import(U("utils/aliancaSirvo"))).sirvoAvisos).linhas.length, naoLidas:get((await import(U("utils/aliancaSirvoChat"))).sirvoChat).naoLidas, confirma:!!document.querySelector(".click_again")}`)
+const estadoFinal = (j) => j.ev(`return {pagina:get(S.activePage), modo:MODOATUAL(), foco:document.activeElement?.tagName, anteparo:!!document.querySelector(".anteparo"), avisos:(await import(U("utils/aliancaSirvo"))).sirvoAvisos&&0, linhas:get((await import(U("utils/aliancaSirvo"))).sirvoAvisos).linhas.length, naoLidas:get((await import(U("utils/aliancaSirvoChat"))).sirvoChat).naoLidas, confirma:!!document.querySelector(".click_again")}`)
 
 async function umChip(id, atrasoMs, alvo, rotulo) {
     await irParaModo(j, "Preparar")
@@ -77,15 +77,15 @@ for (const atraso of [80, 250, 500]) {
     const modo = await localizar(j, BOTAO_DO_MODO("Preparar"))
     await clicarEm(j, chip.x, chip.y) // 1o chip: vai ao Culto, anteparo armado
     await clicarEm(j, modo.x, modo.y) // o seletor de modo (a esquerda) nunca e engolido, e volta ao Preparar sem esperar
-    r.ok("4.1 o seletor de modo funciona dentro do anteparo (volta ao Preparar)", (await j.ev(`return get(S.modoAlianca)`)) === "preparar", "ficou no Culto")
+    r.ok("4.1 o seletor de modo funciona dentro do anteparo (volta ao Preparar)", (await j.ev(`return MODOATUAL()`)) === "preparar", "ficou no Culto")
     await clicarEm(j, chip.x, chip.y) // ainda dentro dos 700 ms (alguns ms depois do 1o): engolido, nao sai do Preparar
     await esperar(300)
-    r.ok("4.2 um chip tocado dentro do anteparo e engolido (continua no Preparar)", (await j.ev(`return get(S.modoAlianca)`)) === "preparar", "saiu do Preparar")
+    r.ok("4.2 um chip tocado dentro do anteparo e engolido (continua no Preparar)", (await j.ev(`return MODOATUAL()`)) === "preparar", "saiu do Preparar")
     await esperar(800)
     const chip3 = await localizar(j, CHIP("roteiro"))
     await clicarEm(j, chip3.x, chip3.y) // vencido o anteparo: passa
     await esperar(500)
-    r.ok("4.3 passados os 700 ms o chip passa e leva ao Culto", (await j.ev(`return get(S.modoAlianca)`)) === "culto", "nao foi ao Culto")
+    r.ok("4.3 passados os 700 ms o chip passa e leva ao Culto", (await j.ev(`return MODOATUAL()`)) === "culto", "nao foi ao Culto")
     // o anteparo foi renovado: Editar 450 ms depois do 2o chip bem sucedido... (o clique no chip3 acabou de armar de novo; medimos desde ele)
     await irParaModo(j, "Preparar")
     await esperar(800)
@@ -99,13 +99,13 @@ for (const atraso of [80, 250, 500]) {
     await clicarEm(j, editar.x, editar.y)
     await esperar(600)
     r.ok("4.5 depois dos 700 ms o Editar funciona (nao e bloqueio permanente)", (await j.ev(`return get(S.activePage)`)) === "edit", "o Editar continua engolido")
-    await j.ev(`S.activePage.set("show"); await esp(300); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); await esp(300); return 1`)
 }
 
 // saindo de settings pelo codigo do chip (os chips so existem na pagina show na 1a): chega em show
 {
-    await j.ev(`S.modoAlianca.set("preparar"); S.activePage.set("settings"); await esp(400); const P=await import(U("utils/aliancaPilula")); P.irAoCulto(); await esp(400); return 1`)
-    const e = await j.ev(`return {pagina:get(S.activePage), modo:get(S.modoAlianca)}`)
+    await j.ev(`MODO("preparar"); T.trocarTela("settings", "menu-app"); await esp(400); const P=await import(U("utils/aliancaPilula")); P.irAoCulto(); await esp(400); return 1`)
+    const e = await j.ev(`return {pagina:get(S.activePage), modo:MODOATUAL()}`)
     r.ok("5.1 irAoCulto() saindo de settings chega em show no Culto", e.pagina === "show" && e.modo === "culto", JSON.stringify(e))
 }
 

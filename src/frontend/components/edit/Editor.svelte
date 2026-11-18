@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte"
     import type { TabsObj } from "../../../types/Tabs"
-    import { activeEdit, activePopup, activeShow, cloudUsers, drawer, drawerOpenedInEdit, editMode, focusMode, modoAlianca, refreshEditSlide, showsCache } from "../../stores"
+    import { activeEdit, activePopup, activeShow, cloudUsers, drawer, drawerOpenedInEdit, editMode, focusMode, refreshEditSlide, showsCache } from "../../stores"
     import { notasAtivas, timelineAtiva } from "../../utils/aliancaModo"
     import { isActiveShowInUseByCloudUser } from "../../utils/cloudSync"
     import { getAccess } from "../../utils/profile"
@@ -46,7 +46,7 @@
     // TODO: could add more tabs, like to edit slide layers (like background media)
     $: editTabs = {
         // Preparar (8a): a dica do Ctrl+Enter (quebra o slide no cursor) mora na aba Slide
-        default: { name: "tools.slide", icon: "slide", ...($modoAlianca === "preparar" ? { tooltip: "tools.slide - Ctrl+Enter quebra o slide no cursor" } : {}) }, // example.default
+        default: { name: "tools.slide", icon: "slide", tooltip: "tools.slide - Ctrl+Enter quebra o slide no cursor" }, // example.default
         ...(!chordsHidden && { chords: { name: "edit.chords", icon: "chords", data: chordCount > 0 ? chordCount : undefined, disabled: chordsDisabled } }),
         text_edit: { name: "show.text", tooltip: "show.text [Ctrl+Shift+T]", icon: "text_edit" }
     } as TabsObj

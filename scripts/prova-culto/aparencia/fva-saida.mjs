@@ -17,7 +17,7 @@ async function foto(s, arq) {
 }
 const j = await abrir()
 await abrirShow(j, ID, 0, "culto", true)
-await j.ev(`S.activePage.set("show"); return 1`)
+await j.ev(`T.trocarTela("show", "segmentado"); return 1`)
 const aberta = await j.ev(`return get(S.outputDisplay)`).catch(() => null)
 let s
 try {
@@ -28,7 +28,7 @@ try {
     s = await janela("saida")
 }
 for (const modo of ["culto", "preparar"]) {
-    await j.ev(`S.modoAlianca.set(${JSON.stringify(modo)}); const sh=get(S.showsCache)["${ID}"]; O.setOutput("slide",{id:"${ID}",layout:sh.settings.activeLayout,index:1,projectIndex:0}); return 1`)
+    await j.ev(`MODO(${JSON.stringify(modo)}); const sh=get(S.showsCache)["${ID}"]; O.setOutput("slide",{id:"${ID}",layout:sh.settings.activeLayout,index:1,projectIndex:0}); return 1`)
     await esperar(2500)
     const info = await s.avaliar(`return JSON.stringify({ds:{...document.body.dataset}, sec:getComputedStyle(document.body).getPropertyValue("--secondary"), ff:getComputedStyle(document.body).fontFamily, w:innerWidth,h:innerHeight, htmlsz: document.body.innerHTML.length})`)
     console.log(modo, info)
@@ -36,6 +36,6 @@ for (const modo of ["culto", "preparar"]) {
     const dump = await s.avaliar(`return document.body.innerHTML.replace(/svelte-[a-z0-9]+/g,"").replace(/(zoom|picker|id)_[0-9a-f]{6,}/g,"$1_X")`)
     writeFileSync(`${dir}/${pref}saida-${modo}.html`, dump)
 }
-await j.ev(`S.modoAlianca.set("culto"); S.outputs.update(a=>{a.default.out={};return a}); return 1`)
+await j.ev(`MODO("culto"); S.outputs.update(a=>{a.default.out={};return a}); return 1`)
 j.fechar()
 s.fechar()

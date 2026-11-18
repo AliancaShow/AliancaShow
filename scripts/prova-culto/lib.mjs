@@ -15,6 +15,10 @@ export const PRE = `
 const BASE=${JSON.stringify("http://localhost:3000/@fs/" + RAIZ_APP + "/src/frontend/")}
 const U=(n)=>{const e=performance.getEntriesByType("resource").map(r=>r.name).filter(x=>x.includes("/src/frontend/"+n+".ts")); return e[e.length-1]||(BASE+n+".ts")}
 const S=await import(U("stores")); const get=(s)=>{let x;s.subscribe(v=>x=v)();return x}
+// fatia 2: a tela e a porta (utils/aliancaTela.ts). MODO/MODOATUAL mantem o vocabulario dos roteiros: culto = Mostrar, preparar = Editar
+const T=await import(U("utils/aliancaTela"))
+const MODO=(m)=>T.trocarTela(m==="preparar"?"edit":"show","segmentado")
+const MODOATUAL=()=>get(T.tela)==="editar"?"preparar":"culto"
 const esp=(ms)=>new Promise(r=>setTimeout(r,ms))
 `
 

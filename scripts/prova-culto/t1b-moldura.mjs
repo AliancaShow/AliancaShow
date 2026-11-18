@@ -78,7 +78,7 @@ r.ok("T-1b-1.9 Voltar do Palco (vindo da busca) volta a show", (await pagina()) 
 // ---------------------------------------------------------------- T-1b-12: pagina fora da lista (Q14)
 await instalarContagem(j)
 for (const p of ["calendar", "reflow"]) {
-    await j.ev(`S.activePage.set(${JSON.stringify(p)}); return 1`)
+    await j.ev(`T.trocarTela(${JSON.stringify(p)}, "menu-app"); return 1`)
     await esperar(60)
     const meio = await barra() // a barra nunca fica vazia, nem no meio do redirecionamento
     await esperar(500)
@@ -89,7 +89,7 @@ for (const p of ["calendar", "reflow"]) {
 
 // ---------------------------------------------------------------- T-1b-3 (parte): entrar no Preparar estando em draw
 await irParaModo(j, "Culto")
-await j.ev(`S.activePage.set("draw"); await esp(300); return 1`)
+await j.ev(`T.trocarTela("draw", "menu-app"); await esp(300); return 1`)
 await irParaModo(j, "Preparar")
 await esperar(500)
 r.ok("T-1b-3.x entrar no Preparar estando em draw: volta a show com o toast de Desenhar e Biblia", (await pagina()) === "show" && (await j.ev(`return get(S.toastMessages)`)).includes("Desenhar e Bíblia em tela cheia ficam no Culto."), await pagina())
@@ -99,18 +99,18 @@ await j.ev(`S.toastMessages.set([]); return 1`)
 // ---------------------------------------------------------------- T-1b-10: decisao 9 (Preparar -> Culto)
 for (const [de, vai] of [["settings", "show"], ["stage", "show"], ["edit", "edit"]]) {
     await irParaModo(j, "Preparar")
-    await j.ev(`S.activePage.set(${JSON.stringify(de)}); await esp(300); return 1`)
+    await j.ev(`T.trocarTela(${JSON.stringify(de)}, "menu-app"); await esp(300); return 1`)
     if (de === "edit") await j.ev(`S.activeEdit.set({slide:0,items:[],showId:get(S.activeShow)?.id}); return 1`)
     await irParaModo(j, "Culto")
     r.ok(`T-1b-10 ${de} no Preparar, clique real em Culto: ${vai}`, (await pagina()) === vai, await pagina())
-    await j.ev(`S.activePage.set("show"); await esp(200); return 1`)
+    await j.ev(`T.trocarTela("show", "segmentado"); await esp(200); return 1`)
 }
 await foto("1b-culto-depois-da-volta")
 
 // ---------------------------------------------------------------- T-1b-13: falha da guarda e visivel (Q13)
 await irParaModo(j, "Preparar")
 await instalarContagem(j)
-await j.ev(`window.__toastOriginal = S.toastMessages.set; let n = 0; S.toastMessages.set = (...a) => { if (n++ === 0) throw new Error("toast quebrado (T-1b-13)"); return window.__toastOriginal(...a) }; S.activePage.set("draw"); await esp(600); return 1`)
+await j.ev(`window.__toastOriginal = S.toastMessages.set; let n = 0; S.toastMessages.set = (...a) => { if (n++ === 0) throw new Error("toast quebrado (T-1b-13)"); return window.__toastOriginal(...a) }; T.trocarTela("draw", "menu-app"); await esp(600); return 1`)
 const falhas = await j.ev(`const F=await import(U("utils/aliancaFalha")); return get(F.falhas).map(f=>f.origem)`)
 r.ok("T-1b-13 a faixa acende com guarda-de-pagina, a pagina ja voltou a show, zero outputs", falhas.includes("guarda-de-pagina") && (await pagina()) === "show" && (await lerContagem(j)).out === 0 && (await j.ev(`return !!document.querySelector(".faixaFalha")`)) === true, JSON.stringify({ falhas, p: await pagina() }))
 await j.ev(`S.toastMessages.set = window.__toastOriginal; return 1`)

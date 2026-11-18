@@ -14,7 +14,9 @@
      */
     import { createEventDispatcher, onDestroy, tick } from "svelte"
     import type { Tree } from "../../../types/Projects"
-    import { activePage, activePopup, activeProject, focusMode, folders, modoAlianca, outputs, projects, projectView } from "../../stores"
+    import { activePage, activePopup, activeProject, focusMode, folders, outputs, projects, projectView } from "../../stores"
+    import { tela } from "../../utils/aliancaTela"
+    import { escFechou } from "../../utils/aliancaToque"
     import { cultoDoProjeto } from "../../utils/agendas"
     import { algoNoAr } from "../../utils/aliancaModo"
     import { abaLateral } from "../../utils/aliancaBibliotecaEstado"
@@ -179,6 +181,7 @@
 
     /** fechou por tecla: camada e popover somem; o ouvinte de teclado vive ate o keyup dessa tecla (ou TETO_TECLA_MS) engolindo o auto-repeat */
     function fecharPorTecla(tecla: string) {
+        if (tecla === "Escape") escFechou()
         fase = "fechado"
         aberto = null
         pararTimers()
@@ -237,7 +240,7 @@
     // mudou de modo, de aba, de pagina, entrou em foco ou abriu um popup: o popover nao tem mais razao de estar la
     function observarStores() {
         pararObservacao()
-        for (const store of [modoAlianca, abaLateral, focusMode, activePage, activePopup] as { subscribe: (f: () => void) => () => void }[]) {
+        for (const store of [tela, abaLateral, focusMode, activePage, activePopup] as { subscribe: (f: () => void) => () => void }[]) {
             let primeira = true
             soltarStores.push(
                 store.subscribe(() => {

@@ -23,7 +23,6 @@ import {
     folders,
     groups,
     mediaFolders,
-    modoAlianca,
     openScripture,
     openToolsTab,
     outputs,
@@ -43,6 +42,7 @@ import {
     stageShows,
     styles
 } from "../../stores"
+import { naoEMostrar, tecladoLivre, trocarTela } from "../../utils/aliancaTela"
 import { permitidoNoPreparar, textoDoBloqueio } from "../../utils/aliancaQuickSearchLogica"
 import { newToast, triggerFunction } from "../../utils/common"
 import { translateText } from "../../utils/language"
@@ -186,7 +186,7 @@ export async function quicksearch(searchValue: string, categoryFilter: null | Se
     }
 
     // --- ACTIONS ---
-    if (isVisible("actions") && get(modoAlianca) !== "preparar") {
+    if (isVisible("actions") && tecladoLivre()) {
         const actionsList = trimValues(sort(keysToID(get(actions))), 2)
         addValues(actionsList, "action", "actions")
     }
@@ -340,21 +340,21 @@ const triggerActions = {
     settings_output: (id: string) => {
         currentOutputSettings.set(id)
         settingsTab.set("display_settings")
-        activePage.set("settings")
+        trocarTela("settings", "spotlight")
     },
     settings_styles: (id: string) => {
         activeStyle.set(id)
         settingsTab.set("styles")
-        activePage.set("settings")
+        trocarTela("settings", "spotlight")
     },
     settings_profiles: (id: string) => {
         selectedProfile.set(id)
         settingsTab.set("profiles")
-        activePage.set("settings")
+        trocarTela("settings", "spotlight")
     },
     stage_layout: (id: string) => {
         activeStage.set({ id, items: [] })
-        activePage.set("stage")
+        trocarTela("stage", "spotlight")
     },
     overlay: (id: string) => {
         if (get(activePage) === "edit") {
@@ -362,7 +362,7 @@ const triggerActions = {
             refreshEditSlide.set(true)
         } else {
             activeShow.set({ id, type: "overlay" })
-            activePage.set("show")
+            trocarTela("show", "spotlight")
 
             openDrawer("overlays")
         }
@@ -371,7 +371,7 @@ const triggerActions = {
         showRecentlyUsedProjects.set(false)
         activeProject.set(id)
         projectView.set(false)
-        activePage.set("show")
+        trocarTela("show", "spotlight")
     },
     action: (id: string) => {
         const action = get(actions)[id]
@@ -380,7 +380,7 @@ const triggerActions = {
     main_page: (id: string) => {
         if (id === "projects") {
             projectView.set(true)
-            activePage.set("show")
+            trocarTela("show", "spotlight")
             return
         }
 
@@ -391,7 +391,7 @@ const triggerActions = {
 
         if (id === "settings") settingsTab.set("general")
 
-        activePage.set(id as any)
+        trocarTela(id as any, "spotlight")
 
         // if (id === "edit") openActiveShow()
     },
@@ -404,7 +404,7 @@ const triggerActions = {
     popups: (id: string, data: any) => {
         if (id === "project") {
             projectView.set(true)
-            activePage.set("show")
+            trocarTela("show", "spotlight")
             history({
                 id: "UPDATE",
                 newData: { replace: { parent: get(folders)[get(projects)[get(activeProject) || ""]?.parent] ? get(projects)[get(activeProject) || ""]?.parent || "/" : "/" } },
@@ -416,7 +416,7 @@ const triggerActions = {
         if (data?.drawerTab) openDrawer(data.drawerTab)
         if (data?.settingsTab) {
             settingsTab.set(data.settingsTab)
-            activePage.set("settings")
+            trocarTela("settings", "spotlight")
         }
 
         if (id === "overlay" || id === "template" || id === "effect") {
@@ -452,13 +452,13 @@ const triggerActions = {
     },
     settings: (id: string) => {
         settingsTab.set(id as any)
-        activePage.set("settings")
+        trocarTela("settings", "spotlight")
     },
     settings_connection: (id: string) => {
         enableConnection(id)
 
         settingsTab.set("connection")
-        activePage.set("settings")
+        trocarTela("settings", "spotlight")
 
         activePopup.set(null)
         // let popup close first
@@ -479,7 +479,7 @@ const triggerActions = {
 
         if (get(activePage) === "edit") refreshEditSlide.set(true)
         else {
-            activePage.set("show")
+            trocarTela("show", "spotlight")
 
             // add to project
             if (control) {
@@ -512,7 +512,7 @@ const triggerActions = {
         showRef.name = data?.name || ""
         activeShow.set(showRef)
 
-        activePage.set("show")
+        trocarTela("show", "spotlight")
         if (get(focusMode)) focusMode.set(false)
     }
 }
@@ -521,7 +521,7 @@ export function selectQuicksearchValue(value: QuickSearchValue, control: boolean
     if (!value) return
 
     // Preparar (1a, D10): lista branca de tipos e de ids; o que nao esta nela nao roda e avisa
-    if (get(modoAlianca) === "preparar" && !permitidoNoPreparar(value.type, value.id, value.data)) {
+    if (naoEMostrar() && !permitidoNoPreparar(value.type, value.id, value.data)) {
         newToast(textoDoBloqueio(value.type, value.id))
         quickSearchActive.set(false)
         return

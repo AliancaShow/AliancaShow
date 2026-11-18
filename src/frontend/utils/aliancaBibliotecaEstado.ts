@@ -1,6 +1,6 @@
 import { writable } from "svelte/store"
-import { modoAlianca } from "../stores"
-import type { TipoDaBiblioteca } from "./aliancaBibliotecaLogica"
+import { tela } from "./aliancaTela"
+import { chegadaZeraBiblioteca, type TipoDaBiblioteca } from "./aliancaBibliotecaLogica"
 
 // Os stores da aba Biblioteca do Preparar (FV-B), num módulo leve: o `aliancaAbasEditor` importa daqui sem puxar a gaveta,
 // o histórico etc. Os efeitos estão em aliancaBiblioteca.ts. Tudo em memória (nada vai para o disco).
@@ -23,8 +23,11 @@ let iniciado = false
 export function iniciarEstadoDaBiblioteca() {
     if (iniciado) return
     iniciado = true
-    modoAlianca.subscribe((modo) => {
-        if (modo === "preparar") return
+    let anterior: "mostrar" | "editar" | null = null
+    tela.subscribe((t) => {
+        const zera = chegadaZeraBiblioteca(anterior, t)
+        if (t !== "pagina") anterior = t
+        if (!zera) return
         abaLateral.set("culto")
         buscaDaBiblioteca.set("")
         tipoDaBiblioteca.set("musicas")

@@ -12,8 +12,9 @@
     //  - ProjectContentList: `mousedown` (limpar a selecao ao clicar fora) e `keydown|capture` (Esc/Delete na lista) tratam `selected`, que o
     //    SelectElem ja limpa sozinho; MORTOS aqui, sem perda de efeito (conferido: Delete so age com selecao e o clique fora limpa pelo SelectElem).
     import type { ProjectShowRef, Tree } from "../../../types/Projects"
-    import { activeProject, activeShow, categories, editingProjectTemplate, folders, outputDisplay, outputs, projects, quickSearchActive, shows, sorted, special } from "../../stores"
-    import { faixaAoVivo } from "../../utils/aliancaAoVivoLogica"
+    import { activeProject, activeShow, categories, drawSettings, drawTool, editingProjectTemplate, folders, outputState, outputs, paintCache, playingAudio, projects, quickSearchActive, shows, sorted, special } from "../../stores"
+    import { algoNoArEm, faixaAoVivo, telaoLigadoEm } from "../../utils/aliancaAoVivoLogica"
+    import { desenhoAtivo } from "../../utils/aliancaPilulaLogica"
     import { noAr } from "../../utils/aliancaModo"
     import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
     import { ABAS, CHAVE_ABA, montarArvoreDeCultos } from "../../utils/aliancaRoteiroLogica"
@@ -102,7 +103,9 @@
     // ----- NO AR -----
     const lerNoAr = (_saidas: unknown) => noAr().ids
     $: noArIds = lerNoAr($outputs)
-    $: ao = faixaAoVivo({ telaoLigado: !!$outputDisplay })
+    $: extrasNoAr = { desenho: desenhoAtivo($drawTool, $drawSettings, $paintCache), audio: Object.keys($playingAudio).length > 0 }
+    $: telaoLigado = telaoLigadoEm($outputs, $outputState)
+    $: ao = faixaAoVivo({ telaoLigado, algoNoAr: algoNoArEm($outputs, $outputState, extrasNoAr) })
     $: musicas = categoriasDeMusica($categories as Parameters<typeof categoriasDeMusica>[0])
     // `_deps` existe so para o Svelte reavaliar o texto quando os stores chegam depois da montagem
     function tipoDe(item: ProjectShowRef, _deps?: unknown): string {
@@ -118,7 +121,7 @@
         return item.name || removeExtension(getFileName(item.id)) || "(sem nome)"
     }
     const contextoDe = (t: string | undefined) => ((t || "show") === "show" ? "show" : t === "video" || t === "image" ? "media" : t)
-    const noArDe = (item: ProjectShowRef) => !!$outputDisplay && (item.type || "show") === "show" && noArIds.has(item.id)
+    const noArDe = (item: ProjectShowRef) => telaoLigado && (item.type || "show") === "show" && noArIds.has(item.id)
 
     // o clique faz o mesmo que o ShowButton de antes (utils/aliancaRoteiroClique.ts): leiaute do item, ultimo do culto, conferido, editor
     function abrir(item: ProjectShowRef, index: number, e?: MouseEvent) {

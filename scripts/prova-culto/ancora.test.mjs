@@ -20,9 +20,10 @@ test("fecho segue import estatico, dinamico, re-export e resolve .ts/.svelte", (
     assert.ok(!f.has("src/frontend/fora.ts"))
 })
 test("a lista de excecoes real bate com o SHA travado", () => assert.equal(shaDasExcecoes(), SHA_EXCECOES))
-test("passa: arquivo fora do fecho, e do fecho que esta nas excecoes", () => {
+test("passa: arquivo fora do fecho, e do fecho que esta nas excecoes (a lista real esta vazia depois da re-ancoragem da fatia 2: o teste passa uma lista propria)", () => {
     const f = fecho("src/frontend/MainOutput.svelte", leitor)
-    assert.deepEqual(verificar({ fechoDaAncora: f, alterados: ["src/frontend/fora.ts", "src/frontend/stores.ts"] }), [])
+    const excecoes = { "src/frontend/stores.ts": { motivo: "x", sha: "s" } }
+    assert.deepEqual(verificar({ fechoDaAncora: f, alterados: ["src/frontend/fora.ts", "src/frontend/stores.ts"], excecoes }), [])
 })
 test("MUTACAO arquivo do fecho fora da lista reprova", () => {
     const f = fecho("src/frontend/MainOutput.svelte", leitor)
