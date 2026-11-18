@@ -8,7 +8,6 @@
 
     export let showId: string
     // leiaute v2 (fatia 2, regra B): o menu "mais opcoes" (notas e linha do tempo do slide) so existia fora do Preparar e saiu: ha um so editor
-    export let hideOptions = false
 
     $: currentShow = $showsCache[showId]
 
