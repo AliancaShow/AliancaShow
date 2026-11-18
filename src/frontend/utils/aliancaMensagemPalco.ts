@@ -25,12 +25,12 @@ export async function enviarMensagemPalco(bruto: string, minutos = MINUTOS_PADRA
     const motivo = semCaminho()
     if (motivo) return { ok: false, mensagem: motivo }
     const r = await pedirAoSirvo("show_enviar_mensagem_palco", { p_event: get(sirvo).cultoId, p_texto: p.texto, p_minutos: minutos })
-    return r.ok ? { ok: true } : { ok: false, mensagem: mensagemDeErro(r.pg, r.mensagem) }
+    return r.ok ? { ok: true } : { ok: false, mensagem: mensagemDeErro(r.codigo, r.mensagem) }
 }
 
 export async function limparMensagemPalco(): Promise<ResultadoMensagem> {
     const motivo = semCaminho()
     if (motivo) return { ok: false, mensagem: motivo }
     const r = await pedirAoSirvo("show_limpar_mensagem_palco", { p_event: get(sirvo).cultoId })
-    return r.ok ? { ok: true } : { ok: false, mensagem: mensagemDeErro(r.pg, r.mensagem) }
+    return r.ok ? { ok: true } : { ok: false, mensagem: mensagemDeErro(r.codigo, r.mensagem) }
 }

@@ -35,22 +35,18 @@ export function restanteTexto(ateMs: number, agoraMs: number): string {
 }
 
 /**
- * A recusa do Sirvo em portugues claro, por codigo do Postgres (`pg`) — nunca a frase crua do banco.
- * 42501 = sem "conduz" (ou chave recusada), 54000 = limite de escritas por minuto, P0002 = culto inexistente, 22023/23514 = texto/validade fora da regra.
- * Sem codigo: a mensagem do proprio Show (ja em portugues: "Calma...", "Sem conexao...") passa como veio.
+ * A recusa do Sirvo em portugues claro, pelo `codigo` que o Show ja recebe (`pedirAoSirvo`): o main repassa a frase do proprio Sirvo
+ * (0081/0093: "Esta chave só lê o roteiro...", "Pedidos demais desta chave em um minuto...", "Culto inexistente."), entao so o que o main
+ * ja classifica (culto inexistente, chave recusada, rede, ocupado) ganha frase propria; o resto passa como veio, com o texto do Sirvo.
  */
-export function mensagemDeErro(pg: string | undefined, mensagem: string): string {
-    switch (pg) {
-        case "42501":
-            return "O Sirvo recusou: esta chave não pode conduzir o culto (um admin liga “conduz” no Perfil)."
-        case "54000":
-            return "Muitas mensagens em pouco tempo. Espere um minuto e envie de novo."
-        case "P0002":
-            return "Esse culto não existe mais no Sirvo."
-        case "22023":
-        case "23514":
-        case "22001":
-            return "O Sirvo recusou o texto ou o tempo: confira (até 120 caracteres, de 1 a 60 min)."
+export function mensagemDeErro(codigo: string | undefined, mensagem: string): string {
+    switch (codigo) {
+        case "culto_inexistente":
+            return "Esse culto não existe mais no Sirvo. Escolha o culto de novo."
+        case "chave_invalida":
+            return "O Sirvo recusou a chave. Confira a chave em Configurações."
+        case "ocupado":
+            return "Calma: um pedido de cada vez. Tente de novo."
         default:
             return mensagem || "O Sirvo não aceitou."
     }

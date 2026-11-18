@@ -115,20 +115,20 @@ describe("duracao, contagem e erros em portugues", () => {
         expect(restanteTexto(5000, 4500)).toBe("0:01")
         expect(restanteTexto(0, 9000)).toBe("0:00")
     })
-    it("cada codigo do Sirvo vira uma frase clara (42501, 54000, P0002, texto/validade)", () => {
-        expect(mensagemDeErro("42501", "x")).toContain("não pode conduzir")
-        expect(mensagemDeErro("54000", "x")).toContain("Muitas mensagens")
-        expect(mensagemDeErro("P0002", "x")).toContain("não existe mais")
-        expect(mensagemDeErro("22023", "x")).toContain("120 caracteres")
-        expect(mensagemDeErro(undefined, "Calma: um pedido de cada vez.")).toBe("Calma: um pedido de cada vez.")
+    it("o que o main ja classifica ganha frase propria; o resto passa com a frase do proprio Sirvo", () => {
+        expect(mensagemDeErro("culto_inexistente", "x")).toContain("não existe mais")
+        expect(mensagemDeErro("chave_invalida", "x")).toContain("recusou a chave")
+        expect(mensagemDeErro("ocupado", "x")).toContain("um pedido de cada vez")
+        expect(mensagemDeErro("erro", "Pedidos demais desta chave em um minuto. Espere um pouco.")).toBe("Pedidos demais desta chave em um minuto. Espere um pouco.")
+        expect(mensagemDeErro("erro", 'Esta chave só lê o roteiro. Peça a um admin para ligar "conduz" em Perfil → chaves do AliançaShow.')).toContain("só lê o roteiro")
         expect(mensagemDeErro(undefined, "")).toBe("O Sirvo não aceitou.")
     })
-    it("a recusa com codigo chega ao operador ja traduzida (envio e limpar)", async () => {
+    it("a recusa chega ao operador (envio e limpar), com a frase do Sirvo ou a nossa", async () => {
         const { enviarMensagemPalco, limparMensagemPalco } = await import("./aliancaMensagemPalco")
-        mocks.resposta = { ok: false, mensagem: "limite excedido", pg: "54000" }
-        expect(await enviarMensagemPalco("oi")).toEqual({ ok: false, mensagem: mensagemDeErro("54000", "") })
-        mocks.resposta = { ok: false, mensagem: "culto", pg: "P0002" }
-        expect(await limparMensagemPalco()).toEqual({ ok: false, mensagem: mensagemDeErro("P0002", "") })
+        mocks.resposta = { ok: false, mensagem: "Pedidos demais desta chave em um minuto. Espere um pouco.", codigo: "erro" }
+        expect(await enviarMensagemPalco("oi")).toEqual({ ok: false, mensagem: "Pedidos demais desta chave em um minuto. Espere um pouco." })
+        mocks.resposta = { ok: false, mensagem: "Culto não encontrado no Sirvo.", codigo: "culto_inexistente" }
+        expect(await limparMensagemPalco()).toEqual({ ok: false, mensagem: mensagemDeErro("culto_inexistente", "") })
     })
 })
 
@@ -142,10 +142,5 @@ describe("as duas funcoes estao na lista de escrita do main e no tipo", () => {
             expect(linha, f).toContain(`"${f}"`)
             expect(tipo, f).toContain(`"${f}"`)
         }
-    })
-    it("o main devolve o codigo do Postgres dessas duas (pg), senao o Show nao sabe traduzir", () => {
-        const main = readFileSync(join(raiz, "electron/sirvo/sirvo.ts"), "utf8")
-        expect(main).toContain("DO_PALCO")
-        expect(main).toContain('DO_PALCO.has(funcao)) && typeof codigo === "string"')
     })
 })
