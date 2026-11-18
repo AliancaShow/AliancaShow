@@ -14,7 +14,7 @@ const ok = (nome, cond, extra = "") => {
 
 const j = await abrir("principal")
 try {
-    await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1105, deviceScaleFactor: 1, mobile: false })
+    await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
     // 1. um culto com show: a lista so existe com projeto aberto; abre pelo store (o seletor tem a propria prova) e o show pelo clique na linha
     await j.ev(`
 const p=get(S.projects); const alvo=Object.entries(p).find(([k,v])=>(v.shows||[]).some(s=>(s.type===undefined||s.type==="show")))
