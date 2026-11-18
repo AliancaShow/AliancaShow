@@ -12,6 +12,7 @@
     import { calcular, quando } from "../../utils/aliancaSirvoPilulaLogica"
     import { sirvoChat } from "../../utils/aliancaSirvoChat"
     import { sirvoMaterialEstado } from "../../utils/aliancaSirvoMaterial"
+    import AliancaCortina from "./AliancaCortina.svelte"
 
     let agoraMs = Date.now()
     const relogio = setInterval(() => (agoraMs = Date.now()), 2_000)
@@ -79,6 +80,7 @@
             Sirvo
         </button>
         {#if aberto}
+            <AliancaCortina on:fechar={() => (aberto = false)} />
             <div class="pop" role="dialog" aria-label="Culto do Sirvo" data-acao="sirvo-pop">
                 <div class="secao">CULTO DO SIRVO</div>
                 {#if culto}
@@ -103,6 +105,7 @@
             Sirvo
         </button>
         {#if aberto}
+            <AliancaCortina on:fechar={() => (aberto = false)} />
             <div class="pop" role="dialog" aria-label="Sirvo sem chave" data-acao="sirvo-pop">
                 <div class="titulo">Sirvo desconectado</div>
                 <div class="txt">Sem a chave do Sirvo, o AliançaShow não lê o roteiro do culto, não recebe os avisos nem mostra o chat. Cole a chave nas Configurações do Sirvo.</div>

@@ -12,6 +12,7 @@
     import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
     import { toggleOutputs } from "../helpers/output"
     import { restoreOutput } from "../output/clear"
+    import AliancaCortina from "./AliancaCortina.svelte"
 
     export let semTelaFisica = false
 
@@ -127,7 +128,17 @@
         <span class="ponto" />
         <span>{rotulo}</span>
     </button>
-    <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}>▾{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button>
+    <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}
+        >▾{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button
+    >
+    {#if menuAberto || pergunta}
+        <AliancaCortina
+            on:fechar={() => {
+                if (pergunta) maquina.cancelar()
+                menuAberto = false
+            }}
+        />
+    {/if}
     {#if menuAberto}
         <div class="pop menu" role="menu" data-acao="telao-menu-pop">
             <button role="menuitem" class="item" data-item="travar" class:ativo={$outLocked} tabindex="-1" on:mousedown|preventDefault on:click={travar}><span class="it">{$outLocked ? "Destravar saída" : "Travar saída"}</span><span class="sub">{$outLocked ? "libera o telão para mudar" : "nada muda no telão até destravar"}</span></button>
@@ -265,7 +276,9 @@
         background: var(--luz-pop);
         border: 1px solid var(--luz-borda);
         border-radius: 12px;
-        box-shadow: inset 0 0 0 1px var(--luz-borda), 0 18px 40px rgba(0, 0, 0, 0.5);
+        box-shadow:
+            inset 0 0 0 1px var(--luz-borda),
+            0 18px 40px rgba(0, 0, 0, 0.5);
         backdrop-filter: var(--luz-vidro, none);
         transform-origin: top right;
         animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
