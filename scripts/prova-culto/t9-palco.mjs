@@ -5,7 +5,7 @@
 //   A. sem chave que conduz: caixa desligada com o motivo escrito, Enviar inerte, o modo diz por que nao liga (e nada escreve em outputs)
 //   B. com "conduz" injetado: o campo aceita 120 caracteres e o contador acompanha; as validades 1/3/5/10 (padrao 3) selecionam por clique
 //   C. Enviar sem chave volta o erro em portugues na linha de estado (que tem altura fixa: nada se desloca)
-//   D. modo so retorno: sem retorno configurado nao liga e diz o motivo; com um retorno falso na loja ainda recusa (a saida nao respeita o modo)
+//   D. modo so retorno: sem retorno configurado nao liga e diz o motivo; com um retorno na loja liga e desliga pelo botao (8b)
 //   E. indicador: com o modo ligado na loja, a faixa ambar aparece no topo da coluna No ar e a pilula mostra SO RETORNO; "Desligar" (clique real) volta
 //   G. (revisao da fatia 8) o erro NAO esconde a mensagem viva nem o Limpar, e some sozinho em ~6 s; Limpar que falha mantem o botao;
 //      estado passageiro (Sirvo fora do ar, sem culto) so aparece na linha de estado e NAO acende a faixa de falha (a chave que so le acende)
@@ -90,10 +90,12 @@ ok("D. o modo segue desligado", (await dom(`${sel("modo-so-retorno")}.getAttribu
 await print("t9-d-modo-sem-retorno")
 await j.ev(`S.outputs.update(a=>({...a, retorno_t9:{enabled:true,active:false,name:"Retorno t9",color:"#000",bounds:{x:0,y:0,width:1280,height:720},screen:null,stageOutput:"L_t9"}})); await esp(400); return 1`)
 await clicarAcao("modo-so-retorno")
-await esperar(300)
-const av2 = await estado()
-ok("D. com retorno mas sem a saida respeitar o modo: recusa e diz o porque", /output\.ts/.test(av2), av2)
-ok("D. o telao nao foi tocado (outputs so ganhou o retorno falso)", (await dom(`JSON.stringify(Object.keys(get(S.outputs)).filter(k=>k!=="retorno_t9").map(k=>[k,get(S.outputs)[k].out||null]))`)) === JSON.stringify(Object.keys(JSON.parse(base)).map((k) => [k, JSON.parse(base)[k].out || null])))
+await esperar(400)
+ok("D. com retorno configurado o modo LIGA (8b: a saida respeita o modo; a prova por caminho esta em t10-retorno)", (await dom(`${sel("modo-so-retorno")}.getAttribute("aria-pressed")`)) === "true")
+ok("D. o telao nao foi tocado ao ligar (so o retorno falso mudou)", (await dom(`JSON.stringify(Object.keys(get(S.outputs)).filter(k=>k!=="retorno_t9").map(k=>[k,get(S.outputs)[k].out||null]))`)) === JSON.stringify(Object.keys(JSON.parse(base)).map((k) => [k, JSON.parse(base)[k].out || null])))
+await clicarAcao("modo-so-retorno")
+await esperar(400)
+ok("D. clicar de novo desliga", (await dom(`${sel("modo-so-retorno")}.getAttribute("aria-pressed")`)) === "false")
 
 // ---------- E. indicador (estado forcado na loja: o gesto real so liga depois do ajuste aprovado em output.ts)
 // a coluna inteira ANTES da faixa: a faixa ambar nao pode deslocar nada (nem reservar espaco), nem os 38 px que ela ocupava
