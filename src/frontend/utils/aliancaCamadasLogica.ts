@@ -28,9 +28,6 @@ export function camadasDoNoAr(e: EntradaCamadas): Camada[] {
 
 export const tudoDesabilitado = (e: EntradaCamadas) => e.travada || e.tudoLimpo
 
-/** Segurar para limpar tudo: tempo do gesto e inercia depois de aparecer (lição de 09/ago: destrutivo nao herda o pixel do seguro). */
-export const SEGURAR_MS = 900
-
 /** "16:9", "3:1"... a partir da resolucao da saida (reduz por MDC; resolucao estranha vira "w×h"). */
 export function proporcaoDaSaida(w: number, h: number): string {
     if (!w || !h) return "16:9"

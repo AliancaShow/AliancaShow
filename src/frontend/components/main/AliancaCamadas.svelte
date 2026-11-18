@@ -1,12 +1,10 @@
 <script lang="ts">
     // Leiaute v2, coluna No ar: a faixa de icones colada na tela (sobreposicao F3, texto F2, fundo F1, audio F4) e "limpar tudo".
     // NAO le nem escreve o estado do Preview (autoChange/activeClear): deriva dos mesmos stores (aliancaCamadasLogica) e chama os mesmos
-    // limpadores que as teclas F1-F4 de `previewShortcuts`. Respeita `outLocked`. "Limpar tudo" e de SEGURAR (nasce inerte 1 s); Esc
-    // continua limpando na hora (e do Preview escondido).
-    import { onDestroy } from "svelte"
+    // limpadores que as teclas F1-F4 de `previewShortcuts`. Respeita `outLocked`. "Limpar tudo" limpa com UM clique, como o Esc.
     import { clearAudio } from "../../audio/audioFading"
     import { outLocked, outputs, playingAudio, playingMetronome, timelineRecordingAction } from "../../stores"
-    import { camadasDoNoAr, COR_DA_CAMADA, SEGURAR_MS, tudoDesabilitado, type IdCamada } from "../../utils/aliancaCamadasLogica"
+    import { camadasDoNoAr, COR_DA_CAMADA, tudoDesabilitado, type IdCamada } from "../../utils/aliancaCamadasLogica"
     import { clearAll, clearBackground, clearOverlays, clearSlide } from "../output/clear"
     import { isOutCleared } from "../helpers/output"
 
@@ -51,38 +49,10 @@
         }
     }
 
-    // ----- limpar tudo: segurar -----
-    let progresso = 0
-    let inicio = 0
-    let quadro = 0
-    const nasceuEm = Date.now()
-    let agora = Date.now()
-    const relogio = setInterval(() => (agora = Date.now()), 250)
-    onDestroy(() => {
-        clearInterval(relogio)
-        cancelAnimationFrame(quadro)
-    })
-    $: inerte = agora - nasceuEm < 1000
-    function comecar(e: PointerEvent) {
-        if (e.button !== 0 || tudoOff || Date.now() - nasceuEm < 1000) return
-        ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
-        inicio = performance.now()
-        const passo = () => {
-            progresso = Math.min(1, (performance.now() - inicio) / SEGURAR_MS)
-            if (progresso >= 1) {
-                inicio = 0
-                progresso = 0
-                clearAll(true)
-                return
-            }
-            quadro = requestAnimationFrame(passo)
-        }
-        quadro = requestAnimationFrame(passo)
-    }
-    function soltar() {
-        cancelAnimationFrame(quadro)
-        inicio = 0
-        progresso = 0
+    // ----- limpar tudo: UM clique, igual ao Esc (limpar o telao e recuperavel por "Voltar o que foi limpo") -----
+    function limparTudo() {
+        if (tudoOff) return
+        clearAll(true)
     }
 </script>
 
@@ -92,8 +62,7 @@
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={ICONES[c.id]} /></svg>
         </button>
     {/each}
-    <button class="ic tudo" class:inerte disabled={tudoOff} aria-label="Segure pra limpar tudo · Esc" data-title="Segure pra limpar tudo · Esc" data-camada="tudo" tabindex="-1" on:mousedown|preventDefault on:pointerdown={comecar} on:pointerup={soltar} on:pointercancel={soltar} on:pointerleave={soltar}>
-        <span class="enche" style="height: {progresso * 100}%" />
+    <button class="ic tudo" disabled={tudoOff} aria-label="Limpar tudo (Esc)" data-title="Limpar tudo (Esc)" data-camada="tudo" tabindex="-1" on:mousedown|preventDefault on:click={limparTudo}>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={ICONES.tudo} /></svg>
     </button>
 </div>
@@ -138,17 +107,6 @@
     .tudo:disabled {
         border-color: var(--luz-linha);
         color: rgba(248, 248, 240, 0.2);
-    }
-    .tudo.inerte {
-        opacity: 0.6;
-    }
-    .enche {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(242, 26, 39, 0.35);
-        pointer-events: none;
     }
     svg {
         position: relative;
