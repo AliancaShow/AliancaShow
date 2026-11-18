@@ -145,6 +145,22 @@ export function lerReferencia(texto: string): ReferenciaBiblica | null {
     return { livro: livro.n, nomeDoLivro: livro.nome, capitulo, versiculos }
 }
 
+/**
+ * O livro que a Biblia chama de `nomeNaBiblia` e mesmo o livro `numero` da tabela? A biblioteca numera os livros como cada Biblia quiser (so NT 1-27,
+ * deuterocanonicos), entao so o numero nao basta: "Rm 8:28" no livro 45 de uma Biblia onde o 45 e Hebreus mostraria o texto de outro livro.
+ * "ok" = o nome e o do livro; "outro" = o nome e de OUTRO livro (recusa, com o nome); "desconhecido" = o nome nao e reconhecido (outro idioma): vale o numero.
+ */
+export function conferirLivro(nomeNaBiblia: string, numero: number): { resultado: "ok" | "desconhecido" } | { resultado: "outro"; nome: string } {
+    const n = normalizar(nomeNaBiblia)
+    const m = /^([123])\s*([a-z]+)$/.exec(n) || /^(i{1,3})\s+([a-z]+)$/.exec(n) || /^()([a-z]+)$/.exec(n)
+    if (!m) return { resultado: "desconhecido" }
+    const romano: { [r: string]: number } = { i: 1, ii: 2, iii: 3 }
+    const prefixo = m[1] ? romano[m[1]] || Number(m[1]) : null
+    const achado = acharLivro(prefixo, m[2])
+    if (!achado) return { resultado: "desconhecido" }
+    return achado.n === numero ? { resultado: "ok" } : { resultado: "outro", nome: nomeNaBiblia }
+}
+
 /** "Romanos 8:28", "Romanos 8:28-30" ou "Salmos 23" */
 export function rotuloDaReferencia(r: ReferenciaBiblica): string {
     if (!r.versiculos) return `${r.nomeDoLivro} ${r.capitulo}`

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, destinoDaTecla, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -147,6 +147,26 @@ describe("spotlight: o Enter que sobra depois de fechar", () => {
     it("nunca engole com a busca aberta nem sem ter executado nada", () => {
         expect(enterDepoisDeFechar(1000, 1100, true)).toBe(false)
         expect(enterDepoisDeFechar(null, 1100, false)).toBe(false)
+    })
+})
+
+describe("spotlight: o livro da Biblia confere pelo NOME, nao so pelo numero", () => {
+    it("o nome que a Biblia da ao livro e o do Spotlight: confere", () => {
+        expect(conferirLivro("Romanos", 45)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("1 Coríntios", 46)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("I Coríntios", 46)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("1Co", 46)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("Salmos", 19)).toEqual({ resultado: "ok" })
+        expect(conferirLivro("João", 43)).toEqual({ resultado: "ok" })
+    })
+    it("numeracao diferente (o livro 45 da Biblia e Hebreus): recusa e diz qual livro e", () => {
+        expect(conferirLivro("Hebreus", 45)).toEqual({ resultado: "outro", nome: "Hebreus" })
+        expect(conferirLivro("2 João", 62)).toEqual({ resultado: "outro", nome: "2 João" })
+    })
+    it("nome que a tabela nao reconhece (outro idioma, nome longo): vale o numero, e o rotulo mostra o nome da Biblia", () => {
+        expect(conferirLivro("Romans", 45)).toEqual({ resultado: "desconhecido" })
+        expect(conferirLivro("Cântico dos Cânticos", 22)).toEqual({ resultado: "desconhecido" })
+        expect(conferirLivro("", 45)).toEqual({ resultado: "desconhecido" })
     })
 })
 
