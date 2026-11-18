@@ -68,6 +68,7 @@ import { loadShows } from "./setShow"
 import { getCustomMetadata, getGroupName, getLayoutRef } from "./show"
 import { _show } from "./shows"
 import { marcarConferidoSeFicar } from "../../utils/aliancaConferir"
+import { recusarNoModo, soRetornoLigado } from "../../utils/aliancaSoRetorno"
 import { addZero, getMonthName, getWeekday, joinTime, joinTimeBig, secondsToTime } from "./time"
 import { stopTimers } from "./timerTick"
 
@@ -210,6 +211,7 @@ function shouldTriggerBefore(action: any) {
     return action?.triggers?.find((trigger) => triggerActionsBeforeOutput[trigger]?.(action.actionValues?.[trigger]))
 }
 export function checkActionTrigger(layoutData: SlideData, slideIndex = 0) {
+    if (soRetornoLigado()) return // AliancaShow (8b): no modo "so retorno" as acoes do slide nao rodam (mandam so a letra)
     if (Array.isArray(layoutData?.actions?.slideActions)) {
         layoutData.actions.slideActions.forEach((a) => {
             if (shouldTriggerBefore(a)) runAction(a, { slideIndex, source: "slide" })
@@ -219,6 +221,8 @@ export function checkActionTrigger(layoutData: SlideData, slideIndex = 0) {
 
 export async function playPdf(data: OutSlide | null, next: boolean, loop = false) {
     if (!data?.id || data?.type !== "pdf") return
+    // AliancaShow (8b, D1/B1): no modo "so retorno" PDF e recusado ALTO ANTES de tocar em qualquer coisa (nem o fundo do telao, que o `clearBackground` abaixo limparia)
+    if (soRetornoLigado()) return recusarNoModo("PDF")
 
     GlobalWorkerOptions.workerSrc = "./assets/pdf.worker.min.mjs"
     const loadingTask = getDocument(encodeFilePath(data.id))
@@ -291,6 +295,8 @@ export function updateOut(showId: string, index: number, layout: LayoutRef[], ex
 
     // holding "alt" key will disable all extra features
     if (!extra || !data) return
+    // AliancaShow (8b): no modo "so retorno" o slide manda so a letra: fundo, efeitos, sobreposicoes, temporizador, audio, MIDI e acoes ficam de fora
+    if (soRetornoLigado()) return
 
     // trigger start show action first
     const startShowId = data.actions?.startShow?.id || data.actions?.slideActions?.find((a) => a && a.actionValues?.start_show)?.actionValues?.start_show?.id

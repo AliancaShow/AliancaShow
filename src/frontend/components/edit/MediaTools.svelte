@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { TabsObj } from "../../../types/Tabs"
+    import { semDesvio } from "../../utils/aliancaSoRetorno"
     import { activeEdit, activeShow, media } from "../../stores"
     import { clone } from "../helpers/array"
     import { getExtension, getMediaType } from "../helpers/media"
@@ -66,7 +67,7 @@
         if (bgId !== mediaId) return
 
         deleteKeys.forEach((key) => delete bg[key])
-        setOutput("background", bg)
+        semDesvio(() => setOutput("background", bg))
 
         mediaSections = clone(mediaBoxes[mediaType]?.sections || {})
     }
@@ -96,7 +97,7 @@
         } else {
             bg[input.id] = value
         }
-        setOutput("background", bg)
+        semDesvio(() => setOutput("background", bg))
     }
 
     function valueChanged2(e: any) {

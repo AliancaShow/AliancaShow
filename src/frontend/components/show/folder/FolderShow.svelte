@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import { Main } from "../../../../types/IPC/Main"
     import type { ShowType } from "../../../../types/Show"
     import { clearAudio } from "../../../audio/audioFading"
@@ -57,7 +58,7 @@
             return
         }
 
-        if (findMatchingOut(file.path, $outputs)) {
+        if (!soRetornoLigado() && findMatchingOut(file.path, $outputs)) {
             clearBackground()
             return
         }
@@ -69,7 +70,7 @@
         let videoType = getMediaLayerType(file.path, mediaStyle)
         let loop = videoType === "foreground" ? false : true
         let muted = videoType === "background" ? true : false
-        if (videoType === "foreground") clearSlide()
+        if (videoType === "foreground" && !soRetornoLigado()) clearSlide()
         setOutput("background", { path: file.path, type: file.type, loop, muted, startAt: 0, semPasta: true, ...mediaStyle, ignoreLayer: videoType === "foreground" })
 
         startFolderTimer(path, file)

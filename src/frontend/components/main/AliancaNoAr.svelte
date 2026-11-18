@@ -2,10 +2,10 @@
     // Leiaute v2: a coluna da direita em Mostrar ("o que a igreja ve"): a tela principal em proporcao real com a faixa de icones colada
     // (camadas), as outras telas (abas, do mesmo tamanho), a caixa "Mensagem pro palco" e o chat do culto, que ocupa o resto. A faixa de transporte (video, audio, medidor, temporizadores, Spotify) fica logo abaixo da tela (fatia 7, D6).
     // O `Preview` antigo continua montado e escondido em AliancaTela: e ele que escuta o teclado.
-    import { outputDisplay, outputs, styles } from "../../stores"
+    import { outputDisplay, outputs, showsCache, styles } from "../../stores"
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
     import { desligarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
-    import { ROTULO_FAIXA, SUBTITULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
+    import { ROTULO_FAIXA, SUBTITULO_FAIXA, descreverRetorno } from "../../utils/aliancaSoRetornoLogica"
     import { saidasHabilitadas } from "../../utils/aliancaTransporteLogica"
     import { getResolution } from "../helpers/output"
     import PreviewOutput from "../output/preview/PreviewOutput.svelte"
@@ -22,13 +22,14 @@
     $: outras = habilitadas.slice(1)
     $: resolucao = principal ? getResolution(null, [$outputs, $styles], false, principal) : { width: 1920, height: 1080 }
     $: proporcao = proporcaoDaSaida(resolucao.width, resolucao.height)
+    $: noRetorno = $soRetorno ? descreverRetorno($outputs as any, (id) => $showsCache[id]?.name || "") : ""
     $: nomePrincipal = $outputs[principal]?.name || "Telão"
 </script>
 
 <!-- a faixa ambar SOBREPOE o cabecalho "NO AR" (position:absolute dentro do .topo): nunca entra no fluxo, nunca reserva espaco, nunca empurra a coluna (regra da casa: nada se desloca, ate o toque duplo cair no mesmo lugar) -->
 <div class="topo">
 {#if $soRetorno}
-    <div class="faixa-retorno" role="status" data-acao="faixa-so-retorno"><span class="fr-t">{ROTULO_FAIXA}</span><span class="fr-s">{SUBTITULO_FAIXA}</span><button type="button" class="fr-b" tabindex="-1" data-acao="desligar-so-retorno" on:mousedown|preventDefault on:click={desligarSoRetorno}>Desligar</button></div>
+    <div class="faixa-retorno" role="status" data-acao="faixa-so-retorno"><span class="fr-t">{ROTULO_FAIXA}</span><span class="fr-s" data-acao="retorno-mostra">{SUBTITULO_FAIXA} · retorno: {noRetorno}</span><button type="button" class="fr-b" tabindex="-1" data-acao="desligar-so-retorno" on:mousedown|preventDefault on:click={desligarSoRetorno}>Desligar</button></div>
 {/if}
 
 <div class="cab">

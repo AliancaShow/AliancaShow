@@ -2,7 +2,7 @@
     // Leiaute v2, topo: a pilula do telao. Liga e desliga pela maquina de aliancaSaidaMenuLogica (1 s inerte, 3 s de janela, 0,8 s de
     // trava). Desligar pede confirmacao num segundo botao ("Desligar mesmo"). So mouse: Enter e Espaco nao ligam nem desligam (botao sem
     // foco por Tab; o keydown global tira o foco de qualquer BUTTON). Ctrl+O continua como esta (shortcuts.ts).
-    import { onDestroy } from "svelte"
+    import { onDestroy, onMount } from "svelte"
     import { get } from "svelte/store"
     import { activePage, drawSettings, drawTool, outLocked, outputCache, outputDisplay, outputs, paintCache, settingsTab } from "../../stores"
     import { tela, trocarTela } from "../../utils/aliancaTela"
@@ -13,7 +13,8 @@
     import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
     import { toggleOutputs } from "../helpers/output"
     import { restoreOutput } from "../output/clear"
-    import { soRetorno } from "../../utils/aliancaSoRetorno"
+    import { falhaAlta } from "../../utils/aliancaFalha"
+    import { iniciarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { ROTULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
     import AliancaCortina from "./AliancaCortina.svelte"
 
@@ -40,6 +41,8 @@
         aoMudar: (s) => (estado = s)
     })
     $: ($outputDisplay, $outputs, $drawTool, $drawSettings, $paintCache, $activePage, $tela, semTelaFisica, maquina.mundoMudou())
+    // 8b (R2): a recuperacao da queda do modo "so retorno" sobe uma vez, com a janela principal (o topo existe em toda tela), nao com a coluna No ar
+    onMount(() => iniciarSoRetorno((m) => falhaAlta("so-retorno", m)))
     onDestroy(() => maquina.destruir())
 
     // cronometro "Telao no ar · mm:ss": comeca quando a saida entra no ar e zera quando sai

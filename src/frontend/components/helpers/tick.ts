@@ -1,5 +1,6 @@
 import { get } from "svelte/store"
 import { outputs, slideTimers } from "../../stores"
+import { iniciarAutomacao } from "../../utils/aliancaSoRetorno"
 import { playFolder } from "../../utils/shortcuts"
 import { clone } from "./array"
 import { startFolderTimer } from "./output"
@@ -36,18 +37,24 @@ export function newSlideTimer(timerId: string, duration: number, folderPath = ""
             return a
         })
 
-        if (data) {
-            const isPDF = data.endsWith(".pdf")
-            if (isPDF) {
-                startFolderTimer(data, { type: "pdf", path: "" })
-                OutputHelper.advanceOutput(id, "", { playNext: true })
-            } else {
-                playFolder(data)
+        // AliancaShow (8b, I1): o fim do temporizador e AUTOMACAO do telao: o modo "so retorno" so desvia gestos do operador (null com o modo desligado)
+        const solta = iniciarAutomacao()
+        try {
+            if (data) {
+                const isPDF = data.endsWith(".pdf")
+                if (isPDF) {
+                    startFolderTimer(data, { type: "pdf", path: "" })
+                    OutputHelper.advanceOutput(id, "", { playNext: true })
+                } else {
+                    playFolder(data)
+                }
+                return
             }
-            return
-        }
 
-        OutputHelper.advanceOutput(id, "", { playNext: true })
+            OutputHelper.advanceOutput(id, "", { playNext: true })
+        } finally {
+            solta?.()
+        }
     }
 }
 

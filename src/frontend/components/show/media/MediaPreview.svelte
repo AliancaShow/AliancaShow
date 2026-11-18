@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { MediaStyle } from "../../../../types/Main"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import type { ProjectShowRef } from "../../../../types/Projects"
     import { activeShow, media, outLocked, outputs, styles } from "../../../stores"
     import { translateText } from "../../../utils/language"
@@ -67,7 +68,7 @@
                         if ($outLocked) return
 
                         const type = getMediaLayerType(mediaPath, mediaStyle)
-                        if (type === "foreground" || type !== "background") clearSlide()
+                        if ((type === "foreground" || type !== "background") && !soRetornoLigado()) clearSlide()
 
                         setOutput("background", { path: mediaPath, ...mediaStyle })
                     }}

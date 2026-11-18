@@ -1,5 +1,6 @@
 <script lang="ts">
     import { derived, get } from "svelte/store"
+    import { soRetornoLigado } from "../../../utils/aliancaSoRetorno"
     import type { ContentFile, ContentProviderId } from "../../../../electron/contentProviders/base/types"
     import type { MediaStyle } from "../../../../types/Main"
     import type { ShowType } from "../../../../types/Show"
@@ -138,7 +139,7 @@
 
         const activeOutputs = getAllActiveOutputs()
 
-        const isActive = activeOutputs.some((a) => (a.out?.background?.path || a.out?.background?.id) === path)
+        const isActive = !soRetornoLigado() && activeOutputs.some((a) => (a.out?.background?.path || a.out?.background?.id) === path)
         if (isActive) {
             clearBackground()
             return
@@ -147,7 +148,7 @@
         let videoType = getMediaLayerType(path, mediaStyle)
         let loop = contentProvider || videoType === "foreground" ? false : true
         let muted = videoType === "background" ? true : false
-        if (videoType === "foreground") clearSlide()
+        if (videoType === "foreground" && !soRetornoLigado()) clearSlide()
 
         // get style per output
         activeOutputs.forEach((output) => {

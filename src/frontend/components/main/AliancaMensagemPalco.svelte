@@ -11,7 +11,7 @@
     import { enviarMensagemPalco, limparMensagemPalco } from "../../utils/aliancaMensagemPalco"
     import { mensagemDaCaixa } from "../../utils/aliancaMensagemPalcoVista"
     import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_ERRO_MS, avisoDaCaixa, caminhoDoEnvio, campoAposEnvio, conferirDuvida, duvidaDoEnvio, envioAceito, mensagemViva, prepararMensagem, restanteTexto, type Duvida } from "../../utils/aliancaMensagemPalcoLogica"
-    import { desligarSoRetorno, iniciarSoRetorno, ligarSoRetorno, porQueNaoLigarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
+    import { desligarSoRetorno, ligarSoRetorno, porQueNaoLigarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { outputs } from "../../stores"
 
     let texto = ""
@@ -40,11 +40,9 @@
         // sem mensagem viva nada precisa redesenhar a cada segundo: o relogio so anda quando ha contagem
         if (viva || tique % 5 === 0) agora = sirvoAgora()
     }, 1000)
-    const parar = iniciarSoRetorno()
     onMount(() => (agora = sirvoAgora()))
     onDestroy(() => {
         clearInterval(relogio)
-        parar()
         if (tAviso) clearTimeout(tAviso)
         if (tErro) clearTimeout(tErro)
     })

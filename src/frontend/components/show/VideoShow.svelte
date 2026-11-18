@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
+    import { soRetornoLigado } from "../../utils/aliancaSoRetorno"
     import type { Unsubscriber } from "svelte/store"
     import { uid } from "uid"
     import { Main } from "../../../types/IPC/Main"
@@ -190,7 +191,7 @@
 
         let loop = shouldLoop
         let muted = shouldBeMuted
-        if (videoType === "foreground" || (videoType !== "background" && !shouldLoop)) clearSlide()
+        if (!soRetornoLigado() && (videoType === "foreground" || (videoType !== "background" && !shouldLoop))) clearSlide()
         let bg: any = { type, startAt, muted, loop, ...mediaStyle, ignoreLayer: videoType === "foreground" }
         // AliancaShow F7: so o "repetir" que o item do culto ESCOLHEU vence a pasta
         if (typeof projectItem?.loop === "boolean") bg.loopDoItem = projectItem.loop

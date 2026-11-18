@@ -12,6 +12,8 @@ import { actions, activeFocus, activeProject, activeRename, activeShow, activeTi
 import { isMainWindow, isOutputWindow, newToast } from "../../utils/common"
 import { indiceDaFoto, mesmoSlideDaFoto, podeTerFoto, tirarFoto } from "../../utils/aliancaFoto"
 import { destinoRecusaTecla } from "../../utils/aliancaModo"
+import { destinoDoEnvio, recusarNoModo, semDesvio } from "../../utils/aliancaSoRetorno"
+import { aceitaNoModo, oQueRecusou } from "../../utils/aliancaSoRetornoLogica"
 import { resolverFim } from "../../utils/aliancaPastasMidiaLogica"
 import { translateText } from "../../utils/language"
 import { confirmCustom } from "../../utils/popup"
@@ -64,16 +66,27 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
     // AliancaShow: guarda no DESTINO. No Preparar, o que chegar aqui por tecla em curso e recusado
     if (destinoRecusaTecla()) return
 
+    // AliancaShow (8b): modo "so retorno" — o PONTO UNICO de desvio. Ligado, o que vai ao ar (nunca a limpeza) segue SO para o(s) retorno(s), com ou sem
+    // saida explicita no pedido; o telao nao muda e os efeitos de "foi ao ar" nao rodam. So slide de TEXTO entra (D1, abaixo). Desligado: `desvio` e null e nada abaixo muda.
+    const desvio = destinoDoEnvio(data)
+    const modo = desvio !== null
+    // D1: o modo aceita SO slide de texto. Midia, PDF, sobreposicao, efeito e slide com video sao recusados ALTO, sem tocar telao, retorno nem tocador
+    if (modo) {
+        const temVideo = type === "slide" && getSlideVideoItems(data).length > 0
+        if (!aceitaNoModo(type, data, temVideo)) return recusarNoModo(oQueRecusou(type, data, temVideo))
+    }
+    if (desvio && !desvio.length) return // modo ligado e o retorno sumiu: descarta (nunca cai no telao)
+
     const ref = data?.layout ? _show(data.id).layouts([data.layout]).ref()[0] || [] : []
 
     // stop any active break slide recording when the slide changes
     if (type === "slide") _stopBreakRecording()
 
-    customActionActivation("output_changed")
+    if (!modo) customActionActivation("output_changed")
 
     const bindings = data?.bindings || (data?.layout ? ref[data.index]?.data?.bindings || [] : [])
-    const allOutputIds = bindings.length ? bindings : getActiveOutputs(get(outputs), true, false, true)
-    const outs = outputId ? [outputId] : allOutputIds
+    const allOutputIds = desvio || (bindings.length ? bindings : getActiveOutputs(get(outputs), true, false, true))
+    const outs = desvio || (outputId ? [outputId] : allOutputIds)
 
     // track usage (& set attributionString)
     if (type === "slide" && data?.id) {
@@ -91,10 +104,10 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
 
         if (data.type === "pdf") {
             const out = get(outputs)[outs[0]]?.out?.slide
-            if (out?.type !== "pdf") customActionActivation("pdf_start")
+            if (out?.type !== "pdf" && !modo) customActionActivation("pdf_start")
         } else {
             const groupId = slide.globalGroup
-            if (groupId) customActionActivation("group_start", groupId)
+            if (groupId && !modo) customActionActivation("group_start", groupId)
 
             // start recording time on break slides (no items, globalGroup === "break")
             const layoutSlideIndex = ref[data.index]?.type === "parent" ? (ref[data.index]?.index ?? -1) : -1
@@ -140,12 +153,12 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
             const currentOutSlideId = get(outputs)[outs?.[0]]?.out?.slide?.id || ""
 
             // log usage if show is not currently outputted
-            if (currentOutSlideId !== data?.id) appendShowUsage(data.id)
+            if (currentOutSlideId !== data?.id && !modo) appendShowUsage(data.id)
 
             const overrideCategoryAction = ref[data?.index]?.data?.actions?.slideActions?.find((action) => Object.values(action.customData || {}).find((a1) => Object.entries(a1).find(([key, value]) => key === "overrideCategoryAction" && value === true)))
 
             // run category action if show slide is not currently outputted, and it does not have a custom override action
-            if (currentOutSlideId !== data?.id || resetActionTrigger) {
+            if (!modo && (currentOutSlideId !== data?.id || resetActionTrigger)) {
                 const category = get(showsCache)[data.id]?.category || ""
                 const categoryActionId = get(categories)[category]?.action
                 if (!overrideCategoryAction && categoryActionId) runAction(get(actions)[categoryActionId], { source: "slide" }, true)
@@ -158,7 +171,7 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
             const currentBackground = get(outputs)[outs?.[0]]?.out?.background || {}
             const mediaData = get(media)[currentBackground.path || ""] || {}
             const mediaType = getMediaLayerType(currentBackground.path || "", mediaData)
-            if (mediaType === "foreground") clearBackground()
+            if (mediaType === "foreground" && !modo) clearBackground()
         }
 
         let toggleState = false
@@ -187,7 +200,7 @@ export function setOutput(type: string, data: any, toggle = false, outputId = ""
             if (type === "background") {
                 // clear if PDF/PPT is active
                 const slideContent = getOutputContent(id)
-                if (data && (slideContent.type === "pdf" || slideContent.type === "ppt")) clearSlide()
+                if (data && (slideContent.type === "pdf" || slideContent.type === "ppt") && !modo) clearSlide()
 
                 if (data) data = changeOutputBackground(data, { id })
             }
@@ -449,7 +462,8 @@ function startOverlayTimer(outputId: string, overlayId: string, outData: string[
                 clearOverlayTimer(outputId, overlayId)
                 if (!get(outputs)[outputId]?.out?.[type]?.includes(overlayId)) return
 
-                setOutput(type, overlayId, true, outputId)
+                // AliancaShow (8b, I2): a expiracao de uma sobreposicao e LIMPEZA do telao, nao envio do operador: nunca e desviada pelo modo "so retorno"
+                semDesvio(() => setOutput(type, overlayId, true, outputId))
             }, overlay.displayDuration! * 1000)
         }
 

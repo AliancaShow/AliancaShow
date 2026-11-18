@@ -11,6 +11,7 @@ import { saidasQueMostram } from "./aliancaEditarLogica"
 import { SAIDA_TRAVADA } from "./aliancaEditarLogica"
 import { destinosDoEnvio, jaMostramOSlide, saidasParaMandar } from "./aliancaEditarSaidas"
 import { refotografarSaidas } from "./aliancaRefotografar"
+import { soRetornoLigado } from "./aliancaSoRetorno"
 
 // Leiaute v2, fatia 3: "Mandar pro ar" de um slide que se esta EDITANDO (faixa de pendencia do centro e botao direito na miniatura).
 // E o clique do slide de Mostrar (components/show/Slides.svelte `slideClick`) sem o `e`: um gesto deliberado do operador. Quem chama e um clique do
@@ -48,7 +49,7 @@ export function mandarSlideAoAr(showId: string, index: number, saidas: string | 
                 updateOut(showId, index, ref, true, id)
             }
             // o mesmo slide ja no ar: "mandar de novo" tira uma foto nova (e o que a faixa de pendencia pede) so nas saidas DESTE envio
-            refotografarSaidas(jaNoAr)
+            if (!soRetornoLigado()) refotografarSaidas(jaNoAr) // (8b) no modo so retorno o telao nao muda: nem a foto
         })
         return true
     } catch (erro) {
