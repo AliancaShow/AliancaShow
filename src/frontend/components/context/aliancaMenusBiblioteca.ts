@@ -149,7 +149,8 @@ function paraORoteiro(classe: string, contextElem: HTMLElement | null, sel: Sel)
         return
     }
     const dados = (sel?.data || []).filter((d) => d !== null && d !== undefined)
-    if (!dados.length) return falhaAlta("menu-biblioteca", `${classe}: nada selecionado para pôr no roteiro`)
+    // a selecao e lida na hora do clique no item do menu: se a lista se refez nesse meio tempo nao ha nada selecionado, e isso e normal (achado 10)
+    if (!dados.length) return void newToast("A seleção mudou. Abra o menu de novo.")
     for (const d of dados) {
         if (classe === "#media_card") {
             const path: string = d.path || ""

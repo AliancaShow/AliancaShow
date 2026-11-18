@@ -92,4 +92,9 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         const card = readFileSync(join(__dirname, "../drawer/Card.svelte"), "utf8")
         expect(card).toContain("class:active")
     })
+    it("revisao da fatia 6, achado 10: a selecao que sumiu entre o botao direito e o clique avisa o operador (a falha alta fica para defeito de codigo)", () => {
+        const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
+        expect(reg).not.toMatch(/nada selecionado para pôr no roteiro/)
+        expect(reg).toContain('newToast("A seleção mudou. Abra o menu de novo.")')
+    })
 })
