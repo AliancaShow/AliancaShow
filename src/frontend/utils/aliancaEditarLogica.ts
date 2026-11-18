@@ -87,6 +87,18 @@ export const TIPOS_EDITAVEIS: TipoEditavel[] = ["show", "media", "audio", "camer
 /** `activeEdit.type` que o seletor nao sabe descrever (pdf, ppt...): nao se edita aqui, e quem ve isso tem de avisar em voz alta */
 export const tipoDeEdicaoDesconhecido = (t: string | undefined): boolean => !!t && !(TIPOS_EDITAVEIS as string[]).includes(t)
 
+/**
+ * Cabine 18/nov (A9): o que o Editor poe em `activeEdit` ao montar quando o item aberto no centro nao e um show. So tipo EDITAVEL entra: um bloco
+ * (section), pdf, ppt, folder ou player como `activeShow` virava `activeEdit.type = "section"` e a faixa de falha acendia "editar-tipo-desconhecido"
+ * a cada volta de Configuracoes para Editar. Devolve `null` quando nao ha nada a fazer (show, tipo que nao se edita, ou edicao ja em curso de outro item).
+ */
+export function edicaoDoItemMostrado(show: { id?: string; type?: string } | null | undefined, edit: { id?: string; type?: string } | null | undefined): { id: string; type: TipoEditavel; items: any[] } | null {
+    const tipo = show?.type || "show"
+    if (!show?.id || tipo === "show" || !(TIPOS_EDITAVEIS as string[]).includes(tipo)) return null
+    if (edit?.id && edit.type !== tipo) return null
+    return { id: show.id, type: tipo as TipoEditavel, items: [] }
+}
+
 /** o `activeEdit` de cada item do roteiro quando ele e escolhido no seletor (null = o tipo nao se edita aqui) */
 export function editDoItemDoRoteiro(it: { id: string; type?: string }): { type: TipoEditavel; slide?: number; id?: string; showId?: string; items: any[] } | null {
     const tipo = tipoEditavelDoRoteiro(it.type)

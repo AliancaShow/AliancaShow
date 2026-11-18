@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { INERTE_MS, TETO_INERTE_MS, assinaturaDasOpcoes, camadaPodeSair, dataLocalISO, dataValida, decidirTecla, dentroDaCarencia, estadoDoBotaoDia, eventoDoNome, hojeLocalISO, indiceInicial, larguraDoLayout, larguraDoPopover, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, posicaoDoPopover, removerGruposVazios, rotuloDoDia, somarDias } from "./aliancaSeletorLogica"
+import { INERTE_MS, TETO_INERTE_MS, assinaturaDasOpcoes, camadaPodeSair, dataLocalISO, dataValida, decidirTecla, dentroDaCarencia, estadoDoBotaoDia, eventoDoNome, hojeLocalISO, indiceInicial, larguraDoLayout, larguraDoPopover, moverDestaque, montarOpcoesDeDia, nomeDaAgenda, opcoesPlanas, posicaoDoPopover, removerGruposVazios, rotuloDoDia, somarDias , gruposSoNoSirvo } from "./aliancaSeletorLogica"
 import type { ItemDaArvore, ResolvidoDoCulto } from "./aliancaSeletorLogica"
 
 describe("datas locais", () => {
@@ -421,5 +421,34 @@ describe("hora no cartao do dia (fatia 9)", () => {
         expect(horaDoNomeDoProjeto("07 - Vigília · 12h")).toBe("")
         expect(horaDoNomeDoProjeto("08 · 99h99")).toBe("")
         expect(horaDoNomeDoProjeto("08 · 24h")).toBe("")
+    })
+})
+
+describe("cabine 18/nov, A8: o seletor lista tambem os proximos cultos do Sirvo que ainda nao tem projeto", () => {
+    const dia = (iso: string) => iso.slice(0, 10)
+    const hora = () => "10h"
+    const cultos = [
+        { event_id: "e1", titulo: "Culto de Domingo", comeca_em: "2026-11-22T13:00:00Z" },
+        { event_id: "e2", titulo: "Culto de Domingo", comeca_em: "2026-11-29T13:00:00Z" },
+        { event_id: "e3", titulo: "Culto de Domingo", comeca_em: "2026-12-06T13:00:00Z" },
+        { event_id: "velho", titulo: "Antigo", comeca_em: "2026-11-08T13:00:00Z" },
+        { event_id: "fim", titulo: "Encerrado", comeca_em: "2026-11-25T13:00:00Z", encerrado: true }
+    ]
+    const base = { hoje: "2026-11-18", dataDoCulto: dia, horaDoCulto: hora }
+    it("lista os futuros sem projeto, em ordem, num grupo so, com id `sirvo:<event_id>` e marca soNoSirvo", () => {
+        const g = gruposSoNoSirvo({ cultos, ligados: new Set(), datasLocais: new Set(), ...base })
+        expect(g).toHaveLength(1)
+        expect(g[0].opcoes.map((o) => o.id)).toEqual(["sirvo:e1", "sirvo:e2", "sirvo:e3"])
+        expect(g[0].opcoes.every((o) => o.soNoSirvo && o.hora === "10h")).toBe(true)
+    })
+    it("tira o culto que ja tem projeto ligado e o que cai numa data que ja tem projeto local", () => {
+        const g = gruposSoNoSirvo({ cultos, ligados: new Set(["e1"]), datasLocais: new Set(["2026-11-29"]), ...base })
+        expect(g[0].opcoes.map((o) => o.id)).toEqual(["sirvo:e3"])
+    })
+    it("tudo coberto: nenhum grupo (o popover nao desenha grupo vazio)", () => {
+        expect(gruposSoNoSirvo({ cultos, ligados: new Set(["e1", "e2", "e3"]), datasLocais: new Set(), ...base })).toEqual([])
+    })
+    it("data invalida do Sirvo nao quebra nem aparece", () => {
+        expect(gruposSoNoSirvo({ cultos: [{ event_id: "x", comeca_em: "lixo" }], ligados: new Set(), datasLocais: new Set(), hoje: "2026-11-18", dataDoCulto: () => null, horaDoCulto: hora })).toEqual([])
     })
 })

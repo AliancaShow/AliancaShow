@@ -116,3 +116,11 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         expect(novo).toContain('roteiroTravado(r.projetoId, r.item, "novo")')
     })
 })
+
+describe("cabine 18/nov, A11: o menu da midia nao tem \"Mostrar agora (sem pôr no roteiro)\" (o ▶ do cartao ja faz isso)", () => {
+    it("media_card nao traz alianca_agora; os outros layouts de biblioteca seguem com ele", () => {
+        expect(NOVOS.media_card).not.toContain("alianca_agora")
+        expect(NOVOS.show_drawer).toContain("alianca_agora")
+        expect(NOVOS.overlay_card).toContain("alianca_agora")
+    })
+})

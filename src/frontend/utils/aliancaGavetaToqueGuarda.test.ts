@@ -69,11 +69,11 @@ describe("a guarda da biblioteca (fatia 6)", () => {
             expect(t, f).not.toMatch(/TocarAgora|autorizarAr|aliancaGavetaToque|on:tocar/)
         }
     })
-    it("marcar para levar ao culto so fora de Mostrar (`podeMarcar`): em Mostrar o clique so seleciona", () => {
+    it("marcar para levar ao culto so fora de Mostrar (`podeMarcar`): em Mostrar nada e marcado (midia vai ao ar, B1; o resto so seleciona)", () => {
         for (const f of CONVERTIDAS.filter((c) => /AudioFile|MediaCard/.test(c))) {
             const t = ler(f)
             for (const m of t.matchAll(/cliqueDeMarcar\(m\)|duploCliqueDeMarcar\(m\)/g)) {
-                expect(t.slice(Math.max(0, m.index! - 160), m.index!), `${f} @${m.index}`).toContain("podeMarcar()")
+                expect(t.slice(Math.max(0, m.index! - 640), m.index!), `${f} @${m.index}`).toContain("podeMarcar()")
             }
         }
         const sb = ler(CONVERTIDAS.find((c) => c.endsWith("ShowButton.svelte"))!)
@@ -108,5 +108,24 @@ describe("a guarda da biblioteca (fatia 6)", () => {
         const t = ler("src/frontend/components/drawer/navigation/AudioTabs.svelte")
         expect(t).not.toContain("onDoubleClick")
         expect(t).not.toContain("AudioPlaylist.start")
+    })
+})
+
+describe("cabine 18/nov, B1: clique simples numa midia (video ou imagem) vai ao ar em Mostrar", () => {
+    const t = ler("src/frontend/components/drawer/media/MediaCard.svelte")
+    const ini = t.indexOf("function click(")
+    const corpo = t.slice(ini, t.indexOf("// leiaute v2: o \"＋\" do cartao"))
+    it("na guarda da gaveta, fora do marcar (`podeMarcar`), a midia levanta a guarda (autorizarAr) e refaz o clique", () => {
+        expect(corpo).toMatch(/if \(!podeMarcar\(\)\) \{[\s\S]{0,400}autorizarAr\(\(\) => click\(\{\}\)\)/)
+        expect(corpo).toMatch(/type !== "video" && type !== "image"/)
+    })
+    it("o caminho de Editar continua so marcando: cliqueDeMarcar vem depois do `podeMarcar`, sem autorizarAr", () => {
+        const marcar = corpo.slice(corpo.indexOf("const m = marcadoDeArquivo"))
+        expect(marcar.slice(0, 200)).toContain("cliqueDeMarcar(m)")
+        expect(marcar.slice(0, 200)).not.toContain("autorizarAr")
+    })
+    it("a trava de clique repetido segue: o `wait` do cartao e a trava global (aliancaToque) nao foram tiradas", () => {
+        expect(corpo).toMatch(/wait = true[\s\S]{0,80}setTimeout\(\(\) => \{\s*wait = false/)
+        expect(ler("src/frontend/utils/aliancaToque.ts")).toMatch(/repeticao\.engole\(chave, performance\.now\(\), ponto\(e\)\)/)
     })
 })

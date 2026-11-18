@@ -18,7 +18,7 @@ import { listarBiblioteca, type LinhaDaBiblioteca } from "./aliancaBibliotecaLog
 import { prepararEdicaoDoShow } from "./aliancaEditarAcoes"
 import { falhaAlta } from "./aliancaFalha"
 import { alternarTelaCheia, salvarAgora } from "./aliancaJanela"
-import { acaoDaTecla, conferirLivro, filtrarAcoes, lerReferencia, MAX_VERSICULOS, MAXIMO_POR_SECAO, rotuloDaReferencia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, conferirLivro, filtrarAcoes, lerReferencia, lerSoLivro, MAX_VERSICULOS, MAXIMO_POR_SECAO, rotuloDaReferencia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "./aliancaTocarNoAr"
 import { telaAtual, trocarTela } from "./aliancaTela"
 import { newToast } from "./common"
@@ -105,23 +105,37 @@ export function buscarAcoes(consulta: string): Resultado[] {
 }
 
 /** a Biblia que o Spotlight usa: a aba aberta na pasta Biblia (colecao = a versao de pre-visualizacao dela, a MESMA que o Scripture toca) ou, sem aba, a primeira instalada */
-function bibliaEmUso(): { aba: string; id: string; nome: string } | null {
+export function bibliaEmUso(): { aba: string; id: string; nome: string } | null {
     const todas = get(scriptures)
-    const aba = get(drawerTabsData).scripture?.activeSubTab || Object.keys(todas)[0] || ""
+    // a aba da pasta Biblia pode estar velha (uma Biblia que saiu): cai para a primeira instalada, nunca diz "nenhuma Biblia" havendo uma (cabine 18/nov, A6)
+    const ativa = get(drawerTabsData).scripture?.activeSubTab || ""
+    const aba = ativa && todas[ativa] ? ativa : Object.keys(todas)[0] || ""
     if (!aba || !todas[aba]) return null
     const versoes = todas[aba]?.collection?.versions
     const id = versoes?.[todas[aba]?.collection?.previewIndex || 0] || versoes?.[0] || aba
     return { aba, id, nome: todas[aba]?.customName || todas[aba]?.name || id }
 }
 
+/** o que a busca diz, alto, quando nao ha nenhuma Biblia (o instalador sai sem Biblia se a pasta bundled-bibles/ estiver sem .fsb) */
+export const MOTIVO_SEM_BIBLIA = "Nenhuma Bíblia instalada. Adicione uma em Importar (ou copie o .fsb para Documentos/AliancaShow/Bibles)."
+
+/** "João", "Rom": falta o capitulo. Nunca calado: sem Biblia diz que nao ha Biblia; com Biblia diz como completar. So o nome do livro, sem Enter util. */
+function buscarSoLivro(consulta: string): Resultado[] {
+    const l = lerSoLivro(consulta)
+    if (!l) return []
+    const motivo = bibliaEmUso() ? `Falta o capítulo e o versículo: ${l.nome} 3:16` : MOTIVO_SEM_BIBLIA
+    const ref = { livro: l.livro, nomeDoLivro: l.nome, capitulo: 0, versiculos: null }
+    return [{ chave: "versiculo:livro:" + l.livro, tipo: "versiculo", titulo: l.nome, icone: "scripture", id: l.nome, detalhe: motivo, versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo } }]
+}
+
 /** "Rm 8:28": o resultado de versiculo, com o texto lido da Biblia aberta. Sem Biblia, sem livro ou sem esse versiculo: o resultado diz o motivo (Enter avisa, nunca cai calado). */
 export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
     const ref = lerReferencia(consulta)
-    if (!ref) return []
+    if (!ref) return buscarSoLivro(consulta)
     const rotulo = rotuloDaReferencia(ref)
     const base = { chave: "versiculo:" + rotulo, tipo: "versiculo" as const, titulo: rotulo, icone: "scripture", id: rotulo }
     const biblia = bibliaEmUso()
-    if (!biblia) return [{ ...base, detalhe: "Nenhuma Bíblia instalada", versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo: "Nenhuma Bíblia instalada: adicione uma em Importar." } }]
+    if (!biblia) return [{ ...base, detalhe: MOTIVO_SEM_BIBLIA, versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo: MOTIVO_SEM_BIBLIA } }]
     const sem = (motivo: string): Resultado[] => [{ ...base, detalhe: motivo, versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto: "", motivo } }]
     try {
         const bible = await loadJsonBible(biblia.id)

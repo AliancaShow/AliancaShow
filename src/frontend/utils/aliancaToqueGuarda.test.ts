@@ -56,3 +56,14 @@ describe("o aviso de notas do slide em Mostrar nao e controle morto (achado 2.2)
 describe("Esc: a repeticao de tecla e engolida na ligacao", () => {
     it("aoEsc consulta escEngolidoPorRepeticao(e)", () => expect(ler("utils/aliancaToque.ts")).toMatch(/escEngolidoPorRepeticao\(e\) \|\| esc\.segura\(agora\)/))
 })
+
+describe("cabine 18/nov, A7: o video do centro (previa) nunca toca", () => {
+    const t = ler("components/show/VideoShow.svelte")
+    it("nasce parado, nao segue o relogio da saida e nao tem tocar/pausar/mudo da previa", () => {
+        expect(t).toMatch(/let videoData = \{ paused: true,/)
+        expect(t).toMatch(/if \(type !== "player" && videoData && !videoData\.paused\) videoData\.paused = true/)
+        expect(t).not.toContain("syncVideoToAudio")
+        expect(t).not.toMatch(/videoData\.paused = !videoData\.paused/)
+        expect(t).not.toMatch(/if \(playingInOutput\) videoData\.paused = data\.paused/)
+    })
+})

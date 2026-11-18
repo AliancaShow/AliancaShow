@@ -154,6 +154,23 @@ export function lerReferencia(texto: string): ReferenciaBiblica | null {
 }
 
 /**
+ * Cabine 18/nov (A6): so o NOME de um livro ("joão", "Rom", "1 Co"), sem capitulo. A busca avisa que falta o capitulo (e, sem Biblia, que nao ha Biblia)
+ * em vez de ficar calada. Abaixo de 3 letras nao conta (a abreviatura de duas letras, "is", "os", "at", e palavra comum de titulo de musica).
+ */
+export function lerSoLivro(texto: string): { nome: string; livro: number } | null {
+    const t = String(texto ?? "")
+        .trim()
+        .replace(/\s+/g, " ")
+    const m = /^(?:(?:([123])\s*[ºªo°.]?|([Ii]{1,3})[\s.])\s*)?([A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+){0,3})\.?$/.exec(t)
+    if (!m) return null
+    const prefixo = m[1] ? Number(m[1]) : m[2] ? m[2].length : null
+    // com numero ("1 Co") a abreviatura de 2 letras e inequivoca; sem numero, abaixo de 3 letras e palavra comum
+    if (!prefixo && normalizar(m[3]).replace(/ /g, "").length < 3) return null
+    const livro = acharLivro(prefixo, m[3])
+    return livro ? { nome: livro.nome, livro: livro.n } : null
+}
+
+/**
  * O livro que a Biblia chama de `nomeNaBiblia` e mesmo o livro `numero` da tabela? A biblioteca numera os livros como cada Biblia quiser (so NT 1-27,
  * deuterocanonicos), entao so o numero nao basta: "Rm 8:28" no livro 45 de uma Biblia onde o 45 e Hebreus mostraria o texto de outro livro.
  * "ok" = o nome e o do livro; "outro" = o nome e de OUTRO livro (recusa, com o nome); "desconhecido" = o nome nao e reconhecido (outro idioma): vale o numero.
