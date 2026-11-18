@@ -24,7 +24,6 @@
     import Center from "../system/Center.svelte"
     import DropArea from "../system/DropArea.svelte"
     import AliancaDividir from "./AliancaDividir.svelte"
-    import ShowHeader from "./ShowHeader.svelte"
 
     export let showId: string
     export let layout = ""
@@ -531,10 +530,6 @@
     <Autoscroll class={$focusMode || isLocked ? "" : "context #shows__close"} {offset} disabled={disableAutoScroll} {shouldSkipSmooth} bind:scrollElem style="display: flex;">
         <DropArea id="all_slides" selectChildren>
             <DropArea id="slides" hoverTimeout={0} selectChildren>
-                {#if !$focusMode}
-                    <ShowHeader {showId} hideOptions={!layoutSlides?.length} />
-                {/if}
-
                 {#if $showsCache[showId] === undefined}
                     <Center faded={!loading}>
                         {#if loading}

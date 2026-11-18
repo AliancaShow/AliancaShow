@@ -26,12 +26,14 @@ const REAL = {
     preview: ler("src/frontend/components/output/preview/Preview.svelte"),
     // TopButton.svelte foi apagado (leiaute v2): o texto fica vazio e o arquivo NAO pode voltar
     topButton: "",
-    showHeader: ler("src/frontend/components/show/ShowHeader.svelte"),
+    // ShowHeader.svelte foi apagado (leiaute v2): o texto fica vazio e o arquivo NAO pode voltar
+    showHeader: "",
     popupShortcuts: ler("src/frontend/components/main/popups/Shortcuts.svelte")
 }
 
 describe("teclas 1 a 6 saem (1b, decisao 12)", () => {
     it("o codigo esta limpo", () => expect(problemasDasTeclas(REAL)).toEqual([]))
+    it("ShowHeader.svelte nao existe mais (o titulo e o menu ⋮ moraram no cabecalho do centro)", () => expect(existsSync(join(RAIZ, "src/frontend/components/show/ShowHeader.svelte"))).toBe(false))
     it("TopButton.svelte nao existe mais", () => expect(existsSync(join(RAIZ, "src/frontend/components/inputs/TopButton.svelte"))).toBe(false))
     it("o `import type` de shortcuts.ts nao carrega mais TopViews", () => expect(REAL.shortcuts).not.toMatch(/import type \{[^}]*TopViews/))
     describe("mutacoes (texto injetado)", () => {

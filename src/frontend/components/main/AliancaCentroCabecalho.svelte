@@ -3,6 +3,7 @@
     import { activeProject, activeShow, outputDisplay, outputs, projects, shows } from "../../stores"
     import { noAr } from "../../utils/aliancaModo"
     import { getFileName, removeExtension } from "../helpers/media"
+    import AliancaCentroMais from "./AliancaCentroMais.svelte"
 
     const nomeDe = (item: { id?: string; type?: string; name?: string } | null | undefined, _shows?: unknown): string => {
         if (!item?.id) return ""
@@ -24,6 +25,7 @@
     {#if atual}<span class="depois">depois: {proximo || "—"}</span>{/if}
     {#if aoVivo}<span class="vivo">AO VIVO · a igreja vê este item</span>{/if}
     <span class="dica">clique num slide = no ar · ← → avançam</span>
+    <AliancaCentroMais />
 </div>
 
 <style>
@@ -33,7 +35,7 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 0 16px;
+        padding: 0 12px 0 16px;
         border-bottom: 1px solid var(--luz-linha);
     }
     .item {
