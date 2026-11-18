@@ -101,4 +101,11 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
         expect(reg).toMatch(/swichProjectItem\(indice, item\.id\)[\s\S]{0,120}abrirItemDoRoteiro\(item, indice\)[\s\S]{0,120}tocarShowNoAr\(item\.id/)
     })
+    it("revisao da fatia 6, achado 12: nenhum REMOVIDOS diz que a previa e o clique simples (o clique so seleciona e nao abre no centro): a falta e declarada", () => {
+        for (const [layout, declarados] of Object.entries(REMOVIDOS))
+            for (const [item, destino] of Object.entries(declarados)) {
+                expect(destino, `${layout}.${item}`).not.toMatch(/a previa e o clique simples/)
+                if (item === "preview" || /previa/i.test(destino)) expect(destino, `${layout}.${item}`).toContain("SEM SUBSTITUTO")
+            }
+    })
 })

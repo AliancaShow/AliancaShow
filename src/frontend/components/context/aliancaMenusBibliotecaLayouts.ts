@@ -5,7 +5,7 @@ import { semDestino } from "../../utils/aliancaMenusBibliotecaLogica"
 export type Layout = { [id: string]: string[] }
 /** layouts que o FreeShow nao tinha (a linha de show usava o menu `default`, com a busca rapida): nascem aqui */
 export const CRIADOS = ["show_drawer", "project_effect", "stream_card"]
-export const SO_O_LUGAR = "o clique simples agora so seleciona (a previa)"
+export const SO_O_LUGAR = "SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)"
 const SEM_MARCA = "a lista nova nao mostra essa marca"
 
 /** layout -> o menu novo */
@@ -53,14 +53,14 @@ export const NOVOS: Layout = {
 /** layout -> item do menu ANTIGO que nao esta no novo -> para onde foi. Texto vai para a descricao do PR e para o teste */
 export const REMOVIDOS: { [layout: string]: { [item: string]: string } } = {
     show_drawer: {},
-    media_card: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    audio_button: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    audio_button_playlist: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    overlay_card: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    overlay_card_default: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
+    media_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    audio_button: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    audio_button_playlist: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    overlay_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    overlay_card_default: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
     overlay_card_readonly: { preview: SO_O_LUGAR },
-    effect_card: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
-    effect_card_default: { GROUP_open: "Editar ficou (item `edit`); a previa e o clique simples" },
+    effect_card: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
+    effect_card_default: { GROUP_open: "Editar ficou (item `edit`); SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)" },
     scripture_verse: {},
     action: {},
     action_readonly: {},
