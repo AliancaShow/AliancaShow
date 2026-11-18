@@ -4,6 +4,7 @@
     // Mostrar escreve: anteparo, pagina `show`, modo `culto` (a ordem de irAoCulto). Editar escreve pagina `edit` e modo `preparar`.
     import { activePage, modoAlianca } from "../../stores"
     import { armarAnteparo, irAoCulto } from "../../utils/aliancaPilula"
+    import { marcadoDoSegmentado } from "../../utils/aliancaSegmentadoLogica"
     import Clock from "../system/Clock.svelte"
     import AliancaMenuApp from "./AliancaMenuApp.svelte"
     import AliancaSirvoPilula from "./AliancaSirvoPilula.svelte"
@@ -11,7 +12,10 @@
 
     export let semTelaFisica = false
 
-    $: marcado = $activePage === "show" ? "mostrar" : $activePage === "edit" ? "editar" : null
+    // a aba acesa segue o `modoAlianca` (o que o teclado obedece); pagina e modo discordando acende o contorno de alerta
+    $: ({ marcado, cruzado } = marcadoDoSegmentado($activePage, $modoAlianca))
+    let marcado: "mostrar" | "editar" | null = null
+    let cruzado = false
 
     function irMostrar() {
         irAoCulto()
@@ -28,7 +32,7 @@
     <AliancaSirvoPilula />
 
     <div class="centro">
-        <div class="seg" role="tablist" aria-label="O que o centro mostra" data-acao="segmentado">
+        <div class="seg" class:cruzado data-title={cruzado ? "A tela e o teclado estão em modos diferentes: a aba acesa é a do teclado." : ""} role="tablist" aria-label="O que o centro mostra" data-acao="segmentado">
             <button role="tab" class="aba" class:on={marcado === "mostrar"} aria-selected={marcado === "mostrar"} data-aba="mostrar" tabindex="-1" on:mousedown|preventDefault on:click={irMostrar}>Mostrar</button>
             <button role="tab" class="aba" class:on={marcado === "editar"} aria-selected={marcado === "editar"} data-aba="editar" tabindex="-1" on:mousedown|preventDefault on:click={irEditar}>Editar</button>
         </div>
@@ -53,6 +57,9 @@
         flex-grow: 1;
         display: flex;
         justify-content: center;
+    }
+    .seg.cruzado {
+        box-shadow: inset 0 0 0 1px var(--luz-laranja);
     }
     .seg {
         display: flex;
