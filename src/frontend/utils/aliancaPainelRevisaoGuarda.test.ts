@@ -37,7 +37,7 @@ describe("2.1: Ferramentas da saida nao abrem em Editar (nada de pagina inerte c
     })
     it("desenhoBloqueado acende a falha `desenho-no-preparar` quando o modo e Preparar", () => {
         const t = ler("utils/aliancaDesenho.ts")
-        expect(t).toMatch(/gavetaNaoToca\(\)/)
+        expect(t).toMatch(/emEditar\(\)/)
         expect(t).toMatch(/falhaAlta\("desenho-no-preparar"/)
     })
 })
