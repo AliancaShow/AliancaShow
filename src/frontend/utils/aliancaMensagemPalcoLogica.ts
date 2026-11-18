@@ -51,3 +51,16 @@ export function mensagemDeErro(codigo: string | undefined, mensagem: string): st
             return mensagem || "O Sirvo não aceitou."
     }
 }
+
+/**
+ * Por que a caixa nao pode mandar agora, com texto VERDADEIRO para cada motivo. `persistente` = promessa quebrada que so uma pessoa
+ * conserta (a chave nao conduz): so esse acende a faixa de falha da janela. O resto e passageiro (Sirvo fora do ar, sem culto
+ * seguido, sem chave): fala so na linha de estado da caixa e some quando a causa some.
+ */
+export function caminhoDoEnvio(e: { status: string; cultoId: string | null; podeConduzir: boolean }): { motivo: string; persistente: boolean } {
+    if (e.status === "sem_chave" || e.status === "chave_invalida") return { motivo: "Sem chave do Sirvo. Coloque a chave em Configurações.", persistente: false }
+    if (!e.cultoId) return { motivo: "Nenhum culto do Sirvo sendo seguido.", persistente: false }
+    if (e.status !== "conectado") return { motivo: "O Sirvo não está respondendo agora. Tente de novo em instantes.", persistente: false }
+    if (!e.podeConduzir) return { motivo: "Esta chave só lê o roteiro. Um admin liga “conduz” no Sirvo (Perfil → chaves do AliançaShow).", persistente: true }
+    return { motivo: "", persistente: false }
+}

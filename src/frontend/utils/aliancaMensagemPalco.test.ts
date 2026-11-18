@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({ motivo: "", chamadas: [] as any[], resposta: {
 vi.mock("./aliancaSirvo", async () => {
     const { writable } = await import("svelte/store")
     return {
-        sirvo: writable({ cultoId: "evt-1" }),
+        sirvo: writable({ status: "conectado", cultoId: "evt-1", podeConduzir: true, enviando: false }),
         porQueNaoConduz: () => mocks.motivo,
         pedirAoSirvo: async (funcao: string, args: any) => {
             mocks.chamadas.push({ funcao, args })
@@ -45,8 +45,12 @@ describe("mensagemViva", () => {
     })
 })
 
+const estadoBom = { status: "conectado", cultoId: "evt-1", podeConduzir: true, enviando: false }
+
 describe("enviarMensagemPalco / limparMensagemPalco", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).set({ ...estadoBom })
         mocks.motivo = ""
         mocks.chamadas.length = 0
         mocks.resposta = { ok: true, dados: {} }
@@ -55,9 +59,12 @@ describe("enviarMensagemPalco / limparMensagemPalco", () => {
         const { falhas } = await import("./aliancaFalha")
         falhas.set([])
         mocks.motivo = "Esta chave só lê o roteiro."
+        const { sirvo } = await import("./aliancaSirvo")
+        ;(sirvo as any).update((e: any) => ({ ...e, podeConduzir: false }))
         const { enviarMensagemPalco } = await import("./aliancaMensagemPalco")
         const r = await enviarMensagemPalco("oi")
-        expect(r).toEqual({ ok: false, mensagem: "Esta chave só lê o roteiro." })
+        expect(r.ok).toBe(false)
+        expect((r as any).mensagem).toContain("só lê o roteiro")
         expect(mocks.chamadas).toEqual([])
         const f = get(falhas)
         expect(f.length).toBe(1)
@@ -143,4 +150,30 @@ describe("as duas funcoes estao na lista de escrita do main e no tipo", () => {
             expect(tipo, f).toContain(`"${f}"`)
         }
     })
+})
+
+describe("M2: so a promessa quebrada acende a faixa de falha; o passageiro so fala na caixa", () => {
+    const casos: [string, any, RegExp][] = [
+        ["Sirvo fora do ar", { status: "caido" }, /não está respondendo/],
+        ["sem culto seguido", { cultoId: null }, /Nenhum culto/],
+        ["sem chave", { status: "sem_chave" }, /Sem chave/]
+    ]
+    for (const [nome, parcial, texto] of casos) {
+        it(`${nome}: recusa com texto verdadeiro e NAO acende a falha`, async () => {
+            const { falhas } = await import("./aliancaFalha")
+            const { sirvo } = await import("./aliancaSirvo")
+            falhas.set([])
+            ;(sirvo as any).set({ ...estadoBom, ...parcial })
+            mocks.motivo = "Esperando o Sirvo responder…"
+            mocks.chamadas.length = 0
+            const { enviarMensagemPalco, limparMensagemPalco } = await import("./aliancaMensagemPalco")
+            const r: any = await enviarMensagemPalco("oi")
+            expect(r.ok).toBe(false)
+            expect(r.mensagem).toMatch(texto)
+            expect(r.mensagem).not.toMatch(/ainda não ligada/)
+            expect(((await limparMensagemPalco()) as any).mensagem).toMatch(texto)
+            expect(get(falhas)).toEqual([])
+            expect(mocks.chamadas).toEqual([])
+        })
+    }
 })

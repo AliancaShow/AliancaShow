@@ -4,17 +4,17 @@
 // proprio roteiro (`mensagem_palco`), que `pedirAoSirvo` rebusca na hora. Nada aqui escreve em `outputs`.
 import { get } from "svelte/store"
 import { falhaAlta } from "./aliancaFalha"
-import { MINUTOS_PADRAO, mensagemDeErro, minutosValidos, prepararMensagem } from "./aliancaMensagemPalcoLogica"
-import { pedirAoSirvo, porQueNaoConduz, sirvo } from "./aliancaSirvo"
+import { MINUTOS_PADRAO, caminhoDoEnvio, mensagemDeErro, minutosValidos, prepararMensagem } from "./aliancaMensagemPalcoLogica"
+import { pedirAoSirvo, sirvo } from "./aliancaSirvo"
 
 export type ResultadoMensagem = { ok: true } | { ok: false; mensagem: string }
 
 export const ORIGEM_FALHA = "mensagem-palco"
 
+/** a falha alta so para promessa quebrada que persiste (a chave nao conduz); o passageiro (Sirvo fora do ar, sem culto, sem chave) so volta o texto */
 function semCaminho(): string {
-    const motivo = porQueNaoConduz()
-    if (!motivo) return ""
-    falhaAlta(ORIGEM_FALHA, `Sirvo: mensagem pro palco ainda não ligada (${motivo})`)
+    const { motivo, persistente } = caminhoDoEnvio(get(sirvo))
+    if (motivo && persistente) falhaAlta(ORIGEM_FALHA, `Sirvo: mensagem pro palco ainda não ligada (${motivo})`)
     return motivo
 }
 
