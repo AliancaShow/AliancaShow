@@ -29,6 +29,9 @@
     export let showId: string
     export let layout = ""
     export let projectIndex = -1
+    // leiaute v2: numero de colunas fixado de fora (a grade automatica do centro). `null` = o de sempre, `$slidesOptions.columns`.
+    export let colunas: number | null = null
+    $: colunasDaGrade = colunas ?? $slidesOptions.columns
 
     $: currentShow = $showsCache[showId]
     $: activeLayout = layout || $showsCache[showId]?.settings?.activeLayout
@@ -89,7 +92,7 @@
 
         let output = $outputs[activeOutputs[0]]
         if (output?.out?.slide && showId === output.out.slide.id && activeLayout === output.out.slide.layout) {
-            let columns = mode === "grid" ? ($slidesOptions.columns > 2 ? $slidesOptions.columns : 0) : 1
+            let columns = mode === "grid" ? (colunasDaGrade > 2 ? colunasDaGrade : 0) : 1
             let index = Math.max(0, (output.out.slide.index || 0) - columns)
             offset = ((scrollElem?.querySelector(".grid")?.children[index] as HTMLElement)?.offsetTop || 5) - 5
         }
@@ -543,7 +546,7 @@
                 {:else if $modoAlianca === "preparar" && $dividirAberto === showId}
                     <AliancaDividir {showId} />
                 {:else}
-                    <div class="grid" style={$focusMode ? "" : "padding-bottom: 60px;"}>
+                    <div class="grid" class:auto={colunas !== null} style={$focusMode ? "" : "padding-bottom: 60px;"}>
                         {#if layoutSlides.length}
                             {#each layoutSlides as slide, i}
                                 {@const currentSlide = currentShow?.slides?.[slide.id]}
@@ -562,7 +565,7 @@
                                             selo={$modoAlianca === "preparar" && activeSlides[i] !== undefined ? (mudouNoAr[i] ? "no ar · mudou" : "no ar") : ""}
                                             {endIndex}
                                             list={!gridMode}
-                                            columns={$slidesOptions.columns}
+                                            columns={colunasDaGrade}
                                             icons
                                             {altKeyPressed}
                                             disableThumbnails={isLessons && !loaded}
@@ -571,7 +574,7 @@
                                         />
                                     {/if}
                                 {:else}
-                                    <SkeletonSlide slide={currentSlide} index={i} color={slide.color} columns={$slidesOptions.columns} active={activeSlides[i] !== undefined} on:click={(e) => slideClick(e, i)} />
+                                    <SkeletonSlide slide={currentSlide} index={i} color={slide.color} columns={colunasDaGrade} active={activeSlides[i] !== undefined} on:click={(e) => slideClick(e, i)} />
                                 {/if}
                             {/each}
                         {:else}
@@ -596,6 +599,13 @@
 </div>
 
 <style>
+    /* leiaute v2: a mesma geometria do prototipo (padding 10 + 6 em volta de cada cartao = 16 e vao de 12) */
+    .grid.auto {
+        padding: 10px;
+    }
+    .grid.auto :global(.main) {
+        padding: 6px;
+    }
     .grid {
         display: flex;
         flex-wrap: wrap;

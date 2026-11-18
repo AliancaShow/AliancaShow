@@ -14,6 +14,10 @@
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
+    import Navigation from "../edit/Navigation.svelte"
+    import LazyLoad from "../helpers/LazyLoad.svelte"
+    import AliancaEditarFerramentas from "./AliancaEditarFerramentas.svelte"
+    import AliancaCentro from "./AliancaCentro.svelte"
     import AliancaRoteiro from "./AliancaRoteiro.svelte"
     import AliancaBibliotecaPainel from "./AliancaBibliotecaPainel.svelte"
     import AliancaCorpoPagina from "./AliancaCorpoPagina.svelte"
@@ -100,11 +104,13 @@
             <div class="area">
                 <div class="faixa">
                     <section class="painel col" data-regiao="roteiro" style="width: {valores.esq}px">
-                        <AliancaRoteiro />
+                        {#if pagina === "edit"}<Navigation />{:else}<AliancaRoteiro />{/if}
                     </section>
                     <AliancaDivisoria eixo="v" on:pegar={pegar("esq")} />
                     <section class="painel centro" data-regiao="centro">
-                        <!-- AQUI:centro -->
+                        {#if pagina === "edit"}
+                            <div class="editor"><LazyLoad component={() => import("../edit/Editor.svelte")} show={true} /></div>
+                        {:else}<AliancaCentro />{/if}
                     </section>
                 </div>
                 <AliancaDivisoria eixo="h" on:pegar={pegar("bib")} />
@@ -114,7 +120,7 @@
             </div>
             <AliancaDivisoria eixo="v" on:pegar={pegar("dir")} />
             <aside class="painel dir" data-regiao="no-ar" style="width: {valores.dir}px">
-                <AliancaNoAr />
+                {#if pagina === "edit"}<AliancaEditarFerramentas />{:else}<AliancaNoAr />{/if}
             </aside>
         </div>
     {/if}
@@ -194,6 +200,12 @@
     .col,
     .dir {
         flex-shrink: 0;
+    }
+    .editor {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
     }
     .semLugar {
         align-items: center;

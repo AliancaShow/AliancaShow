@@ -23,6 +23,9 @@
     import ShowNotes from "./ShowNotes.svelte"
     import Slides from "./Slides.svelte"
 
+    // leiaute v2: com `colunas` (a grade automatica do centro) o rodape de leiautes nao e montado (P4) e o zoom e automatico
+    export let colunas: number | null = null
+
     $: show = $activeShow
 
     // check for timer & create global
@@ -91,8 +94,8 @@
                     <FolderShow path={show.id} index={show.index || 0} />
                 {/key}
             {:else if (show.type || "show") === "show"}
-                <Slides showId={$activeShow?.id || ""} />
-                <Layouts />
+                <Slides showId={$activeShow?.id || ""} {colunas} />
+                {#if colunas === null}<Layouts />{/if}
             {:else if show.type === "show_placeholder"}
                 <ProjectShowPlaceholder />
             {:else}
