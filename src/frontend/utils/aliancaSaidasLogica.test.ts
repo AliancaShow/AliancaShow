@@ -1,6 +1,6 @@
 // Configuracoes > Telas e saidas (C4): mapa das telas e lista "Todas as saidas". Parte pura.
 import { describe, expect, it } from "vitest"
-import { numeroDaTela, ocupaATela, ordenarTelas, resumoDaSaida, resumoDeRede, rotuloDaTela } from "./aliancaSaidasLogica"
+import { estadoDaSaida, numeroDaTela, ocupaATela, ordenarTelas, podeMover, resumoDaSaida, resumoDeRede, rotuloDaTela, telaDaCabine } from "./aliancaSaidasLogica"
 
 const T = (id: number, x: number, internal = false) => ({ id, internal, bounds: { x, y: 0, width: 1920, height: 1080 } })
 const telas = [T(30, 3840), T(10, 0, true), T(20, 1920)]
@@ -60,5 +60,44 @@ describe("resumo das secoes raras", () => {
     it("webrtc", () => {
         expect(resumoDeRede("webrtc", {})).toBe("desligado")
         expect(resumoDeRede("webrtc", { webrtc: true })).toBe("sem endereço")
+    })
+})
+
+describe("podeMover e a tela da cabine (revisao do PR #41, achado 1)", () => {
+    const T2 = (id: number, x: number, internal = false) => ({ id, internal, bounds: { x, y: 0, width: 1920, height: 1080 } })
+    const ts = [T2(10, 0, true), T2(20, 1920), T2(30, 3840)]
+    const saidas: any = { tel: { name: "Telão", screen: "20" }, ret: { name: "Retorno", screen: "30" }, ndi: { name: "NDI", invisible: true, ndi: true }, trav: { name: "Travada", screen: "20", boundsLocked: true }, off: { name: "Desligada", enabled: false, screen: "30" } }
+    it("a cabine e a tela que contem o centro da janela principal; sem o centro, a interna", () => {
+        expect(telaDaCabine(ts, { x: 2500, y: 400 })).toBe("20")
+        expect(telaDaCabine(ts, null)).toBe("10")
+        expect(telaDaCabine([T2(20, 1920)], null)).toBeNull()
+    })
+    it("recusa a tela da cabine, dizendo por que", () => {
+        const r: any = podeMover("tel", saidas, ts[0], ts, "10")
+        expect(r.ok).toBe(false)
+        expect(r.motivo).toMatch(/cabine/)
+    })
+    it("recusa a tela ja ocupada por outra saida ligada; saida desligada nao ocupa", () => {
+        expect((podeMover("tel", saidas, ts[2], ts, "10") as any).motivo).toMatch(/Retorno/)
+        expect(podeMover("tel", { ...saidas, ret: saidas.off }, ts[2], ts, "10")).toEqual({ ok: true })
+    })
+    it("recusa saida so de rede e saida com posicao travada", () => {
+        expect((podeMover("ndi", saidas, ts[2], ts, "10") as any).motivo).toMatch(/só de rede/)
+        expect((podeMover("trav", saidas, ts[2], ts, "10") as any).motivo).toMatch(/travada/)
+    })
+    it("recusa mover para onde ja esta; aceita tela livre", () => {
+        expect(podeMover("tel", saidas, ts[1], ts, "10").ok).toBe(false)
+        expect(podeMover("tel", { tel: saidas.tel }, ts[2], ts, "10")).toEqual({ ok: true })
+    })
+})
+
+describe("estado da saida (vermelho so com conteudo no ar)", () => {
+    it("desligada = sem ponto; habilitada vazia = verde mesmo com a janela ligada; so conteudo + janela = vermelho", () => {
+        expect(estadoDaSaida({ enabled: false }, true)).toBe("")
+        expect(estadoDaSaida({ enabled: true, out: {} }, true)).toBe("ligada")
+        expect(estadoDaSaida({ enabled: true, out: { slide: null, background: null, overlays: [] } }, true)).toBe("ligada")
+        expect(estadoDaSaida({ enabled: true, out: { slide: { id: "x" } } }, false)).toBe("ligada")
+        expect(estadoDaSaida({ enabled: true, out: { slide: { id: "x" } } }, true)).toBe("ar")
+        expect(estadoDaSaida({ enabled: true, out: { overlays: ["o"] } }, true)).toBe("ar")
     })
 })

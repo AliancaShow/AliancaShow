@@ -71,3 +71,44 @@ export function resumoDeRede(tipo: "blackmagic" | "rtmp" | "webrtc", s: { blackm
     if (!s.webrtc) return "desligado"
     return s.webrtcData?.url ? "com endereço" : "sem endereço"
 }
+
+/** a tela da cabine: a que contem o centro da janela principal; sem essa informacao, a tela interna (a mesma que o mapa chama de "Cabine") */
+export function telaDaCabine(telas: TelaDoSistema[], centro?: { x: number; y: number } | null): string | null {
+    if (centro) {
+        const dentro = telas.find((t) => centro.x >= t.bounds.x && centro.x < t.bounds.x + t.bounds.width && centro.y >= t.bounds.y && centro.y < t.bounds.y + t.bounds.height)
+        if (dentro) return String(dentro.id)
+    }
+    const interna = telas.find((t) => t.internal)
+    return interna ? String(interna.id) : null
+}
+
+export type PodeMover = { ok: true } | { ok: false; motivo: string }
+
+/** pode mover a saida `id` para a tela `tela`? Recusa dizendo o porque (nunca em silencio): cabine, tela ocupada, saida so de rede, posicao travada */
+export function podeMover(id: string, saidas: { [id: string]: SaidaDoMapa & { boundsLocked?: boolean } }, tela: TelaDoSistema, telas: TelaDoSistema[], cabine: string | null): PodeMover {
+    const s = saidas[id]
+    if (!s) return { ok: false, motivo: "Escolha uma saída antes de mover." }
+    const nome = s.name || "Esta saída"
+    const n = ordenarTelas(telas).findIndex((t) => String(t.id) === String(tela.id)) + 1
+    if (s.invisible) return { ok: false, motivo: `“${nome}” é só de rede (NDI, WebRTC, RTMP ou Blackmagic): não tem janela para mover.` }
+    if (s.boundsLocked) return { ok: false, motivo: `“${nome}” está com a posição travada (cadeado em Tela de saída). Destrave antes de mover.` }
+    if (ocupaATela(s, tela)) return { ok: false, motivo: `“${nome}” já está no Monitor ${n}.` }
+    if (cabine !== null && String(tela.id) === cabine) return { ok: false, motivo: `O Monitor ${n} é a tela da cabine, onde está esta janela: a saída taparia a interface.` }
+    const dona = Object.entries(saidas).find(([oid, o]) => oid !== id && o.enabled !== false && !o.invisible && ocupaATela(o, tela))
+    if (dona) return { ok: false, motivo: `O Monitor ${n} já é de “${dona[1].name || "outra saída"}”. Mova aquela saída primeiro.` }
+    return { ok: true }
+}
+
+type SaidaComConteudo = SaidaDoMapa & { out?: { [k: string]: any } | null }
+
+/** a saida esta mostrando alguma coisa agora? (slide, fundo, overlay ou efeito; `refresh` e `transition` nao contam) */
+export function temConteudoNoAr(s: SaidaComConteudo): boolean {
+    const o = s.out || {}
+    return (["background", "slide", "effects", "overlays"] as const).some((k) => (Array.isArray(o[k]) ? o[k].length > 0 : !!o[k]))
+}
+
+/** "" desligada; "ligada" habilitada (verde); "ar" so quando a janela esta ligada E ha conteudo na saida (vermelho) */
+export function estadoDaSaida(s: SaidaComConteudo, janelasLigadas: boolean): "" | "ligada" | "ar" {
+    if (s.enabled === false) return ""
+    return janelasLigadas && temConteudoNoAr(s) ? "ar" : "ligada"
+}
