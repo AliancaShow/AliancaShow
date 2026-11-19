@@ -5,10 +5,14 @@
 //   C  "N alteracoes nao salvas" e Descartar desfazem de verdade; Salvar zera
 //   D  Telas e saidas: abas (a nova leva NOVO), Habilitada/Nome, secoes raras recolhidas com resumo, mapa das telas, lista de saidas
 //   E  propriedades do Editar: secoes com fio, Mais/Avancado recolhidos com resumo, grupo de botoes em pastilha, campos na mesma pele
-//   F  a janela de SAIDA nao recebeu a pele (sem data-tema, sem tokens, sem .luz-pele)
+//   G  rascunho completo: special/saida contam, criar/apagar saida NAO contam, foto sobrevive a fechar/reabrir e ao autosave, Fechar com pendencia pergunta (inline), Descartar zera de verdade
+//   H  mapa das telas: clicar NAO move (confirmacao inline, Mover em outro pixel e inerte ~1 s), recusas altas (cabine, ocupada, so-rede, travada), Desfazer 10 s
+//   I  interruptores de NDI/RTMP/WebRTC/Blackmagic: desligar no ar pede confirmacao; Blackmagic desligado limpa a resolucao forcada
+//   J  abas de saida: icone de tipo + cor, ponto vermelho so com conteudo no ar; Renomear leva ao campo Nome
+//   F  a janela de SAIDA nao recebeu a pele (sem data-tema, sem tokens, sem .luz-pele) e EXISTE uma janela de saida (senao a prova falha: nao provou)
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-cabine3"
 mkdirSync(saida, { recursive: true })
@@ -101,11 +105,11 @@ try {
     await clique(`document.querySelector('[data-acao=pagina-salvar]')`)
     await esperar(2500)
     ok("C6 Salvar zera a contagem (e diz Salvo)", !(await cabine()).includes("não salva"), await cabine())
-    // desfaz o que a prova mexeu
+    // desfaz o que a prova mexeu (a chave foi salva ligada: desliga e salva de novo, o Descartar devolveria ao salvo)
     await clique(`[...document.querySelectorAll('[data-acao=config-painel] .togglefield')].find(t=>t.innerText.includes(${JSON.stringify(rot)}))`)
     await esperar(500)
-    await clique(`document.querySelector('[data-acao=pagina-descartar]')`)
-    await esperar(500)
+    await clique(`document.querySelector('[data-acao=pagina-salvar]')`)
+    await esperar(2500)
 
     // ---------- D: Telas e saidas
     await j.ev(`S.outputs.update(a=>{delete a.ndi_c4; return a}); return 1`)
@@ -160,6 +164,210 @@ S.activeEdit.set({type:"show",slide:0,items:[0],showId:get(S.activeShow).id}); a
     await print("c4-7-editar-mais")
     await clique(`${painel}.querySelector('[data-grupo=mais]')`)
 
+
+    // ---------- G: rascunho completo
+    // le a loja (o cabecalho troca o numero por "Alteracoes descartadas" por 3 s depois de um Descartar)
+    const contagem = async () => String(await j.ev(`const R=await import(U("utils/aliancaConfigRascunho")); return get(R.alteracoesNaoSalvas)`))
+    const descartarUI = async () => {
+        await clique(`document.querySelector('[data-acao=pagina-descartar]')`)
+        await esperar(700)
+    }
+    await j.ev(`S.activePopup.set(null); S.outputs.update(a=>{for(const k of Object.keys(a)) if(k.startsWith("c4_")) delete a[k]; return a}); T.trocarTela("settings","menu-app"); S.settingsTab.set("general"); await esp(1500); return 1`)
+    const vG = await valor()
+    ok("G0 ao entrar, nada pendente", (await contagem()) === "0", await cabine())
+    await j.ev(`S.special.update(a=>({...a, c4_teste: 1})); await esp(500); return 1`)
+    ok("G1 uma opcao de `special` (a maior parte de Geral/Outros/Arquivos) conta como alteracao", (await contagem()) === "1", await cabine())
+    await j.ev(`S.outputs.update(a=>{a.c4_nova={name:"Nova C4",enabled:false,out:{}}; return a}); await esp(500); S.outputs.update(a=>{delete a.c4_nova; return a}); await esp(500); S.outputs.update(a=>{a.c4_nova={name:"Nova C4",enabled:false,out:{}}; return a}); await esp(500); return 1`)
+    ok("G2 criar e apagar saida vale na hora: nao entra na contagem (segue 1)", (await contagem()) === "1", await cabine())
+    await descartarUI()
+    ok("G3 Descartar devolve o `special`, deixa a saida criada em paz e a contagem volta a 0 de verdade", (await dom(`get(S.special).c4_teste === undefined && !!get(S.outputs).c4_nova`)) && (await contagem()) === "0" && (await dom(`document.querySelector('[data-acao=pagina-descartar]').disabled`)), await cabine())
+    await j.ev(`S.outputs.update(a=>{a.default.name="Renomeada C4"; a.default.alwaysOnTop=false; return a}); await esp(500); return 1`)
+    ok("G4 nome e sempre-no-topo da saida contam (uma saida = 1)", (await contagem()) === "1", await cabine())
+    await descartarUI()
+    ok("G5 Descartar devolve o nome e o sempre-no-topo da saida", await dom(`get(S.outputs).default.name==="Primary" && get(S.outputs).default.alwaysOnTop===undefined`) || (await dom(`get(S.outputs).default.name!=="Renomeada C4"`)), JSON.stringify(await dom(`({n:get(S.outputs).default.name,a:get(S.outputs).default.alwaysOnTop})`)))
+    ok("G6 ligar/desligar a saida vale na hora: nao conta e o Descartar nao o desfaz", await (async () => {
+        await j.ev(`S.outputs.update(a=>{a.c4_nova.enabled=false; a.c4_nova.ndi=true; return a}); await esp(500); return 1`)
+        const n = await contagem()
+        await descartarUI()
+        return n === "0" && (await dom(`get(S.outputs).c4_nova.ndi===true`))
+    })())
+    ok("G7 a pagina diz que criar/apagar/ligar valem na hora (linha discreta na aba Telas e saidas)", await (async () => {
+        await aba("display_settings")
+        return dom(`/aplicam na hora/.test(document.querySelector('[data-acao=saidas-na-hora]')?.innerText||"")`)
+    })())
+    await aba("general")
+    // autosave nao zera a foto
+    await j.ev(`S.labelsDisabled.update(v=>!v); await esp(500); S.statusIndicator.set("saved"); await esp(500); return 1`)
+    ok("G8 o autosave (statusIndicator=saved) nao zera o que esta pendente", (await contagem()) === "1", await cabine())
+    // sair sem Fechar e reabrir nao renova a foto
+    await j.ev(`T.trocarTela("show","segmentado"); await esp(700); T.trocarTela("settings","menu-app"); S.settingsTab.set("general"); await esp(1200); return 1`)
+    ok("G9 reabrir Configuracoes nao zera a contagem (a foto e da primeira abertura)", (await contagem()) === "1", await cabine())
+    // Fechar com pendencia: confirmacao inline, nunca dialogo nativo
+    await j.ev(`window.__confirmou=0; window.confirm=()=>{window.__confirmou++; return true}; return 1`)
+    await clique(`document.querySelector('[data-acao=pagina-fechar]')`)
+    await esperar(500)
+    const barra = await dom(`(()=>{const b=document.querySelector('[data-acao=fechar-confirma]'); return b? {t:b.innerText.replace(/\\s+/g," ").trim(), bt:[...b.querySelectorAll('button')].map(x=>x.innerText.trim())}:null})()`)
+    ok("G10 Fechar com alteracao pendente mostra a confirmacao inline: Salvar / Descartar / Continuar editando", !!barra && barra.bt.join("|") === "Salvar|Descartar|Continuar editando" && /1 alteração não salva/.test(barra.t), JSON.stringify(barra))
+    ok("G11 e nao usou o dialogo nativo do navegador", (await dom(`window.__confirmou`)) === 0)
+    await print("c4-8-fechar-pendente")
+    await clique(`document.querySelector('[data-acao=fechar-continuar]')`)
+    await esperar(400)
+    ok("G12 Continuar editando fica na pagina e a alteracao segue pendente", (await dom(`!document.querySelector('[data-acao=fechar-confirma]') && !!document.querySelector('[data-acao=pagina-cabecalho]')`)) && (await contagem()) === "1")
+    await clique(`document.querySelector('[data-acao=pagina-fechar]')`)
+    await esperar(400)
+    await clique(`document.querySelector('[data-acao=fechar-descartar]')`)
+    await esperar(900)
+    ok("G13 Descartar e fechar: a loja volta e a pagina fecha", (await dom(`get(S.labelsDisabled)===${JSON.stringify(!!vG)} && !document.querySelector('[data-acao=pagina-cabecalho]')`)), JSON.stringify(await dom(`({l:get(S.labelsDisabled),cab:!!document.querySelector('[data-acao=pagina-cabecalho]'),t:get(T.tela)})`)) + " v0=" + v0)
+    await j.ev(`S.outputs.update(a=>{delete a.c4_nova; return a}); return 1`)
+
+    // ---------- H: mapa das telas (telas FALSAS pelo gancho de dev: esta maquina tem um monitor so)
+    await j.ev(`const M=await import(U("IPC/main")); const real=(await M.requestMain("GET_DISPLAYS"))[0]
+const F=(id,x)=>({id,internal:false,bounds:{x,y:0,width:1920,height:1080}})
+globalThis.__telasDoSistemaFalsas=[real,F(900002,1920),F(900003,3840),F(900004,5760)]
+const base={enabled:false,out:{},style:Object.keys(get(S.styles))[0]||""}
+const b=(x)=>({x,y:0,width:1920,height:1080})
+S.outputs.update(a=>{a.c4_mapa={...base,name:"Telão C4",screen:"900002",bounds:b(1920)}; a.c4_outra={...base,enabled:true,name:"Retorno C4",screen:"900003",bounds:b(3840)}; a.c4_ndi={...base,name:"NDI C4",invisible:true,ndi:true}; a.c4_trav={...base,name:"Travada C4",screen:"900002",bounds:b(1920),boundsLocked:true}; return a})
+S.currentOutputSettings.set("c4_mapa"); T.trocarTela("settings","menu-app"); S.settingsTab.set("general"); await esp(700); return 1`)
+    await aba("display_settings")
+    const tela = (id) => `document.querySelector('[data-acao=saidas-mapa-telas] .tela[data-tela="${id}"]')`
+    const st = () => dom(`(()=>{const o=get(S.outputs).c4_mapa; return {screen:o.screen,x:o.bounds.x,enabled:o.enabled}})()`)
+    const recusa = () => dom(`document.querySelector('[data-acao=saidas-mapa-recusa]')?.innerText||""`)
+    const h0 = await dom(`({n:document.querySelectorAll('[data-acao=saidas-mapa-telas] .tela').length, minha:document.querySelector('[data-acao=saidas-mapa-telas] .tela.minha')?.dataset.tela})`)
+    ok("H0 o mapa mostra as 4 telas (a real e 3 falsas)", h0.n === 4, JSON.stringify(h0))
+    const realId = await dom(`document.querySelector('[data-acao=saidas-mapa-telas] .tela[data-numero="1"]').dataset.tela`)
+    await clique(tela(realId))
+    await esperar(500)
+    ok("H1 clicar na tela da CABINE recusa em voz alta e nao move", /cabine/.test(await recusa()) && (await st()).screen === "900002", await recusa())
+    await print("c4-9-mapa-recusa")
+    await clique(tela(900003))
+    await esperar(500)
+    ok("H2 clicar em tela ocupada por outra saida recusa dizendo qual", /Retorno C4/.test(await recusa()) && (await st()).screen === "900002", await recusa())
+    await clique(tela(900004))
+    await esperar(400)
+    const pedido = await dom(`(()=>{const b=document.querySelector('[data-acao=saidas-mapa-confirma]'); const m=document.querySelector('[data-acao=saidas-mapa-mover]'); const t=${tela(900004)}.getBoundingClientRect(); const r=m?.getBoundingClientRect(); return b?{t:b.innerText.replace(/\\s+/g," ").trim(), inerte:m.disabled, cancelar:!!document.querySelector('[data-acao=saidas-mapa-cancelar]'), sobre:r? (r.left<t.right&&r.right>t.left&&r.top<t.bottom&&r.bottom>t.top):null}:null})()`)
+    ok("H3 clicar numa tela livre ABRE a confirmacao no mapa, sem mover, com o botao Mover inerte", !!pedido && /Mover Telão C4 para Monitor 4\?/.test(pedido.t) && pedido.inerte && pedido.cancelar && (await st()).screen === "900002", JSON.stringify(pedido))
+    ok("H4 o botao Mover fica em outro pixel que a tela clicada", pedido && pedido.sobre === false, JSON.stringify(pedido))
+    await print("c4-10-mapa-confirma")
+    await esperar(1300)
+    ok("H5 depois de ~1 s o Mover acorda", await dom(`!document.querySelector('[data-acao=saidas-mapa-mover]').disabled`))
+    await clique(`document.querySelector('[data-acao=saidas-mapa-cancelar]')`)
+    await esperar(300)
+    ok("H6 Cancelar fecha a confirmacao e nada mexeu", (await dom(`!document.querySelector('[data-acao=saidas-mapa-confirma]')`)) && (await st()).screen === "900002")
+    await clique(tela(900004))
+    await esperar(1400)
+    await clique(`document.querySelector('[data-acao=saidas-mapa-mover]')`)
+    await esperar(500)
+    let e1 = await st()
+    ok("H7 Mover move: tela e limites novos, sem ligar a janela (enabled segue false)", e1.screen === "900004" && e1.x === 5760 && e1.enabled === false, JSON.stringify(e1))
+    ok("H8 aparece \"Desfazer\" logo depois de mover", await dom(`!!document.querySelector('[data-acao=saidas-mapa-desfazer]')`))
+    await print("c4-11-mapa-desfazer")
+    await clique(`document.querySelector('[data-acao=saidas-mapa-desfazer]')`)
+    await esperar(500)
+    e1 = await st()
+    ok("H9 Desfazer restaura a tela e os limites anteriores", e1.screen === "900002" && e1.x === 1920 && (await dom(`!document.querySelector('[data-acao=saidas-mapa-desfazer]')`)), JSON.stringify(e1))
+    await clique(tela(900004))
+    await esperar(1400)
+    await clique(`document.querySelector('[data-acao=saidas-mapa-mover]')`)
+    await esperar(10600)
+    ok("H10 o Desfazer some sozinho em 10 s e a troca fica", (await dom(`!document.querySelector('[data-acao=saidas-mapa-desfazer]')`)) && (await st()).screen === "900004")
+    await j.ev(`S.outputs.update(a=>{a.c4_mapa.screen="900002"; a.c4_mapa.bounds.x=1920; return a}); S.currentOutputSettings.set("c4_ndi"); await esp(600); return 1`)
+    await clique(tela(900004))
+    await esperar(500)
+    ok("H11 saida so de rede (NDI) recusa: nao tem janela para mover", /só de rede/.test(await recusa()) && (await dom(`!document.querySelector('[data-acao=saidas-mapa-confirma]')`)), await recusa())
+    await j.ev(`S.currentOutputSettings.set("c4_trav"); await esp(600); return 1`)
+    await clique(tela(900004))
+    await esperar(500)
+    ok("H12 saida com posicao travada (boundsLocked) recusa", /travada/.test(await recusa()) && (await dom(`!document.querySelector('[data-acao=saidas-mapa-confirma]')`)), await recusa())
+    ok("H13 a dica do mapa diz a cor que de fato marca (vermelho)", await dom(`/em vermelho/.test(document.querySelector('[data-acao=saidas-mapa] .cota').innerText)`))
+    await j.ev(`delete globalThis.__telasDoSistemaFalsas; S.outputs.update(a=>{for(const k of Object.keys(a)) if(k.startsWith("c4_")) delete a[k]; return a}); S.currentOutputSettings.set("default"); await esp(500); return 1`)
+
+    // ---------- I: interruptores de rede
+    await aba("general")
+    await j.ev(`const b={enabled:false,out:{},style:Object.keys(get(S.styles))[0]||"",invisible:true}
+S.outputs.update(a=>{a.c4_rede={...b,name:"Rede C4",ndi:true}; return a}); S.currentOutputSettings.set("c4_rede"); return 1`)
+    await aba("display_settings")
+    const sw = (acao) => `document.querySelector('[data-acao=${acao}] [role=switch]')`
+    const so = () => dom(`(()=>{const o=get(S.outputs).c4_rede; return {ndi:!!o.ndi,rtmp:!!o.rtmp,webrtc:!!o.webrtc,bm:!!o.blackmagic,fr:o.forcedResolution||null}})()`)
+    await clique(sw("saida-ndi"))
+    await esperar(400)
+    ok("I1 desligar NDI de uma saida que NAO esta no ar vale direto (sem confirmacao)", !(await so()).ndi && !(await dom(`!!document.querySelector('[data-acao=saida-desligar-confirma]')`)))
+    await clique(sw("saida-ndi"))
+    await esperar(400)
+    ok("I2 ligar NDI de novo vale direto", (await so()).ndi)
+    // no ar: transmitindo por RTMP
+    await j.ev(`S.outputs.update(a=>{a.c4_rede.rtmp=true; a.c4_rede.rtmpData={streaming:true,destinations:[{id:"d1",url:"rtmp://exemplo/live",key:"k",enabled:true}]}; return a}); await esp(600); return 1`)
+    await clique(`document.querySelector('[data-secao=rtmp-webrtc]')`).catch(() => {})
+    await esperar(500)
+    if (!(await dom(`!!document.querySelector('[data-acao=saida-rtmp]')`))) await clique(`document.querySelector('[data-secao=rtmp-webrtc]')`)
+    await esperar(400)
+    await clique(sw("saida-rtmp"))
+    await esperar(500)
+    const cf = await dom(`(()=>{const b=document.querySelector('[data-acao=saida-desligar-confirma]'); return b?b.innerText.replace(/\\s+/g," ").trim():null})()`)
+    ok("I3 desligar RTMP TRANSMITINDO pede confirmacao e nao desliga ainda", !!cf && /Desligar RTMP/.test(cf) && (await so()).rtmp === true, String(cf))
+    ok("I4 o interruptor volta ao valor real enquanto espera (continua ligado)", await dom(`document.querySelector('[data-acao=saida-rtmp] [role=switch]').getAttribute('aria-checked')==='true'`))
+    await print("c4-12-desligar-no-ar")
+    await clique(`document.querySelector('[data-acao=saida-desligar-nao]')`)
+    await esperar(300)
+    ok("I5 Cancelar mantem o RTMP ligado", (await so()).rtmp === true && (await dom(`!document.querySelector('[data-acao=saida-desligar-confirma]')`)))
+    await clique(sw("saida-rtmp"))
+    await esperar(400)
+    await clique(`document.querySelector('[data-acao=saida-desligar-sim]')`)
+    await esperar(500)
+    ok("I6 confirmar desliga o RTMP", (await so()).rtmp === false)
+    // WebRTC e NDI com a saida transmitindo (a trava e da saida, como a do Habilitada)
+    await j.ev(`S.outputs.update(a=>{a.c4_rede.webrtc=true; a.c4_rede.webrtcData={streaming:true,url:"https://x"}; return a}); await esp(600); return 1`)
+    await clique(sw("saida-webrtc"))
+    await esperar(400)
+    ok("I7 WebRTC transmitindo tambem pede confirmacao", (await so()).webrtc === true && (await dom(`/Desligar WebRTC/.test(document.querySelector('[data-acao=saida-desligar-confirma]')?.innerText||"")`)))
+    await clique(`document.querySelector('[data-acao=saida-desligar-nao]')`)
+    await esperar(300)
+    await clique(sw("saida-ndi"))
+    await esperar(400)
+    ok("I8 NDI com a saida transmitindo pede confirmacao (derrubaria a fonte na rede)", (await so()).ndi === true && (await dom(`/Desligar NDI/.test(document.querySelector('[data-acao=saida-desligar-confirma]')?.innerText||"")`)))
+    await clique(`document.querySelector('[data-acao=saida-desligar-nao]')`)
+    // Blackmagic desligado limpa forcedResolution
+    await j.ev(`S.outputs.update(a=>{a.c4_rede.webrtc=false; a.c4_rede.webrtcData={}; a.c4_rede.rtmpData={}; a.c4_rede.blackmagic=true; a.c4_rede.forcedResolution={width:1280,height:720}; return a}); await esp(700); return 1`)
+    if (!(await dom(`!!document.querySelector('[data-acao=saida-blackmagic]')`))) await clique(`document.querySelector('[data-secao=blackmagic]')`)
+    await esperar(400)
+    await clique(sw("saida-blackmagic"))
+    await esperar(500)
+    const b1 = await so()
+    ok("I9 desligar o Blackmagic limpa a resolucao forcada (como o fluxo original)", b1.bm === false && b1.fr === null, JSON.stringify(b1))
+    await j.ev(`S.outputs.update(a=>{delete a.c4_rede; return a}); S.currentOutputSettings.set("default"); await esp(400); return 1`)
+
+    // ---------- J: abas de saida
+    const outDisp = await dom(`get(S.outputDisplay)`)
+    await j.ev(`S.outputs.update(a=>{a.c4_tipo={name:"Tipo C4",enabled:true,invisible:false,ndi:true,color:"#33cc88",out:{},style:Object.keys(get(S.styles))[0]||""}; return a}); S.outputDisplay.set(true); await esp(700); return 1`)
+    const aba4 = `document.querySelector('[data-acao=saidas-abas] [data-saida=c4_tipo]')`
+    const tipos = await dom(`(()=>{const t=${aba4}; return {n:t.querySelectorAll('[data-acao=saida-tipos] svg, [data-acao=saida-tipos] i, [data-acao=saida-tipos] img').length, cor:getComputedStyle(t.querySelector('[data-acao=saida-cor]')).backgroundColor, estado:t.querySelector('.pt')?.dataset.estado||null}})()`)
+    ok("J1 a aba mostra os icones de tipo (janela + NDI) e a cor da saida", tipos.n >= 2 && tipos.cor === "rgb(51, 204, 136)", JSON.stringify(tipos))
+    ok("J2 habilitada e vazia = ponto VERDE (ligada), nunca vermelho so por estar habilitada", tipos.estado === "ligada", JSON.stringify(tipos))
+    await j.ev(`S.outputs.update(a=>{a.c4_tipo.out={slide:{id:"s",index:0,layout:"l"}}; return a}); await esp(500); return 1`)
+    ok("J3 com conteudo no ar e a janela ligada, o ponto fica VERMELHO", await dom(`${aba4}.querySelector('.pt').dataset.estado==="ar"`))
+    await print("c4-13-abas")
+    await j.ev(`S.outputDisplay.set(false); await esp(400); return 1`)
+    ok("J4 sem janela ligada nao esta no ar: volta a verde", await dom(`${aba4}.querySelector('.pt').dataset.estado==="ligada"`))
+    await j.ev(`S.outputDisplay.set(${JSON.stringify(outDisp)}); S.outputs.update(a=>{a.c4_tipo.out={}; return a}); await esp(400); return 1`)
+    // Renomear (menu de contexto real da aba)
+    const ra = await localizar(j, aba4)
+    await j.enviar("Input.dispatchMouseEvent", { type: "mouseMoved", x: ra.x, y: ra.y })
+    await j.enviar("Input.dispatchMouseEvent", { type: "mousePressed", x: ra.x, y: ra.y, button: "right", clickCount: 1 })
+    await j.enviar("Input.dispatchMouseEvent", { type: "mouseReleased", x: ra.x, y: ra.y, button: "right", clickCount: 1 })
+    await esperar(500)
+    const item = await localizar(j, `[...document.querySelectorAll('.contextMenu span.item')].find(d=>/^(renomear|rename)$/i.test(d.innerText.trim()))`)
+    ok("J5 o menu de contexto da aba oferece Renomear", item.ok, item.motivo)
+    if (item.ok) {
+        await clicarEm(j, item.x, item.y)
+        await esperar(700)
+        ok("J6 Renomear leva o foco ao campo Nome desta saida (nao fica mudo)", await dom(`document.activeElement?.closest?.('[data-acao=saida-nome]') && get(S.currentOutputSettings)==="c4_tipo" && get(S.activeRename)===null`))
+        await tecla(j, "a", { ctrl: true })
+        await j.enviar("Input.insertText", { text: "Renomeada C4" })
+        await tecla(j, "Enter")
+        await esperar(500)
+        ok("J7 digitar o novo nome grava na saida", (await dom(`get(S.outputs).c4_tipo.name`)) === "Renomeada C4", await dom(`get(S.outputs).c4_tipo.name`))
+    }
+    await j.ev(`S.contextActive.set(false); S.outputs.update(a=>{delete a.c4_tipo; return a}); S.currentOutputSettings.set("default"); await esp(400); return 1`)
+
     // ---------- F: a saida nao recebeu a pele
     let s = null
     try {
@@ -167,8 +375,8 @@ S.activeEdit.set({type:"show",slide:0,items:[0],showId:get(S.activeShow).id}); a
     } catch (e) {
         s = null
     }
-    if (!s) console.log("      (sem janela de saida aberta neste perfil: F vale pelo guarda estatico e pela Prova do Culto)")
-    else {
+    ok("F0 existe uma janela de saida aberta para provar (sem ela a prova nao provou nada)", !!s)
+    if (s) {
         const r = await s.avaliar(`return {tema: document.body.dataset.tema || null, campoH: getComputedStyle(document.body).getPropertyValue('--luz-campo-h').trim(), pele: document.querySelectorAll('.luz-pele').length}`)
         ok("F1 a janela de saida nao tem data-tema, nao define o token novo e nao tem .luz-pele", r.tema === null && r.campoH === "" && r.pele === 0, JSON.stringify(r))
         s.fechar()
