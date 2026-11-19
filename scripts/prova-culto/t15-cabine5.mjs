@@ -85,6 +85,15 @@ const off = await j.ev(`
   return {existe:!!c, estado:c?.dataset.estado||null, texto:c?.innerText||""}`)
 ok("C7 offline aparece na raiz (nao some)", off.existe, JSON.stringify(off))
 ok("C8 offline marcado como OFFLINE", off.estado === "falta" && /OFFLINE/.test(off.texto), JSON.stringify(off))
+// Lixeira: o processo principal recusa o que nao existe (sem abrir a caixa nativa); o menu da midia tem os dois itens no Preparar
+const lix = await j.ev(`
+  const {requestMain}=await import(U("IPC/main")); const {Main}=await import(BASE.replace("/src/frontend/","/src/types/IPC/Main.ts"))
+  const r=Object.values(get(S.mediaFolders))[0].path
+  const recusa=await requestMain(Main.ALIANCA_LIXEIRA,{caminho:r+"/sumiu-de-proposito.mp4"})
+  const L=await import(U("components/context/contextMenus"))
+  return {recusa, menu:L.contextMenuLayouts.media_card}`)
+ok("C9 Lixeira recusa arquivo que nao existe (sem caixa)", lix.recusa && lix.recusa.ok === false && /Recusado/.test(lix.recusa.mensagem), JSON.stringify(lix.recusa))
+ok("C10 menu da midia tem Tirar da biblioteca e Apagar do computador", lix.menu.includes("alianca_tirar_bib") && lix.menu.includes("alianca_apagar_pc"), JSON.stringify(lix.menu))
 
 // ---------------------------------------------------------------- D
 const d = await j.ev(`

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { BIB, caminhosDaRaiz, categoriaDe, destinoDaPasta, NOME_BACKGROUNDS, pastaJaMigrada, planejarPasta, tagsAoImportar, tagsAoTirar } from "./aliancaBibliotecaMidiaLogica"
+import { BIB, caminhosDaRaiz, categoriaDe, destinoDaPasta, idDaCategoria, NOME_BACKGROUNDS, pastaJaMigrada, planejarPasta, tagsAoImportar, tagsAoTirar } from "./aliancaBibliotecaMidiaLogica"
 
 const PASTA = { name: "Aberturas", color: "", aliancaPasta: { fim: "parar", camada: "frente" } }
 
@@ -40,6 +40,13 @@ describe("biblioteca de mídia (cabine-5)", () => {
         expect(Object.keys(plano.midia).sort()).toEqual(["C:/a/1.mp4", "C:/a/sub/2.jpg", "C:/b/4.mov"])
         expect(plano.midia["C:/b/4.mov"]).toEqual(["c1", BIB])
         expect(pastaJaMigrada(plano.mediaTags, "f2")).toBe(true)
+    })
+
+    it("id fixo da categoria pelo nome (a Prova do Culto compara)", () => {
+        expect(idDaCategoria("Backgrounds")).toBe("cat_backgrounds")
+        expect(idDaCategoria("Aberturas e contadores")).toBe("cat_aberturas_e_contadores")
+        expect(idDaCategoria("Do ProPresenter (triar)")).toBe("cat_do_propresenter_triar")
+        expect(idDaCategoria("Vídeos")).toBe("cat_videos")
     })
 
     it("plano: mídia que já tem categoria não muda de categoria; pasta vazia não cria categoria", () => {

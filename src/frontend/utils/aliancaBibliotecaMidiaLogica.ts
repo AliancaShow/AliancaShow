@@ -87,6 +87,16 @@ export function destinoDaPasta(p: PastaDoDisco): { nome: string; comportamento: 
     return { nome, comportamento: { ...FRENTE } }
 }
 
+/** id fixo da categoria nascida da migracao ("cat_backgrounds"): a mesma pasta da sempre o mesmo id (a Prova do Culto compara) */
+export const idDaCategoria = (nome: string) =>
+    "cat_" +
+    nome
+        .normalize("NFD")
+        .replace(/\p{M}/gu, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "")
+
 /** a categoria (id) já existente com esse nome (sem diferenciar maiúsculas), ou null */
 export function categoriaPeloNome(mediaTags: TagsDeMidia, nome: string): string | null {
     const alvo = nome.trim().toLowerCase()
@@ -116,7 +126,7 @@ export type PlanoDeMigracao = {
  * Mídia que JÁ tem categoria não muda de categoria (só entra na biblioteca). Pasta sem vídeo/imagem não cria categoria, mas fica marcada.
  * `novoId` cria o id de uma categoria nova.
  */
-export function planejarPasta(pasta: PastaDoDisco, arquivos: string[], estado: { media: { [c: string]: any }; mediaTags: TagsDeMidia }, novoId: () => string, plano?: PlanoDeMigracao): PlanoDeMigracao {
+export function planejarPasta(pasta: PastaDoDisco, arquivos: string[], estado: { media: { [c: string]: any }; mediaTags: TagsDeMidia }, novoId: (nome: string) => string, plano?: PlanoDeMigracao): PlanoDeMigracao {
     const p: PlanoDeMigracao = plano || { mediaTags: {}, midia: {}, migradas: [] }
     const tags = { ...(estado.mediaTags || {}), ...p.mediaTags }
     const midias = arquivos.filter(ehVideoOuImagem)
@@ -125,7 +135,7 @@ export function planejarPasta(pasta: PastaDoDisco, arquivos: string[], estado: {
     const { nome, comportamento } = destinoDaPasta(pasta)
     let catId = categoriaPeloNome(tags, nome)
     if (!catId && midias.length) {
-        catId = novoId()
+        catId = novoId(nome)
         p.mediaTags[catId] = { name: nome, color: "", aliancaPasta: comportamento, aliancaDeDisco: [] }
     }
     // a marca "já migrada" vai na categoria de destino; pasta vazia marca na categoria se ela já existe, senão não marca (relê na próxima vez)
