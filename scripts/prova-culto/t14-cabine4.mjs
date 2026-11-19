@@ -152,7 +152,8 @@ try {
         ["Palco", "stage"],
         ["Configuracoes", "settings"]
     ]) {
-        await j.ev(`S.activePage.set(${JSON.stringify(pag)}); await esp(1200); return 1`)
+        await j.ev(`T.trocarTela(${JSON.stringify(pag)},"segmentado"); await esp(1500); return 1`)
+        if ((await dom(`get(S.activePage)`)) !== pag) { ok(`A9: a pagina ${nome} abriu`, false, String(await dom(`get(S.activePage)`))); continue }
         await spotify(true)
         await j.ev(`${VP} await VideoPlayer.start(${CAMINHO_V1}, {muted:false, loop:false}, [${JSON.stringify(tela)}]); await esp(1500); return 1`)
         ok(
@@ -163,7 +164,7 @@ try {
         await fimDoFade()
         await limpar()
     }
-    await j.ev(`S.activePage.set("show"); await esp(600); return 1`)
+    await j.ev(`T.trocarTela("show","segmentado"); await esp(800); return 1`)
     await marcaV1(null)
 
     // o estado fingido de A nao deve vazar para B: pagina nova
