@@ -1,7 +1,9 @@
 // Rodada da cabine 18/nov, C1: o cartao de midia da biblioteca. Pura (sem store, sem DOM): o que o clique faz e como a duracao aparece.
 
-/** o clique repetido no MESMO cartao dentro desta janela e ignorado (decisao do dono: 0,7 s; a trava global de aliancaToqueLogica usa o mesmo numero) */
-export const TRAVA_CARTAO_MS = 700
+import { CLIQUE_MIDIA_MS } from "./aliancaToqueLogica"
+
+/** o clique repetido no MESMO cartao dentro desta janela e ignorado (decisao do dono: 0,7 s; so o cartao de midia, o resto de Mostrar segue com a trava de 400 ms) */
+export const TRAVA_CARTAO_MS = CLIQUE_MIDIA_MS
 
 /** `72` -> `1:12`; `3725` -> `1:02:05`; sem duracao valida -> "" (imagem e video que ainda nao leu nao mostram selo) */
 export function formatarDuracao(segundos: number | null | undefined): string {

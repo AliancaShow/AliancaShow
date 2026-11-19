@@ -10,7 +10,7 @@ const saida = process.argv[2] || "prints-cabine2"
 mkdirSync(saida, { recursive: true })
 const falhas = []
 const ok = (n, c, x = "") => (console.log(`${c ? "ok   " : "FALHA"} ${n}${x ? " :: " + x : ""}`), c || falhas.push(n))
-const j = await abrir("principal")
+const j = await abrir("principal", { buffer: true })
 const dom = (expr) => j.ev(`return ${expr}`)
 async function print(nome) {
     await esperar(600)
@@ -47,7 +47,8 @@ try {
     const mais = await caixa(`${cartao("v1")}.querySelector('.mais')`)
     ok("C1 alvo do ＋ de 38 x 38 no canto inferior direito do thumb", mais && Math.abs(mais.w - 38) <= 1 && Math.abs(mais.h - 38) <= 1 && Math.abs(mais.x + mais.w - (th.x + th.w)) <= 1 && Math.abs(mais.y + mais.h - (th.y + th.h)) <= 1, JSON.stringify({ mais, th }))
     const dur = await dom(`${cartao("v1")}.querySelector('.dur')?.innerText`)
-    ok("C1 duracao do video no canto superior (m:ss)", /^\d+:\d\d$/.test(dur || ""), String(dur))
+    ok("C1 duracao do video no canto superior (m:ss)", /^[0-9]+:[0-9][0-9]/.test(dur || ""), String(dur))
+    ok("C1 video em repeticao ganha o ↻ ao lado da duracao", (await dom(`!!${cartao("v1")}.querySelector('[data-acao=midia-repete]')`)) === true)
     ok("C1 imagem nao tem selo de duracao", (await dom(`!${cartao("f1")}.querySelector('.dur')`)) === true)
     const durBox = await caixa(`${cartao("v1")}.querySelector('.dur')`)
     ok("C1 a duracao esta no canto SUPERIOR direito do thumb", durBox && durBox.y < th.y + 10 && durBox.x + durBox.w > th.x + th.w - 12, JSON.stringify(durBox))
@@ -87,6 +88,16 @@ try {
     const t2 = await tempo()
     ok("C1 clique no que JA esta no ar (passada a trava) REINICIA o video", t2 >= 0 && t2 < 1.2, String(t2))
     ok("C1 reiniciar nao limpa o ar", /v1\.mp4$/.test((await fundo()) || ""))
+    // achado 7 (PR #40): a trava de 700 ms vale para a MIDIA (a ~560 ms ainda engole); o resto de Mostrar volta a 400 ms (aliancaToqueLogica.test.ts)
+    await esperar(900)
+    await clicarEm(j, th.x + th.w / 2, th.y + th.h / 2)
+    await esperar(150)
+    await j.ev(`const V=await import(U("components/media/video/videoPlayer")); const p=get(S.outputs).default.out.background.path; V.VideoPlayer.seekTo(p,"default",1.6); await esp(60); return 1`)
+    await esperar(350)
+    await clicarEm(j, th.x + th.w / 2, th.y + th.h / 2)
+    await esperar(120)
+    const t3 = await tempo()
+    ok("C1 2o clique a ~560 ms do 1o ainda e engolido (trava da midia = 700 ms, nao 400)", t3 >= 1.5, String(t3))
     await limpar()
 
     // ---------- imagem: clique simples ao ar; de novo nao limpa
@@ -97,6 +108,23 @@ try {
     await clicarEm(j, th2.x + th2.w / 2, th2.y + th2.h / 2)
     await esperar(900)
     ok("C1 clicar de novo na imagem que ja esta no ar NAO limpa", /f1\.png$/.test((await fundo()) || ""), String(await fundo()))
+    await limpar()
+
+    // ---------- modo LISTA da midia: a mesma zona segura (so o thumb manda ao ar; o nome da linha so seleciona) - achado 10
+    await j.ev(`S.mediaOptions.update(o=>({...o,mode:"list"})); await esp(1200); return 1`)
+    const linhaL = (nome) => `[...document.querySelectorAll('[data-regiao=biblioteca] .over')].find(e=>e.innerText.includes(${JSON.stringify(nome)}))`
+    const nomeL = await caixa(`${linhaL("f1")}?.lastElementChild`)
+    const thumbL = await caixa(`${linhaL("f1")}?.querySelector('.card')`)
+    ok("C1 modo lista: a linha tem thumb e nome", !!nomeL && !!thumbL, JSON.stringify({ nomeL, thumbL }))
+    if (nomeL && thumbL) {
+        await clicarEm(j, nomeL.x + nomeL.w / 2, nomeL.y + nomeL.h / 2)
+        await esperar(900)
+        ok("C1 modo lista: clicar no NOME da linha nao manda ao ar", (await fundo()) === null, String(await fundo()))
+        await clicarEm(j, thumbL.x + thumbL.w / 2, thumbL.y + thumbL.h / 2)
+        await esperar(900)
+        ok("C1 modo lista: clicar no THUMB manda ao ar", (await fundo()) !== null && (await fundo()).includes("f1"), String(await fundo()))
+    }
+    await j.ev(`S.mediaOptions.update(o=>({...o,mode:"grid"})); await esp(900); return 1`)
     await limpar()
 
     // ---------- C3: tarja do so retorno no lugar do cabecalho
@@ -124,6 +152,29 @@ try {
     await print("c3-recusa")
     await esperar(5200)
     ok("C3 passados 5 s volta a SÓ RETORNO", (await dom(`document.querySelector('[data-acao=faixa-so-retorno]').innerText.includes('SÓ RETORNO')`)) === true)
+    // achado 1 (PR #40): duas recusas, a 2a mostra a 2a (nome do item clicado), nunca a antiga
+    await j.ev(`S.activeDrawerTab.set("media"); S.drawerTabsData.update(a=>{a.media={...(a.media||{}),activeSubTab:"all"};return a}); await esp(1200); return 1`)
+    const tarjaTxt = () => dom(`document.querySelector('[data-acao=tarja-recusa]')?.innerText ?? null`)
+    const cf = await caixa(`${cartao("f1")}.querySelector('.card')`)
+    await clicarEm(j, cf.x + cf.w / 2, cf.y + cf.h / 2)
+    await esperar(400)
+    ok("C3 recusa por CLIQUE REAL na imagem f1: a tarja diz o NOME (\"f1\"), nao o tipo", (await tarjaTxt()) === "f1", String(await tarjaTxt()))
+    await esperar(800)
+    const cv = await caixa(`${cartao("v1")}.querySelector('.card')`)
+    await clicarEm(j, cv.x + cv.w / 2, cv.y + cv.h / 2)
+    await esperar(400)
+    ok("C3 2a recusa (outro item): a tarja troca para o nome da 2a (\"v1\"), nunca repete a 1a", (await tarjaTxt()) === "v1", String(await tarjaTxt()))
+    ok("C3 nada foi ao ar com o modo ligado", (await fundo()) === null, String(await fundo()))
+    await j.ev(`window.__sr.recusarNoModo("áudio"); return 1`)
+    await esperar(400)
+    ok("C3 recusa sem tentativa gravada (tecla/API) com tipo diferente da 1a: diz \"item\", nunca o tipo antigo (\"mídia\")", (await tarjaTxt()) === "item", String(await tarjaTxt()))
+    await esperar(5300)
+    // achado 2 (PR #40): a recusa que ja passou nao repisca ao desmontar/montar a tarja (Editar e volta)
+    await j.ev(`T.trocarTela("edit","segmentado"); await esp(900); T.trocarTela("show","segmentado"); await esp(300); return 1`)
+    const antesPisca = await dom(`document.querySelector('[data-acao=topo-no-ar]').dataset.estado`)
+    await esperar(900)
+    ok("C3 voltar de Editar NAO repisca a recusa antiga: a tarja segue SO RETORNO (estado ligado)", antesPisca === "ligado" && (await dom(`document.querySelector('[data-acao=faixa-so-retorno]').innerText.includes('SÓ RETORNO')`)) === true, antesPisca)
+    await j.ev(`S.activeDrawerTab.set("shows"); await esp(500); return 1`)
     await clicarEm(j, bDes.x + bDes.w / 2, bDes.y + bDes.h / 2)
     await esperar(600)
     const y3 = JSON.parse(await ys())
@@ -168,7 +219,27 @@ try {
     await clicarNo("[data-no=audio]")
     ok("C6 Audio (filho de Midia) abre a aba de audio e a raiz Midia segue aberta", (await aba()).startsWith("audio") && (await dom(`document.querySelector('[data-acao=arvore] [data-no=media]').getAttribute('aria-expanded')`)) === "true", await aba())
     await clicarNo("[data-no=inputs]")
-    ok("C6 Entradas e UMA linha so (filtro de tipo na lista: cameras/telas/NDI)", (await aba()) === "media:inputs" && (await dom(`document.querySelectorAll('[data-regiao=biblioteca] [aria-label],[data-regiao=biblioteca] button').length>0`)) === true)
+    const filtrosEntradas = await dom(`[...document.querySelectorAll('[data-regiao=biblioteca] button')].map(b=>b.innerText.trim())`)
+    ok("C6 Entradas e UMA linha so, e a lista traz o filtro de tipo (Cameras, Telas, NDI)", (await aba()) === "media:inputs" && ["Câmeras", "Telas", "NDI"].every((n) => filtrosEntradas.includes(n)), filtrosEntradas.join("|"))
+    await clicarNo("[data-no=shows]")
+    await esperar(300)
+    // achado 5 (PR #40): sub-aba vazia ou categoria que nao existe mais cai em "tudo", nao na 1a categoria
+    const sub = (tab) => dom(`get(S.drawerTabsData).${tab}?.activeSubTab ?? ""`)
+    for (const [tab, ruim] of [["shows", ""], ["shows", "categoria_apagada"], ["media", ""], ["media", "pasta:fantasma"]]) {
+        await j.ev(`S.activeDrawerTab.set("${tab}"); S.drawerTabsData.update(a=>{a.${tab}={...(a.${tab}||{}),activeSubTab:"${ruim}"};return a}); await esp(1200); return 1`)
+        ok(`C6 ${tab} com sub-aba "${ruim || "(vazia)"}" cai em "all" (nunca na 1a categoria/pasta)`, (await sub(tab)) === "all", await sub(tab))
+    }
+    await j.ev(`S.activeDrawerTab.set("shows"); S.drawerTabsData.update(a=>{a.shows={...a.shows,activeSubTab:"all"};return a}); await esp(500); return 1`)
+    // achado 6: Modelos e Calendario abertos mostram as sub-abas/acoes deles (nada preso)
+    await clicarNo("[data-no=ferramentas]")
+    await clicarNo("[data-no=templates]")
+    const textosModelos = (await dom(`document.querySelector('[data-acao=arvore]').innerText`)).split(String.fromCharCode(10)).join(" | ")
+    ok("C6 Modelos aberto mostra as sub-abas (Tudo) e \"Nova categoria\" dentro da arvore", /Tudo/.test(textosModelos) && /categoria/i.test(textosModelos) && (await dom(`!!document.querySelector('[data-acao=arvore] .neto')`)) === true, textosModelos)
+    await print("c6-modelos")
+    await clicarNo("[data-no=calendar]")
+    const textosCal = (await dom(`document.querySelector('[data-acao=arvore]').innerText`)).split(String.fromCharCode(10)).join(" | ")
+    ok("C6 Calendario aberto mostra as duas sub-abas e \"Importar calendario\"", /Importar/i.test(textosCal) && /Eventos/.test(textosCal) && /agenda/i.test(textosCal), textosCal)
+    await print("c6-calendario")
     await clicarNo("[data-no=shows]")
     await esperar(300)
 
@@ -220,7 +291,14 @@ S.activeShow.set({id:alvo[1].shows[i].id,index:i,type:"show"}); S.activeDrawerTa
     // ---------- D1: Ctrl+K, versiculo: um resultado POR Biblia instalada (a em uso primeiro)
     // o perfil de teste tem so a NVI de 564 bytes: a 2a Biblia (ARA) e gerada AQUI, no perfil da prova (nunca vai para o repo)
     const PERFIL_DIR = (process.env.FS_PERFIL_DIR || "C:/Users/andre.zagato/Documents/ProjetosPessoais/aliancashow/bancada/prova-perfil-9223").split("\\").join("/")
-    writeFileSync(juntar(PERFIL_DIR, "data", "Bibles", "ARA.fsb"), JSON.stringify(["ara", { name: "ARA", metadata: {}, books: [{ number: 43, name: "João", chapters: [{ number: 3, verses: [{ number: 16, text: "Porque Deus amou de tal maneira o mundo que deu o seu Filho unigênito." }] }] }] }]))
+    // a ARA da prova tem o tamanho de uma Biblia de verdade (~4 MB: 66 livros, o 43 com o versiculo real): o texto que vai ao ar tem de ser o dela mesmo com o arquivo grande (achado 3)
+    const enchimento = "Texto de enchimento so para dar corpo ao arquivo da prova, sem relacao com nenhum versiculo real da Biblia."
+    const livrosAra = Array.from({ length: 66 }, (_, k) => k + 1).map((n) =>
+        n === 43
+            ? { number: 43, name: "João", chapters: [{ number: 3, verses: [{ number: 16, text: "Porque Deus amou de tal maneira o mundo que deu o seu Filho unigênito." }] }] }
+            : { number: n, name: "Livro " + n, chapters: Array.from({ length: 20 }, (_, c) => ({ number: c + 1, verses: Array.from({ length: 30 }, (_, v) => ({ number: v + 1, text: enchimento + " " + n + ":" + (c + 1) + ":" + (v + 1) })) })) }
+    )
+    writeFileSync(juntar(PERFIL_DIR, "data", "Bibles", "ARA.fsb"), JSON.stringify(["ara", { name: "ARA", metadata: {}, books: livrosAra }]))
     await j.ev(`S.activePopup.set(null); S.quickSearchActive.set(false); T.trocarTela("show","segmentado"); S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a}); S.scriptures.update(a=>({...a, ara:{name:"ARA",id:"ara",copyright:"fixture da prova"}})); S.drawerTabsData.update(a=>{a.scripture={...(a.scripture||{}),activeSubTab:"nvi",enabled:true};return a}); await esp(500); return 1`)
     const versiculos = async (q) => {
         await j.ev(`S.quickSearchActive.set(false); return 1`)
@@ -239,7 +317,10 @@ S.activeShow.set({id:alvo[1].shows[i].id,index:i,type:"show"}); S.activeDrawerTa
     await tecla(j, "ArrowDown"); await esperar(200)
     ok("D1 ↓ escolhe a outra Biblia (ARA)", (await dom(`document.querySelector('[data-acao=spotlight] .linha.sel')?.innerText.includes('ARA')`)) === true)
     await tecla(j, "Enter"); await esperar(1200)
-    ok("D1 Enter na 2a abre/toca o versiculo da ARA (a pasta Biblia passa para a ARA)", (await dom(`get(S.drawerTabsData).scripture?.activeSubTab`)) === "ara", await dom(`get(S.drawerTabsData).scripture?.activeSubTab`))
+    await esperar(1500)
+    const noAr = await dom(`JSON.stringify(get(S.outputs).default?.out?.slide?.tempItems ?? null)`)
+    ok("D1 Enter na 2a Biblia poe no ar o TEXTO DA ARA (\"de tal maneira\"), nao o da NVI", /de tal maneira/.test(noAr) && !/tanto amou/.test(noAr), String(noAr).slice(0, 160))
+    ok("D1 a Biblia em uso NAO mudou: a pasta Biblia voltou para a NVI (a escolha valeu so para aquele versiculo)", (await dom(`get(S.drawerTabsData).scripture?.activeSubTab`)) === "nvi", await dom(`get(S.drawerTabsData).scripture?.activeSubTab`))
     await j.ev(`S.outputs.update(a=>{Object.values(a).forEach(o=>{o.out={}});return a}); S.drawerTabsData.update(a=>{a.scripture={...(a.scripture||{}),activeSubTab:"nvi"};return a}); await esp(400); return 1`)
     v = await versiculos("Jo 3:16")
     await tecla(j, "Enter"); await esperar(1200)
