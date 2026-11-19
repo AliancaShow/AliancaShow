@@ -77,6 +77,14 @@ export function telaDaCabine(telas: TelaDoSistema[], centro?: { x: number; y: nu
     if (centro) {
         const dentro = telas.find((t) => centro.x >= t.bounds.x && centro.x < t.bounds.x + t.bounds.width && centro.y >= t.bounds.y && centro.y < t.bounds.y + t.bounds.height)
         if (dentro) return String(dentro.id)
+        // o centro nao caiu em tela nenhuma (janela esticada entre monitores, lista velha): vale a tela MAIS PERTO dele, nunca "nenhuma" em silencio
+        const dist = (t: TelaDoSistema) => {
+            const dx = Math.max(t.bounds.x - centro.x, 0, centro.x - (t.bounds.x + t.bounds.width))
+            const dy = Math.max(t.bounds.y - centro.y, 0, centro.y - (t.bounds.y + t.bounds.height))
+            return dx * dx + dy * dy
+        }
+        const perto = [...telas].sort((a, b) => dist(a) - dist(b))[0]
+        if (perto) return String(perto.id)
     }
     const interna = telas.find((t) => t.internal)
     return interna ? String(interna.id) : null

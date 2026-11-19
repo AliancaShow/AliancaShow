@@ -72,6 +72,25 @@ describe("podeMover e a tela da cabine (revisao do PR #41, achado 1)", () => {
         expect(telaDaCabine(ts, null)).toBe("10")
         expect(telaDaCabine([T2(20, 1920)], null)).toBeNull()
     })
+    it("1, 2 e 3 monitores, com x negativo e escala diferente: a cabine e a tela que tem o centro da janela", () => {
+        const M = (id: number, x: number, y: number, w: number, h: number) => ({ id, internal: false, bounds: { x, y, width: w, height: h } })
+        expect(telaDaCabine([M(1, 0, 0, 1920, 1080)], { x: 960, y: 516 })).toBe("1")
+        const dois = [M(1, -1920, 0, 1920, 1080), M(2, 0, 0, 1920, 1080)]
+        expect(telaDaCabine(dois, { x: -960, y: 500 })).toBe("1")
+        expect(telaDaCabine(dois, { x: 960, y: 500 })).toBe("2")
+        // 3 monitores como na cabine real: retrato a esquerda (x -1080), principal no meio, retrato a direita; a tela [0] NAO e a da cabine
+        const tres = [M(7, -1080, -581, 1080, 1920), M(8, 0, 0, 1920, 1080), M(9, 1920, -581, 1080, 1920)]
+        expect(telaDaCabine(tres, { x: 960, y: 516 })).toBe("8")
+        expect(telaDaCabine(tres, { x: -540, y: 300 })).toBe("7")
+        expect(telaDaCabine(tres, { x: 2400, y: 300 })).toBe("9")
+        // escala 150%: bounds em pixels logicos (DIP), o centro da janela tambem
+        expect(telaDaCabine([M(1, 0, 0, 1280, 720), M(2, 1280, 0, 1920, 1080)], { x: 640, y: 360 })).toBe("1")
+    })
+    it("centro fora de todas as telas: vale a mais perto (nunca nenhuma, em silencio)", () => {
+        const tres = [{ id: 7, internal: false, bounds: { x: -1080, y: 0, width: 1080, height: 1920 } }, { id: 8, internal: false, bounds: { x: 1920, y: 0, width: 1920, height: 1080 } }]
+        expect(telaDaCabine(tres, { x: 960, y: 516 })).toBe("7")
+        expect(telaDaCabine(tres, { x: 1500, y: 516 })).toBe("8")
+    })
     it("recusa a tela da cabine, dizendo por que", () => {
         const r: any = podeMover("tel", saidas, ts[0], ts, "10")
         expect(r.ok).toBe(false)
