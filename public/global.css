@@ -800,4 +800,160 @@ body[data-tema="luz"] .luz-pele[data-acao="editar-ferramentas"] .luz-sec {
 body[data-tema="luz"] .luz-pele .tip svg g {
     fill: var(--luz-mudo) !important;
 }
+/* cabine 19/nov (C4, pedido 2): a GRADE do miolo das propriedades do Editar. Toda linha de campos e um .luz-lin: respiro de 8 px entre campos e
+   entre linhas, campo de 44 px, pastilha de 36 px; cada bloco (.luz-bloco) e rotulo + fio e abre/recolhe. Numero com regua = .luz-num (AliancaCampoNumero) */
+body[data-tema="luz"] .luz-pele .luz-lin {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+body[data-tema="luz"] .luz-pele .luz-lin > .textfield,
+body[data-tema="luz"] .luz-pele .luz-lin > .togglefield,
+body[data-tema="luz"] .luz-pele .luz-lin > .checkboxfield,
+body[data-tema="luz"] .luz-pele .luz-lin > .luz-num {
+    margin-bottom: 0;
+}
+body[data-tema="luz"] .luz-pele .luz-lin > .textfield,
+body[data-tema="luz"] .luz-pele .luz-lin > .luz-num {
+    flex: 1 1 0;
+    min-width: 0;
+}
+body[data-tema="luz"] .luz-pele .luz-lin.so-numeros > .luz-num.regua {
+    flex: 1 1 100%;
+}
+body[data-tema="luz"] .luz-pele .luz-bloco {
+    margin-bottom: 0;
+}
+body[data-tema="luz"] .luz-pele .luz-bloco > .luz-corpo {
+    padding-bottom: 2px;
+}
+body[data-tema="luz"] .luz-pele .luz-num {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    height: var(--luz-campo-h);
+    min-height: var(--luz-campo-h);
+    padding: 20px 10px 0;
+    border: 1px solid var(--luz-borda);
+    border-radius: var(--luz-raio-campo);
+    background: var(--luz-campo);
+    color: var(--luz-texto);
+    box-sizing: border-box;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 0;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+body[data-tema="luz"] .luz-pele .luz-num:focus-within {
+    border-color: var(--luz-texto);
+    box-shadow: 0 0 0 3px var(--luz-halo-foco);
+}
+body[data-tema="luz"] .luz-pele .luz-num.disabled {
+    opacity: 0.4;
+}
+body[data-tema="luz"] .luz-pele .luz-num > label {
+    position: absolute;
+    left: 10px;
+    top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    max-width: calc(100% - 20px);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 13px;
+    color: var(--luz-mudo);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body[data-tema="luz"] .luz-pele .luz-num .ponto {
+    width: 5px;
+    height: 5px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--luz-raio-selo);
+    background: var(--luz-texto);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+body[data-tema="luz"] .luz-pele .luz-num .v {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+    line-height: 18px;
+}
+body[data-tema="luz"] .luz-pele .luz-num .v input {
+    height: 18px;
+    min-width: 1ch;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--luz-texto);
+    font: inherit;
+    line-height: 18px;
+}
+body[data-tema="luz"] .luz-pele .luz-num .v i {
+    margin-left: 4px;
+    font-style: normal;
+    font-weight: 400;
+    color: var(--luz-mudo);
+}
+body[data-tema="luz"] .luz-pele .luz-num .dir {
+    position: absolute;
+    right: 4px;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+body[data-tema="luz"] .luz-pele .luz-num .q {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--luz-raio-botao);
+    background: transparent;
+    color: var(--luz-mudo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+body[data-tema="luz"] .luz-pele .luz-num .q:hover:not(:disabled) {
+    background: var(--luz-hover);
+    color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele .luz-num .reg {
+    position: absolute;
+    right: 52px;
+    top: 14px;
+    width: 84px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+body[data-tema="luz"] .luz-pele .luz-num .reg::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: var(--luz-raio-selo);
+    background: linear-gradient(to right, var(--luz-texto-60) var(--luz-reg), var(--luz-trilho) var(--luz-reg));
+}
+body[data-tema="luz"] .luz-pele .luz-num .reg::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: var(--luz-texto);
+    border: 0;
+}
 /* LUZ:FIM */
