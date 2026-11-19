@@ -159,7 +159,7 @@ S.activeEdit.set({type:"show",slide:0,items:[0],showId:get(S.activeShow).id}); a
     await print("c4-6-editar")
     await clique(`${painel}.querySelector('[data-grupo=mais]')`)
     await esperar(700)
-    const resumos = await dom(`[...${painel}.querySelectorAll('[data-acao=secao-resumo]')].map(s=>s.closest('button').innerText.replace(/\\s+/g," ").trim())`)
+    const resumos = await dom(`[...${painel}.querySelectorAll('[data-acao=secao-resumo]')].map(s=>s.closest('[data-acao=bloco-cabecalho]').innerText.replace(/\\s+/g," ").trim())`)
     ok("E6 abrir Mais mostra as secoes de efeito recolhidas com resumo (Contorno e Sombra: \"desligado\")", resumos.some((t) => /contorno.*desligado/i.test(t)) && resumos.some((t) => /sombra.*desligado/i.test(t)), JSON.stringify(resumos))
     await print("c4-7-editar-mais")
     await clique(`${painel}.querySelector('[data-grupo=mais]')`)
