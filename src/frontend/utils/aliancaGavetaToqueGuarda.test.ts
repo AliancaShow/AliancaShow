@@ -126,6 +126,6 @@ describe("cabine 18/nov, B1: clique simples numa midia (video ou imagem) vai ao 
     })
     it("a trava de clique repetido segue: o `wait` do cartao e a trava global (aliancaToque) nao foram tiradas", () => {
         expect(corpo).toMatch(/wait = true[\s\S]{0,80}setTimeout\(\(\) => \{\s*wait = false/)
-        expect(ler("src/frontend/utils/aliancaToque.ts")).toMatch(/repeticao\.engole\(chave, performance\.now\(\), ponto\(e\)\)/)
+        expect(ler("src/frontend/utils/aliancaToque.ts")).toMatch(/repeticao\.engole\(chave, performance\.now\(\), ponto\(e\), travaDoClique\(alvo\)\)/)
     })
 })
