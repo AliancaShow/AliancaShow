@@ -29,7 +29,7 @@ describe("aliancaToque usa a chave do clicavel mais interno com o ponto do ponte
     const t = ler("utils/aliancaToque.ts")
     it("chaveDoClique + ponto", () => {
         expect(t).toMatch(/chaveDoClique\(alvo\)/)
-        expect(t).toMatch(/repeticao\.engole\(chave, performance\.now\(\), ponto\(e\)\)/)
+        expect(t).toMatch(/repeticao\.engole\(chave, performance\.now\(\), ponto\(e\), travaDoClique\(alvo\)\)/)
         expect(t).not.toMatch(/closest\(ITEM\)/)
     })
 })
