@@ -1,10 +1,12 @@
 <script lang="ts">
     import { OUTPUT } from "../../../../types/Channels"
+    import { Main } from "../../../../types/IPC/Main"
+    import { requestMain } from "../../../IPC/main"
     import type { ClickEvent } from "../../../../types/Main"
     import type { Output } from "../../../../types/Output"
     import { AudioAnalyser } from "../../../audio/audioAnalyser"
     import { checkPrimaryOutputRouting, createOutputAudioChannel } from "../../../audio/routing/audioRoutingInit"
-    import { activeTriggerFunction, currentOutputSettings, outputs, popupData, stageShows, styles, toggleOutputEnabled } from "../../../stores"
+    import { activeTriggerFunction, currentOutputSettings, outputDisplay, outputs, popupData, stageShows, styles, toggleOutputEnabled } from "../../../stores"
     import { newToast } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { waitForPopupData } from "../../../utils/popup"
@@ -12,8 +14,7 @@
     import Icon from "../../helpers/Icon.svelte"
     import { clone, keysToID, sortByName, sortObject } from "../../helpers/array"
     import { addOutput, checkFFmpeg, enableStageOutput, refreshOut } from "../../helpers/output"
-    import Tabs from "../../input/Tabs.svelte"
-    import HiddenInput from "../../inputs/HiddenInput.svelte"
+    import SelectElem from "../../system/SelectElem.svelte"
 
     // prevent "resetting" rename if output changed while renaming
     $: updatedOutputs = $outputs
@@ -145,33 +146,70 @@
         }
     }
 
-    let edit: any
+    // C4: saidas criadas depois que esta pagina abriu levam o selo NOVO (ambar) ate a pagina fechar
+    const iniciais = new Set(Object.keys($outputs))
+    $: novas = outputsList.filter((o) => !iniciais.has(o.id || "")).map((o) => o.id || "")
+
+    /** vermelho = saida NO AR agora; verde = habilitada; sem ponto = desligada (so o no ar leva vermelho) */
+    const estado = (tab: Output, noAr: boolean) => (tab.enabled === false ? "" : noAr ? "ar" : "ligada")
+
+    function criar(e: MouseEvent) {
+        createOutput({ detail: { ctrl: e.ctrlKey } } as unknown as ClickEvent)
+    }
+
+    async function identificar() {
+        const telas = (await requestMain(Main.GET_DISPLAYS)) || []
+        send(OUTPUT, ["IDENTIFY_SCREENS"], telas)
+    }
 </script>
 
-<Tabs id="output" tabs={outputsList} value={$currentOutputSettings || ""} newLabel="settings.new_output" class="context #output_screen" on:open={(e) => currentOutputSettings.set(e.detail)} on:create={createOutput} let:tab>
-    {#if tab.stageOutput}<Icon id="stage" right title={translateText("menu.stage")} />{/if}
-    {#if tab.enabled !== false}<Icon id="check" size={0.7} white right />{/if}
-    <HiddenInput value={tab.name} id={"output_" + tab.id} on:edit={(e) => updateOutput("name", e.detail.value, tab.id)} bind:edit />
-
-    <div class="right-icons">
-        {#if !tab.invisible}<Icon id="hdmi" size={0.6} white title={translateText("settings.window")} />{/if}
-        {#if tab.blackmagic}<Icon id="blackmagic" size={0.6} white title="Blackmagic Design" />{/if}
-        {#if tab.ndi}<Icon id="ndi" size={0.6} white title="NDI" />{/if}
-        {#if tab.webrtc}<Icon id="broadcast" size={0.6} white title="WebRTC" />{/if}
-        {#if tab.rtmp}<Icon id="broadcast" size={0.6} white title="RTMP" />{/if}
+<div class="faixa" data-acao="saidas-faixa">
+    <div class="luz-seg" role="tablist" data-acao="saidas-abas">
+        {#each outputsList as tab (tab.id)}
+            <SelectElem id="output" data={{ id: tab.id }} fill>
+                <button type="button" role="tab" aria-selected={$currentOutputSettings === tab.id} class="aba context #output_screen{tab.stageOutput ? "_stage" : ""}" class:a={$currentOutputSettings === tab.id} data-saida={tab.id} tabindex="-1" on:click={() => currentOutputSettings.set(tab.id || "")}>
+                    {#if estado(tab, $outputDisplay) !== ""}<i class="pt {estado(tab, $outputDisplay)}"></i>{/if}
+                    {tab.name || "Sem nome"}
+                    {#if novas.includes(tab.id)}<span class="luz-tag-novo">NOVO</span>{/if}
+                </button>
+            </SelectElem>
+        {/each}
     </div>
-
-    {#if tab.color}
-        <div class="color" style="--color: {tab.color};"></div>
-    {/if}
-</Tabs>
+    <button type="button" class="luz-bt" data-acao="saidas-nova" tabindex="-1" on:click={criar}>
+        <Icon id="add" size={0.9} white />
+        {translateText("settings.new_output")}
+    </button>
+    <span class="espaco"></span>
+    <button type="button" class="luz-bt fan" data-acao="saidas-identificar" tabindex="-1" on:click={identificar}>
+        <Icon id="screen" size={0.9} white />
+        Identificar telas
+    </button>
+</div>
 
 <style>
-    .right-icons {
+    .faixa {
         display: flex;
-        gap: 2px;
-        margin-left: auto;
-        padding-left: 8px;
-        opacity: 0.7;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+    .luz-seg :global(.selectElem) {
+        width: auto;
+    }
+    .espaco {
+        flex: 1;
+    }
+    .pt {
+        width: 7px;
+        height: 7px;
+        border-radius: 4px;
+        background: var(--luz-fraco);
+        flex-shrink: 0;
+    }
+    .pt.ar {
+        background: var(--luz-vermelho);
+    }
+    .pt.ligada {
+        background: var(--luz-verde);
     }
 </style>

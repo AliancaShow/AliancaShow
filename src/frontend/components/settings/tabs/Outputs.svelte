@@ -17,6 +17,9 @@
     import { hasStreamableDestination } from "../../helpers/rtmpDestinations"
     import InputRow from "../../input/InputRow.svelte"
     import Title from "../../input/Title.svelte"
+    import { resumoDeRede } from "../../../utils/aliancaSaidasLogica"
+    import AliancaMapaTelas from "../AliancaMapaTelas.svelte"
+    import SecaoLuz from "../SecaoLuz.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialCheckbox from "../../inputs/MaterialCheckbox.svelte"
     import MaterialDropdown from "../../inputs/MaterialDropdown.svelte"
@@ -323,12 +326,26 @@
 
     $: isCropped = currentOutput?.cropping && (currentOutput.cropping.left || 0) + (currentOutput.cropping.right || 0) + (currentOutput.cropping.top || 0) + (currentOutput.cropping.bottom || 0) > 0
     $: outputLabel = (currentOutput?.blackmagicData?.displayMode || `${currentOutput?.bounds?.width || 1920}x${currentOutput?.bounds?.height || 1080}`) + (isCropped ? ` - settings.cropped` : "")
+
+    // C4: ligar/desligar o envio por rede de DENTRO da propria secao (o mesmo updateOutput do fluxo de criacao)
+    async function alternarRede(chave: "ndi" | "blackmagic" | "webrtc" | "rtmp", ligar: boolean) {
+        if (ligar && chave === "rtmp" && !(await checkFFmpeg())) return
+        updateOutput(chave, ligar)
+        if (ligar && chave !== "blackmagic") newToast("toast.output_capture_enabled")
+    }
+    $: placas = blackmagicDevices.length
+    $: nomeNaRede = currentOutput?.ndiData?.name || `AliancaShow NDI${currentOutput?.name ? ` - ${currentOutput.name}` : ""}`
 </script>
 
-{#if outputsList.filter((a) => !a.stageOutput).length > 1 || !currentOutput?.enabled || currentOutput?.stageOutput}
+<div class="duas" data-acao="saidas-conteudo">
+<div class="coluna">
+<SecaoLuz titulo="Saída" id="saida">
+{#if currentOutput}
     {@const isStreaming = currentOutput?.webrtcData?.streaming || currentOutput?.rtmpData?.streaming}
     <MaterialToggleSwitch label="settings.enabled" checked={currentOutput?.enabled} defaultValue={true} disabled={(!currentOutput?.stageOutput && currentOutput?.enabled && activeOutputs.length < 2) || (currentOutput?.enabled && isStreaming)} on:change={(e) => _toggleOutput(e.detail)} />
 {/if}
+
+<div data-acao="saida-nome"><MaterialTextInput label="inputs.name" value={currentOutput?.name || ""} on:change={(e) => updateOutput("name", e.detail)} /></div>
 
 {#if stageId}
     <InputRow>
@@ -346,6 +363,8 @@
     </InputRow>
 {/if}
 
+</SecaoLuz>
+
 <!-- WIP toggle fullscreen (Mac) ?? Only working one time for some reason -->
 <!-- WIP toggle visibleOnAllWorkspaces (Mac) -->
 
@@ -357,8 +376,10 @@
     <MaterialToggleSwitch label="settings.always_on_top" checked={currentOutput?.alwaysOnTop !== false} defaultValue={true} on:change={(e) => updateOutput("alwaysOnTop", e.detail)} />
 {/if}
 
+{#if !currentOutput?.stageOutput}
+<SecaoLuz titulo="Blackmagic Design" id="blackmagic" recolhivel aberta={!!currentOutput?.blackmagic} resumo={resumoDeRede("blackmagic", currentOutput || {}, placas)}>
+    <div class="linha" data-acao="saida-blackmagic"><MaterialToggleSwitch label="Enviar esta saída por Blackmagic" checked={!!currentOutput?.blackmagic} defaultValue={false} on:change={(e) => alternarRede("blackmagic", e.detail)} /></div>
 {#if currentOutput?.blackmagic}
-    <Title label="Blackmagic Design" icon="blackmagic" />
 
     <MaterialDropdown
         label="settings.device"
@@ -389,9 +410,12 @@
         {/if}
     {/if}
 {/if}
+</SecaoLuz>
 
+<SecaoLuz titulo="NDI®" id="ndi" recolhivel aberta={!!currentOutput?.ndi} resumo={currentOutput?.ndi ? "ligado" : "desligado"}>
+    <div class="linha" data-acao="saida-ndi"><MaterialToggleSwitch label="Enviar esta saída por NDI" checked={!!currentOutput?.ndi} defaultValue={false} on:change={(e) => alternarRede("ndi", e.detail)} /></div>
 {#if currentOutput?.ndi}
-    <Title label="NDI®" icon="ndi" />
+    <p class="dica">Aparece na rede como “{nomeNaRede}”</p>
 
     <InputRow>
         {#if currentOutput.invisible && !currentOutput.blackmagic}
@@ -401,7 +425,7 @@
     </InputRow>
 
     <InputRow>
-        <MaterialTextInput label="inputs.name" value={currentOutput.ndiData?.name || `AliancaShow NDI${currentOutput.name ? ` - ${currentOutput.name}` : ""}`} defaultValue={`AliancaShow NDI${currentOutput.name ? ` - ${currentOutput.name}` : ""}`} on:change={(e) => updateNdiData(e.detail, "name")} />
+        <MaterialTextInput label="Nome na rede" value={currentOutput.ndiData?.name || `AliancaShow NDI${currentOutput.name ? ` - ${currentOutput.name}` : ""}`} defaultValue={`AliancaShow NDI${currentOutput.name ? ` - ${currentOutput.name}` : ""}`} on:change={(e) => updateNdiData(e.detail, "name")} />
         <MaterialTextInput label="inputs.group" title="settings.comma_seperated" value={currentOutput.ndiData?.groups || ""} defaultValue="" placeholder="public" on:change={(e) => updateNdiData(e.detail, "groups")} />
     </InputRow>
 
@@ -415,7 +439,11 @@
         </div>
     {/if} -->
 {/if}
+</SecaoLuz>
 
+<SecaoLuz titulo="RTMP · WebRTC" id="rtmp-webrtc" recolhivel aberta={!!currentOutput?.webrtc || !!currentOutput?.rtmp} resumo={[currentOutput?.rtmp ? "RTMP " + resumoDeRede("rtmp", currentOutput) : "", currentOutput?.webrtc ? "WebRTC " + resumoDeRede("webrtc", currentOutput) : ""].filter(Boolean).join(" · ") || "desligado"}>
+    <div class="linha" data-acao="saida-webrtc"><MaterialToggleSwitch label="Enviar esta saída por WebRTC" checked={!!currentOutput?.webrtc} defaultValue={false} on:change={(e) => alternarRede("webrtc", e.detail)} /></div>
+    <div class="linha" data-acao="saida-rtmp"><MaterialToggleSwitch label="Enviar esta saída por RTMP" checked={!!currentOutput?.rtmp} defaultValue={false} on:change={(e) => alternarRede("rtmp", e.detail)} /></div>
 {#if currentOutput?.webrtc}
     <Title label="WebRTC" icon="broadcast" />
 
@@ -432,7 +460,7 @@
 
     {#if currentOutput?.enabled && currentOutput?.webrtcData?.url}
         <div style="padding-bottom: 10px;">
-            <MaterialButton variant="outlined" icon={currentOutput.webrtcData?.streaming ? "stop" : "record"} style="width: 100%; justify-content: center; {currentOutput.webrtcData?.streaming ? 'background: #b60707 !important;' : ''}" on:click={() => (currentOutput?.webrtcData?.streaming ? stopStreaming(currentOutput.id, true) : startStreaming(currentOutput?.id))} white>
+            <MaterialButton variant="outlined" icon={currentOutput.webrtcData?.streaming ? "stop" : "record"} style="width: 100%; justify-content: center; {currentOutput.webrtcData?.streaming ? 'background: var(--luz-vermelho) !important;' : ''}" on:click={() => (currentOutput?.webrtcData?.streaming ? stopStreaming(currentOutput.id, true) : startStreaming(currentOutput?.id))} white>
                 {translateText(currentOutput.webrtcData?.streaming ? "output.stop_streaming" : "output.start_streaming")}
             </MaterialButton>
         </div>
@@ -497,14 +525,34 @@
 
     {#if currentOutput?.enabled && hasStreamableDestination(currentOutput.rtmpData)}
         <div style="padding: 10px 0;">
-            <MaterialButton variant="outlined" icon={currentOutput.rtmpData?.streaming ? "stop" : "record"} style="width: 100%; justify-content: center; {currentOutput.rtmpData?.streaming ? 'background: #b60707 !important;' : ''}" on:click={() => (currentOutput?.rtmpData?.streaming ? stopRtmpStreaming(currentOutput.id, true) : startRtmpStreaming(currentOutput?.id))} white>
+            <MaterialButton variant="outlined" icon={currentOutput.rtmpData?.streaming ? "stop" : "record"} style="width: 100%; justify-content: center; {currentOutput.rtmpData?.streaming ? 'background: var(--luz-vermelho) !important;' : ''}" on:click={() => (currentOutput?.rtmpData?.streaming ? stopRtmpStreaming(currentOutput.id, true) : startRtmpStreaming(currentOutput?.id))} white>
                 {translateText(currentOutput.rtmpData?.streaming ? "output.stop_streaming" : "output.start_streaming")}
             </MaterialButton>
         </div>
     {/if}
 {/if}
+</SecaoLuz>
+{/if}
+</div>
+<AliancaMapaTelas />
+</div>
 
 <style>
+    .duas {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start;
+    }
+    .coluna {
+        width: 560px;
+        flex-shrink: 0;
+        min-width: 0;
+    }
+    .dica {
+        margin: -2px 0 10px;
+        font-size: 11px;
+        color: var(--luz-mudo);
+    }
     .hint {
         padding: 0 10px 10px;
         font-size: 0.8em;
@@ -524,8 +572,8 @@
         flex-direction: column;
 
         padding: 8px;
-        border: 1px solid var(--primary-lighter);
-        border-radius: 4px;
+        border: 1px solid var(--luz-borda);
+        border-radius: var(--luz-raio-campo);
     }
 
     .dot {
@@ -533,27 +581,27 @@
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background-color: #6b6b6b;
+        background-color: var(--luz-fraco);
     }
     .dot.connecting,
     .dot.reconnecting {
-        background-color: #e0a800;
+        background-color: var(--luz-laranja);
     }
     .dot.live {
-        background-color: #2ecc71;
+        background-color: var(--luz-verde);
     }
     .dot.error {
-        background-color: #b60707;
+        background-color: var(--luz-vermelho);
     }
 
     .destination-warning {
         padding-top: 4px;
         font-size: 0.8em;
-        color: #e0bc50;
+        color: var(--luz-ambar);
     }
     .destination-error {
         padding-top: 4px;
-        color: #ff8080;
+        color: var(--luz-vermelho-claro);
         font-size: 0.8em;
     }
 </style>
