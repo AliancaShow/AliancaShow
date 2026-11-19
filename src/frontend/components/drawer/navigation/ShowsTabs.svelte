@@ -59,7 +59,7 @@
     }
 </script>
 
-<NavigationSections {sections} active={activeSubTab} extra={["all", "unlabeled"]} on:rename={updateName}>
+<NavigationSections {sections} active={activeSubTab} extra={["all", "unlabeled"]} padrao="all" on:rename={updateName}>
     <div slot="section_0">
         <AliancaLinhaAdd rotulo="categoria" titulo="Nova categoria" desligada={readOnly} on:click={newCategory} />
     </div>

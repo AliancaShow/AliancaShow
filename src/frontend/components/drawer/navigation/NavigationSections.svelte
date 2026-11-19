@@ -2,6 +2,7 @@
     import { onMount } from "svelte"
     import { activeActionTagFilter, activeDrawerTab, activeEdit, activeVariableTagFilter, activeTimerTagFilter, dictionary, drawerTabsData, labelsDisabled } from "../../../stores"
     import { translateText } from "../../../utils/language"
+    import { subAbaDeVolta } from "../../../utils/aliancaArvoreLogica"
     import MaterialDrawerTab from "../MaterialDrawerTab.svelte"
 
     // interface Button extends Category {
@@ -16,6 +17,8 @@
     export let active: string
     // C6: sub-abas validas que NAO tem linha propria (a raiz e o "tudo"; Entradas/Online/Audio sao linhas da arvore): nao disparam a escolha da 1a linha
     export let extra: string[] = []
+    // "tudo" da raiz (Shows e Midia: "all"): sub-aba vazia ou apagada cai nele, nunca na 1a categoria/pasta (que filtraria a lista sem ninguem pedir)
+    export let padrao = ""
 
     let ready = false
     onMount(() => {
@@ -23,9 +26,10 @@
         setTimeout(() => (ready = true), 50)
     })
 
-    $: if (ready && sections.length && (!active || (!extra.includes(active) && !sections.flat().find((a) => a.id === active)))) {
+    $: if (ready && sections.length) {
         const flat = sections.flat().filter((a) => a && a !== "SEPARATOR" && a.id !== "SEPARATOR" && a.id !== "TITLE")
-        if (flat.length) setSubTab(flat[0].id)
+        const volta = subAbaDeVolta(active, flat, extra, padrao)
+        if (volta) setSubTab(volta)
     }
 
     function setSubTab(tabId: string) {

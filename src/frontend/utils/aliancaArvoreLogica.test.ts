@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { aplicarRecorte, recorteDeShows, decidirEscrita, filtroSemCategoria, FILHOS_FERRAMENTAS, NOS, RAIZES, raizDaAba, raizMostraTudo, sanearNaCarga, sanearSubAba, temNo } from "./aliancaArvoreLogica"
+import { aplicarRecorte, subAbaDeVolta, recorteDeShows, decidirEscrita, filtroSemCategoria, FILHOS_FERRAMENTAS, NOS, RAIZES, raizDaAba, raizMostraTudo, sanearNaCarga, sanearSubAba, temNo } from "./aliancaArvoreLogica"
 
 describe("arvore da biblioteca (C6)", () => {
     it("quatro raizes: Shows, Midia, Biblia, Ferramentas", () => {
@@ -59,5 +59,24 @@ describe("recorte da lista de Shows pela arvore (C6)", () => {
         expect(aplicarRecorte(linhas, { tipo: "sem-categoria" }, cats).map((x) => x.id)).toEqual(["a", "c"])
         expect(aplicarRecorte(linhas, { tipo: "categoria", id: "louvor" }, cats).map((x) => x.id)).toEqual(["b"])
         expect(aplicarRecorte(linhas, { tipo: "chips" }, cats)).toEqual(linhas)
+    })
+})
+
+describe("revisao do PR #40, achado 5: sub-aba vazia ou apagada cai em \"tudo\"", () => {
+    const linhas = [{ id: "cat_a" }, { id: "cat_b" }]
+    it("vazia cai no padrao (all), nunca na 1a categoria", () => {
+        expect(subAbaDeVolta("", linhas, ["all", "unlabeled"], "all")).toBe("all")
+        expect(subAbaDeVolta(undefined, linhas, ["all"], "all")).toBe("all")
+    })
+    it("categoria apagada cai no padrao", () => {
+        expect(subAbaDeVolta("cat_apagada", linhas, ["all", "unlabeled"], "all")).toBe("all")
+    })
+    it("valida (linha ou extra) nao muda", () => {
+        expect(subAbaDeVolta("cat_b", linhas, ["all"], "all")).toBeNull()
+        expect(subAbaDeVolta("unlabeled", linhas, ["all", "unlabeled"], "all")).toBeNull()
+    })
+    it("sem padrao (aba sem \"tudo\") a 1a linha, como sempre; sem linhas nada", () => {
+        expect(subAbaDeVolta("", linhas, [], "")).toBe("cat_a")
+        expect(subAbaDeVolta("", [], [], "")).toBeNull()
     })
 })

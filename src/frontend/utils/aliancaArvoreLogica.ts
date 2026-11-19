@@ -23,6 +23,8 @@ export const FILHOS_FERRAMENTAS: NoDaArvore[] = [
     { id: "calendar", nome: "Calendário" },
     { id: "overlays", nome: "Sobreposições" }
 ]
+/** os filhos de Ferramentas que, abertos, mostram embaixo as sub-abas e acoes que tem (Modelos: categorias e "Nova categoria"; Calendario: Importar calendario) */
+export const SUBABAS_NA_ARVORE: string[] = ["templates", "functions", "calendar", "overlays"]
 export const FILHOS_MIDIA: NoDaArvore[] = [{ id: "audio", nome: "Áudio" }]
 
 /** Todas as abas que ainda tem lugar na arvore (a raiz de cada uma esta em `raizDaAba`). */
@@ -88,4 +90,14 @@ export function aplicarRecorte<T extends { categoria: string | null }>(linhas: T
     if (r.tipo === "sem-categoria") return linhas.filter((l) => !l.categoria || !categorias?.[l.categoria])
     if (r.tipo === "categoria") return linhas.filter((l) => l.categoria === r.id)
     return linhas
+}
+
+/**
+ * Para onde a lista cai quando a sub-aba salva esta VAZIA ou aponta para algo que nao existe mais (categoria apagada, pasta removida). `padrao` e o "tudo" da raiz
+ * ("all" em Shows e Midia: antes a 1a linha era "Tudo"; agora a 1a linha e uma categoria/pasta e cair nela filtraria a lista sem ninguem pedir - revisao do PR #40, achado 5).
+ * Sem `padrao` (as abas que nao tem "tudo"), a 1a linha de verdade. `null` = a sub-aba atual e valida: nada a fazer.
+ */
+export function subAbaDeVolta(ativa: string | null | undefined, linhas: { id: string }[], extra: string[], padrao: string): string | null {
+    if (ativa && (extra.includes(ativa) || linhas.some((l) => l.id === ativa))) return null
+    return padrao || linhas[0]?.id || null
 }

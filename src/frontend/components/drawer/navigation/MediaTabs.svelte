@@ -108,7 +108,7 @@
     }
 </script>
 
-<NavigationSections {sections} active={activeSubTab} extra={["all", "__fora__", "inputs", "online", "pasta:raiz"]} on:rename={updateName}>
+<NavigationSections {sections} active={activeSubTab} extra={["all", "__fora__", "inputs", "online", "pasta:raiz"]} padrao="all" on:rename={updateName}>
     <div slot="section_0">
         {#if $tela !== "mostrar"}
             <AliancaLinhaAdd rotulo="pasta de mídia" titulo="Nova pasta de mídia" desligada={readOnly} on:click={novaPasta} />
