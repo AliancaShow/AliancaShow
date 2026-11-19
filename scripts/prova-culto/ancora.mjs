@@ -37,12 +37,12 @@ export const EXCECOES = {
         "sha": "bf96cef8c00bec3e925bd74935e159bba906200eb46851c534480c123b640616"
     },
     "src/electron/IPC/responsesMain.ts": {
-        "motivo": "fatia 4 (aprovada 18/nov): novo canal `TOGGLE_DEVTOOLS` (sem efeito em producao; em dev abre o DevTools da janela principal). Nenhuma resposta existente muda",
-        "sha": "62f8168f7d46315cc4b98e581b3b16b5556719700e55ac1c260518f0493e61fd"
+        "motivo": "fatia 4 (aprovada 18/nov): novo canal `TOGGLE_DEVTOOLS` (sem efeito em producao; em dev abre o DevTools da janela principal). Nenhuma resposta existente muda | Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): READ_BIBLES_FOLDER devolve embutida/legado por Biblia",
+        "sha": "7618691b3f2c92fbbfda4a359bbf7cfd1d75feb623cfe41bb1f6263a0ef8d42f"
     },
     "src/types/IPC/Main.ts": {
-        "motivo": "fatia 4 (aprovada 18/nov): tipo do canal novo `TOGGLE_DEVTOOLS`; so acrescenta",
-        "sha": "1183d05780e63eb48a15dad507fbd8d607c1286e20bcb957cb98a0f82fe5b1dd"
+        "motivo": "fatia 4 (aprovada 18/nov): tipo do canal novo `TOGGLE_DEVTOOLS`; so acrescenta | Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): READ_BIBLES_FOLDER devolve embutida/legado por Biblia",
+        "sha": "ac629ee8323f2e2c8046e15bad329dd4e8b87c477805334efa6dca924fe89ca6"
     },
     "src/electron/utils/menuTemplate.ts": {
         "motivo": "fatia 4 (aprovada 18/nov): tira `quick_start_guide` do menu (macOS); nada da saida usa",
@@ -107,6 +107,18 @@ export const EXCECOES = {
     "src/frontend/components/slide/Textbox.svelte": {
         "motivo": "rodada da cabine (A4/A5, aprovada pelo André 18/nov): autosize de PALCO nao mede nem usa cache com caixa escondida/0x0 (cache envenenado a 800 px). Slides do telao nao passam pela guarda",
         "sha": "5a4637063f642fbf9a6fc4b2e6f86d9bd791d0b77a0fb7432241d42971b3b48f"
+    },
+    "src/electron/data/defaults.ts": {
+        "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): default de scriptures fica vazio (o nvi/'NVI' nao casava com o arquivo); nada da saida le scriptures",
+        "sha": "34deed63a1dc16ae1a01542894e36a7ec664f64f2cda4236387f214bad885818"
+    },
+    "src/electron/utils/files.ts": {
+        "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): bundledBiblesFolder() exportado (resources/bibles ou bundled-bibles/); a copia na partida ja existia",
+        "sha": "bd969066fda1caaaae933a3e8d593ecca8b21bbb8e628d6b153d4a79e99cbeda"
+    },
+    "src/frontend/utils/bibliasEmbutidas.ts": {
+        "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): registra cada .fsb embutida sem duplicar NVI/ARA, corrige registro antigo e alerta alto quando falta arquivo; so roda na janela principal (updateSyncedSettings)",
+        "sha": "9a11d8d01cf6312e4639768b765c5904ecb88c9c161e8428f1d97ce5fb29a824"
     }
 }
 
@@ -126,11 +138,15 @@ export const NOVOS_NO_FECHO = {
     "src/frontend/utils/aliancaSoRetornoLogica.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): arquivo novo: parte pura (aceitaNoModo, oQueRecusou, motivoDaRecusa)",
         "sha": "cbf854f6e38498cb2214baae2898e72394de0ee07d1ad1b5974780c49fd5274d"
+    },
+    "src/frontend/utils/bibliasEmbutidasLogica.ts": {
+        "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): logica pura do registro (sem efeito colateral); entra no fecho via bibliasEmbutidas.ts",
+        "sha": "63db7ef3fe23133f6e4f21f83dd4fa34fc857399291413469ca970c5c7cff2d5"
     }
 }
 
-export const SHA_EXCECOES = "c14c4990e5466f734c3cbadf92bc91f026b26cce9dfebaba350a49830b8fb995"
-export const SHA_NOVOS = "ed7662101256d7f316c003d314dc25396bce5032913ea3e844943f0184ac93f3"
+export const SHA_EXCECOES = "974d5c2eecad6f288a3a4fa985a5856c1814c8aa9ab69517b4c4dd0d3a057750"
+export const SHA_NOVOS = "fda7eab12fe65bd4b503d4f8a7e3a0c96831aa99a94b3bd1409990db7c3c5907"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
