@@ -18,9 +18,13 @@ const ok = (c, m) => {
 const tempo = `(get(S.activeTimers).find(t=>t.id==="t9")||{}).currentTime ?? null`
 
 async function rodar(rotulo, comAba) {
-    await principal.ev(`S.activeTimers.set([]); S.timers.update(a=>{a.t9={name:"T9",type:"counter",start:100,end:0,id:"t9"};return a}); S.activeDrawerTab.set(${JSON.stringify(comAba ? "functions" : "shows")}); await esp(500)`)
+    await principal.ev(`S.activeTimers.set([]); S.timers.update(a=>{a.t9={name:"T9",type:"counter",start:100,end:0,id:"t9"};return a}); S.activeDrawerTab.set(${JSON.stringify(comAba ? "functions" : "shows")}); ${comAba ? 'const {setDrawerTabData}=await import(U("components/helpers/historyHelpers")); setDrawerTabData("functions","timer");' : ""} await esp(500)`)
     const aba = await principal.ev(`return get(S.activeDrawerTab)`)
     ok(comAba ? aba === "functions" : aba !== "functions", `${rotulo}: aba ativa da gaveta = ${aba}`)
+    if (comAba) {
+        const sub = await principal.ev(`return get(S.drawerTabsData).functions?.activeSubTab`)
+        ok(sub === "timer", `${rotulo}: sub-aba de Funcoes = ${sub} (Ferramentas > Funcoes > Temporizadores)`)
+    }
     await principal.avaliar("if (window.__provaFim) await window.__provaFim(); return 1")
     await principal.ev(`const {playPauseGlobal}=await import(U("components/drawer/timers/timers")); playPauseGlobal("t9", get(S.timers).t9, true); return 1`)
     const v0 = await principal.ev(`return ${tempo}`)

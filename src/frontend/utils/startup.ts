@@ -24,6 +24,7 @@ import { iniciarPonteiros } from "./aliancaPonteiros"
 import { iniciarAbasDoEditor } from "./aliancaAbasEditor"
 import { iniciarTemaAlianca } from "./aliancaTema"
 import { iniciarTelaAlianca } from "./aliancaTelaEfeitos"
+import { iniciarSpotifyParaComSom } from "./aliancaSpotifyComSom"
 import { configurarRegistroDeFalha } from "./aliancaFalha"
 
 let initialized = false
@@ -67,6 +68,8 @@ async function startupMain() {
     iniciarTemaAlianca()
     // 0b: atributos data-tela/pagina no body e saneamento da pasta de midia ao chegar em Mostrar (so a janela principal)
     iniciarTelaAlianca()
+    // Cabine 4: o Spotify para sozinho quando midia com som entra no ar (so a janela principal passa por aqui)
+    iniciarSpotifyParaComSom()
     // 1b, D8: a guarda de paginas do Preparar e a volta ao show (so a janela principal assina)
     configurarRegistroDeFalha(({ origem, mensagem, pilha }) => sendMain(Main.LOG_ERROR, { time: new Date(), os: get(os).platform || "Unknown", version: get(version), type: "aliancaFalha", source: origem, message: mensagem, stack: pilha }))
     setLanguage("", true)
