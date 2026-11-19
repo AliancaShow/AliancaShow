@@ -17,7 +17,7 @@
     import { hasStreamableDestination } from "../../helpers/rtmpDestinations"
     import InputRow from "../../input/InputRow.svelte"
     import Title from "../../input/Title.svelte"
-    import { resumoDeRede } from "../../../utils/aliancaSaidasLogica"
+    import { estadoDaSaida, resumoDeRede } from "../../../utils/aliancaSaidasLogica"
     import AliancaMapaTelas from "../AliancaMapaTelas.svelte"
     import SecaoLuz from "../SecaoLuz.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
@@ -325,10 +325,37 @@
     $: isCropped = currentOutput?.cropping && (currentOutput.cropping.left || 0) + (currentOutput.cropping.right || 0) + (currentOutput.cropping.top || 0) + (currentOutput.cropping.bottom || 0) > 0
     $: outputLabel = (currentOutput?.blackmagicData?.displayMode || `${currentOutput?.bounds?.width || 1920}x${currentOutput?.bounds?.height || 1080}`) + (isCropped ? ` - settings.cropped` : "")
 
-    // C4: ligar/desligar o envio por rede de DENTRO da propria secao (o mesmo updateOutput do fluxo de criacao)
-    async function alternarRede(chave: "ndi" | "blackmagic" | "webrtc" | "rtmp", ligar: boolean) {
-        if (ligar && chave === "rtmp" && !(await checkFFmpeg())) return
+    // C4: ligar/desligar o envio por rede de DENTRO da propria secao (o mesmo updateOutput do fluxo de criacao).
+    // Desligar com a saida NO AR (transmitindo por RTMP/WebRTC, ou mostrando conteudo) pede confirmacao inline: a mesma trava `isStreaming` do "Habilitada".
+    let confirmaDesligar: { id: string; chave: "ndi" | "blackmagic" | "webrtc" | "rtmp" } | null = null
+    let versaoDasChaves = 0 // refaz os interruptores para eles voltarem ao valor real quando o pedido nao passa
+    $: if (confirmaDesligar && confirmaDesligar.id !== currentOutput?.id) confirmaDesligar = null
+    $: transmitindo = !!(currentOutput?.webrtcData?.streaming || currentOutput?.rtmpData?.streaming)
+    $: noAr = !!currentOutput && estadoDaSaida(currentOutput as any, $outputDisplay) === "ar"
+
+    function alternarRede(chave: "ndi" | "blackmagic" | "webrtc" | "rtmp", ligar: boolean) {
+        if (!ligar && currentOutput?.id && (transmitindo || noAr)) {
+            confirmaDesligar = { id: currentOutput.id, chave }
+            versaoDasChaves++
+            return
+        }
+        aplicarRede(chave, ligar)
+    }
+    async function aplicarRede(chave: "ndi" | "blackmagic" | "webrtc" | "rtmp", ligar: boolean) {
+        confirmaDesligar = null
+        const id = currentOutput?.id || ""
+        if (ligar && chave === "rtmp" && !(await checkFFmpeg())) {
+            versaoDasChaves++
+            return
+        }
         updateOutput(chave, ligar)
+        // desligar a placa devolve a resolucao do telao (a resolucao forcada so existe enquanto a placa esta em uso)
+        if (!ligar && chave === "blackmagic" && id) {
+            outputs.update((a: any) => {
+                if (a[id]) delete a[id].forcedResolution
+                return a
+            })
+        }
         if (ligar && chave !== "blackmagic") newToast("toast.output_capture_enabled")
     }
     $: placas = blackmagicDevices.length
@@ -376,7 +403,8 @@
 
 {#if !currentOutput?.stageOutput}
 <SecaoLuz titulo="Blackmagic Design" id="blackmagic" recolhivel aberta={!!currentOutput?.blackmagic} resumo={resumoDeRede("blackmagic", currentOutput || {}, placas)}>
-    <div class="linha" data-acao="saida-blackmagic"><MaterialToggleSwitch label="Enviar esta saída por Blackmagic" checked={!!currentOutput?.blackmagic} defaultValue={false} on:change={(e) => alternarRede("blackmagic", e.detail)} /></div>
+    <div class="linha" data-acao="saida-blackmagic">{#key versaoDasChaves}<MaterialToggleSwitch label="Enviar esta saída por Blackmagic" checked={!!currentOutput?.blackmagic} defaultValue={false} on:change={(e) => alternarRede("blackmagic", e.detail)} />{/key}</div>
+    {#if confirmaDesligar?.chave === "blackmagic"}<div class="desliga" data-acao="saida-desligar-confirma" role="alertdialog"><span>Desligar Blackmagic com a saída no ar? A transmissão cai.</span><button type="button" class="luz-bt" data-acao="saida-desligar-sim" tabindex="-1" on:click={() => aplicarRede("blackmagic", false)}>Desligar</button><button type="button" class="luz-bt" data-acao="saida-desligar-nao" tabindex="-1" on:click={() => (confirmaDesligar = null)}>Cancelar</button></div>{/if}
 {#if currentOutput?.blackmagic}
 
     <MaterialDropdown
@@ -411,7 +439,8 @@
 </SecaoLuz>
 
 <SecaoLuz titulo="NDI®" id="ndi" recolhivel aberta={!!currentOutput?.ndi} resumo={currentOutput?.ndi ? "ligado" : "desligado"}>
-    <div class="linha" data-acao="saida-ndi"><MaterialToggleSwitch label="Enviar esta saída por NDI" checked={!!currentOutput?.ndi} defaultValue={false} on:change={(e) => alternarRede("ndi", e.detail)} /></div>
+    <div class="linha" data-acao="saida-ndi">{#key versaoDasChaves}<MaterialToggleSwitch label="Enviar esta saída por NDI" checked={!!currentOutput?.ndi} defaultValue={false} on:change={(e) => alternarRede("ndi", e.detail)} />{/key}</div>
+    {#if confirmaDesligar?.chave === "ndi"}<div class="desliga" data-acao="saida-desligar-confirma" role="alertdialog"><span>Desligar NDI com a saída no ar? A transmissão cai.</span><button type="button" class="luz-bt" data-acao="saida-desligar-sim" tabindex="-1" on:click={() => aplicarRede("ndi", false)}>Desligar</button><button type="button" class="luz-bt" data-acao="saida-desligar-nao" tabindex="-1" on:click={() => (confirmaDesligar = null)}>Cancelar</button></div>{/if}
 {#if currentOutput?.ndi}
     <p class="dica">Aparece na rede como “{nomeNaRede}”</p>
 
@@ -440,8 +469,10 @@
 </SecaoLuz>
 
 <SecaoLuz titulo="RTMP · WebRTC" id="rtmp-webrtc" recolhivel aberta={!!currentOutput?.webrtc || !!currentOutput?.rtmp} resumo={[currentOutput?.rtmp ? "RTMP " + resumoDeRede("rtmp", currentOutput) : "", currentOutput?.webrtc ? "WebRTC " + resumoDeRede("webrtc", currentOutput) : ""].filter(Boolean).join(" · ") || "desligado"}>
-    <div class="linha" data-acao="saida-webrtc"><MaterialToggleSwitch label="Enviar esta saída por WebRTC" checked={!!currentOutput?.webrtc} defaultValue={false} on:change={(e) => alternarRede("webrtc", e.detail)} /></div>
-    <div class="linha" data-acao="saida-rtmp"><MaterialToggleSwitch label="Enviar esta saída por RTMP" checked={!!currentOutput?.rtmp} defaultValue={false} on:change={(e) => alternarRede("rtmp", e.detail)} /></div>
+    <div class="linha" data-acao="saida-webrtc">{#key versaoDasChaves}<MaterialToggleSwitch label="Enviar esta saída por WebRTC" checked={!!currentOutput?.webrtc} defaultValue={false} on:change={(e) => alternarRede("webrtc", e.detail)} />{/key}</div>
+    {#if confirmaDesligar?.chave === "webrtc"}<div class="desliga" data-acao="saida-desligar-confirma" role="alertdialog"><span>Desligar WebRTC com a saída no ar? A transmissão cai.</span><button type="button" class="luz-bt" data-acao="saida-desligar-sim" tabindex="-1" on:click={() => aplicarRede("webrtc", false)}>Desligar</button><button type="button" class="luz-bt" data-acao="saida-desligar-nao" tabindex="-1" on:click={() => (confirmaDesligar = null)}>Cancelar</button></div>{/if}
+    <div class="linha" data-acao="saida-rtmp">{#key versaoDasChaves}<MaterialToggleSwitch label="Enviar esta saída por RTMP" checked={!!currentOutput?.rtmp} defaultValue={false} on:change={(e) => alternarRede("rtmp", e.detail)} />{/key}</div>
+    {#if confirmaDesligar?.chave === "rtmp"}<div class="desliga" data-acao="saida-desligar-confirma" role="alertdialog"><span>Desligar RTMP com a saída no ar? A transmissão cai.</span><button type="button" class="luz-bt" data-acao="saida-desligar-sim" tabindex="-1" on:click={() => aplicarRede("rtmp", false)}>Desligar</button><button type="button" class="luz-bt" data-acao="saida-desligar-nao" tabindex="-1" on:click={() => (confirmaDesligar = null)}>Cancelar</button></div>{/if}
 {#if currentOutput?.webrtc}
     <Title label="WebRTC" icon="broadcast" />
 
@@ -545,6 +576,20 @@
         width: 560px;
         flex-shrink: 0;
         min-width: 0;
+    }
+    .desliga {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 4px 0 10px;
+        padding: 8px 10px;
+        border-radius: var(--luz-raio-campo);
+        box-shadow: inset 0 0 0 1px var(--luz-laranja);
+        font-size: 13px;
+        color: var(--luz-texto);
+    }
+    .desliga span {
+        margin-right: auto;
     }
     .dica {
         margin: -2px 0 10px;

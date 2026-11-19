@@ -9,13 +9,16 @@
     export let recolhivel = false
     export let aberta = !recolhivel
     export let id = ""
+    // `aberta` vindo do pai so ABRE (ex.: ligar NDI abre a secao); desligar nao a recolhe debaixo do dedo, o interruptor tem que continuar la
+    let ab = aberta
+    $: if (aberta) ab = true
 </script>
 
 {#if recolhivel}
-    <button type="button" class="luz-sec dob" data-acao="secao-recolhivel" data-secao={id || titulo} aria-expanded={aberta} tabindex="-1" on:click={() => (aberta = !aberta)}>
-        <Icon id="arrow_back_modern" size={0.6} white style="transition: transform 0.1s ease; transform: rotate({aberta ? -90 : 180}deg); opacity: 0.6;" />
+    <button type="button" class="luz-sec dob" data-acao="secao-recolhivel" data-secao={id || titulo} aria-expanded={ab} tabindex="-1" on:click={() => (ab = !ab)}>
+        <Icon id="arrow_back_modern" size={0.6} white style="transition: transform 0.1s ease; transform: rotate({ab ? -90 : 180}deg); opacity: 0.6;" />
         {titulo}
-        {#if !aberta && resumo}<small>{resumo}</small>{/if}
+        {#if !ab && resumo}<small>{resumo}</small>{/if}
     </button>
 {:else}
     <div class="luz-sec" data-secao={id || titulo}>
@@ -24,6 +27,6 @@
     </div>
 {/if}
 
-{#if aberta}
+{#if ab}
     <slot />
 {/if}

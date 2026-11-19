@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { tick } from "svelte"
     import { OUTPUT } from "../../../../types/Channels"
     import { Main } from "../../../../types/IPC/Main"
     import { requestMain } from "../../../IPC/main"
@@ -6,8 +7,9 @@
     import type { Output } from "../../../../types/Output"
     import { AudioAnalyser } from "../../../audio/audioAnalyser"
     import { checkPrimaryOutputRouting, createOutputAudioChannel } from "../../../audio/routing/audioRoutingInit"
-    import { activeTriggerFunction, currentOutputSettings, outputDisplay, outputs, popupData, stageShows, styles, toggleOutputEnabled } from "../../../stores"
+    import { activeRename, activeTriggerFunction, currentOutputSettings, outputDisplay, outputs, popupData, stageShows, styles, toggleOutputEnabled } from "../../../stores"
     import { newToast } from "../../../utils/common"
+    import { estadoDaSaida } from "../../../utils/aliancaSaidasLogica"
     import { translateText } from "../../../utils/language"
     import { waitForPopupData } from "../../../utils/popup"
     import { send } from "../../../utils/request"
@@ -150,8 +152,21 @@
     const iniciais = new Set(Object.keys($outputs))
     $: novas = outputsList.filter((o) => !iniciais.has(o.id || "")).map((o) => o.id || "")
 
-    /** vermelho = saida NO AR agora; verde = habilitada; sem ponto = desligada (so o no ar leva vermelho) */
-    const estado = (tab: Output, noAr: boolean) => (tab.enabled === false ? "" : noAr ? "ar" : "ligada")
+    // vermelho = a saida esta mostrando conteudo AGORA (janela ligada e algo no ar); verde = habilitada; sem ponto = desligada
+    const estado = (tab: Output, janelasLigadas: boolean) => estadoDaSaida(tab as any, janelasLigadas)
+
+    // "Renomear" do menu de contexto da aba: leva ao campo Nome desta pagina (a aba e so um botao, nao um campo)
+    $: if (typeof $activeRename === "string" && $activeRename.startsWith("output_")) renomearPeloCampo($activeRename.slice("output_".length))
+    async function renomearPeloCampo(id: string) {
+        activeRename.set(null)
+        if (!$outputs[id]) return
+        currentOutputSettings.set(id)
+        await tick()
+        await new Promise((r) => setTimeout(r, 80))
+        const campo = document.querySelector("[data-acao=saida-nome] input") as HTMLInputElement | null
+        campo?.focus()
+        campo?.select()
+    }
 
     function criar(e: MouseEvent) {
         createOutput({ detail: { ctrl: e.ctrlKey } } as unknown as ClickEvent)
@@ -163,13 +178,22 @@
     }
 </script>
 
+<div class="topo">
 <div class="faixa" data-acao="saidas-faixa">
     <div class="luz-seg" role="tablist" data-acao="saidas-abas">
         {#each outputsList as tab (tab.id)}
             <SelectElem id="output" data={{ id: tab.id }} fill>
                 <button type="button" role="tab" aria-selected={$currentOutputSettings === tab.id} class="aba context #output_screen{tab.stageOutput ? "_stage" : ""}" class:a={$currentOutputSettings === tab.id} data-saida={tab.id} tabindex="-1" on:click={() => currentOutputSettings.set(tab.id || "")}>
-                    {#if estado(tab, $outputDisplay) !== ""}<i class="pt {estado(tab, $outputDisplay)}"></i>{/if}
+                    {#if estado($outputs[tab.id || ""] || tab, $outputDisplay) !== ""}<i class="pt {estado($outputs[tab.id || ""] || tab, $outputDisplay)}" data-estado={estado($outputs[tab.id || ""] || tab, $outputDisplay)}></i>{/if}
+                    <span class="tipos" data-acao="saida-tipos">
+                        {#if tab.stageOutput}<Icon id="stage" size={0.7} white title={translateText("menu.stage")} />{:else if !tab.invisible}<Icon id="hdmi" size={0.7} white title={translateText("settings.window")} />{/if}
+                        {#if tab.blackmagic}<Icon id="blackmagic" size={0.7} white title="Blackmagic Design" />{/if}
+                        {#if tab.ndi}<Icon id="ndi" size={0.7} white title="NDI" />{/if}
+                        {#if tab.webrtc}<Icon id="broadcast" size={0.7} white title="WebRTC" />{/if}
+                        {#if tab.rtmp}<Icon id="broadcast" size={0.7} white title="RTMP" />{/if}
+                    </span>
                     {tab.name || "Sem nome"}
+                    {#if tab.color}<span class="cor" data-acao="saida-cor" style="--color: {tab.color};"></span>{/if}
                     {#if novas.includes(tab.id)}<span class="luz-tag-novo">NOVO</span>{/if}
                 </button>
             </SelectElem>
@@ -185,8 +209,27 @@
         Identificar telas
     </button>
 </div>
+<p class="naHora" data-acao="saidas-na-hora">Criar e apagar saídas, ligar e desligar saída, janela ou NDI e mover de tela aplicam na hora: não entram em “alterações não salvas” nem no Descartar.</p>
+</div>
 
 <style>
+    .naHora {
+        margin: 6px 0 0;
+        font-size: 11px;
+        color: var(--luz-mudo);
+    }
+    .tipos {
+        display: inline-flex;
+        gap: 3px;
+        opacity: 0.75;
+    }
+    .cor {
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--color);
+        flex-shrink: 0;
+    }
     .faixa {
         display: flex;
         align-items: center;
