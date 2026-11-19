@@ -352,10 +352,23 @@ function readBiblesFolder() {
     } catch (err) {
         console.error("Could not read bundled Bibles folder:", err)
     }
-    return names.map((name) => {
+    const lista: { path: string; name: string; embutida?: boolean; legado?: boolean }[] = names.map((name) => {
         const filePath = path.join(bibleFolder, name)
         return { path: filePath, name: name.replace(/\.fsb$/i, ""), embutida: embutidas.has(name.toLowerCase()) }
     })
+    // pasta legada (pre v0.5.6): loadScripture ainda abre dali
+    try {
+        const legada = path.join(app.getPath("documents"), "Bibles")
+        if (legada !== bibleFolder && doesPathExist(legada)) {
+            for (const name of readFolder(legada)) {
+                const nome = name.replace(/\.fsb$/i, "")
+                if (/\.fsb$/i.test(name) && !lista.some((x) => x.name.toLowerCase() === nome.toLowerCase())) lista.push({ path: path.join(legada, name), name: nome, legado: true })
+            }
+        }
+    } catch (err) {
+        console.error("Could not read legacy Bibles folder:", err)
+    }
+    return lista
 }
 
 // SHOW
