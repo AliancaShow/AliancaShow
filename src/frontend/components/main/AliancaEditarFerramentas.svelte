@@ -12,7 +12,7 @@
     $: temShow = !!$showsCache[$activeShow?.id || ""]
 </script>
 
-<div class="ferr" data-acao="editar-ferramentas">
+<div class="ferr luz-pele" data-acao="editar-ferramentas">
     {#if tipo === "media" || tipo === "camera"}
         <LazyLoad component={() => import("../edit/MediaTools.svelte")} show={true} />
     {:else if tipo === "audio"}

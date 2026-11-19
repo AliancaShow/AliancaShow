@@ -9,7 +9,7 @@
     export let center = false
 </script>
 
-<h3 class:center data-title={translateText(title)}>
+<h3 class="luz-sec" class:center data-title={translateText(title)}>
     <Icon id={icon} white />
     {translateText(label, $dictionary)}
 </h3>
