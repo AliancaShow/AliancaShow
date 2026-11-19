@@ -5,7 +5,7 @@ import { uid } from "uid"
 import { Main } from "../../types/IPC/Main"
 import { history } from "../components/helpers/history"
 import { requestMain } from "../IPC/main"
-import { activePage, loadedState, media, mediaFolders, mediaTags } from "../stores"
+import { activePage, loadedState, media, mediaFolders, mediaTags, special } from "../stores"
 import { newToast } from "./common"
 import { falhaAlta } from "./aliancaFalha"
 import { aceitarNaFoto } from "./aliancaConfigRascunho"
@@ -47,6 +47,29 @@ export function tirarDaBiblioteca(caminhos: string[]): number {
     registrar(alvo, novas)
     newToast(`${alvo.length} ${alvo.length === 1 ? "mídia tirada" : "mídias tiradas"} da biblioteca (o arquivo continua no computador) · Ctrl+Z desfaz`)
     return alvo.length
+}
+
+/**
+ * "Apagar do computador" (aprovado pelo André 19/nov): cada arquivo vai para a Lixeira do Windows depois da caixa de confirmacao NATIVA
+ * (quem decide e o processo principal). O que foi apagado sai da biblioteca; falha fala alto.
+ */
+export async function apagarDoComputador(caminhos: string[]): Promise<number> {
+    const apagados: string[] = []
+    for (const c of Array.from(new Set(caminhos.filter(Boolean)))) {
+        const r = await requestMain(Main.ALIANCA_LIXEIRA, { caminho: c })
+        if (!r) {
+            falhaAlta("biblioteca-midia", `a Lixeira nao respondeu: ${c}`)
+            continue
+        }
+        if (r.ok) apagados.push(c)
+        else if (r.mensagem) falhaAlta("biblioteca-midia", r.mensagem)
+    }
+    if (apagados.length) {
+        esquecerExistencia()
+        tirarDaBiblioteca(apagados)
+        newToast(`${apagados.length} ${apagados.length === 1 ? "arquivo foi" : "arquivos foram"} para a Lixeira do Windows`)
+    }
+    return apagados.length
 }
 
 // ---------------------------------------------------------------- leitura do disco (falha ALTA: nada de categoria vazia calada)
@@ -138,6 +161,12 @@ function dadosProntos(): boolean {
  */
 export async function migrarPastasDoDisco(): Promise<void> {
     if (migrando || !dadosProntos() || get(activePage) === "settings") return
+    // cabine-5 (André, 19/nov): arquivo sumido nao toca OUTRO de mesmo nome achado nas pastas do disco (as pastas continuam no store, escondidas).
+    // Uma vez so: se alguem religar em Informacoes da midia, fica religado.
+    if (!get(special).aliancaAutoLocalizarDecidido) {
+        special.update((a) => ({ ...a, autoLocateMedia: false, aliancaAutoLocalizarDecidido: true }))
+        aceitarNaFoto("special")
+    }
     const pendentes = Object.entries(get(mediaFolders))
         .map(([id, f]: any) => ({ id, ...f }))
         .filter((p) => p.path && !pastaJaMigrada(get(mediaTags), p.id))

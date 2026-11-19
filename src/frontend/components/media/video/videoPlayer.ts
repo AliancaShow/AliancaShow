@@ -8,6 +8,7 @@ import { AudioInputCapture } from "../../../audio/routing/audioInputCapture"
 import { requestMain } from "../../../IPC/main"
 import { media, outputs, playerVideos, playingVideos, playingVideoState, special, transitionData } from "../../../stores"
 import { iniciarAutomacao } from "../../../utils/aliancaSoRetorno"
+import { newToast } from "../../../utils/common"
 import { playFolder } from "../../../utils/shortcuts"
 import { customActionActivation } from "../../actions/actions"
 import { getVimeoData, getYouTubeData } from "../../drawer/player/playerHelper"
@@ -98,6 +99,8 @@ export class VideoPlayer {
                 const located = await locateMediaFile(audioPath)
                 if (!located) {
                     this.isStarting.delete(ref)
+                    // cabine-5 (aprovado pelo André 19/nov): arquivo sumido nao toca e fala alto
+                    newToast("Arquivo não encontrado (offline): " + audioPath)
                     return false
                 }
 

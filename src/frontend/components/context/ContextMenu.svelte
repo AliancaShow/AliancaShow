@@ -161,7 +161,7 @@
         // AliancaShow F7: pastas de midia so no Preparar; "ao terminar" e "camada" so para video
         if (id === "alianca_mover") return $tela !== "mostrar"
         // cabine-5: tirar da biblioteca so no Preparar (no culto o botao direito nao mexe na biblioteca)
-        if (id === "alianca_tirar_bib") return $tela !== "mostrar"
+        if (id === "alianca_tirar_bib" || id === "alianca_apagar_pc") return $tela !== "mostrar"
         // Editar: "Mandar so para" so com duas telas ou mais (com uma, seria o mesmo que "Mandar pro ar")
         if (id === "alianca_so") return mostrarMandarSo(saidasDoMenu())
         if (id === "alianca_fim" || id === "alianca_camada") return $tela !== "mostrar" && getMediaType(getExtension($selected.data?.[0]?.path || $selected.data?.[0]?.id || "")) === "video"
