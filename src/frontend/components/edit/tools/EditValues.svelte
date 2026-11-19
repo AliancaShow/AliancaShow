@@ -460,7 +460,7 @@
                                                 {#if input.values?.subtext.includes("<a href=")}<Icon id="launch" white />{/if}
                                             </p>
                                         {:else if input.type === "number"}
-                                            <AliancaCampoNumero {...values} {value} unit={input.multiplier ? "" : input.extension || ""} defaultValue={values.defaultValue ?? padraoDe(input)} showSlider={soNumeros || visiveis.length === 1 ? values.showSlider : false} enableKeyframe={$timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show"} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
+                                            <AliancaCampoNumero {...values} {value} unit={input.multiplier ? "" : input.extension || ""} defaultValue={section.noReset ? null : (values.defaultValue ?? padraoDe(input))} showSlider={soNumeros || visiveis.length === 1 ? values.showSlider : false} enableKeyframe={$timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show"} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
                                         {:else}
                                             <Input input={{ type: input.type, ...values, value }} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
                                         {/if}

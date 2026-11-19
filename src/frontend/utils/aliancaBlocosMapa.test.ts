@@ -22,7 +22,7 @@ describe("mapaDeBlocos (prancha C4)", () => {
         expect(i.rotulos["vista:position"]).toBe("Posição")
         expect(i.rotulos["mais:default"]).toBe("Fundo da caixa")
         const md = mapaDeBlocos("box", "media", itemBoxes.media!.sections)!
-        expect(md.rotulos["vista:default"]).toBe("Mídia")
+        expect(md.rotulos["vista:default"]).toBe("Arquivo")
         expect(md.rotulos["avancado:default"]).toBe("Mistura e espelho")
     })
     it("tipo sem mapa fino continua sem mapa", () => {

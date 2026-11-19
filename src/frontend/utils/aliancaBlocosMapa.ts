@@ -22,7 +22,7 @@ export function mapaDeBlocos(origem: "box" | "item", tipo: string, secoes: Secoe
     const m = mapaDeGrupos(origem, tipo, secoes)
     if (!m) return null
     if (origem === "item") return { ...m, rotulos: { ...m.rotulos, "vista:position": "Posição" } }
-    if (tipo === "media") return { ...m, rotulos: { ...m.rotulos, "vista:default": "Mídia" } }
+    if (tipo === "media") return { ...m, rotulos: { ...m.rotulos, "vista:default": "Arquivo" } }
     if (tipo !== "text") return m
     // o texto: Texto e Linhas sobem de Mais para a vista (o operador mexe toda hora); o resto raro continua recolhido
     const mais = { ...m.mais }

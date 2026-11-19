@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { fracaoNaRegua, linhaSoDeNumeros, lerNumero, mostrarNumero, mudouDoPadrao, prender, temRegua } from "./aliancaCampoNumeroLogica"
+import { separarUnidade, fracaoNaRegua, linhaSoDeNumeros, lerNumero, mostrarNumero, mudouDoPadrao, prender, temRegua } from "./aliancaCampoNumeroLogica"
 
 describe("lerNumero", () => {
     it.each([
@@ -53,5 +53,17 @@ describe("regua", () => {
         expect(mudouDoPadrao(5, 0)).toBe(true)
         expect(mudouDoPadrao(0, 0)).toBe(false)
         expect(mudouDoPadrao(5, null)).toBe(false)
+    })
+})
+
+describe("separarUnidade", () => {
+    it("a unidade do rotulo vale mais que a extensao", () => {
+        expect(separarUnidade("X (%)", "px")).toEqual({ rotulo: "X", unidade: "%" })
+        expect(separarUnidade("Velocidade (s)", "")).toEqual({ rotulo: "Velocidade", unidade: "s" })
+    })
+    it("sem parenteses usa a extensao; rotulo vazio nao quebra", () => {
+        expect(separarUnidade("Tamanho", "px")).toEqual({ rotulo: "Tamanho", unidade: "px" })
+        expect(separarUnidade("", "")).toEqual({ rotulo: "", unidade: "" })
+        expect(separarUnidade("(%)", "px")).toEqual({ rotulo: "(%)", unidade: "px" })
     })
 })

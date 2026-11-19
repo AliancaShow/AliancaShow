@@ -52,3 +52,10 @@ export function mudouDoPadrao(valor: number, padrao: number | null | undefined):
     if (padrao === null || padrao === undefined || Number.isNaN(Number(padrao))) return false
     return Number(valor) !== Number(padrao)
 }
+
+/** "X (%)" -> { rotulo: "X", unidade: "%" }: a unidade que o rotulo ja traz vale mais que a extensao gravada (a posicao grava "px" e fala em %). */
+export function separarUnidade(rotulo: string, extensao = ""): { rotulo: string; unidade: string } {
+    const m = String(rotulo ?? "").match(/^(.*?)\s*\(([^()]{1,4})\)\s*$/)
+    if (m && m[1]) return { rotulo: m[1], unidade: m[2] }
+    return { rotulo: String(rotulo ?? ""), unidade: extensao }
+}
