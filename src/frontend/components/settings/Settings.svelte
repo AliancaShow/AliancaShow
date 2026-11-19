@@ -1,6 +1,7 @@
 <script lang="ts">
     import { resetAudioRouting } from "../../audio/routing/audioRoutingInit"
     import { dictionary, settingsTab } from "../../stores"
+    import { configSecao, ROTULOS_CONFIG } from "../../utils/aliancaConfigSecao"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
@@ -44,8 +45,8 @@
 </script>
 
 <main>
-    <div class="title" style={scrolled ? "box-shadow: 2px 2px 4px 5px rgb(0 0 0 / 0.1);" : ""}>
-        <h2>{translateText(`settings.${tabId}`, $dictionary)}</h2>
+    <div class="title" style={scrolled ? "box-shadow: none;" : ""}>
+        <h2>{(tabId === "connection" && $configSecao ? ROTULOS_CONFIG[$configSecao] : ROTULOS_CONFIG[tabId]) || translateText(`settings.${tabId}`, $dictionary)}</h2>
 
         <div style="display: flex;align-items: center;gap: 8px;">
             {#if hints[tabId]}
@@ -114,45 +115,55 @@
 </main>
 
 <style>
+    /* C4: pagina do painel de Configuracoes (titulo 22 px, abas da pagina logo abaixo do titulo, conteudo com 24/32 de respiro) */
     main {
         display: flex;
         flex-direction: column;
-        height: 100%;
-
+        flex: 1;
+        min-height: 0;
         position: relative;
 
-        --padding: 150px;
+        --padding: 32px;
     }
 
     .title {
+        order: 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        flex-shrink: 0;
 
-        padding: 15px var(--padding);
-        border-bottom: 1px solid var(--primary-lighter);
+        padding: 24px var(--padding) 0;
 
         transition: 0.2s box-shadow ease;
     }
 
     h2 {
-        font-size: 1.6em;
-        color: var(--text);
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        font-variation-settings: "wdth" 112;
+        letter-spacing: -0.01em;
+        color: var(--luz-texto);
 
         overflow: visible;
         margin-right: 20px;
     }
 
     .scroll {
+        order: 2;
         position: relative;
 
         overflow-y: auto;
-        /* overflow-x: hidden; */
-        height: 100%;
-        padding: 20px var(--padding);
+        flex: 1;
+        min-height: 0;
+        padding: 8px var(--padding) 24px;
     }
 
     .tabs {
+        order: 1;
         z-index: 1;
+        flex-shrink: 0;
+        padding: 16px var(--padding) 0;
     }
 </style>

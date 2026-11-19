@@ -12,8 +12,10 @@
     import StageLayout from "../stage/StageLayout.svelte"
     import StageLayouts from "../stage/StageLayouts.svelte"
     import StageTools from "../stage/StageTools.svelte"
-    import { onDestroy } from "svelte"
+    import { onDestroy, onMount } from "svelte"
     import { activeStage, statusIndicator } from "../../stores"
+    import { alteracoesNaoSalvas, descartarAlteracoes, iniciarRascunho, pararRascunho, tirarFoto } from "../../utils/aliancaConfigRascunho"
+    import { textoDeAlteracoes } from "../../utils/aliancaConfigRascunhoLogica"
     import { trocarTela } from "../../utils/aliancaTela"
     import { save } from "../../utils/save"
 
@@ -56,34 +58,59 @@
         if (tEspera) clearTimeout(tEspera)
         dizer("Salvo ✓")
     }
+    // so Configuracoes: "N alteracoes nao salvas" e Descartar. A foto e tirada ao abrir e a cada Salvar confirmado (Salvar daqui ou Ctrl+S)
+    $: if (pagina === "settings" && $statusIndicator === "saved") tirarFoto()
+    onMount(() => {
+        if (pagina === "settings") iniciarRascunho()
+    })
+    function descartar() {
+        const n = descartarAlteracoes()
+        dizer(n ? "Alterações descartadas" : "Nada a descartar")
+    }
     onDestroy(() => {
+        pararRascunho()
         if (tEspera) clearTimeout(tEspera)
         if (tAviso) clearTimeout(tAviso)
     })
 </script>
 
-<div class="corpoPagina" data-pagina={pagina}>
+<div class="corpoPagina luz-pele" data-pagina={pagina}>
     <header class="cab" data-acao="pagina-cabecalho">
         <h1>{TITULOS[pagina]}</h1>
         <div class="acoes">
             <span class="aviso" data-acao="pagina-aviso" role="status" aria-live="polite">{aviso}</span>
+            {#if pagina === "settings"}
+                {#if !aviso && $alteracoesNaoSalvas}<span class="pendentes" data-acao="pagina-pendentes">{textoDeAlteracoes($alteracoesNaoSalvas)}</span>{/if}
+                <button class="descartar" data-acao="pagina-descartar" data-title="Desfaz o que mudou desde a última vez que salvou" tabindex="-1" disabled={!$alteracoesNaoSalvas} on:mousedown|preventDefault on:click={descartar}>Descartar</button>
+            {/if}
             <button class="salvar" data-acao="pagina-salvar" data-title="Salvar (Ctrl+S)" tabindex="-1" on:mousedown|preventDefault on:click={salvar}>Salvar</button>
             <button class="fechar" data-acao="pagina-fechar" data-title={origem === "edit" ? "Voltar a Editar" : "Voltar a Mostrar"} tabindex="-1" on:mousedown|preventDefault on:click={fechar}>Fechar</button>
         </div>
     </header>
-    <div class="cols">
-        <div class="col" style="width: {esq}px">
-            {#if pagina === "settings"}<SettingsTabs />{:else if pagina === "stage"}<StageLayouts />{:else}<DrawTabs />{/if}
-        </div>
-        <div class="meio">
-            {#if pagina === "settings"}<Settings />{:else if pagina === "stage"}<StageLayout />{:else}<DrawSlide />{/if}
-        </div>
-        {#if pagina !== "stage" || $activeStage.id}
-            <div class="col" style="width: {dir}px">
-                {#if pagina === "settings"}<SettingsTools />{:else if pagina === "stage"}<StageTools />{:else}<DrawSettings />{/if}
+    {#if pagina === "settings"}
+        <!-- C4: um painel so (lista a esquerda, pagina a direita); as ferramentas de cada pagina descem para o pe da propria pagina -->
+        <div class="painelCfg" data-acao="config-painel">
+            <nav class="listaCfg" data-acao="config-lista"><SettingsTabs /></nav>
+            <div class="paginaCfg">
+                <Settings />
+                <div class="ferrCfg"><SettingsTools /></div>
             </div>
-        {/if}
-    </div>
+        </div>
+    {:else}
+        <div class="cols">
+            <div class="col" style="width: {esq}px">
+                {#if pagina === "stage"}<StageLayouts />{:else}<DrawTabs />{/if}
+            </div>
+            <div class="meio">
+                {#if pagina === "stage"}<StageLayout />{:else}<DrawSlide />{/if}
+            </div>
+            {#if pagina !== "stage" || $activeStage.id}
+                <div class="col" style="width: {dir}px">
+                    {#if pagina === "stage"}<StageTools />{:else}<DrawSettings />{/if}
+                </div>
+            {/if}
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -110,8 +137,10 @@
     }
     .cab h1 {
         margin: 0;
-        font-size: 16px;
+        font-size: 17px;
         font-weight: 700;
+        font-variation-settings: "wdth" 118;
+        letter-spacing: -0.01em;
         color: var(--luz-texto);
     }
     .acoes {
@@ -125,29 +154,77 @@
         margin-right: 4px;
     }
     .salvar,
-    .fechar {
-        height: 32px;
-        padding: 0 18px;
+    .fechar,
+    .descartar {
+        height: var(--luz-botao-h);
+        padding: 0 14px;
         border: 1px solid var(--luz-borda);
-        border-radius: 8px;
+        border-radius: var(--luz-raio-acao);
         background: var(--luz-campo);
         font: inherit;
         font-size: 13px;
+        font-weight: 600;
         color: var(--luz-texto);
         cursor: pointer;
     }
-    .salvar:hover {
+    .fechar:hover {
         background: var(--luz-hover);
         border-color: var(--luz-borda-forte);
     }
-    .fechar {
-        font-weight: 600;
+    /* um so primario por tela: Salvar */
+    .salvar {
         border-color: var(--luz-texto);
         background: var(--luz-texto);
         color: var(--luz-tinta);
     }
-    .fechar:hover {
-        background: rgba(248, 248, 240, 0.85);
+    .salvar:hover {
+        background: var(--luz-branco-suave);
+    }
+    .descartar {
+        border-color: transparent;
+        background: transparent;
+        color: var(--luz-mudo);
+    }
+    .descartar:hover:not(:disabled) {
+        background: var(--luz-hover);
+        color: var(--luz-texto);
+    }
+    .descartar:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+    .pendentes {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--luz-laranja);
+        margin-right: 4px;
+    }
+    /* Configuracoes: o painel unico do desenho C4 (lista de 236 px + pagina) */
+    .painelCfg {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        border-radius: var(--luz-raio);
+        background: var(--luz-painel-opaco);
+        box-shadow: inset 0 0 0 1px var(--luz-linha);
+        overflow: hidden;
+    }
+    .listaCfg {
+        width: 236px;
+        flex-shrink: 0;
+        min-height: 0;
+        overflow: auto;
+        border-right: 1px solid var(--luz-linha);
+    }
+    .ferrCfg {
+        flex-shrink: 0;
+    }
+    .paginaCfg {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
     }
     .cols {
         flex: 1;
