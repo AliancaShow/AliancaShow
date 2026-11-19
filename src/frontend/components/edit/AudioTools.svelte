@@ -70,7 +70,7 @@
 
 <div class="main border editTools">
     <div class="content">
-        <EditValues sections={currentAudioSections} item={currentMedia} on:change={valueChanged} />
+        <EditValues sections={currentAudioSections} item={currentMedia} escopo="audio" on:change={valueChanged} />
     </div>
 
     <FloatingInputs>

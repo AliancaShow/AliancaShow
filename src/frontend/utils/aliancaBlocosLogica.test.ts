@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { abertoPorPadrao, blocoAberto, chaveDoBloco, comBloco, lerBlocos, serializarBlocos } from "./aliancaBlocosLogica"
+import { abertoPorPadrao, blocoAberto, blocoNaTela, chaveDoBloco, comBloco, lerBlocos, serializarBlocos } from "./aliancaBlocosLogica"
 
 describe("blocos das propriedades do Editar", () => {
     it("a vista nasce aberta; Mais e Avancado (e o que tem dentro) nascem recolhidos", () => {
@@ -36,5 +36,13 @@ describe("blocos das propriedades do Editar", () => {
     it("a chave separa o tipo: a Sombra do texto nao e a Sombra da caixa", () => {
         expect(chaveDoBloco("text", "mais:shadow")).not.toBe(chaveDoBloco("item", "avancado:shadow"))
         expect(chaveDoBloco("", "a")).toBe("x|a")
+    })
+
+    it("bloco que liga recurso: do armazenamento so abre com o recurso ligado; aberto AGORA nao fecha quando o valor volta ao padrao (arrasto da regua)", () => {
+        expect(blocoNaTela({ aberto: true, ligaRecurso: true, mudou: false, abertoAgora: false })).toBe(false)
+        expect(blocoNaTela({ aberto: true, ligaRecurso: true, mudou: true, abertoAgora: false })).toBe(true)
+        expect(blocoNaTela({ aberto: true, ligaRecurso: true, mudou: false, abertoAgora: true })).toBe(true)
+        expect(blocoNaTela({ aberto: false, ligaRecurso: true, mudou: true, abertoAgora: true })).toBe(false)
+        expect(blocoNaTela({ aberto: true, ligaRecurso: false, mudou: false, abertoAgora: false })).toBe(true)
     })
 })

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy } from "svelte"
     import { actions, activeEdit, activePage, activeStage, outputs, timers } from "../../../stores"
-    import { abertoPorPadrao, blocoAberto, chaveDoBloco } from "../../../utils/aliancaBlocosLogica"
+    import { abertoPorPadrao, blocoAberto, blocoNaTela, chaveDoBloco } from "../../../utils/aliancaBlocosLogica"
     import { blocos, definirBloco } from "../../../utils/aliancaBlocosEstado"
     import { linhaSoDeNumeros } from "../../../utils/aliancaCampoNumeroLogica"
     import { idDoInput, linhasFiltradas, secoesDoGrupo, type Grupo, type MapaGrupos } from "../../../utils/aliancaEditorLogica"
@@ -260,18 +260,31 @@
             })
         })
 
-        if (sections[id].expandAutoValue) setTimeout(() => definirBloco(chaveDoBloco(escopo || type, entrada.chave), false))
+        if (sections[id].expandAutoValue) {
+            abertosAgora.delete(entrada.chave)
+            abertosAgora = abertosAgora
+            setTimeout(() => definirBloco(chaveDoBloco(escopo || type, entrada.chave), false))
+        }
     }
 
     // cabine 4: cada bloco abre e recolhe e a escolha do operador fica guardada (aliancaBlocosEstado). A vista nasce aberta, o raro recolhido.
     // Bloco que LIGA um recurso ao abrir (contorno, sombra, lista, acordes, rolagem) so conta como aberto enquanto o recurso esta ligado neste item:
     // senao a escolha guardada de um item abriria o campo cru em outro, sem o valor-base que o abrir poe.
-    function blocoEstaAberto(entrada: Entrada, mudou: boolean, _estado: any = null): boolean {
+    // O bloco que o operador abriu AGORA nao fecha sozinho quando o valor volta ao padrao (arrasto da regua ate 0): vale ate ele fechar o bloco
+    // ou trocar de selecao. So o estado vindo do armazenamento passa pela regra "so aberto com o recurso ligado".
+    let abertosAgora = new Set<string>()
+    let selecaoAnterior = ""
+    $: selecao = JSON.stringify([$activeEdit?.type, $activeEdit?.id, $activeEdit?.slide, $activeEdit?.items, $activeStage?.id, $activeStage?.items])
+    $: if (selecao !== selecaoAnterior) {
+        selecaoAnterior = selecao
+        abertosAgora = new Set()
+    }
+    function blocoEstaAberto(entrada: Entrada, mudou: boolean, _estado: any = null, _agora: any = null): boolean {
         const semCabecalho = entrada.id === "default" && !entrada.rotulo
         if (semCabecalho || entrada.fixa || entrada.section.alwaysOpen) return true
         const padrao = grupos ? abertoPorPadrao(entrada.grupo || null) : mudou
         const aberto = blocoAberto($blocos, chaveDoBloco(escopo || type, entrada.chave), padrao)
-        return aberto && !(entrada.section.expandAutoValue && !mudou)
+        return blocoNaTela({ aberto, ligaRecurso: !!entrada.section.expandAutoValue, mudou, abertoAgora: abertosAgora.has(entrada.chave) })
     }
     // o valor-base que liga o recurso do bloco (contorno com 10 px, sombra transparente, lista ligada...)
     function poeValoresBase(id: string) {
@@ -290,6 +303,9 @@
     // abrir um bloco que LIGA um recurso poe o valor-base; recolher so esconde
     function alternarBloco(entrada: Entrada, aberto: boolean, mudou: boolean) {
         if (!aberto && !mudou) poeValoresBase(entrada.id)
+        if (aberto) abertosAgora.delete(entrada.chave)
+        else abertosAgora.add(entrada.chave)
+        abertosAgora = abertosAgora
         definirBloco(chaveDoBloco(escopo || type, entrada.chave), !aberto)
     }
 
@@ -327,7 +343,10 @@
 
     // C4: resumo do que ha dentro da secao RECOLHIDA (valores de agora) e do grupo fechado (quais secoes mexeram)
     function resumoDe(entrada: Entrada, _updater: any = null): string {
-        const valores = entrada.linhas.flat().filter((i) => !i.hidden && i.type !== "tip" && i.type !== "toggle" && i.type !== "radio").map((i) => getValue(i))
+        const valores = entrada.linhas
+            .flat()
+            .filter((i) => !i.hidden && i.type !== "tip" && i.type !== "toggle" && i.type !== "radio")
+            .map((i) => getValue(i))
         const mudou = entrada.section.noReset || entrada.semReset ? false : !!hasChangedValues(entrada.id, null, entrada.ids, false)
         return resumoDaSecao({ id: entrada.id, mudou, valores })
     }
@@ -400,10 +419,10 @@
             {@const section = entrada.section}
             {@const hasChanged = section.noReset || entrada.semReset ? false : !!hasChangedValues(id, { styles, item }, entrada.ids)}
             {@const comCabecalho = id !== "default" || !!entrada.rotulo}
-            {@const expanded = blocoEstaAberto(entrada, hasChanged, $blocos)}
+            {@const expanded = blocoEstaAberto(entrada, hasChanged, $blocos, abertosAgora)}
             {@const travado = !!(section.alwaysOpen || entrada.fixa)}
 
-            <div class="section luz-bloco" data-acao="bloco" data-bloco={entrada.chave}>
+            <div class="section luz-bloco" class:filho={!!entrada.grupo && entrada.grupo !== "vista"} data-acao="bloco" data-bloco={entrada.chave}>
                 {#if comCabecalho}
                     <div class="title">
                         <div class="luz-sec{travado ? '' : ' dob'}" role="button" tabindex="-1" data-acao="bloco-cabecalho" aria-expanded={expanded} on:click={() => !travado && alternarBloco(entrada, expanded, hasChanged)} on:keydown={(e) => !travado && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), alternarBloco(entrada, expanded, hasChanged))}>
@@ -428,45 +447,57 @@
                         {#each entrada.linhas as inputRow}
                             {@const visiveis = inputRow.filter((i) => !i.hidden)}
                             {@const soNumeros = linhaSoDeNumeros(visiveis.map((i) => i.type))}
-                            <div class="luz-lin" class:so-numeros={soNumeros}>
-                                {#each inputRow as input}
-                                    {#if !input.hidden}
-                                        {@const value = getValue(input, { styles, item, customValues })}
-                                        {@const values = getValues(input)}
-                                        {@const hasTimelineAction = $timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show" && SlideTimeline.hasActionAtTime(input.key || "", type, $activeEdit?.items?.length ? $activeEdit.items : [0], timelineUpdater)}
+                            {#if visiveis.length}
+                                <div class="luz-lin" class:so-numeros={soNumeros}>
+                                    {#each inputRow as input}
+                                        {#if !input.hidden}
+                                            {@const value = getValue(input, { styles, item, customValues })}
+                                            {@const values = getValues(input)}
+                                            {@const hasTimelineAction = $timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show" && SlideTimeline.hasActionAtTime(input.key || "", type, $activeEdit?.items?.length ? $activeEdit.items : [0], timelineUpdater)}
 
-                                        {#if input.type === "fontDropdown"}
-                                            <MaterialFontDropdown label={values.label} {value} style={values.style} fontStyleValue={input.styleValue} on:change={(e) => changed(e, input)} on:fontStyle={(e) => changed(e, { ...input, key: "font" })} enableFontStyles />
-                                        {:else if input.type === "toggle"}
-                                            <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => toggle(input)}>
-                                                <Icon id={values.icon} size={1.2} white />
-                                                <div class="highlight" class:active={value.includes(input.value)}></div>
-                                            </MaterialButton>
-                                        {:else if input.type === "radio"}
-                                            <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => radio(input)}>
-                                                <Icon id={values.icon} size={1.2} white />
-                                                <div class="highlight radio" class:active={value === input.value}></div>
-                                            </MaterialButton>
-                                        {:else if input.type === "textarea"}
-                                            <MaterialTextarea label={values.label} {value} on:change={(e) => changed(e, input, id)} />
-                                        {:else if input.type === "media"}
-                                            <MaterialFilePicker label={(value ? values.label : "") || "edit.choose_media"} {value} filter={{ name: "Media files", extensions: mediaExtensions }} on:change={(e) => changed(e, input, id)} autoTrigger={$activeEdit.type !== "template"} allowEmpty />
-                                        {:else if input.type === "popup"}
-                                            <MaterialPopupButton {...values} {value} on:change={(e) => changed(e, input, id)} allowEmpty={values.allowEmpty !== false} />
-                                        {:else if input.type === "tip"}
-                                            <p class="tip">
-                                                {#if values.label}{translateText(values.label)}{/if}
-                                                {@html input.values?.subtext || ""}
-                                                {#if input.values?.subtext.includes("<a href=")}<Icon id="launch" white />{/if}
-                                            </p>
-                                        {:else if input.type === "number"}
-                                            <AliancaCampoNumero {...values} {value} unit={input.multiplier ? "" : input.extension || ""} defaultValue={section.noReset ? null : (values.defaultValue ?? padraoDe(input))} showSlider={soNumeros || visiveis.length === 1 ? values.showSlider : false} enableKeyframe={$timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show"} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
-                                        {:else}
-                                            <Input input={{ type: input.type, ...values, value }} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
+                                            {#if input.type === "fontDropdown"}
+                                                <MaterialFontDropdown label={values.label} {value} style={values.style} fontStyleValue={input.styleValue} on:change={(e) => changed(e, input)} on:fontStyle={(e) => changed(e, { ...input, key: "font" })} enableFontStyles />
+                                            {:else if input.type === "toggle"}
+                                                <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => toggle(input)}>
+                                                    <Icon id={values.icon} size={1.2} white />
+                                                    <div class="highlight" class:active={value.includes(input.value)}></div>
+                                                </MaterialButton>
+                                            {:else if input.type === "radio"}
+                                                <MaterialButton style="min-width: 50px;flex: 1;" title={values.label} on:click={() => radio(input)}>
+                                                    <Icon id={values.icon} size={1.2} white />
+                                                    <div class="highlight radio" class:active={value === input.value}></div>
+                                                </MaterialButton>
+                                            {:else if input.type === "textarea"}
+                                                <MaterialTextarea label={values.label} {value} on:change={(e) => changed(e, input, id)} />
+                                            {:else if input.type === "media"}
+                                                <MaterialFilePicker label={(value ? values.label : "") || "edit.choose_media"} {value} filter={{ name: "Media files", extensions: mediaExtensions }} on:change={(e) => changed(e, input, id)} autoTrigger={$activeEdit.type !== "template"} allowEmpty />
+                                            {:else if input.type === "popup"}
+                                                <MaterialPopupButton {...values} {value} on:change={(e) => changed(e, input, id)} allowEmpty={values.allowEmpty !== false} />
+                                            {:else if input.type === "tip"}
+                                                <p class="tip">
+                                                    {#if values.label}{translateText(values.label)}{/if}
+                                                    {@html input.values?.subtext || ""}
+                                                    {#if input.values?.subtext.includes("<a href=")}<Icon id="launch" white />{/if}
+                                                </p>
+                                            {:else if input.type === "number"}
+                                                <AliancaCampoNumero
+                                                    {...values}
+                                                    {value}
+                                                    unit={input.multiplier ? "" : input.extension || ""}
+                                                    defaultValue={section.noReset ? null : (values.defaultValue ?? padraoDe(input))}
+                                                    showSlider={soNumeros || visiveis.length === 1 ? values.showSlider : false}
+                                                    enableKeyframe={$timelineAtiva && $activePage === "edit" && ($activeEdit.type || "show") === "show"}
+                                                    {hasTimelineAction}
+                                                    on:change={(e) => changed(e, input, id)}
+                                                    on:keyframe={(e) => changed(e, input, id, true)}
+                                                />
+                                            {:else}
+                                                <Input input={{ type: input.type, ...values, value }} {hasTimelineAction} on:change={(e) => changed(e, input, id)} on:keyframe={(e) => changed(e, input, id, true)} />
+                                            {/if}
                                         {/if}
-                                    {/if}
-                                {/each}
-                            </div>
+                                    {/each}
+                                </div>
+                            {/if}
                         {/each}
                     </div>
                 {/if}

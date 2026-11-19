@@ -115,9 +115,9 @@
 
     <div class="content">
         {#if active === "media"}
-            <EditValues sections={mediaSections} item={currentMedia} on:change={valueChanged2} />
+            <EditValues sections={mediaSections} item={currentMedia} escopo="midia" on:change={valueChanged2} />
         {:else if active === "filters"}
-            <EditValues sections={clone(filterSections)} item={currentMedia} on:change={valueChanged2} />
+            <EditValues sections={clone(filterSections)} item={currentMedia} escopo="midia-filtros" on:change={valueChanged2} />
         {/if}
     </div>
 

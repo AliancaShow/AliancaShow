@@ -116,7 +116,7 @@
 
                                 <svelte:fragment slot="menu">
                                     {#if editContent}
-                                        <EditValues sections={editContent} {item} on:change={(e) => valueChanged(e.detail, i)} />
+                                        <EditValues sections={editContent} {item} escopo="efeito-{item.type === 'shape' ? item.shape : item.type}" on:change={(e) => valueChanged(e.detail, i)} />
                                     {/if}
                                 </svelte:fragment>
                             </InputRow>

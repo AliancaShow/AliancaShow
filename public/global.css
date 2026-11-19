@@ -957,4 +957,53 @@ body[data-tema="luz"] .luz-pele .luz-num .reg::-webkit-slider-thumb {
     background: var(--luz-texto);
     border: 0;
 }
+/* revisao do PR #42 (achado 11): cor, caixa de marcar e seletor com a MESMA pele do campo (44 px, rotulo em cima, borda 1 px, raio de campo) */
+body[data-tema="luz"] .luz-pele .textfield:has(> .color-display) > label {
+    top: 5px;
+    font-size: 10.5px;
+    line-height: 13px;
+}
+body[data-tema="luz"] .luz-pele .textfield > .color-display {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 48px;
+    height: 22px;
+    margin: 0;
+    transform: translateY(-50%);
+    border: 1px solid var(--luz-borda-forte);
+    border-radius: var(--luz-raio-selo);
+    box-sizing: border-box;
+}
+body[data-tema="luz"] .luz-pele .textfield > .color-display[style*="background:transparent"] {
+    background-image: linear-gradient(135deg, transparent 46%, var(--luz-mudo) 46% 54%, transparent 54%) !important;
+}
+body[data-tema="luz"] .luz-pele[data-acao="editar-ferramentas"] .luz-lin > .checkboxfield {
+    flex: 1 1 100%;
+    height: var(--luz-campo-h);
+    padding: 0 10px;
+    border: 1px solid var(--luz-borda);
+    border-radius: var(--luz-raio-campo);
+    background: var(--luz-campo);
+    box-sizing: border-box;
+    align-items: center;
+}
+/* Mais e Avancado sao o nivel ACIMA dos blocos que guardam: titulo mais forte (creme, negrito) e os blocos de dentro recuados com um fio */
+body[data-tema="luz"] .luz-pele[data-acao="editar-ferramentas"] .luz-sec[data-acao="editar-grupo"] {
+    margin-top: 22px;
+    font-weight: 700;
+    color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele[data-acao="editar-ferramentas"] .luz-sec[data-acao="editar-grupo"]::after {
+    background: var(--luz-borda);
+}
+body[data-tema="luz"] .luz-pele[data-acao="editar-ferramentas"] .luz-bloco.filho {
+    margin-left: 6px;
+    padding-left: 12px;
+    border-left: 1px solid var(--luz-borda);
+}
+/* a regua mora a direita do campo: o rotulo de campo com regua nao passa por baixo dela */
+body[data-tema="luz"] .luz-pele .luz-num.regua > label {
+    max-width: calc(100% - 156px);
+}
 /* LUZ:FIM */

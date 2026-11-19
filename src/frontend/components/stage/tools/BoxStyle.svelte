@@ -260,4 +260,4 @@
     let timeout: NodeJS.Timeout | null = null
 </script>
 
-<EditValues sections={stageSections} {styles} {item} {customValues} on:change={updateStyle2} isStage />
+<EditValues sections={stageSections} {styles} {item} {customValues} escopo="palco-caixa" on:change={updateStyle2} isStage />

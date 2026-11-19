@@ -33,9 +33,9 @@ export function fracaoNaRegua(v: number, min: number, max: number): number {
     return Math.min(1, Math.max(0, (v - min) / (max - min)))
 }
 
-/** A regua so aparece com os dois extremos conhecidos (e nao absurdos): sem teto, so os botoes. `showSlider: false` desliga, `true` pede. */
+/** A regua so aparece quando o campo PEDE (`showSlider: true`), como no MaterialNumberInput de antes, e com os dois extremos conhecidos: ter `max` nao basta (Posicao tem -200..200 e nunca teve regua). */
 export function temRegua(showSlider: boolean | undefined | null, min: number | null, max: number | null, sliderMin?: number, sliderMax?: number): boolean {
-    if (showSlider === false) return false
+    if (showSlider !== true) return false
     const lo = sliderMin ?? min
     const hi = sliderMax ?? max
     if (lo === null || lo === undefined || hi === null || hi === undefined) return false

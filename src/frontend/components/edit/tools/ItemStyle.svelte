@@ -181,4 +181,4 @@
     }
 </script>
 
-<EditValues sections={currentItemSections} {item} styles={data} type="item" {grupos} on:change={updateStyle2} />
+<EditValues sections={currentItemSections} {item} styles={data} type="item" escopo={agrupar ? "item" : "item-plano"} {grupos} on:change={updateStyle2} />

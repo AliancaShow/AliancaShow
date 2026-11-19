@@ -105,4 +105,4 @@
     }
 </script>
 
-<EditValues sections={currentItemSections} {item} styles={data} on:change={updateStyle2} isStage />
+<EditValues sections={currentItemSections} {item} styles={data} escopo="palco-item" on:change={updateStyle2} isStage />

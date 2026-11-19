@@ -38,7 +38,9 @@ describe("regua", () => {
         expect(fracaoNaRegua(3, 5, 5)).toBe(0)
     })
     it("so tem regua com os dois extremos; showSlider false desliga", () => {
-        expect(temRegua(undefined, 0, 100)).toBe(true)
+        expect(temRegua(undefined, 0, 100)).toBe(false)
+        expect(temRegua(undefined, -200, 200)).toBe(false)
+        expect(temRegua(true, 0, 100)).toBe(true)
         expect(temRegua(undefined, 0, null)).toBe(false)
         expect(temRegua(false, 0, 100)).toBe(false)
         expect(temRegua(true, 0, null, 0, 50)).toBe(true)

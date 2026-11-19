@@ -760,5 +760,5 @@
 <svelte:window on:keyup={keyup} on:keydown={keydown} on:mouseup={getTextSelection} on:mousedown={mousedown} />
 
 {#if loaded}
-    <EditValues sections={boxSections} {item} {styles} {customValues} {grupos} {fixas} type="text" escopo={id} on:change={updateValue2} />
+    <EditValues sections={boxSections} {item} {styles} {customValues} {grupos} {fixas} type="text" escopo={agrupar ? id : id + "-plano"} on:change={updateValue2} />
 {/if}
