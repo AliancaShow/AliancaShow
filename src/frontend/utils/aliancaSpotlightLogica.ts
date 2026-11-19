@@ -329,3 +329,15 @@ export const SECOES: SecaoDoSpotlight[] = [
     { id: "midia", titulo: "Mídia" },
     { id: "audio", titulo: "Áudio" }
 ]
+
+// ---------------------------------------------------------------- outra Biblia: so para aquele versiculo (revisao do PR #40, achado 3)
+
+/** o que esta no ar vindo do componente Scripture (`playScripture` manda o slide "temp" com a aba/Biblia dele em `categoryId`): uma assinatura por saida */
+export function assinaturaDoTemp(saidas: { out?: { slide?: any } | null }[]): { c: string; t: unknown }[] {
+    return saidas.filter((o) => o?.out?.slide?.id === "temp").map((o) => ({ c: String(o.out!.slide.categoryId ?? ""), t: o.out!.slide.tempItems }))
+}
+
+/** a Biblia `alvo` acabou de tocar? (o que esta no ar mudou desde `antes` e alguma saida mostra o slide dela) */
+export function tocouNaBiblia(antes: { c: string; t: unknown }[], depois: { c: string; t: unknown }[], alvo: string): boolean {
+    return JSON.stringify(antes) !== JSON.stringify(depois) && depois.some((s) => s.c === alvo)
+}

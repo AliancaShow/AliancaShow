@@ -96,3 +96,54 @@ export const campoAposEnvio = (atual: string, enviado: string): string => (atual
 
 /** M6: o envio vai sair? (texto valido, caminho livre, nada em curso). So entao o Enter larga o foco do campo. */
 export const envioAceito = (texto: string, motivoSemCaminho: string, enviando: boolean): boolean => !enviando && !motivoSemCaminho && prepararMensagem(texto).ok
+
+/** A3: o rotulo da mensagem no ar ("no palco · 2:41"): o texto FICA no campo e este rotulo diz que ele esta no palco */
+export const rotuloNoPalco = (ateMs: number, agoraMs: number): string => `no palco · ${restanteTexto(ateMs, agoraMs)}`
+
+/** A3: o campo e a mensagem viva sao o MESMO texto? (o campo acende como "no palco" so entao) */
+export function campoEstaNoPalco(campo: string, viva: { texto: string } | null): boolean {
+    if (!viva) return false
+    const p = prepararMensagem(campo)
+    return p.ok && p.texto === viva.texto
+}
+
+/** A3: quanto o envio espera a mensagem viva aparecer no roteiro antes de desistir de acompanhar (o campo, nesse caso, nao e esvaziado) */
+export const PRAZO_APARECER_MS = 15_000
+
+export type Envio = { campo: string; texto: string; visto: boolean; venceEm: number }
+
+/**
+ * A3: o que acontece com o campo depois de um envio que deu certo. O texto FICA no campo enquanto a mensagem esta no palco; quando ela SAI
+ * (expirou ou alguem limpou), o campo se esvazia, se ainda for o texto enviado. "esperando" = o roteiro ainda nao mostrou a mensagem
+ * (leva ate ~2 s); "perdeu" = nunca apareceu dentro do prazo (o campo fica como esta, o operador decide).
+ */
+export function acompanharEnvio(e: Envio, viva: { texto: string } | null, agoraMs: number): "noPalco" | "saiu" | "esperando" | "perdeu" {
+    if (viva && viva.texto === e.texto) return "noPalco"
+    if (e.visto) return "saiu"
+    return agoraMs > e.venceEm ? "perdeu" : "esperando"
+}
+
+// ---------------------------------------------------------------- A2: a mensagem viva alimenta o item do layout de palco
+// O layout de palco do FreeShow nao tem "item de mensagem" proprio: o item que a igreja poe la (a etiqueta "Mensagem palco") e uma VARIAVEL de texto
+// (item "variavel" ou o valor dinamico {$...} num texto). A mensagem viva escreve em toda variavel de texto cujo NOME seja um destes (o mesmo
+// identificador que o FreeShow usa: minusculas, espaco vira "_"); `sirvo_mensagem` e a que o Show cria sozinho.
+export const NOMES_DA_MENSAGEM = ["sirvo_mensagem", "mensagem_palco"] as const
+
+const idDoNome = (nome: unknown): string => (typeof nome === "string" ? nome.toLowerCase().trim().replace(/ /g, "_") : "")
+
+/** as chaves da loja de variaveis que recebem a mensagem (so as de texto) */
+export function chavesDaMensagem(variaveis: { [chave: string]: { name?: string; type?: string } | undefined } | null | undefined): string[] {
+    return Object.entries(variaveis || {})
+        .filter(([chave, v]) => !!v && (v.type === undefined || v.type === "text") && ((NOMES_DA_MENSAGEM as readonly string[]).includes(idDoNome(v.name)) || (NOMES_DA_MENSAGEM as readonly string[]).includes(chave)))
+        .map(([chave]) => chave)
+}
+
+/** o texto da mensagem como variavel do FreeShow: sem HTML nem {...} (o mesmo tratamento que o Sirvo ja da a `sirvo_mensagem`), ate 200 */
+export const textoDaVariavel = (texto: string | null | undefined): string =>
+    (texto || "")
+        .replace(/</g, "‹")
+        .replace(/>/g, "›")
+        .replace(/\{/g, "(")
+        .replace(/\}/g, ")")
+        .replace(/[\u0000-\u001f\u007f]/g, " ")
+        .slice(0, 200)

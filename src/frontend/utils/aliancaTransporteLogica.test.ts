@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { arrastoVale, criarLimitador, prenderVolume, VOLUME_MAXIMO, outrasSaidasComVideo, saidasHabilitadas, saidasDasAbas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra } from "./aliancaTransporteLogica"
+import { arrastoVale, criarLimitador, prenderVolume, VOLUME_MAXIMO, outrasSaidasComVideo, saidasHabilitadas, saidasDasAbas, extrasDaFaixa, fracao, limiteBusca, prenderBusca, restante, tempoCurto, timersNaFaixa, valorNaBarra, videosDaPilha, etiquetaDeSaidaNecessaria, nomeDaEtiqueta, CARTAO_ALTURA, CARTOES_SEM_ROLAR, pilhaAlturaMaxima } from "./aliancaTransporteLogica"
 
 describe("tempoCurto", () => {
     it.each([
@@ -133,12 +133,12 @@ const ler = (rel: string) => readFileSync(join(__dirname, "..", rel), "utf8").re
 describe("faixa de transporte (guarda de texto)", () => {
     it("a faixa e a linha levam data-sem-trava", () => {
         expect(ler("components/main/AliancaTransporte.svelte")).toMatch(/class="faixa"[^>]*data-sem-trava/)
-        expect(ler("components/main/AliancaTransporteLinha.svelte")).toMatch(/class="linha"[^>]*data-sem-trava/)
+        expect(ler("components/main/AliancaTransporteLinha.svelte")).toMatch(/class="tk"[^>]*data-sem-trava/)
     })
     it("mora no No ar, entre a tela e as outras telas, e a caixa da faixa nao e posicionada sobre ela", () => {
         expect(ler("components/main/AliancaNoAr.svelte")).toMatch(/<AliancaCamadas \/>\s*<\/div>\s*<AliancaTransporte \/>\s*<AliancaOutrasTelas/)
         const css = ler("components/main/AliancaTransporte.svelte")
-        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    /* so a primeira linha"))
+        const caixa = css.slice(css.indexOf("    .faixa {"), css.indexOf("    .vazio {"))
         expect(caixa).not.toMatch(/position:\s*(absolute|fixed)/)
     })
     it("a faixa e a tela No ar escolhem a saida pela MESMA funcao (achado 4)", () => {
@@ -212,5 +212,31 @@ describe("cabine 18/nov, A1: toda saida habilitada vira aba (a de rede, NDI, tam
         expect(saidasDasAbas({ a: { enabled: true, invisible: true }, b: { enabled: true, invisible: true } })).toEqual({ principal: "a", outras: ["b"] })
         expect(saidasDasAbas({ a: { enabled: false } })).toEqual({ principal: "", outras: [] })
         expect(saidasDasAbas(null)).toEqual({ principal: "", outras: [] })
+    })
+})
+
+describe("C2: pilha de cartoes de 60 px", () => {
+    const f = (id: string, caminho: string, video = true) => ({ id, caminho, video })
+    it("um cartao de video por arquivo; o mesmo arquivo em duas saidas e um cartao so", () => {
+        expect(videosDaPilha([f("a", "x.mp4"), f("b", "y.mp4"), f("c", "x.mp4"), f("d", "", false)])).toEqual([
+            { id: "a", caminho: "x.mp4" },
+            { id: "b", caminho: "y.mp4" }
+        ])
+    })
+    it("etiqueta de saida so quando ha duvida (nunca com uma saida, nunca quando todas mostram o mesmo)", () => {
+        expect(etiquetaDeSaidaNecessaria([f("a", "x.mp4")])).toBe(false)
+        expect(etiquetaDeSaidaNecessaria([f("a", "x.mp4"), f("b", "x.mp4")])).toBe(false)
+        expect(etiquetaDeSaidaNecessaria([f("a", "x.mp4"), f("b", "y.mp4")])).toBe(true)
+        expect(etiquetaDeSaidaNecessaria([f("a", "x.mp4"), f("b", "", false)])).toBe(true)
+        expect(etiquetaDeSaidaNecessaria([f("a", "", false), f("b", "", false)])).toBe(false)
+    })
+    it("\"Primaria\" nunca aparece", () => {
+        for (const n of ["Primária", "Primaria", "primary", "Primary", "", null, undefined]) expect(nomeDaEtiqueta(n as any)).toBe("TELÃO")
+        expect(nomeDaEtiqueta("NDI Live")).toBe("NDI LIVE")
+    })
+    it("60 px por cartao; a pilha rola a partir do 4o (188 px = 3 cartoes)", () => {
+        expect(CARTAO_ALTURA).toBe(60)
+        expect(pilhaAlturaMaxima()).toBe(188)
+        expect(CARTOES_SEM_ROLAR).toBe(3)
     })
 })

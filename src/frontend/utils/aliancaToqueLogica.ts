@@ -3,11 +3,20 @@
 // 1. O Esc que FECHOU ou DESSELECIONOU algo segura por 700 ms o Esc seguinte. O Esc limpa o telao; quem aperta Esc para sair de uma caixa de
 //    texto ou fechar um popover nao pode, no segundo Esc, limpar o telao sem querer (mesmo desenho do incidente de 09/ago do Sirvo: dois toques
 //    na mesma coordenada).
-// 2. Clique repetido no MESMO item em menos de 400 ms e engolido: o duplo clique nunca dispara a acao duas vezes (video nao comeca 2x). A conta
-//    e feita contra o ultimo clique ACEITO naquele item (clicar de 300 em 300 ms nao silencia o item para sempre).
+// 2. Clique repetido no MESMO item em menos de 400 ms e engolido (slides, versiculos, roteiro, botoes): o duplo clique nunca dispara a acao duas vezes. A conta
+//    e feita contra o ultimo clique ACEITO naquele item (clicar de 300 em 300 ms nao silencia o item para sempre). O clique em MIDIA (cartao da biblioteca) e o unico
+//    com 700 ms (pedido do dono, cabine 18/nov): revisao do PR #40, achado 7.
 
 export const ESC_SEGURA_MS = 700
 export const CLIQUE_REPETIDO_MS = 400
+/** so o cartao de midia: o 2o clique em ate 0,7 s e ignorado (decisao do dono, 18/nov) */
+export const CLIQUE_MIDIA_MS = 700
+export const CARTAO_DE_MIDIA = '[data-acao="midia-cartao"]'
+
+/** a trava que vale para este clique: 700 ms dentro do cartao de midia, 400 ms em todo o resto */
+export function travaDoClique(alvo: { closest(seletor: string): unknown }): number {
+    return alvo.closest(CARTAO_DE_MIDIA) ? CLIQUE_MIDIA_MS : CLIQUE_REPETIDO_MS
+}
 
 /** tecla segurada (auto-repeticao): nunca encadeia, e engolida sempre (segurar Esc para sair de um campo nao limpa o telao quando a espera vence) */
 export function escEngolidoPorRepeticao(e: { repeat?: boolean }): boolean {
@@ -43,19 +52,19 @@ export type Ponto = { x: number; y: number }
  */
 export function criarRepeticao<K>(ms = CLIQUE_REPETIDO_MS) {
     const ultimo = new Map<K, { t: number; p?: Ponto }>()
-    const repete = (item: K, agora: number, ponto?: Ponto): boolean => {
+    const repete = (item: K, agora: number, ponto?: Ponto, janela = ms): boolean => {
         const antes = ultimo.get(item)
-        if (!antes || agora - antes.t >= ms) return false
+        if (!antes || agora - antes.t >= janela) return false
         if (ponto && antes.p && Math.hypot(ponto.x - antes.p.x, ponto.y - antes.p.y) > CLIQUE_REPETIDO_PX) return false
         return true
     }
     return {
         /** true: e repeticao dentro da janela (engolir). Aceita (false) atualiza o ultimo clique daquela chave. */
-        engole(item: K, agora: number, ponto?: Ponto): boolean {
-            if (repete(item, agora, ponto)) return true
+        engole(item: K, agora: number, ponto?: Ponto, janela = ms): boolean {
+            if (repete(item, agora, ponto, janela)) return true
             ultimo.set(item, { t: agora, p: ponto })
             // o mapa nao cresce sem fim: esquece o que ja passou da janela
-            if (ultimo.size > 64) for (const [k, v] of ultimo) if (agora - v.t >= ms) ultimo.delete(k)
+            if (ultimo.size > 64) for (const [k, v] of ultimo) if (agora - v.t >= CLIQUE_MIDIA_MS) ultimo.delete(k)
             return false
         },
         /** igual a `engole`, mas SEM registrar nada: o mousedown pergunta se o clique que vem em seguida sera engolido */

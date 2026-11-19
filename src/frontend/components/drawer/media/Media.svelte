@@ -48,7 +48,7 @@
 
     // leiaute v2: colunas pela largura (cartao de 150 px no zoom padrao 5, como o `auto-fill, minmax(150px, 1fr)` do prototipo); o zoom do cabecalho muda esse minimo
     let larguraGrade = 1000
-    $: colunasAuto = Math.max(1, Math.floor(larguraGrade / (750 / ($mediaOptions.columns || 5))))
+    $: colunasAuto = Math.max(1, Math.floor(larguraGrade / (830 / ($mediaOptions.columns || 5))))
     const setView = (v: any) => mediaOptions.update((a) => ({ ...a, view: v }))
 
     let prevActiveSubTab = active

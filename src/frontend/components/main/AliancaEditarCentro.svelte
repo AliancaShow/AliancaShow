@@ -18,7 +18,7 @@
     import { _show } from "../helpers/shows"
     import LazyLoad from "../helpers/LazyLoad.svelte"
     import AliancaDividir from "../show/AliancaDividir.svelte"
-    import ItemAddMenu from "../edit/ItemAddMenu.svelte"
+    import AliancaAdicionarItem from "./AliancaAdicionarItem.svelte"
 
     $: ehShow = ($activeEdit.type || "show") === "show"
     $: showId = ehShow ? ($activeShow?.type === undefined || $activeShow?.type === "show" ? $activeShow?.id : "") || $activeEdit.showId || "" : ""
@@ -108,7 +108,7 @@
         </div>
     {/if}
     <span class="folga"></span>
-    {#if podeAdicionar}<div class="addCab" data-acao="editar-adicionar-item"><ItemAddMenu isLocked={travado} /></div>{/if}
+    {#if podeAdicionar}<div class="addCab" data-acao="editar-adicionar-item"><AliancaAdicionarItem isLocked={travado} /></div>{/if}
     {#if ehShow && show && !dividindo && $editMode === "default"}
         <div class="zoom" data-acao="editar-zoom">
             <button type="button" aria-label="Menos zoom" disabled={$zoomDoEditor <= 0.2} on:click={() => zoomDoEditor.update((v) => limitar(v - passo))}>−</button>
@@ -204,41 +204,10 @@
     .folga {
         flex: 1;
     }
-    /*
-     * O "+" de itens (ItemAddMenu, que a janela de saida tambem importa e por isso nao muda) e um botao redondo posicionado por cima do conteudo. Aqui ele vira um
-     * botao do cabecalho: o wrapper e a ancora, o botao deixa de ser posicionado pelo conteudo e o menu abre dele para baixo. Nada flutua sobre o slide.
-     */
+    /* C5: o wrapper e a ancora do menu "＋ Adicionar item ▾" (AliancaAdicionarItem): o botao com nome fica na barra, ao lado do zoom, e o menu abre dele para baixo */
     .addCab {
         position: relative;
         flex-shrink: 0;
-        width: 32px;
-        height: 32px;
-    }
-    .addCab :global(.row) {
-        --size: 32px;
-        position: absolute !important;
-        top: 0;
-        bottom: auto !important;
-        left: 0;
-        right: auto;
-        width: 32px !important;
-        height: 32px !important;
-        max-width: none;
-    }
-    .addCab :global(.row button) {
-        width: 30px !important;
-        height: 30px !important;
-        padding: 0 !important;
-        justify-content: center;
-    }
-    .addCab :global(.row svg) {
-        width: 18px;
-        height: 18px;
-    }
-    .addCab :global(.addMenu) {
-        top: calc(100% + 6px);
-        bottom: auto;
-        right: 0;
     }
     .zoom {
         display: flex;

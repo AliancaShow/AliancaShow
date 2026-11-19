@@ -12,7 +12,7 @@ const ok = (nome, cond, extra = "") => {
     if (!cond) falhas.push(nome)
 }
 
-const j = await abrir("principal")
+const j = await abrir("principal", { buffer: true })
 try {
     await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
     // 1. um culto com show: a lista so existe com projeto aberto; abre pelo store (o seletor tem a propria prova) e o show pelo clique na linha

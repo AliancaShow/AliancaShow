@@ -99,6 +99,14 @@ export const EXCECOES = {
     "src/frontend/components/timeline/TimelinePlayback.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): video da linha do tempo move o telao como automacao (iniciarAutomacao em try/finally); modo desligado: identico",
         "sha": "fb5b607e4f98f7623a7b710cc3199d22477e8dcd29933acdbec6544c2401b3c2"
+    },
+    "src/frontend/components/stage/Stagebox.svelte": {
+        "motivo": "rodada da cabine (A4/A5, aprovada pelo André 18/nov): item 'saida atual' sem fonte explicita mostra o conteudo da saida em vez de desenhar o proprio retorno dentro dele (recursao no modo so retorno). Com fonte explicita: identico",
+        "sha": "914b0c518b72d4ce000a721292dd2cd2b64c461ee1c686a01b1bc2975d8f8bd9"
+    },
+    "src/frontend/components/slide/Textbox.svelte": {
+        "motivo": "rodada da cabine (A4/A5, aprovada pelo André 18/nov): autosize de PALCO nao mede nem usa cache com caixa escondida/0x0 (cache envenenado a 800 px). Slides do telao nao passam pela guarda",
+        "sha": "5a4637063f642fbf9a6fc4b2e6f86d9bd791d0b77a0fb7432241d42971b3b48f"
     }
 }
 
@@ -121,7 +129,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "beb5312889d57c7333b7f23596dd301cef27fa6a9c7be21f11be78a7699ba103"
+export const SHA_EXCECOES = "c14c4990e5466f734c3cbadf92bc91f026b26cce9dfebaba350a49830b8fb995"
 export const SHA_NOVOS = "ed7662101256d7f316c003d314dc25396bce5032913ea3e844943f0184ac93f3"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")

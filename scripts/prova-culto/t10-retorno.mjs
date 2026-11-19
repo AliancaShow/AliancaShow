@@ -23,7 +23,7 @@ const saida = process.argv[2] || "prints-v2-8b"
 mkdirSync(saida, { recursive: true })
 const falhas = []
 const ok = (n, c, x = "") => (console.log(`${c ? "ok   " : "FALHA"} ${n}${x ? " :: " + x : ""}`), c || falhas.push(n))
-const j = await abrir("principal")
+const j = await abrir("principal", { buffer: true })
 const dom = (expr) => j.ev(`return ${expr}`)
 async function print(nome, espera = 500) {
     await esperar(espera)
@@ -90,8 +90,38 @@ const {loadShows}=await import(U("components/helpers/setShow")); await loadShows
     ok("A. a fonte do layout aponta para o retorno e CONTINUA apontando (R1: a recuperacao nao desfaz)", (await fonte()) === "ret_t10", String(await fonte()))
     ok("A. o retorno foi semeado com o slide do telao (nao apaga o monitor)", (await idxRet()) === 0, String(await idxRet()))
     ok("A. o telao nao foi tocado ao ligar", (await telao()) === tel0)
-    ok("A. a coluna No ar diz o que esta no retorno", /retorno: .*slide 1/.test(await dom(`${sel("retorno-mostra")}?.textContent||""`)), await dom(`${sel("retorno-mostra")}?.textContent||""`))
+    // C3 (cabine 18/nov, contrato mudou): a tarja diz so "SÓ RETORNO · telão parado"; o que o retorno mostra esta na aba Retorno logo abaixo
+ok("A. a coluna No ar diz que o modo esta ligado e o telao parado", /telão parado/.test(await dom(`${sel("retorno-mostra")}?.textContent||""`)), await dom(`${sel("retorno-mostra")}?.textContent||""`))
     await print("t10-a-ligado")
+
+    // ---------- A4 + A5 (cabine, 18/nov): o layout de palco do retorno com o modo LIGADO
+    // A4: o item "saida atual" (current_output) SEM fonte propria cai em `settings.output`, que no modo e o PROPRIO retorno: antes desenhava o layout dele DENTRO
+    // dele (recursao, com fundo opaco por cima da letra). Agora mostra o conteudo da saida (o que o modo mandou) e o texto do slide aparece.
+    const vis = (id) => `[...document.querySelectorAll('#ret_t10 [id="${id}"].stage_item')].find(e=>e.getBoundingClientRect().width>0)`
+    await j.ev(`S.stageShows.update(s=>{s.L_t10.settings.labels=true; s.L_t10.items={c:{type:"current_output",style:"left:0px;top:0px;width:1920px;height:1080px;"},t:{type:"slide_text",style:"left:0px;top:0px;width:1920px;height:540px;font-size:800px;",slideOffset:0},u:{type:"slide_text",style:"left:0px;top:560px;width:1200px;height:400px;font-size:800px;",slideOffset:1}}; return s}); await esp(1500); return 1`)
+    ok("A4. o item 'saida atual' do retorno NAO contem outro layout de palco dentro dele (sem recursao)", (await dom(`!!(${vis("c")}) && !(${vis("c")}).querySelector(".stageArea")`)) === true, await dom(`(${vis("c")})?.innerHTML.slice(0,120)`))
+    const norm = (t) => String(t).split(/\s+/).join("").toLowerCase()
+    const esperado = await dom(`(async()=>{const G=await import(U("components/edit/scripts/textStyle")); const sh=get(S.showsCache)["${SHOW}"]; const lay=sh.layouts[sh.settings.activeLayout]; const sl=sh.slides[lay.slides[0].id]; return sl.items.filter(i=>(i.type||"text")==="text").map(i=>G.getItemText(i)).join(" ")})()`)
+    const naTela = await dom(`(${vis("t")})?.innerText||""`)
+    ok("A4. o texto do slide aparece no item de texto do layout do retorno (e e o do slide que o modo mandou)", norm(esperado).length > 5 && norm(naTela).includes(norm(esperado).slice(0, 12)), JSON.stringify([esperado.slice(0, 40), naTela.slice(0, 60)]))
+    await print("t10-a4-retorno-sem-recursao")
+    // A5: a miniatura e a mesma conta da saida real. Uma copia ESCONDIDA do layout (o Preview antigo) media 0x0 e gravava 800 px no cache dividido com a miniatura:
+    // fechar a aba, mudar o slide e reabrir deixava o texto gigante
+    const fonteDe = (id) => dom(`(()=>{const e=${vis(id)}; const s=e?.querySelector(".lines .break span"); return s?Math.round(parseFloat(getComputedStyle(s).fontSize)):null})()`)
+    const seta = async () => { const r = await localizar(j, `document.querySelector('[data-acao=outras-telas] .seta')`); await clicarEm(j, r.x, r.y) }
+    await seta()
+    await esperar(600)
+    {
+        const w = await localizar(j, `document.querySelectorAll("#showArea .slide")[4]`)
+        await clicarEm(j, w.x, w.y)
+    }
+    await esperar(1500)
+    await seta()
+    await esperar(1500)
+    const f1 = await fonteDe("t"), f2 = await fonteDe("u")
+    ok("A5. miniatura do retorno: o texto do slide escala como na saida real (nao fica em 800 px depois de fechar a aba e mudar de slide)", f1 !== null && f1 > 10 && f1 < 400 && f2 !== null && f2 > 10 && f2 < 400, JSON.stringify([f1, f2]))
+    await print("t10-a5-miniatura")
+    await j.ev(`S.stageShows.update(s=>{s.L_t10.items={}; delete s.L_t10.settings.labels; return s}); await esp(400); return 1`)
 
     // ---------- B. cada caminho
     await caminho(

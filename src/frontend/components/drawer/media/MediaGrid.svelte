@@ -164,8 +164,11 @@
         padding-bottom: 60px;
     }
 
+    /* C1 (cabine 18/nov): 10 px entre os cartoes (5 de cada lado do vizinho) */
     .card {
         display: flex;
         flex-direction: column;
+        box-sizing: border-box;
+        padding: 5px;
     }
 </style>

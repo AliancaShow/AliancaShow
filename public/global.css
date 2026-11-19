@@ -308,6 +308,41 @@ body[data-tema="luz"] {
     --luz-verde-lavagem: rgba(94, 196, 141, 0.14);
     --luz-laranja-lavagem: rgba(235, 166, 64, 0.14);
     --luz-sombra-pop: 0 18px 40px rgba(0, 0, 0, 0.5);
+    /* rodada da cabine (18/nov): selos sobre imagem (duracao, dica, etiqueta de saida) e o branco do que fica sobre o vermelho */
+    --luz-branco: #fff;
+    --luz-selo: rgba(0, 0, 0, 0.72);
+    --luz-selo-forte: rgba(13, 13, 15, 0.86);
+    --luz-thumb: #000;
+    --luz-anel: rgba(248, 248, 240, 0.85);
+    --luz-branco-suave: rgba(255, 255, 255, 0.85);
+    --luz-verde-borda: rgba(94, 196, 141, 0.5);
+    --luz-laranja-borda: rgba(235, 166, 64, 0.55);
+    --luz-raio-cartao: 8px;
+    --luz-raio-botao: 6px;
+    --luz-raio-thumb: 5px;
+    --luz-raio-selo: 4px;
+    --luz-raio-menu: 12px;
+    --luz-raio-item: 7px;
+    /* cartao de midia (C1): escala de texto e medidas do board, em um lugar so */
+    --luz-fs-micro: 10px;
+    --luz-fs-selo: 11px;
+    --luz-fs-nome: 12px;
+    --luz-fs-mais: 15px;
+    --luz-tracking-micro: 0.04em;
+    --luz-respiro-cartao: 5px;
+    --luz-selo-h: 18px;
+    --luz-dica-h: 20px;
+    --luz-rodape-h: 30px;
+    --luz-eng: 24px;
+    --luz-mais-i: 26px;
+    --luz-alvo-mais: 38px;
+    --luz-trava: 700ms;
+    /* transporte (C2): contraste baixo de proposito, o telao continua a coisa mais forte da coluna */
+    --luz-texto-60: rgba(248, 248, 240, 0.6);
+    --luz-texto-80: rgba(248, 248, 240, 0.8);
+    --luz-texto-85: rgba(248, 248, 240, 0.85);
+    --luz-barra-fundo: rgba(248, 248, 240, 0.12);
+    --luz-barra-cheio: rgba(248, 248, 240, 0.5);
     --luz-raio: 14px;
     --luz-fonte: "AliancaUI Archivo", "Segoe UI", system-ui, sans-serif;
 
