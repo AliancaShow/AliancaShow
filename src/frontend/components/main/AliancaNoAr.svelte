@@ -2,10 +2,12 @@
     // Leiaute v2: a coluna da direita em Mostrar ("o que a igreja ve"): a tela principal em proporcao real com a faixa de icones colada
     // (camadas), as outras telas (abas, do mesmo tamanho), a caixa "Mensagem pro palco" e o chat do culto, que ocupa o resto. A faixa de transporte (video, audio, medidor, temporizadores, Spotify) fica logo abaixo da tela (fatia 7, D6).
     // O `Preview` antigo continua montado e escondido em AliancaTela: e ele que escuta o teclado.
-    import { onDestroy } from "svelte"
+    import { onDestroy, onMount } from "svelte"
+    import { get } from "svelte/store"
     import { outputDisplay, outputs, styles } from "../../stores"
     import { falhas } from "../../utils/aliancaFalha"
-    import { RECUSA_MS, estadoDaTarja, oQueNaoFoiAoAr, recusaNova } from "../../utils/aliancaTarjaLogica"
+    import { RECUSA_MS, estadoDaTarja, nomeDaRecusa, recusaNova, vezesJaVistas } from "../../utils/aliancaTarjaLogica"
+    import { consumirTentativa, ligarTentativas } from "../../utils/aliancaTentativa"
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
     import { desligarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { ROTULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
@@ -27,12 +29,14 @@
     $: proporcao = proporcaoDaSaida(resolucao.width, resolucao.height)
     // C3: a recusa do modo (falha `so-retorno-recusa`, que o FaixaDeFalha nao mostra) escreve na tarja por 5 s; outra recusa nesse intervalo reinicia a conta e troca o nome
     let recusa: { nome: string; n: number } | null = null
-    let vistas = 0
+    // achado 2 (PR #40): a tarja nasce vendo o contador de agora; recusa que ja existia (voltou de Editar) nao pisca de novo
+    let vistas = vezesJaVistas(get(falhas))
     let relogio: ReturnType<typeof setTimeout> | undefined
     $: aviso = $falhas.find((f) => f.origem === "so-retorno-recusa")
     $: if (aviso && recusaNova(aviso.vezes, vistas)) {
         vistas = aviso.vezes
-        recusa = { nome: oQueNaoFoiAoAr(aviso.mensagem), n: vistas }
+        // achado 1 (PR #40): o nome vem da tentativa gravada no clique (a recusa e sincrona); sem ela, so a 1a recusa da sessao tem mensagem confiavel
+        recusa = { nome: nomeDaRecusa(consumirTentativa(), Date.now(), aviso.vezes, aviso.mensagem), n: vistas }
         clearTimeout(relogio)
         relogio = setTimeout(() => (recusa = null), RECUSA_MS)
     }
@@ -40,7 +44,14 @@
         recusa = null
         clearTimeout(relogio)
     }
-    onDestroy(() => clearTimeout(relogio))
+    let desligarTentativas = () => {}
+    onMount(() => {
+        desligarTentativas = ligarTentativas()
+    })
+    onDestroy(() => {
+        clearTimeout(relogio)
+        desligarTentativas()
+    })
     $: estado = estadoDaTarja($soRetorno, !!recusa)
     $: nomePrincipal = $outputs[principal]?.name || "Telão"
 </script>

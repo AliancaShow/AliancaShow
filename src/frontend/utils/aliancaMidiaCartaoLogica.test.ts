@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { acaoDoClique, criarCacheDeDuracao, estadoDoCartao, formatarDuracao, TRAVA_CARTAO_MS } from "./aliancaMidiaCartaoLogica"
-import { CLIQUE_REPETIDO_MS } from "./aliancaToqueLogica"
+import { CLIQUE_MIDIA_MS, CLIQUE_REPETIDO_MS } from "./aliancaToqueLogica"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 
 describe("C1: duracao no cartao", () => {
     it("formata m:ss e h:mm:ss; sem duracao valida nao mostra selo", () => {
@@ -53,8 +55,20 @@ describe("C1: o clique no thumb", () => {
         expect(estadoDoCartao({ falta: false, noAr: false, trava: true })).toBe("trava")
         expect(estadoDoCartao({ falta: false, noAr: false, trava: false })).toBe("repouso")
     })
-    it("a trava do cartao e a global valem o mesmo: 700 ms", () => {
-        expect(TRAVA_CARTAO_MS).toBe(700)
-        expect(CLIQUE_REPETIDO_MS).toBe(700)
+    it("a trava do cartao (700 ms, a que o operador ve) e a que o clique engole sao a MESMA, e a global do resto e menor", () => {
+        expect(TRAVA_CARTAO_MS).toBe(CLIQUE_MIDIA_MS)
+        expect(CLIQUE_REPETIDO_MS).toBeLessThan(TRAVA_CARTAO_MS)
+    })
+    it("a barra que enche na tela dura o mesmo que a trava (token --luz-trava no global.css, lido pelo cartao)", () => {
+        const css = readFileSync(join(__dirname, "../../../public/global.css"), "utf8")
+        const m = /--luz-trava: *([0-9]+)ms/.exec(css)
+        expect(Number(m?.[1])).toBe(TRAVA_CARTAO_MS)
+        expect(readFileSync(join(__dirname, "../components/drawer/media/MediaCard.svelte"), "utf8")).toContain("animation: encherTrava var(--luz-trava)")
+    })
+    it("o cartao nao tem tamanho de texto solto: tudo vem dos tokens --luz-fs-* (revisao do PR #40, achado 8)", () => {
+        const fonte = readFileSync(join(__dirname, "../components/drawer/media/MediaCard.svelte"), "utf8")
+        const css = fonte.slice(fonte.indexOf("<style>"))
+        expect(css.match(/font-size: *[0-9]+px/g) || []).toEqual([])
+        expect(css).not.toContain("var(--text)")
     })
 })

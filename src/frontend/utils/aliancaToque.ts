@@ -7,7 +7,7 @@ import { falhaAlta } from "./aliancaFalha"
 import { listaAberta } from "./aliancaGavetaEstado"
 import { arAutorizado } from "./aliancaGavetaToque"
 import { emEditar, tela } from "./aliancaTela"
-import { chaveDoClique, criarEscSeguro, criarRepeticao, escEngolidoPorRepeticao } from "./aliancaToqueLogica"
+import { chaveDoClique, criarEscSeguro, travaDoClique, criarRepeticao, escEngolidoPorRepeticao } from "./aliancaToqueLogica"
 
 const esc = criarEscSeguro()
 const repeticao = criarRepeticao<Element>()
@@ -94,7 +94,7 @@ export function cliqueVaiSerEngolido(e: MouseEvent): boolean {
         if (get(tela) !== "mostrar") return false
         const alvo = e.target instanceof Element ? e.target : null
         const chave = alvo ? chaveDoClique(alvo) : null
-        return !!chave && repeticao.vaiEngolir(chave, performance.now(), ponto(e))
+        return !!chave && repeticao.vaiEngolir(chave, performance.now(), ponto(e), travaDoClique(alvo!))
     } catch (erro) {
         falhaAlta("clique-repetido", erro)
         return false
@@ -121,7 +121,7 @@ function aoClique(e: MouseEvent) {
         // a chave e o clicavel mais interno (botao, slide, versiculo...), nao o conteiner; controles de transporte ficam de fora
         const chave = chaveDoClique(alvo)
         if (!chave) return
-        if (repeticao.engole(chave, performance.now(), ponto(e))) {
+        if (repeticao.engole(chave, performance.now(), ponto(e), travaDoClique(alvo))) {
             e.preventDefault()
             e.stopImmediatePropagation()
             e.stopPropagation()

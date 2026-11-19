@@ -22,8 +22,24 @@ const MODOATUAL=()=>get(T.tela)==="editar"?"preparar":"culto"
 const esp=(ms)=>new Promise(r=>setTimeout(r,ms))
 `
 
-export async function abrir(qual = "principal") {
+/**
+ * `buffer: true` (as fumacas): o buffer de recursos padrao (250) estoura com os modulos do app e `U()` nao acha mais o URL do modulo em uso. O ajuste e injetado AQUI,
+ * por CDP, antes de a pagina carregar (nunca no public/index.html, que a janela de saida e a producao tambem carregam). Recarrega a janela UMA vez: chame no inicio do roteiro.
+ */
+export async function abrir(qual = "principal", { buffer = false } = {}) {
     const j = await janela(qual)
+    if (buffer) {
+        await j.enviar("Page.enable")
+        await j.enviar("Page.addScriptToEvaluateOnNewDocument", { source: "performance.setResourceTimingBufferSize(4000)" })
+        await j.enviar("Page.reload")
+        await esperar(2500)
+        for (let t = 0; t < 60; t++) {
+            const pronta = await j.avaliar("return document.readyState === 'complete' && !!document.body && document.body.children.length > 0").catch(() => false)
+            if (pronta) break
+            await esperar(1000)
+        }
+        await esperar(3000)
+    }
     j.ev = (corpo) => j.avaliar(PRE + corpo)
     return j
 }

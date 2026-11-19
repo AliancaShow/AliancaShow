@@ -14,7 +14,7 @@ const saida = process.argv[2] || "prints-v2-4"
 mkdirSync(saida, { recursive: true })
 const falhas = []
 const ok = (n, c, x = "") => (console.log(`${c ? "ok   " : "FALHA"} ${n}${x ? " :: " + x : ""}`), c || falhas.push(n))
-const j = await abrir("principal")
+const j = await abrir("principal", { buffer: true })
 const dom = (expr) => j.ev(`return ${expr}`)
 const clique = async (expr) => { const a = await localizar(j, expr); if (!a.ok) throw new Error("alvo: " + a.motivo + " :: " + expr); await clicarEm(j, a.x, a.y, 1); return a }
 async function print(nome) {

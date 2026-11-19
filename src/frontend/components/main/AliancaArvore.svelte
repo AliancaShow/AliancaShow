@@ -5,7 +5,7 @@
     // Aba sem no: na carga e saneada sem faixa; em uso (escrita depois da carga) chama falhaAlta("arvore-sem-no") e a arvore volta.
     import { onMount } from "svelte"
     import { activeDrawerTab, drawerTabsData, shows } from "../../stores"
-    import { decidirEscrita, FILHOS_FERRAMENTAS, RAIZES, raizDaAba, raizMostraTudo, sanearNaCarga, sanearSubAba, type Raiz } from "../../utils/aliancaArvoreLogica"
+    import { decidirEscrita, FILHOS_FERRAMENTAS, RAIZES, SUBABAS_NA_ARVORE, raizDaAba, raizMostraTudo, sanearNaCarga, sanearSubAba, type Raiz } from "../../utils/aliancaArvoreLogica"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { getAccess } from "../../utils/profile"
     import Navigation from "../drawer/Navigation.svelte"
@@ -18,7 +18,7 @@
         const saneada = sanearNaCarga($activeDrawerTab)
         ultimoValido = saneada
         if (saneada !== $activeDrawerTab) activeDrawerTab.set(saneada)
-        // sub-aba salva de antes da C6 ("Midias" da pasta-raiz, "Efeitos" de Sobreposicoes): vira "all"
+        // sub-aba salva de antes da C6 ("Midias" da pasta-raiz) vira "all"; Modelos/Calendario/Funcoes/Sobreposicoes mostram as sub-abas delas quando abertos (nada fica preso)
         drawerTabsData.update((a) => {
             for (const aba of Object.keys(a)) {
                 const sub = a[aba as DrawerTabIds]?.activeSubTab
@@ -81,8 +81,8 @@
                 {#if r.id === "ferramentas"}
                     {#each filhosFerramentas as f (f.id)}
                         <button class="fil" class:on={aba === f.id} data-no={f.id} tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho(f.id)}>{f.nome}</button>
-                        <!-- Funcoes (acoes, variaveis, temporizadores) e Sobreposicoes (efeitos, categorias) guardam sub-abas de verdade: abertas, mostram as delas embaixo -->
-                        {#if aba === f.id && (f.id === "functions" || f.id === "overlays")}<div class="neto"><Navigation id={f.id} /></div>{/if}
+                        <!-- Funcoes, Sobreposicoes, Modelos (categorias, "Nova categoria") e Calendario ("Importar calendario") guardam sub-abas/acoes de verdade: abertos, mostram os delas embaixo (revisao do PR #40, achado 6) -->
+                        {#if aba === f.id && SUBABAS_NA_ARVORE.includes(f.id)}<div class="neto"><Navigation id={f.id} /></div>{/if}
                     {/each}
                 {:else}
                     <Navigation id={r.id} />

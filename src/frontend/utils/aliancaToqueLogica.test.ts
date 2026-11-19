@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { escEngolidoPorRepeticao, CLIQUE_REPETIDO_MS, CLIQUE_REPETIDO_PX, ESC_SEGURA_MS, chaveDoClique, criarEscSeguro, criarRepeticao } from "./aliancaToqueLogica"
+import { escEngolidoPorRepeticao, CLIQUE_MIDIA_MS, travaDoClique, CLIQUE_REPETIDO_MS, CLIQUE_REPETIDO_PX, ESC_SEGURA_MS, chaveDoClique, criarEscSeguro, criarRepeticao } from "./aliancaToqueLogica"
 
 describe("Esc que fechou algo segura o seguinte (700 ms)", () => {
     it("sem Esc que fechou: nada e segurado", () => {
@@ -28,21 +28,35 @@ describe("Esc que fechou algo segura o seguinte (700 ms)", () => {
     })
 })
 
-describe("clique repetido no mesmo item (700 ms)", () => {
-    it("o primeiro passa, o segundo dentro de 700 ms e engolido, o de 700 ms em diante passa", () => {
+describe("clique repetido no mesmo item (400 ms; so o cartao de midia usa 700 ms)", () => {
+    it("o primeiro passa, o segundo dentro de 400 ms e engolido, o de 400 ms em diante passa", () => {
         const r = criarRepeticao<string>()
         expect(r.engole("a", 0)).toBe(false)
         expect(r.engole("a", CLIQUE_REPETIDO_MS - 1)).toBe(true)
         expect(r.engole("a", CLIQUE_REPETIDO_MS)).toBe(false)
+    })
+    it("o clique em MIDIA usa 700 ms e o resto 400 ms (revisao do PR #40, achado 7): a janela e escolhida por clique", () => {
+        const r = criarRepeticao<string>()
+        const midia = { closest: (s: string) => (s === '[data-acao="midia-cartao"]' ? {} : null) }
+        const resto = { closest: () => null }
+        expect(travaDoClique(midia)).toBe(CLIQUE_MIDIA_MS)
+        expect(travaDoClique(resto)).toBe(CLIQUE_REPETIDO_MS)
+        // 500 ms depois: o clique em midia ainda e engolido, o de slide ja passa
+        r.engole("cartao", 0, undefined, travaDoClique(midia))
+        r.engole("slide", 0, undefined, travaDoClique(resto))
+        expect(r.engole("cartao", 500, undefined, travaDoClique(midia))).toBe(true)
+        expect(r.engole("slide", 500, undefined, travaDoClique(resto))).toBe(false)
+        expect(r.vaiEngolir("cartao", 600, undefined, travaDoClique(midia))).toBe(true)
+        expect(r.engole("cartao", 700, undefined, travaDoClique(midia))).toBe(false)
     })
     it("itens diferentes nao se engolem", () => {
         const r = criarRepeticao<string>()
         expect(r.engole("a", 0)).toBe(false)
         expect(r.engole("b", 10)).toBe(false)
     })
-    it("clicar a cada 400 ms nao silencia o item para sempre (conta contra o ultimo ACEITO)", () => {
+    it("clicar a cada 250 ms nao silencia o item para sempre (conta contra o ultimo ACEITO)", () => {
         const r = criarRepeticao<string>()
-        const res = [0, 400, 800, 1200, 1600].map((t) => r.engole("a", t))
+        const res = [0, 250, 500, 750, 1000].map((t) => r.engole("a", t))
         expect(res).toEqual([false, true, false, true, false])
     })
     it("o mapa nao cresce sem fim", () => {

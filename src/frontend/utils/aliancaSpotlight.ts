@@ -7,7 +7,7 @@
 // Trocar de tela so pela porta (`trocarTela(..., "spotlight")`) e so quando o resultado vive em outra tela (numa pagina do menu).
 // Sem `.subscribe` no nivel do modulo (a janela de saida importa a arvore de stores).
 import { get } from "svelte/store"
-import { activeDrawerTab, activeEdit, activePopup, activeProfile, activeShow, audioFolders, categories, focusMode, mediaFolders, openScripture, outLocked, quickSearchActive, scriptures, settingsTab, shows, textCache, drawerTabsData } from "../stores"
+import { activeDrawerTab, activeEdit, activePopup, activeProfile, activeShow, audioFolders, categories, focusMode, mediaFolders, openScripture, outLocked, outputs, quickSearchActive, scriptures, settingsTab, shows, textCache, drawerTabsData } from "../stores"
 import { loadJsonBible } from "../components/drawer/bible/scripture"
 import { setDrawerTabData } from "../components/helpers/historyHelpers"
 import { openShow } from "../components/helpers/show"
@@ -18,7 +18,7 @@ import { listarBiblioteca, type LinhaDaBiblioteca } from "./aliancaBibliotecaLog
 import { prepararEdicaoDoShow } from "./aliancaEditarAcoes"
 import { falhaAlta } from "./aliancaFalha"
 import { alternarTelaCheia, salvarAgora } from "./aliancaJanela"
-import { acaoDaTecla, conferirLivro, filtrarAcoes, lerReferencia, lerSoLivro, MAX_VERSICULOS, MAXIMO_POR_SECAO, rotuloDaReferencia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
+import { acaoDaTecla, assinaturaDoTemp, conferirLivro, filtrarAcoes, lerReferencia, lerSoLivro, MAX_VERSICULOS, MAXIMO_POR_SECAO, rotuloDaReferencia, tocouNaBiblia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "./aliancaTocarNoAr"
 import { telaAtual, trocarTela } from "./aliancaTela"
 import { newToast } from "./common"
@@ -187,16 +187,33 @@ async function versiculoNaBiblia(ref: ReferenciaBiblica, biblia: { aba: string; 
     }
 }
 
-/** "Rm 8:28": UM resultado por Biblia instalada (a em uso primeiro, cada um com o trecho do texto dela). Sem nenhuma Biblia: diz isso, alto. */
-export async function buscarVersiculo(consulta: string): Promise<Resultado[]> {
+/** quanto cada Biblia tem para abrir antes de a linha dela dizer "nao carregou" (revisao do PR #40, achado 3): uma .fsb grande ou uma API sem rede nao prende a busca */
+export const PRAZO_BIBLIA_MS = 1500
+
+/** a leitura da Biblia com prazo: estourou, vira a linha de aviso dela (Enter nela avisa e nao abre nada) */
+function comPrazo(ref: ReferenciaBiblica, biblia: { aba: string; id: string; nome: string }, prazo = PRAZO_BIBLIA_MS): Promise<Resultado> {
+    const rotulo = rotuloDaReferencia(ref)
+    const motivo = `A Bíblia ${biblia.nome} não carregou em ${prazo / 1000} s`
+    const estourou: Resultado = { chave: "versiculo:" + rotulo + ":" + biblia.aba, tipo: "versiculo", titulo: `${rotulo} · ${biblia.nome}`, icone: "scripture", id: rotulo, detalhe: motivo, versiculo: { ref, biblia: biblia.aba, idDaVersao: biblia.id, nomeDaBiblia: biblia.nome, texto: "", motivo } }
+    let relogio: ReturnType<typeof setTimeout> | undefined
+    const limite = new Promise<Resultado>((resolve) => (relogio = setTimeout(() => resolve(estourou), prazo)))
+    return Promise.race([versiculoNaBiblia(ref, biblia), limite]).finally(() => clearTimeout(relogio))
+}
+
+/**
+ * "Rm 8:28": UM resultado por Biblia instalada (a em uso primeiro, cada um com o trecho do texto dela). Sem nenhuma Biblia: diz isso, alto.
+ * Em PARTES: `primeiro` e o que pinta (so a Biblia em uso, com prazo), `demais` sao as outras Biblias, cada uma com o prazo dela: musicas e a 1a Biblia
+ * nao esperam as outras (achado 3 do PR #40).
+ */
+export function buscarVersiculoEmPartes(consulta: string): { primeiro: Promise<Resultado[]>; demais: Promise<Resultado>[] } {
     const ref = lerReferencia(consulta)
-    if (!ref) return buscarSoLivro(consulta)
+    if (!ref) return { primeiro: Promise.resolve(buscarSoLivro(consulta)), demais: [] }
     const biblias = bibliasInstaladas()
     if (!biblias.length) {
         const rotulo = rotuloDaReferencia(ref)
-        return [{ chave: "versiculo:" + rotulo, tipo: "versiculo", titulo: rotulo, icone: "scripture", id: rotulo, detalhe: MOTIVO_SEM_BIBLIA, versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo: MOTIVO_SEM_BIBLIA } }]
+        return { primeiro: Promise.resolve([{ chave: "versiculo:" + rotulo, tipo: "versiculo", titulo: rotulo, icone: "scripture", id: rotulo, detalhe: MOTIVO_SEM_BIBLIA, versiculo: { ref, biblia: "", nomeDaBiblia: "", texto: "", motivo: MOTIVO_SEM_BIBLIA } }]), demais: [] }
     }
-    return Promise.all(biblias.map((b) => versiculoNaBiblia(ref, b)))
+    return { primeiro: comPrazo(ref, biblias[0]).then((r) => [r]), demais: biblias.slice(1).map((b) => comPrazo(ref, b)) }
 }
 
 // ---------------------------------------------------------------- executar
@@ -211,12 +228,39 @@ function paraAOndeVive(): void {
     if (tela() === "pagina") trocarTela("show", "spotlight")
 }
 
+/** prazo para a outra Biblia tocar antes de a em uso voltar de qualquer jeito (o componente Scripture carrega e toca em ~1 s) */
+export const PRAZO_VOLTAR_BIBLIA_MS = 6000
+
+/**
+ * Escolher a OUTRA Biblia para TOCAR vale so para aquele versiculo (achado 3 do PR #40): o componente Scripture precisa da aba dela aberta para tocar, entao
+ * a aba em uso volta assim que o slide dela esta no ar (ou no prazo, se nada tocou). Quem so ABRE (Ctrl+Enter) fica na Biblia que escolheu: ali e navegacao.
+ */
+function devolverABibliaEmUso(emUso: string, alvo: string): void {
+    const antes = assinaturaDoTemp(Object.values(get(outputs)) as any[])
+    let feito = false
+    let parar = () => {}
+    const voltar = () => {
+        if (feito) return
+        feito = true
+        parar()
+        if (get(drawerTabsData).scripture?.activeSubTab === alvo) setDrawerTabData("scripture", emUso)
+    }
+    parar = outputs.subscribe((o) => {
+        if (tocouNaBiblia(antes, assinaturaDoTemp(Object.values(o) as any[]), alvo)) setTimeout(voltar, 400)
+    })
+    setTimeout(voltar, PRAZO_VOLTAR_BIBLIA_MS)
+}
+
 /** abre a pasta Biblia no versiculo; com `tocar` o componente da Biblia manda ao ar (respeita a trava dele) */
 function irParaOVersiculo(r: Resultado, tocar: boolean): void {
     const v = r.versiculo!
     paraAOndeVive()
     if (get(focusMode)) focusMode.set(false)
-    if (get(drawerTabsData).scripture?.activeSubTab !== v.biblia) setDrawerTabData("scripture", v.biblia)
+    const emUso = bibliaEmUso()?.aba || ""
+    if (get(drawerTabsData).scripture?.activeSubTab !== v.biblia) {
+        setDrawerTabData("scripture", v.biblia)
+        if (tocar && emUso && emUso !== v.biblia) devolverABibliaEmUso(emUso, v.biblia)
+    }
     activeDrawerTab.set("scripture")
     openScripture.set({ book: v.ref.livro, chapter: v.ref.capitulo, verses: versiculosParaAbrir(v.ref), play: tocar })
 }

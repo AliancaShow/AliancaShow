@@ -16,6 +16,7 @@
     import { doesMediaExist, getMediaLayerType, getMediaStyle, getMediaType, isLocalFile, loadThumbnail } from "../../helpers/media"
     import { VideoPlayer } from "../../media/video/videoPlayer"
     import { acaoDoClique, estadoDoCartao, formatarDuracao, TRAVA_CARTAO_MS } from "../../../utils/aliancaMidiaCartaoLogica"
+    import { registrarTentativa } from "../../../utils/aliancaTentativa"
     import { duracaoDeMidia } from "../../../utils/aliancaMidiaDuracao"
     import { findMatchingOut, getAllActiveOutputs, getFirstActiveOutput, setOutput } from "../../helpers/output"
     import Button from "../../inputs/Button.svelte"
@@ -161,12 +162,15 @@
     function click(e: any) {
         // C1: arquivo que sumiu nunca vai ao ar nem marca (o cartao laranja ja diz por que)
         if (falta) return
+        // modo LISTA (revisao do PR #40, achado 10): a mesma zona segura do cartao em grade - so o thumb (.card) manda ao ar; o nome da linha so seleciona e arrasta
+        const foraDoThumb = !gridCartao && e?.target instanceof Element && !e.target.closest(".card")
         if (gavetaNaoToca()) {
             if (e.ctrlKey || e.metaKey || e.shiftKey || iconClicked) return
             // cabine 18/nov (B1): em Mostrar o clique simples numa MIDIA (video ou imagem) vai ao ar, como no ProPresenter. So la: em Editar o clique MARCA
             // para levar ao culto e nunca vai ao ar. A trava de clique repetido (700 ms, aliancaToque) e o `wait` abaixo seguem valendo: nunca dispara 2x.
             if (!podeMarcar()) {
                 if (type !== "video" && type !== "image") return
+                if (foraDoThumb) return
                 if ($outLocked) return newToast("a saída está travada: destrave para mandar ao ar")
                 autorizarAr(() => click({}))
                 return
@@ -175,7 +179,7 @@
             if (m) cliqueDeMarcar(m)
             return
         }
-        if (e.ctrlKey || e.metaKey || e.shiftKey || $outLocked || wait || iconClicked) return
+        if (e.ctrlKey || e.metaKey || e.shiftKey || $outLocked || wait || iconClicked || foraDoThumb) return
 
         // don't hide again when double clicking
         wait = true
@@ -184,6 +188,8 @@
         }, TRAVA_CARTAO_MS)
 
         const activeOutputs = getAllActiveOutputs()
+        // C3 + achado 1 (PR #40): a tarja do so retorno diz o NOME do que nao foi ao ar (grava antes do setOutput; a recusa e sincrona)
+        registrarTentativa(displayName || name)
 
         const isActive = !soRetornoLigado() && activeOutputs.some((a) => (a.out?.background?.path || a.out?.background?.id) === path)
         // C1 (decisao do dono, 18/nov): clicar no que JA esta no ar REINICIA o video (nunca limpa: limpar com um clique e o acidente de 09/ago do Sirvo)
@@ -275,6 +281,8 @@
     $: mostraChips = !!pastaId && ehAbaDePasta(active) && type === "video"
     $: fimEf = resolverFim({ midia: $media[path], mediaTags: $mediaTags })
     $: camadaEf = camadaNaHora($media[path], $mediaTags)
+    // C1: video em repeticao ganha o ↻ ao lado da duracao (o mesmo criterio do clique: fundo e sem fim de pasta que pare)
+    $: repete = type === "video" && !contentProvider && camadaEf !== "foreground" && fimEf.loop !== false
 
     let iconClicked: NodeJS.Timeout | null = null
     function removeStyle(key: string) {
@@ -381,7 +389,7 @@
         {/if}
 
         {#if gridCartao}
-            {#if duracaoTxt}<span class="dur" data-acao="midia-duracao">{duracaoTxt}</span>{/if}
+            {#if duracaoTxt}<span class="dur" data-acao="midia-duracao">{duracaoTxt}{#if repete}<i class="rep" data-acao="midia-repete" title="Em repetição">↻</i>{/if}</span>{/if}
             {#if estado === "ar"}<span class="selo">NO AR</span>{/if}
             {#if estado === "repouso"}<span class="dica"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor" /></svg>AO AR</span>{/if}
             <button type="button" class="mais" class:ok={jaNoRoteiro} data-acao="midia-mais" aria-label="Adicionar ao roteiro" title={jaNoRoteiro ? "Já está no roteiro — adicionar de novo" : "Adicionar ao fim do roteiro"} tabindex="-1" on:mousedown|preventDefault|stopPropagation on:click={maisNoRoteiro}>
@@ -464,27 +472,32 @@
     }
     .dur {
         position: absolute;
-        top: 5px;
-        right: 5px;
+        top: var(--luz-respiro-cartao);
+        right: var(--luz-respiro-cartao);
         z-index: 3;
-        height: 18px;
+        height: var(--luz-selo-h);
         padding: 0 5px;
         display: flex;
         align-items: center;
         border-radius: var(--luz-raio-selo);
         background: var(--luz-selo);
         color: var(--luz-branco);
-        font-size: 11px;
+        font-size: var(--luz-fs-selo);
         font-weight: 600;
         font-variant-numeric: tabular-nums;
         pointer-events: none;
     }
+    .rep {
+        margin-left: 4px;
+        font-style: normal;
+        font-weight: 700;
+    }
     .dica {
         position: absolute;
-        left: 5px;
-        bottom: 5px;
+        left: var(--luz-respiro-cartao);
+        bottom: var(--luz-respiro-cartao);
         z-index: 3;
-        height: 20px;
+        height: var(--luz-dica-h);
         padding: 0 7px 0 5px;
         display: none;
         align-items: center;
@@ -492,9 +505,9 @@
         border-radius: var(--luz-raio-selo);
         background: var(--luz-selo-forte);
         color: var(--luz-branco);
-        font-size: 10px;
+        font-size: var(--luz-fs-micro);
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: var(--luz-tracking-micro);
         pointer-events: none;
     }
     .mc.cartao:hover .dica {
@@ -502,14 +515,14 @@
     }
     .selo {
         position: absolute;
-        top: 5px;
-        left: 5px;
+        top: var(--luz-respiro-cartao);
+        left: var(--luz-respiro-cartao);
         z-index: 3;
         padding: 2px 6px;
         border-radius: var(--luz-raio-selo);
         background: var(--luz-vermelho);
         color: var(--luz-branco);
-        font-size: 10px;
+        font-size: var(--luz-fs-micro);
         font-weight: 700;
         line-height: 14px;
         pointer-events: none;
@@ -520,8 +533,8 @@
         right: 0;
         bottom: 0;
         z-index: 4;
-        width: 38px;
-        height: 38px;
+        width: var(--luz-alvo-mais);
+        height: var(--luz-alvo-mais);
         padding: 0;
         border: 0;
         background: transparent;
@@ -530,17 +543,17 @@
     }
     .mais-i {
         position: absolute;
-        right: 5px;
-        bottom: 5px;
-        width: 26px;
-        height: 26px;
+        right: var(--luz-respiro-cartao);
+        bottom: var(--luz-respiro-cartao);
+        width: var(--luz-mais-i);
+        height: var(--luz-mais-i);
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: var(--luz-raio-botao);
         background: var(--luz-selo-forte);
         box-shadow: inset 0 0 0 1px var(--luz-borda-forte);
-        font-size: 15px;
+        font-size: var(--luz-fs-mais);
         line-height: 1;
     }
     .mais.ok .mais-i {
@@ -548,7 +561,7 @@
         box-shadow: inset 0 0 0 1px var(--luz-verde-borda);
     }
     .pe {
-        height: 30px;
+        height: var(--luz-rodape-h);
         display: flex;
         align-items: center;
         gap: 2px;
@@ -561,14 +574,14 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 12px;
+        font-size: var(--luz-fs-nome);
         font-weight: 600;
         color: var(--luz-texto);
     }
     .eng {
         flex: none;
-        width: 24px;
-        height: 24px;
+        width: var(--luz-eng);
+        height: var(--luz-eng);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -612,7 +625,7 @@
         background: var(--luz-branco);
         z-index: 5;
         transform-origin: left;
-        animation: encherTrava 700ms linear forwards;
+        animation: encherTrava var(--luz-trava) linear forwards;
     }
     @keyframes encherTrava {
         from {
@@ -644,9 +657,9 @@
         gap: 4px;
         background: var(--luz-thumb);
         color: var(--luz-laranja);
-        font-size: 10px;
+        font-size: var(--luz-fs-micro);
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: var(--luz-tracking-micro);
     }
     .mc.falta .mais,
     .mc.falta .dica {
@@ -701,7 +714,7 @@
     .chips span {
         pointer-events: all;
         background-color: var(--luz-selo);
-        color: var(--text);
+        color: var(--luz-texto);
         padding: 1px 5px;
         font-size: 0.7em;
         font-weight: bold;
