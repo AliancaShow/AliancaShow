@@ -14,7 +14,7 @@
     import StageTools from "../stage/StageTools.svelte"
     import { onDestroy, onMount } from "svelte"
     import { activeStage, statusIndicator } from "../../stores"
-    import { alteracoesNaoSalvas, descartarAlteracoes, iniciarRascunho, pararRascunho, tirarFoto } from "../../utils/aliancaConfigRascunho"
+    import { alteracoesNaoSalvas, descartarAlteracoes, fotoParaSalvar, iniciarRascunho, pararRascunho, tirarFoto } from "../../utils/aliancaConfigRascunho"
     import { textoDeAlteracoes } from "../../utils/aliancaConfigRascunhoLogica"
     import { trocarTela } from "../../utils/aliancaTela"
     import { save } from "../../utils/save"
@@ -31,9 +31,18 @@
         else trocarTela("show", "voltar-de-pagina")
     }
 
+    // Fechar Configuracoes com alteracoes pendentes: confirmacao inline (nunca o dialogo do navegador). As mudancas ja valem ao vivo; o que se arrisca e o disco.
+    let confirmando = false
+    function pedirFechar() {
+        if (pagina === "settings" && $alteracoesNaoSalvas > 0) confirmando = true
+        else fechar()
+    }
+    let fecharDepois = false
+
     // Salvar: o mesmo `save()` do Ctrl+S. Confirma em texto discreto; se o aviso de "salvo" nao vier, diz isso (nunca fica mudo).
     let aviso = ""
     let esperando = false
+    let fotoDoSalvar: ReturnType<typeof fotoParaSalvar> | null = null
     let tEspera: ReturnType<typeof setTimeout> | null = null
     let tAviso: ReturnType<typeof setTimeout> | null = null
     function dizer(texto: string, ms = 3000) {
@@ -41,13 +50,18 @@
         if (tAviso) clearTimeout(tAviso)
         tAviso = setTimeout(() => (aviso = ""), ms)
     }
-    function salvar() {
+    function salvar(_e?: unknown, depoisFechar = false) {
         esperando = true
+        fecharDepois = depoisFechar
         aviso = "Salvando…"
+        // a foto e a do momento do clique: o que mudar enquanto o disco confirma continua pendente
+        if (pagina === "settings") fotoDoSalvar = fotoParaSalvar()
         if (tEspera) clearTimeout(tEspera)
         tEspera = setTimeout(() => {
             if (esperando) {
                 esperando = false
+                fecharDepois = false
+                confirmando = false
                 dizer("Não consegui confirmar que salvou", 6000)
             }
         }, 5000)
@@ -56,16 +70,29 @@
     $: if (esperando && $statusIndicator === "saved") {
         esperando = false
         if (tEspera) clearTimeout(tEspera)
+        // so o botao Salvar renova a foto: o autosave ou outra pagina interna nao zeram o que ainda esta pendente
+        if (pagina === "settings" && fotoDoSalvar) tirarFoto(fotoDoSalvar)
+        fotoDoSalvar = null
         dizer("Salvo ✓")
+        if (fecharDepois) {
+            fecharDepois = false
+            confirmando = false
+            fechar()
+        }
     }
-    // so Configuracoes: "N alteracoes nao salvas" e Descartar. A foto e tirada ao abrir e a cada Salvar confirmado (Salvar daqui ou Ctrl+S)
-    $: if (pagina === "settings" && $statusIndicator === "saved") tirarFoto()
     onMount(() => {
         if (pagina === "settings") iniciarRascunho()
     })
-    function descartar() {
-        const n = descartarAlteracoes()
-        dizer(n ? "Alterações descartadas" : "Nada a descartar")
+    function descartar(_e?: unknown, depoisFechar = false) {
+        const { desfeitas, restantes } = descartarAlteracoes()
+        if (restantes) {
+            dizer(`${restantes} alteraç${restantes === 1 ? "ão não pôde" : "ões não puderam"} ser desfeita${restantes === 1 ? "" : "s"}`, 6000)
+            confirmando = false
+            return
+        }
+        dizer(desfeitas ? "Alterações descartadas" : "Nada a descartar")
+        confirmando = false
+        if (depoisFechar) fechar()
     }
     onDestroy(() => {
         pararRascunho()
@@ -81,12 +108,20 @@
             <span class="aviso" data-acao="pagina-aviso" role="status" aria-live="polite">{aviso}</span>
             {#if pagina === "settings"}
                 {#if !aviso && $alteracoesNaoSalvas}<span class="pendentes" data-acao="pagina-pendentes">{textoDeAlteracoes($alteracoesNaoSalvas)}</span>{/if}
-                <button class="descartar" data-acao="pagina-descartar" data-title="Desfaz o que mudou desde a última vez que salvou" tabindex="-1" disabled={!$alteracoesNaoSalvas} on:mousedown|preventDefault on:click={descartar}>Descartar</button>
+                <button class="descartar" data-acao="pagina-descartar" data-title="Desfaz as opções mudadas desde a última vez que salvou. Não desfaz o que vale na hora (criar saída, ligar e desligar, mover de tela)" tabindex="-1" disabled={!$alteracoesNaoSalvas} on:mousedown|preventDefault on:click={descartar}>Descartar</button>
             {/if}
             <button class="salvar" data-acao="pagina-salvar" data-title="Salvar (Ctrl+S)" tabindex="-1" on:mousedown|preventDefault on:click={salvar}>Salvar</button>
-            <button class="fechar" data-acao="pagina-fechar" data-title={origem === "edit" ? "Voltar a Editar" : "Voltar a Mostrar"} tabindex="-1" on:mousedown|preventDefault on:click={fechar}>Fechar</button>
+            <button class="fechar" data-acao="pagina-fechar" data-title={origem === "edit" ? "Voltar a Editar" : "Voltar a Mostrar"} tabindex="-1" on:mousedown|preventDefault on:click={pedirFechar}>Fechar</button>
         </div>
     </header>
+    {#if confirmando}
+        <div class="confirma" data-acao="fechar-confirma" role="alertdialog" aria-label="Alterações não salvas">
+            <span>{textoDeAlteracoes($alteracoesNaoSalvas)}. Salvar antes de fechar?</span>
+            <button class="salvar" data-acao="fechar-salvar" tabindex="-1" on:mousedown|preventDefault on:click={() => salvar(undefined, true)}>Salvar</button>
+            <button class="fechar" data-acao="fechar-descartar" tabindex="-1" on:mousedown|preventDefault on:click={() => descartar(undefined, true)}>Descartar</button>
+            <button class="fechar" data-acao="fechar-continuar" tabindex="-1" on:mousedown|preventDefault on:click={() => (confirmando = false)}>Continuar editando</button>
+        </div>
+    {/if}
     {#if pagina === "settings"}
         <!-- C4: um painel so (lista a esquerda, pagina a direita); as ferramentas de cada pagina descem para o pe da propria pagina -->
         <div class="painelCfg" data-acao="config-painel">
@@ -192,6 +227,22 @@
     .descartar:disabled {
         opacity: 0.4;
         cursor: default;
+    }
+    .confirma {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: var(--luz-raio-campo);
+        background: var(--luz-campo);
+        box-shadow: inset 0 0 0 1px var(--luz-laranja);
+        font-family: var(--luz-fonte);
+        font-size: 13px;
+        color: var(--luz-texto);
+    }
+    .confirma span {
+        margin-right: auto;
     }
     .pendentes {
         font-size: 12px;
