@@ -12,7 +12,7 @@
     import { newToast } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { destroy, receive, send } from "../../../utils/request"
-    import { clone, keysToID, sortByName, sortObject } from "../../helpers/array"
+    import { clone } from "../../helpers/array"
     import { addRtmpDestination, checkFFmpeg, refreshOut, removeRtmpDestination, startRtmpStreaming, startStreaming, stopRtmpStreaming, stopStreaming, toggleOutput, updateOutputRtmpData, updateOutputWebrtcData, updateRtmpDestination } from "../../helpers/output"
     import { hasStreamableDestination } from "../../helpers/rtmpDestinations"
     import InputRow from "../../input/InputRow.svelte"
@@ -27,8 +27,6 @@
     import MaterialTextInput from "../../inputs/MaterialTextInput.svelte"
     import MaterialToggleSwitch from "../../inputs/MaterialToggleSwitch.svelte"
 
-    let outputsList: Output[] = []
-    $: outputsList = sortObject(sortByName(keysToID($outputs)), "stageOutput")
 
     let currentOutput: Output | null = null
     $: if ($currentOutputSettings) currentOutput = clone({ id: $currentOutputSettings, ...$outputs[$currentOutputSettings] })

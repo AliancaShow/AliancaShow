@@ -24,7 +24,6 @@
     import { filterItemStyle, mergeWithStyle } from "../scripts/itemClipboard"
     import type { EditBoxSection, EditInput } from "../values/boxes"
     import { captionTranslateLanguages } from "../values/captionLanguages"
-    import { sectionColors } from "../values/item"
 
     export let sections: { [key: string]: EditBoxSection } = {}
     export let styles: { [key: string]: string } = {}
@@ -321,9 +320,6 @@
         const valores = entrada.linhas.flat().filter((i) => !i.hidden && i.type !== "tip" && i.type !== "toggle" && i.type !== "radio").map((i) => getValue(i))
         const mudou = entrada.section.noReset || entrada.semReset ? false : !!hasChangedValues(entrada.id, null, entrada.ids, false)
         return resumoDaSecao({ id: entrada.id, mudou, valores })
-    }
-    function nomeDaSecao(entrada: Entrada): string {
-        return entrada.rotulo || translateText(entrada.section.name || "edit." + entrada.id)
     }
     function resumoDeGrupo(g: Grupo, _updater: any = null): string {
         if (!grupos) return ""
