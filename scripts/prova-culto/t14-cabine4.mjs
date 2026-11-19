@@ -148,6 +148,48 @@ try {
     ok("B7: depois de recarregar o app, Fonte continua RECOLHIDA, Alinhamento aberto e Mais aberto", (await aberto("vista:default")) === "false" && (await aberto("vista:align")) === "true" && (await dom(`${painel}.querySelector('[data-grupo=mais]').getAttribute('aria-expanded')`)) === "true")
     // devolve o padrao para o resto da rodada
     await j.ev(`try{localStorage.removeItem("aliancashow.editar.blocos.v1")}catch(e){} return 1`)
+
+    // ---------------- C. fundo/frente no clique do cartao (C1)
+    await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
+    await j.ev(`S.activePopup.set(null); S.outLocked.set(false); S.activeProject.set("f3"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("media"); await esp(2500); return 1`)
+    const cartao = (nome) => `[...document.querySelectorAll('[data-acao=midia-cartao]')].find(c=>c.querySelector('.nm').innerText.trim()===${JSON.stringify(nome)})`
+    const caixaC = (expr) => dom(`(()=>{const e=${expr}; if(!e) return null; const r=e.getBoundingClientRect(); return {x:r.x,y:r.y,w:r.width,h:r.height}})()`)
+    // o caminho do jeito que o cartao usa (barras invertidas no Windows)
+    const caminhoV1 = await dom(`Object.values(get(S.mediaFolders))[0].path.split("/").join(String.fromCharCode(92)) + String.fromCharCode(92) + "v1.mp4"`)
+    const tela1 = await dom(`Object.keys(get(S.outputs))[0]`)
+    const ponhaTexto = () => j.ev(`S.outputs.update(o=>{o["${tela1}"].out={slide:{id:"impulso_aos_teus_pes",index:0,layout:"default"}}; return o}); await esp(500); return 1`)
+    const estadoAr = () => dom(`(()=>{const o=get(S.outputs)["${tela1}"].out||{}; return {texto:!!o.slide, fundo:(o.background?.path||"").split(String.fromCharCode(92)).pop()||"", mudo:o.background?.muted}})()`)
+    const clicaV1 = async () => { const th = await caixaC(`${cartao("v1")}.querySelector('.card')`); await clicarEm(j, th.x + th.w / 2, th.y + th.h / 2); await esperar(900); if (!(await estadoAr()).fundo) { await esperar(1200); await clicarEm(j, th.x + th.w / 2, th.y + th.h / 2); await esperar(900) } }
+    const limparAr = () => j.ev(`S.outputs.update(o=>{Object.values(o).forEach(x=>{x.out={}}); return o}); await esp(500); return 1`)
+    const marca = (v) => j.ev(`S.media.update(m=>{m[${JSON.stringify(caminhoV1)}]={...(m[${JSON.stringify(caminhoV1)}]||{}), videoType:${JSON.stringify(v)}}; if(!${JSON.stringify(v)}) delete m[${JSON.stringify(caminhoV1)}].videoType; return m}); await esp(300); return 1`)
+    await limparAr()
+    // por midia: frente
+    await marca("foreground"); await ponhaTexto(); await clicaV1()
+    let e1 = await estadoAr()
+    ok("C1: midia marcada FRENTE: o clique tira o texto do ar e o video toca COM som", e1.fundo === "v1.mp4" && e1.texto === false && e1.mudo === false, JSON.stringify(e1))
+    await limparAr(); await esperar(800)
+    // por midia: fundo
+    await marca("background"); await ponhaTexto(); await clicaV1()
+    let e2 = await estadoAr()
+    ok("C2: midia marcada FUNDO: entra ATRAS do texto (o texto fica no ar) e MUDO", e2.fundo === "v1.mp4" && e2.texto === true && e2.mudo === true, JSON.stringify(e2))
+    await limparAr(); await esperar(800)
+    // herdada da pasta: sem marca propria, a pasta decide
+    await marca(null)
+    await j.ev(`S.mediaTags.update(t=>{t.pc4={name:"Pasta de teste C4",color:null,aliancaPasta:{camada:"frente",fim:"repetir"}}; return t}); S.media.update(m=>{const k=${JSON.stringify(caminhoV1)}; m[k]={...(m[k]||{}), tags:["pc4"]}; return m}); await esp(400); return 1`)
+    await ponhaTexto(); await clicaV1()
+    let e3 = await estadoAr()
+    ok("C3: pasta FRENTE (sem marca propria na midia): o clique tira o texto e toca COM som", e3.fundo === "v1.mp4" && e3.texto === false && e3.mudo === false, JSON.stringify(e3))
+    await limparAr(); await esperar(800)
+    await j.ev(`S.mediaTags.update(t=>{t.pc4.aliancaPasta.camada="fundo"; return t}); await esp(400); return 1`)
+    await ponhaTexto(); await clicaV1()
+    let e4 = await estadoAr()
+    ok("C4: pasta FUNDO: entra atras do texto e MUDO", e4.fundo === "v1.mp4" && e4.texto === true && e4.mudo === true, JSON.stringify(e4))
+    // o selo do cartao diz de onde vem
+    const selo = await dom(`${cartao("v1")}.querySelector('[data-title]')?.getAttribute('data-title')`)
+    console.log("info selo do cartao:", selo)
+    await limparAr()
+    // limpeza do que a prova criou
+    await j.ev(`S.mediaTags.update(t=>{delete t.pc4; return t}); S.media.update(m=>{const k=${JSON.stringify(caminhoV1)}; if(m[k]) delete m[k].tags; return m}); await esp(300); return 1`)
 } catch (e) {
     console.log("FALHA excecao", e.message)
     falhas.push("excecao")

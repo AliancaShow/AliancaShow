@@ -1,6 +1,6 @@
 // T9 (a), revisao C12: o MOTOR de um timer de contagem do FreeShow roda sem a aba Funcoes/Timers da gaveta (nunca aberta na sessao).
 // Inicia um timer de contagem REAL (playPauseGlobal), amostra o valor por 6 s na janela principal e na de saida, e confere que o
-// STAGE:ACTIVE_TIMERS saiu pelo gancho de IPC. Repete com a aba Timers aberta: mesmo comportamento.
+// STAGE:ACTIVE_TIMERS saiu pelo gancho de IPC. Repete com a aba Funcoes aberta (a aba Timers nao tem no na arvore C6: escrever nela falha alto e volta a Shows): mesmo comportamento.
 // (b) O timer do Sirvo (aliancaSirvo.publicar) NAO e provado aqui: nao e exportado e o perfil de teste nao tem chave. Fica declarado.
 import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
@@ -18,9 +18,9 @@ const ok = (c, m) => {
 const tempo = `(get(S.activeTimers).find(t=>t.id==="t9")||{}).currentTime ?? null`
 
 async function rodar(rotulo, comAba) {
-    await principal.ev(`S.activeTimers.set([]); S.timers.update(a=>{a.t9={name:"T9",type:"counter",start:100,end:0,id:"t9"};return a}); S.activeDrawerTab.set(${JSON.stringify(comAba ? "timers" : "shows")}); await esp(500)`)
+    await principal.ev(`S.activeTimers.set([]); S.timers.update(a=>{a.t9={name:"T9",type:"counter",start:100,end:0,id:"t9"};return a}); S.activeDrawerTab.set(${JSON.stringify(comAba ? "functions" : "shows")}); await esp(500)`)
     const aba = await principal.ev(`return get(S.activeDrawerTab)`)
-    ok(comAba ? aba === "timers" : aba !== "timers", `${rotulo}: aba ativa da gaveta = ${aba}`)
+    ok(comAba ? aba === "functions" : aba !== "functions", `${rotulo}: aba ativa da gaveta = ${aba}`)
     await principal.avaliar("if (window.__provaFim) await window.__provaFim(); return 1")
     await principal.ev(`const {playPauseGlobal}=await import(U("components/drawer/timers/timers")); playPauseGlobal("t9", get(S.timers).t9, true); return 1`)
     const v0 = await principal.ev(`return ${tempo}`)
