@@ -29,7 +29,7 @@ import { apiReturnData, emitOSC, startWebSocketAndRest, stopApiListener } from "
 import { closeMain } from "../utils/close"
 import { detectEncoders, setRtmpEncoderSetting } from "../streaming/encoderDetection"
 import { downloadFfmpeg, resolveFfmpegPath } from "../streaming/ffmpegManager"
-import { addToMediaFolder, bundleMediaFiles, getDataFolderPath, getDataFolderRoot, getFileInfo, getMediaCodec, getMediaSyncFolderPath, getMediaTracks, getPaths, getSimularPaths, loadFile, loadShowsAsync, locateMediaFile, openInSystem, readExifData, readFile, readFolder, readFolderContent, selectFiles, selectFilesDialog, selectFolder, setMediaSyncFolderPath, writeFile } from "../utils/files"
+import { addToMediaFolder, bundledBiblesFolder, bundleMediaFiles, doesPathExist, getDataFolderPath, getDataFolderRoot, getFileInfo, getMediaCodec, getMediaSyncFolderPath, getMediaTracks, getPaths, getSimularPaths, loadFile, loadShowsAsync, locateMediaFile, openInSystem, readExifData, readFile, readFolder, readFolderContent, selectFiles, selectFilesDialog, selectFolder, setMediaSyncFolderPath, writeFile } from "../utils/files"
 import { getMachineId } from "../utils/helpers"
 import { LyricSearch } from "../utils/LyricSearch"
 import { closeMidiInPorts, getMidiInputs, getMidiOutputs, receiveMidi, sendMidi } from "../utils/midi"
@@ -344,9 +344,17 @@ export function loadScripture(msg: { id: string; name: string }) {
 function readBiblesFolder() {
     const bibleFolder: string = getDataFolderPath("scriptures")
     const names = readFolder(bibleFolder)
+    // as que vieram no instalador (bundled-bibles/ ou resources/bibles) sao registradas sozinhas no front
+    let embutidas = new Set<string>()
+    try {
+        const origem = bundledBiblesFolder()
+        if (doesPathExist(origem)) embutidas = new Set(readFolder(origem).map((n) => n.toLowerCase()))
+    } catch (err) {
+        console.error("Could not read bundled Bibles folder:", err)
+    }
     return names.map((name) => {
         const filePath = path.join(bibleFolder, name)
-        return { path: filePath, name: name.replace(/\.fsb$/i, "") }
+        return { path: filePath, name: name.replace(/\.fsb$/i, ""), embutida: embutidas.has(name.toLowerCase()) }
     })
 }
 
