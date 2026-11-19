@@ -36,7 +36,11 @@ const ITENS: { [id: string]: ContextMenuItem } = {
     alianca_descer: { label: "Mover para baixo", icon: "down", iconColor: "#93f190", translate: false },
     alianca_tirar: { label: "Tirar do roteiro", icon: "delete", iconColor: "#ff6b54", translate: false },
     alianca_titulo: { label: "Editar título", icon: "rename", iconColor: "#6effbe", translate: false },
-    alianca_novo_bloco: { label: "Novo bloco", icon: "section", iconColor: "var(--secondary)", translate: false }
+    alianca_novo_bloco: { label: "Novo bloco", icon: "section", iconColor: "var(--secondary)", translate: false },
+    // cabine-5: os 3 tipos foram para a raiz do menu da pasta de midia; sem o titulo "Tipo" do submenu, o rotulo diz o que e
+    type_default: { label: "Tipo: Padrão", icon: "autofill", translate: false },
+    type_background: { label: "Tipo: Plano de fundo", icon: "type_background", translate: false },
+    type_foreground: { label: "Tipo: Primeiro plano", icon: "type_foreground", translate: false }
 }
 
 import { NOVOS, REMOVIDOS, semDestinoPorLayout, type Layout } from "./aliancaMenusBibliotecaLayouts"
@@ -299,4 +303,3 @@ export function acaoDaBiblioteca(chamada: Chamada): boolean {
     }
     return true
 }
-

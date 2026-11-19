@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { dictionary, fullColors, groups, labelsDisabled, language, special, timeFormat } from "../../../stores"
+    import { dictionary, fullColors, groups, labelsDisabled, language, special, timeFormat, transitionData } from "../../../stores"
+    import { modoTrocaFundo, trocaFundo } from "../../../utils/aliancaTrocaFundo"
     import { getLanguageList, setLanguage, translateText } from "../../../utils/language"
     import { isGroupHidden } from "../../../utils/profile"
     import { sortByName } from "../../helpers/array"
@@ -43,6 +44,19 @@
 <MaterialToggleSwitch label="settings.use24hClock" checked={$timeFormat === "24"} on:change={(e) => timeFormat.set(e.detail ? "24" : "12")} />
 <MaterialToggleSwitch label="settings.disable_labels" checked={$labelsDisabled} defaultValue={false} on:change={(e) => labelsDisabled.set(e.detail)} />
 <MaterialToggleSwitch label="settings.full_colors" checked={$fullColors} defaultValue={false} on:change={(e) => fullColors.set(e.detail)} />
+
+<!-- cabine-5: troca de fundo (video/imagem) — corte seco ou fade. Grava a transicao GLOBAL de midia: e a unica que o audio do video tambem segue -->
+<Title label="Fundo" icon="background" />
+<MaterialDropdown
+    label="Troca de fundo"
+    value={modoTrocaFundo($transitionData.media)}
+    defaultValue="fade"
+    options={[
+        { value: "fade", label: "Fade (transição suave)" },
+        { value: "corte", label: "Corte seco" }
+    ]}
+    on:change={(e) => transitionData.update((a) => ({ ...a, media: trocaFundo(a.media, e.detail === "corte" ? "corte" : "fade") }))}
+/>
 
 <!-- SLIDES -->
 
