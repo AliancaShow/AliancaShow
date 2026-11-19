@@ -15,7 +15,7 @@ const saida = process.argv[2] || "prints-v2-6"
 mkdirSync(saida, { recursive: true })
 const falhas = []
 const ok = (n, c, x = "") => (console.log(`${c ? "ok   " : "FALHA"} ${n}${x ? " :: " + x : ""}`), c || falhas.push(n))
-const j = await abrir("principal")
+const j = await abrir("principal", { buffer: true })
 const dom = (expr) => j.ev(`return ${expr}`)
 async function print(nome) {
     await esperar(600)
@@ -173,9 +173,18 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       ok("D2 clique na midia: foi ao fundo da saida e o roteiro nao mudou", ar.some((x) => x.b) && (await tamanho()) === tam, JSON.stringify(ar))
       // o clique no cartao que JA esta no ar o tira (passada a trava de 800 ms): o comportamento antigo do cartao, nao e um segundo disparo
       await esperar(900)
+      // revisao do PR #40 (achado 13): o D2c nao pode passar com um no-op. Se a midia e video, o 2o clique tem de REINICIAR de verdade (tempo medido antes e depois)
+      const caminhoD2 = ar.find((x) => x.b)?.b || ""
+      const ehVideoD2 = caminhoD2.endsWith(".mp4")
+      if (ehVideoD2) await j.ev(`const V=await import(U("components/media/video/videoPlayer")); V.VideoPlayer.seekTo(${JSON.stringify(caminhoD2)},"default",1.6); await esp(150); return 1`)
+      const antesD2 = ehVideoD2 ? await j.ev(`const V=await import(U("components/media/video/videoPlayer")); const x=V.VideoPlayer.getAudio(${JSON.stringify(caminhoD2)},"default"); return x ? x.currentTime : -1`) : null
       await clicarEm(j, a.x, a.y); await esperar(900)
       // C1 (cabine 18/nov, contrato mudou): o 2o clique (depois da trava) no que JA esta no ar REINICIA o video; nunca o tira do ar
       ok("D2c segundo clique (depois da trava) no cartao que esta no ar NAO o tira do ar (reinicia)", (await noAr()).some((x) => x.b))
+      if (ehVideoD2) {
+          const depoisD2 = await j.ev(`const V=await import(U("components/media/video/videoPlayer")); const x=V.VideoPlayer.getAudio(${JSON.stringify(caminhoD2)},"default"); return x ? x.currentTime : -1`)
+          ok("D2c o video REINICIOU de verdade (nao foi um no-op): tempo antes >= 1,5 s, depois < 1,2 s", antesD2 >= 1.5 && depoisD2 >= 0 && depoisD2 < 1.2, JSON.stringify({ antesD2, depoisD2 }))
+      }
       await limpar()
       await j.ev(`S.outLocked.set(true); return 1`)
       await clicarEm(j, a.x, a.y); await esperar(700)

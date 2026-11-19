@@ -23,7 +23,7 @@ const saida = process.argv[2] || "prints-v2-8b"
 mkdirSync(saida, { recursive: true })
 const falhas = []
 const ok = (n, c, x = "") => (console.log(`${c ? "ok   " : "FALHA"} ${n}${x ? " :: " + x : ""}`), c || falhas.push(n))
-const j = await abrir("principal")
+const j = await abrir("principal", { buffer: true })
 const dom = (expr) => j.ev(`return ${expr}`)
 async function print(nome, espera = 500) {
     await esperar(espera)
