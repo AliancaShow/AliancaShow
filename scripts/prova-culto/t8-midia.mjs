@@ -257,7 +257,12 @@ try {
 
     // ---- I. Spotify (so a linha: o estado e fingido, nao ha Spotify no aparelho de teste; o controlador escondido zera o estado a cada 1 s, por isso o estado e reposto)
     await j.ev(`${IMPORTA_SPOTIFY} for(let i=0;i<8;i++){M.spotifyState.set({title:"Cantico",artist:"Coral",isPlaying:false,positionSec:3,durationSec:200,volume:1}); await esp(30)} await esp(20); return 1`)
-    const fs1 = await faixa()
+    let fs1 = await faixa()
+    // o controlador escondido zera o estado a cada 1 s: se zerou entre o set e a medida, repoe o estado (ate 4 vezes) e mede de novo
+    for (let t = 0; t < 4 && fs1.estado !== "ativo"; t++) {
+        await j.ev(`${IMPORTA_SPOTIFY} for(let i=0;i<8;i++){M.spotifyState.set({title:"Cantico",artist:"Coral",isPlaying:false,positionSec:3,durationSec:200,volume:1}); await esp(30)} await esp(20); return 1`)
+        fs1 = await faixa()
+    }
     const sp = await dom(`document.querySelector('[data-acao=spotify]')?.innerText.replace(/\\s+/g,' ')`)
     ok("I: com estado de Spotify a pilha mostra o cartao do Spotify, mesma altura", fs1.estado === "ativo" && fs1.h === 60 && (await abaixo()) === lay0 && /Cantico/.test(sp || ""), `${JSON.stringify(fs1)} ${sp}`)
     await j.ev(`${IMPORTA_SPOTIFY} for(let i=0;i<3;i++){M.spotifyState.set({title:"Cantico",artist:"Coral",isPlaying:false,positionSec:3,durationSec:200,volume:1}); await esp(40)} return 1`)
@@ -272,7 +277,10 @@ try {
     ok("K: cada cartao de midia tem 60 px", (await dom(`[...${FAIXA}.querySelectorAll('[data-transporte]')].every(e=>Math.round(e.getBoundingClientRect().height)===60)`)) === true)
     await print("transporte-pilha", 200)
     await j.ev(`${IMPORTA_SPOTIFY} for(let i=0;i<8;i++){M.spotifyState.set({title:"Cantico",artist:"Coral",isPlaying:true,positionSec:3,durationSec:200,volume:1}); await esp(30)} await esp(20); return 1`)
-    const k1 = await dom(`(()=>{const p=${FAIXA}.querySelector('[data-acao=transporte-pilha]'); return {h:Math.round(p.getBoundingClientRect().height), rola:p.scrollHeight>p.clientHeight+1, cartoes:p.querySelectorAll('[data-transporte],[data-timer],[data-acao=spotify]').length}})()`)
+    const medirK = () => dom(`(()=>{const p=${FAIXA}.querySelector('[data-acao=transporte-pilha]'); return {h:Math.round(p.getBoundingClientRect().height), rola:p.scrollHeight>p.clientHeight+1, cartoes:p.querySelectorAll('[data-transporte],[data-timer],[data-acao=spotify]').length}})()`)
+    // o 4o cartao nasce depois de um ciclo de render (sob carga passa de 20 ms): espera ate 4 s pela MESMA medida
+    let k1 = await medirK()
+    for (let t = 0; t < 20 && k1.cartoes !== 4; t++) (await esperar(200), (k1 = await medirK()))
     ok("K: com o 4o cartao a pilha para em 188 px e rola por dentro", k1.cartoes === 4 && k1.h === 188 && k1.rola === true, JSON.stringify(k1))
     await print("transporte-pilha-rola", 200)
     await j.ev(`${IMPORTA_SPOTIFY} M.spotifyState.set(null); await esp(500); return 1`)
@@ -297,6 +305,8 @@ try {
     await j.ev(`S.outputs.update(o=>{o.default.out={}; o.segunda.out.background={path:${JSON.stringify(VIDEO2)},type:"video",name:"v2.mp4"}; return o}); await esp(800); return 1`)
     ok("L: principal sem video e outra com: o cartao da outra aparece, com etiqueta e sem o ponto do telao", (await dom(`document.querySelectorAll('[data-transporte=video]').length`)) === 1 && (await dom(`document.querySelector('[data-transporte-saida]')?.innerText`)) === "NDI LIVE" && (await dom(`!document.querySelector('[data-transporte-ponto]')`)) === true)
     await j.ev(`S.outputs.update(o=>{delete o.segunda; o.default.name=${JSON.stringify(nomeOrig)}; o.default.out={}; return o}); await esp(800); return 1`)
+    // a coluna (mensagem pro palco, uma linha por saida) so reassenta depois do ciclo de render: espera ate 5 s pela MESMA medida
+    for (let t = 0; t < 25 && (await abaixo()) !== lay0; t++) await esperar(200)
     ok("L: de volta a uma saida so, sem etiqueta e a pilha no lugar", (await faixa()).estado === "vazio" && (await abaixo()) === lay0, `${await abaixo()} vs ${lay0}`)
 } catch (e) {
     console.log("FALHA excecao", e.message)
