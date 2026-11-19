@@ -13,6 +13,8 @@
     import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { membros, pastaParaConfigurar } from "../../../utils/aliancaPastasMidiaEstado"
     import { PASTA_RAIZ, PASTA_SIRVO, ehAbaDePasta, idDaAba, pastaDaMidia } from "../../../utils/aliancaPastasMidiaLogica"
+    import { caminhosDaRaiz } from "../../../utils/aliancaBibliotecaMidiaLogica"
+    import { importarSoltos } from "../../../utils/aliancaBibliotecaMidia"
     import Icon from "../../helpers/Icon.svelte"
     import T from "../../helpers/T.svelte"
     import { clone, keysToID, sortFilenames } from "../../helpers/array"
@@ -178,7 +180,8 @@
             if (active === prevActive) return
             prevActive = active
 
-            requestFiles(Object.values($mediaFolders).map((a) => a.path!))
+            // cabine-5 (André, 19/nov): a raiz "Mídia" é a BIBLIOTECA sem categoria — não lê mais as pastas do disco
+            carregarRaiz()
         } else if (path?.length) {
             if (path === prevActive) return
             prevActive = path
@@ -207,22 +210,20 @@
                     .map((a: any) => a.path)
             }
         } else {
+            // cabine-5: arquivo que sumiu NAO some da lista: o cartao mostra "arquivo nao encontrado" (offline, C1) — decisao do André
             caminhos = (pastaId ? get(membros)[pastaId] : []) || []
-            // existe neste computador? (o store `media` nao e portatil)
-            const existe = await Promise.all(
-                caminhos.map(async (c) => {
-                    if (/^https?:/i.test(c)) return true
-                    try {
-                        return !!(await requestMain(Main.FILE_INFO, c))
-                    } catch {
-                        return true
-                    }
-                })
-            )
-            caminhos = caminhos.filter((_, i) => existe[i])
         }
         if (minha !== cargaPasta) return
+        listarCaminhos(caminhos)
+    }
 
+    // cabine-5: a raiz da biblioteca (na biblioteca e sem categoria); offline aparece como C1, nunca some calado
+    function carregarRaiz() {
+        ++cargaPasta
+        listarCaminhos(caminhosDaRaiz(get(media), get(mediaTags)))
+    }
+
+    function listarCaminhos(caminhos: string[]) {
         const arquivos: FileFolder[] = []
         const audios: { path: string; name: string }[] = []
         for (const c of caminhos) {
@@ -245,6 +246,30 @@
             if (active === PASTA_RAIZ) filterFiles()
             else if (active !== PASTA_SIRVO) carregarPasta()
         }
+    }
+
+    // cabine-5: importou, tirou ou moveu: a raiz se refaz (sem ler o disco)
+    $: assinaturaRaiz = ehTodos ? caminhosDaRaiz($media, $mediaTags).join("|") : ""
+    let assinaturaRaizAnterior = ""
+    $: if (assinaturaRaiz !== assinaturaRaizAnterior) {
+        assinaturaRaizAnterior = assinaturaRaiz
+        if (ehTodos && prevActive === active) carregarRaiz()
+    }
+
+    // cabine-5: soltar arquivos/pastas do Explorer na grade: entram na categoria aberta, ou na raiz. Pasta vira categoria nova.
+    // So "Files" (o arrasto interno de cartoes nao passa por aqui)
+    $: podeSoltar = ehTodos || (!!pastaId && active !== PASTA_SIRVO)
+    function arrastandoDoComputador(e: DragEvent) {
+        if (!podeSoltar || !e.dataTransfer?.types?.includes("Files")) return
+        e.preventDefault()
+    }
+    function soltarDoComputador(e: DragEvent) {
+        const soltos = Array.from(e.dataTransfer?.files || [])
+        if (!podeSoltar || !soltos.length) return
+        e.preventDefault()
+        e.stopPropagation()
+        const caminhos = soltos.map((f) => (window as any).api.showFilePath(f)).filter(Boolean)
+        importarSoltos(caminhos, pastaId)
     }
 
     let hasAudio = { count: 0, exists: false }
@@ -642,7 +667,7 @@
 
 <!-- MAIN -->
 
-<div class="scroll" style="flex: 1;overflow-y: auto;" bind:this={scrollElem}>
+<div class="scroll" style="flex: 1;overflow-y: auto;" bind:this={scrollElem} on:dragover={arrastandoDoComputador} on:drop={soltarDoComputador}>
     <!-- o painel da pasta rola junto com a grade: numa gaveta baixa o rodape dele nao fica escondido atras do zoom -->
     {#if ehPastaView && cfgAberta && $tela !== "mostrar" && pastaId && tagDaPasta}
         <AliancaPastaCfg {pastaId} />
@@ -894,6 +919,5 @@
 
         overflow-y: auto;
         overflow-x: hidden;
-
     }
 </style>

@@ -22,7 +22,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         expect(reg).toMatch(/semDestinoPorLayout\(antigos\)[\s\S]*falhaAlta\("menu-biblioteca"/)
     })
     it("todo item do menu novo existe em contextMenuItems (ou e separador/grupo)", () => {
-        const itensDaFatia = ["alianca_roteiro", "alianca_agora", "alianca_agora_item", "alianca_subir", "alianca_descer", "alianca_tirar", "alianca_titulo", "alianca_novo_bloco"]
+        const itensDaFatia = ["alianca_roteiro", "alianca_agora", "alianca_agora_item", "alianca_subir", "alianca_descer", "alianca_tirar", "alianca_titulo", "alianca_novo_bloco", "alianca_tirar_bib"]
         const registrados = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8") + readFileSync(join(__dirname, "aliancaMenusEditar.ts"), "utf8")
         for (const [layout, itens] of Object.entries(NOVOS))
             for (const i of itens) {
@@ -38,7 +38,11 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
             if (a) antigos[k] = a
         }
         // show_drawer e project_effect nasceram aqui (o FreeShow nao tinha menu para eles)
-        expect(Object.keys(NOVOS).filter((k) => !antigos[k]).sort()).toEqual(["project_effect", "show_drawer", "stream_card"])
+        expect(
+            Object.keys(NOVOS)
+                .filter((k) => !antigos[k])
+                .sort()
+        ).toEqual(["project_effect", "show_drawer", "stream_card"])
         expect(semDestinoPorLayout(antigos)).toEqual({})
         for (const [layout, declarados] of Object.entries(REMOVIDOS)) for (const [item, destino] of Object.entries(declarados)) expect(destino.length, `${layout}.${item}`).toBeGreaterThan(5)
     })
@@ -50,7 +54,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         const aoAr = ["alianca_agora", "alianca_agora_item", "play_no_audio", "play_no_filters"]
         for (const itens of Object.values(NOVOS)) for (const i of itens) if (/^play($|_no_)|agora/.test(i)) expect(aoAr).toContain(i)
     })
-    it("revisao da fatia 6, achado 1: \"Mostrar agora\" num versiculo chama playScripture() direto, nunca refaz o duplo clique (que com a Biblia no ar devolve false)", () => {
+    it('revisao da fatia 6, achado 1: "Mostrar agora" num versiculo chama playScripture() direto, nunca refaz o duplo clique (que com a Biblia no ar devolve false)', () => {
         const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
         expect(reg).not.toMatch(/dispararNoAlvo\([^)]*"dblclick"/)
         expect(reg).toMatch(/startsWith\("#scripture"\)[\s\S]{0,260}playScripture\(\)/)
@@ -63,7 +67,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         for (const t of ["mousedown", "mouseup", "click", "dblclick"]) expect(reg, t).toContain(`"${t}"`)
         expect(reg).toMatch(/anteparo\.engole\([\s\S]{0,400}stopImmediatePropagation\(\)/)
     })
-    it("revisao da fatia 6, achado 3: \"Tirar do roteiro\" passa pela porta do Delete (deleteAction), nao grava a lista na mao", () => {
+    it('revisao da fatia 6, achado 3: "Tirar do roteiro" passa pela porta do Delete (deleteAction), nao grava a lista na mao', () => {
         const reg = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8")
         const tirar = reg.slice(reg.indexOf("function tirar("), reg.indexOf("const ACOES"))
         expect(tirar).toContain('deleteAction({ id: "show", data: [{ index: r.indice }] })')
@@ -117,7 +121,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
     })
 })
 
-describe("cabine 18/nov, A11: o menu da midia nao tem \"Mostrar agora (sem pôr no roteiro)\" (o ▶ do cartao ja faz isso)", () => {
+describe('cabine 18/nov, A11: o menu da midia nao tem "Mostrar agora (sem pôr no roteiro)" (o ▶ do cartao ja faz isso)', () => {
     it("media_card nao traz alianca_agora; os outros layouts de biblioteca seguem com ele", () => {
         expect(NOVOS.media_card).not.toContain("alianca_agora")
         expect(NOVOS.show_drawer).toContain("alianca_agora")

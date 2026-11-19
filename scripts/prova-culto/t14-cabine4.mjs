@@ -10,7 +10,7 @@
 import { mkdirSync } from "node:fs"
 import { writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, BIB_RAIZ } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-cabine4"
 mkdirSync(saida, { recursive: true })
@@ -47,7 +47,8 @@ const fimDoFade = async () => {
 }
 const limpar = () => j.ev(`const {VideoPlayer}=await import(U("components/media/video/videoPlayer")); for (const v of [...get(S.playingVideos)]) await VideoPlayer.stop(v.path); S.playingVideos.set([]); S.playingAudio.set({}); S.outputs.update(o=>{Object.values(o).forEach(x=>{x.out={}}); return o}); await esp(900); return 1`)
 const VP = `const {VideoPlayer}=await import(U("components/media/video/videoPlayer"));`
-const CAMINHO_V1 = `Object.values(get(S.mediaFolders))[0].path.split("/").join(String.fromCharCode(92)) + String.fromCharCode(92) + "v1.mp4"`
+// cabine-5: o v1 da BIBLIOTECA (a chave que o cartao usa; o perfil grava com "/")
+const CAMINHO_V1 = `Object.keys(get(S.media)).find(k=>k.split(String.fromCharCode(92)).join("/").toLowerCase().endsWith("/midia/v1.mp4") && (get(S.media)[k].tags||[]).includes("alianca:bib"))`
 const cartaoV1 = `[...document.querySelectorAll('[data-acao=midia-cartao]')].find(c=>c.querySelector('.nm').innerText.trim()==="v1")`
 const marcaV1 = (v) => j.ev(`const k=${CAMINHO_V1}; S.media.update(m=>{m[k]={...(m[k]||{}), videoType:${JSON.stringify(v)}}; return m}); await esp(300); return 1`)
 const cliqueV1 = async () => {
@@ -59,7 +60,7 @@ const tocandoNoStore = () => dom(`get(S.playingVideos).length`)
 try {
     const tela = await dom(`Object.keys(get(S.outputs))[0]`)
     await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
-    await j.ev(`S.activePopup.set(null); S.outLocked.set(false); S.activeProject.set("f3"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("media"); await esp(2500); return 1`)
+    await j.ev(`S.activePopup.set(null); S.outLocked.set(false); S.activeProject.set("f3"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("media"); ${BIB_RAIZ} await esp(2500); return 1`)
     await limpar()
 
     // A1: clique no cartao de um video marcado FUNDO (mudo, em repeticao) com o Spotify tocando: nada acontece
@@ -153,7 +154,10 @@ try {
         ["Configuracoes", "settings"]
     ]) {
         await j.ev(`T.trocarTela(${JSON.stringify(pag)},"segmentado"); await esp(1500); return 1`)
-        if ((await dom(`get(S.activePage)`)) !== pag) { ok(`A9: a pagina ${nome} abriu`, false, String(await dom(`get(S.activePage)`))); continue }
+        if ((await dom(`get(S.activePage)`)) !== pag) {
+            ok(`A9: a pagina ${nome} abriu`, false, String(await dom(`get(S.activePage)`)))
+            continue
+        }
         await spotify(true)
         await j.ev(`${VP} await VideoPlayer.start(${CAMINHO_V1}, {muted:false, loop:false}, [${JSON.stringify(tela)}]); await esp(1500); return 1`)
         ok(
@@ -278,14 +282,14 @@ try {
 
     // ---------------- C. fundo/frente no clique do cartao (C1)
     await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
-    await j.ev(`S.activePopup.set(null); S.outLocked.set(false); S.activeProject.set("f3"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("media"); await esp(2500); return 1`)
+    await j.ev(`S.activePopup.set(null); S.outLocked.set(false); S.activeProject.set("f3"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("media"); ${BIB_RAIZ} await esp(2500); return 1`)
     const cartao = (nome) => `[...document.querySelectorAll('[data-acao=midia-cartao]')].find(c=>c.querySelector('.nm').innerText.trim()===${JSON.stringify(nome)})`
     const caixaC = (expr) => dom(`(()=>{const e=${expr}; if(!e) return null; const r=e.getBoundingClientRect(); return {x:r.x,y:r.y,w:r.width,h:r.height}})()`)
-    // o caminho do jeito que o cartao usa (barras invertidas no Windows)
-    const caminhoV1 = await dom(`Object.values(get(S.mediaFolders))[0].path.split("/").join(String.fromCharCode(92)) + String.fromCharCode(92) + "v1.mp4"`)
+    // o caminho do jeito que o cartao usa (cabine-5: a chave da BIBLIOTECA no `media`)
+    const caminhoV1 = await dom(CAMINHO_V1)
     const tela1 = await dom(`Object.keys(get(S.outputs))[0]`)
     const ponhaTexto = () => j.ev(`S.outputs.update(o=>{o["${tela1}"].out={slide:{id:"impulso_aos_teus_pes",index:0,layout:"default"}}; return o}); await esp(500); return 1`)
-    const estadoAr = () => dom(`(()=>{const o=get(S.outputs)["${tela1}"].out||{}; return {texto:!!o.slide, fundo:(o.background?.path||"").split(String.fromCharCode(92)).pop()||"", mudo:o.background?.muted}})()`)
+    const estadoAr = () => dom(`(()=>{const o=get(S.outputs)["${tela1}"].out||{}; return {texto:!!o.slide, fundo:(o.background?.path||"").split(String.fromCharCode(92)).join("/").split("/").pop()||"", mudo:o.background?.muted}})()`)
     const clicaV1 = async () => {
         const th = await caixaC(`${cartao("v1")}.querySelector('.card')`)
         await clicarEm(j, th.x + th.w / 2, th.y + th.h / 2)
@@ -317,7 +321,7 @@ try {
     await esperar(800)
     // herdada da pasta: sem marca propria, a pasta decide
     await marca(null)
-    await j.ev(`S.mediaTags.update(t=>{t.pc4={name:"Pasta de teste C4",color:null,aliancaPasta:{camada:"frente",fim:"repetir"}}; return t}); S.media.update(m=>{const k=${JSON.stringify(caminhoV1)}; m[k]={...(m[k]||{}), tags:["pc4"]}; return m}); await esp(400); return 1`)
+    await j.ev(`S.mediaTags.update(t=>{t.pc4={name:"Pasta de teste C4",color:null,aliancaPasta:{camada:"frente",fim:"repetir"}}; return t}); S.media.update(m=>{const k=${JSON.stringify(caminhoV1)}; m[k]={...(m[k]||{}), tags:["pc4","alianca:bib"]}; return m}); S.drawerTabsData.update(a=>{a.media={...(a.media||{}),activeSubTab:"pasta:pc4"};return a}); await esp(1500); return 1`)
     await ponhaTexto()
     await clicaV1()
     let e3 = await estadoAr()

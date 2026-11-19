@@ -2,7 +2,7 @@
 //   node scripts/prova-culto/t15-cabine5.mjs
 //   A  Configuracoes com fundo no ar e fade longo: enquanto o fade de saida da previa do No ar roda, so UM corpo aparece e ele tem a altura toda
 //   B  arvore da Biblia sem "Colecoes"/"Nova colecao"; "＋ biblia" no fim
-//   C  botao direito numa pasta de midia: os 3 tipos na raiz, sem o submenu "Tipo"
+//   C  biblioteca de midia: a pasta do disco virou categoria; nenhuma pasta do disco na arvore; tirar da biblioteca + Ctrl+Z; offline aparece
 //   D  Configuracoes > Geral: "Troca de fundo" (Fade / Corte seco) grava a transicao global de midia
 import { abrir, clicarEm, esperar, localizar } from "./lib.mjs"
 
@@ -57,20 +57,34 @@ console.log("     linhas ＋ na arvore: " + JSON.stringify(biblia.add))
 const raizMidia = await localizar(j, `[...document.querySelectorAll("button.no")].find(b=>b.querySelector(".nome")?.textContent.trim()==="Mídia")`)
 if (raizMidia.ok) await clicarEm(j, raizMidia.x, raizMidia.y)
 await esperar(900)
-const pasta = await localizar(j, `[...document.querySelectorAll('[class*="#category_media_button"]')][0] || [...document.querySelectorAll(".context")].find(e=>String(e.className).includes("category_media_button"))`)
-if (!pasta.ok) ok("C0 pasta de midia na arvore", false, pasta.motivo)
-else {
-    await j.enviar("Input.dispatchMouseEvent", { type: "mousePressed", x: pasta.x, y: pasta.y, button: "right", clickCount: 1 })
-    await j.enviar("Input.dispatchMouseEvent", { type: "mouseReleased", x: pasta.x, y: pasta.y, button: "right", clickCount: 1 })
-    await esperar(600)
-    const itens = await j.ev(`return [...document.querySelectorAll(".contextMenu .item, .contextMenu p, .contextMenu button")].map(e=>e.innerText.trim()).filter(Boolean)`)
-    const t = itens.join(" | ")
-    ok("C1 Tipo: Padrao na raiz", /Tipo: Padr/.test(t), t)
-    ok("C2 Tipo: Plano de fundo na raiz", /Tipo: Plano de fundo/.test(t))
-    ok("C3 Tipo: Primeiro plano na raiz", /Tipo: Primeiro plano/.test(t))
-    await j.ev(`document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape"})); return 1`)
-    await clicarEm(j, 5, 400)
+// a migracao roda ao abrir a Midia (o perfil tem `media` cheio: nao espera os 15 s)
+let mig = null
+for (let i = 0; i < 20 && !mig?.cat; i++) {
+    await esperar(1000)
+    mig = await j.ev(`const t=get(S.mediaTags); const cat=Object.entries(t).find(([,x])=>x.aliancaPasta && (x.aliancaDeDisco||[]).length); const m=get(S.media); const f1=Object.keys(m).find(k=>/f1\\.png$/i.test(k)); return {cat:cat?cat[0]:null, nome:cat?cat[1].name:null, f1, tagsF1:f1?m[f1].tags:null}`)
 }
+ok("C1 a pasta do disco do perfil virou categoria", !!mig?.cat, JSON.stringify(mig))
+ok("C2 f1 entrou na biblioteca, na categoria", !!mig?.tagsF1?.includes("alianca:bib") && mig.tagsF1.includes(mig.cat), JSON.stringify(mig?.tagsF1))
+ok("C3 nenhuma pasta do disco na arvore", (await j.ev(`return document.querySelectorAll('[class*="#category_media_button"]').length`)) === 0)
+ok("C4 linha '＋ importar mídia' na arvore", (await j.ev(`return [...document.querySelectorAll('[data-acao="arvore-add"]')].some(b=>/importar m/.test(b.textContent))`)) === true)
+// tirar da biblioteca e Ctrl+Z
+const tirar = await j.ev(`
+  const B=await import(U("utils/aliancaBibliotecaMidia")); const H=await import(U("components/helpers/history"))
+  const f1=${JSON.stringify(mig?.f1 || "")}
+  const n=B.tirarDaBiblioteca([f1]); await esp(300); const depois=get(S.media)[f1]?.tags||[]
+  H.undo(); await esp(500); const desfeito=get(S.media)[f1]?.tags||[]
+  return {n, depois, desfeito}`)
+ok("C5 tirar da biblioteca: sai a marca e a categoria", tirar.n === 1 && !tirar.depois.includes("alianca:bib") && !tirar.depois.includes(mig?.cat), JSON.stringify(tirar))
+ok("C6 Ctrl+Z repoe na categoria", tirar.desfeito.includes("alianca:bib") && tirar.desfeito.includes(mig?.cat), JSON.stringify(tirar.desfeito))
+// offline: um arquivo que nao existe importado na raiz aparece como OFFLINE (nao some)
+const off = await j.ev(`
+  const B=await import(U("utils/aliancaBibliotecaMidia")); const r=Object.values(get(S.mediaFolders))[0].path
+  B.importarCaminhos([r+"/sumiu-de-proposito.mp4"], null)
+  S.activeDrawerTab.set("media"); S.drawerTabsData.update(a=>{a.media={...(a.media||{}),activeSubTab:"all"};return a}); await esp(4000)
+  const c=[...document.querySelectorAll('[data-acao=midia-cartao]')].find(x=>x.innerText.includes("sumiu-de-proposito"))
+  return {existe:!!c, estado:c?.dataset.estado||null, texto:c?.innerText||""}`)
+ok("C7 offline aparece na raiz (nao some)", off.existe, JSON.stringify(off))
+ok("C8 offline marcado como OFFLINE", off.estado === "falta" && /OFFLINE/.test(off.texto), JSON.stringify(off))
 
 // ---------------------------------------------------------------- D
 const d = await j.ev(`

@@ -5,15 +5,15 @@
     import { Main } from "../../../../types/IPC/Main"
     import { ToMain } from "../../../../types/IPC/ToMain"
     import { destroyMain, receiveToMain, requestMain, sendMain } from "../../../IPC/main"
-    import { activeDrawerTab, drawerTabsData, media, mediaFolders, providerConnections, special } from "../../../stores"
+    import { activeDrawerTab, activePage, drawerTabsData, media, providerConnections, special } from "../../../stores"
     import { tela } from "../../../utils/aliancaTela"
+    import { newToast } from "../../../utils/common"
     import { criarPasta } from "../../../utils/aliancaPastasMidia"
     import { membros, pastas } from "../../../utils/aliancaPastasMidiaEstado"
-    import { PASTA_SIRVO, abaDaPasta } from "../../../utils/aliancaPastasMidiaLogica"
+    import { PASTA_SIRVO, abaDaPasta, idDaAba } from "../../../utils/aliancaPastasMidiaLogica"
+    import { importarCaminhos, importarSoltos, migrarPastasDoDisco } from "../../../utils/aliancaBibliotecaMidia"
     import { getAccess } from "../../../utils/profile"
-    import { keysToID, sortObject } from "../../helpers/array"
-    import { addDrawerFolder } from "../../helpers/dropActions"
-    import { countFolderMediaItems } from "../../helpers/media"
+    import { mediaExtensions } from "../../../values/extensions"
     import AliancaLinhaAdd from "./AliancaLinhaAdd.svelte"
     import NavigationSections from "./NavigationSections.svelte"
 
@@ -23,23 +23,11 @@
     // C6: com Audio (filho de Midia) aberto, nenhuma pasta fica marcada nem a 1a e escolhida sozinha
     $: activeSubTab = $activeDrawerTab === "media" ? $drawerTabsData.media?.activeSubTab || "" : "__fora__"
 
-    $: foldersList = keysToID($mediaFolders)
     $: favoritesListLength = Object.values($media).filter((a) => !a.audio && a.favourite).length
 
-    let folderLengths: { [key: string]: number } = {}
-    $: if (foldersList.length) getCounts()
-    async function getCounts() {
-        const folderPaths = foldersList.map((a) => a.path || "")
-        const data = keysToID((await requestMain(Main.READ_FOLDER, { path: folderPaths })) || {})
-        const newFolderLengths: { [key: string]: number } = {}
-
-        folderPaths.forEach((folderPath) => {
-            const count = countFolderMediaItems(folderPath, data)
-            newFolderLengths[folderPath] = count.folder + count.video + count.image
-        })
-
-        folderLengths = newFolderLengths
-    }
+    // cabine-5 (André, 19/nov): as pastas do computador (mediaFolders) saem da árvore; cada uma vira categoria UMA vez, ao abrir a Mídia
+    // Nunca com Configuracoes aberta: o rascunho de Configuracoes contaria a migracao como "alteracao nao salva" e o Descartar a desfaria pela metade
+    $: if ($activePage !== "settings") migrarPastasDoDisco()
 
     // AliancaShow F7: as pastas (etiquetas). C6: sem o rotulo "Pastas de midia" e sem a linha "Midias" (clicar na raiz Midia e "todas as midias")
     $: secaoPastas = [...$pastas.map((p) => ({ id: abaDaPasta(p.id), label: p.tag.name || "Pasta", icon: "folder", count: ($membros[p.id] || []).length, boxedIcon: true })), { id: PASTA_SIRVO, label: "Do Sirvo", icon: "web" }]
@@ -55,14 +43,6 @@
 
     // Content providers with libraries, and are currently connected
     let contentProviders: { providerId: ContentProviderId; displayName: string; hasContentLibrary: boolean }[] = []
-    $: if ($providerConnections) getProviders()
-    function getProviders() {
-        requestMain(Main.GET_CONTENT_PROVIDERS).then((allProviders) => {
-            if (!allProviders) return
-            contentProviders = allProviders.filter((p) => p.hasContentLibrary && $providerConnections[p.providerId])
-        })
-    }
-
     $: if ($providerConnections) {
         requestMain(Main.GET_CONTENT_PROVIDERS).then((allProviders) => {
             if (!allProviders) return
@@ -73,47 +53,47 @@
     $: curriculumProviders = contentProviders.filter((a) => (a.providerId !== "churchApps" || $special.churchAppsCloudOnly !== true) && a.providerId !== "canva")
 
     let sections: any[] = []
-    $: sections = [
-        secaoPastas,
-        [{ id: "favourites", label: "category.favourites", icon: "star", count: favoritesListLength, hidden: !favoritesListLength && activeSubTab !== "favourites" }],
-        ...(curriculumProviders.length ? [[{ id: "TITLE", label: "Curriculum" }, ...curriculumProviders.map((a) => ({ id: a.providerId, label: a.displayName, icon: "web" }))]] : []),
-        convertToButton(foldersList, folderLengths)
-    ]
+    $: sections = [secaoPastas, [{ id: "favourites", label: "category.favourites", icon: "star", count: favoritesListLength, hidden: !favoritesListLength && activeSubTab !== "favourites" }], ...(curriculumProviders.length ? [[{ id: "TITLE", label: "Curriculum" }, ...curriculumProviders.map((a) => ({ id: a.providerId, label: a.displayName, icon: "web" }))]] : [])]
 
-    function convertToButton(categories: any[], lengths: { [key: string]: number }) {
-        return sortObject(categories, "name").map((a) => {
-            const type = a.mediaType
-            const option = type ? { title: `clock.type: <b>preview.${type}</b>`, icon: `type_${type}`, style: "opacity: 0.6;" } : null
-            return { id: a.id, label: a.name, icon: a.icon || "folder", option, count: lengths[a.path], boxedIcon: true }
-        })
-    }
-
+    // cabine-5: "＋ importar mídia" — escolhe arquivos; eles entram na RAIZ (nunca copiados: o app só registra onde estão)
     const PICK_ID = uid()
-    function addFolder() {
-        sendMain(Main.OPEN_FOLDER, { channel: PICK_ID })
+    function importar() {
+        sendMain(Main.OPEN_FILE, { channel: "ALIANCA_BIB", id: PICK_ID, title: "Importar mídia", filter: { name: "Vídeos e imagens", extensions: mediaExtensions }, multiple: true })
     }
-    let listenerId = receiveToMain(ToMain.OPEN_FOLDER2, (data) => {
-        if (data.channel !== PICK_ID || !data.path) return
-        addDrawerFolder(data, "media")
+    let listenerId = receiveToMain(ToMain.OPEN_FILE2, (data) => {
+        if (data.channel !== "ALIANCA_BIB" || data.id !== PICK_ID || !data.files?.length) return
+        const n = importarCaminhos(data.files, null)
+        newToast(n ? `${n} ${n === 1 ? "mídia importada" : "mídias importadas"} para Mídia (os arquivos ficam onde estão)` : "nenhum vídeo ou imagem escolhido")
     })
     onDestroy(() => destroyMain(listenerId))
 
-    function updateName(e: any) {
-        const { id, value } = e.detail
-        mediaFolders.update((a) => {
-            if (a[id].default) delete a[id].default
-            a[id].name = value
-            return a
-        })
+    // cabine-5: arquivo/pasta solto do Explorer na árvore: na categoria sob o cursor, ou na raiz. Pasta vira categoria.
+    // Pára aqui (o DropArea "navigation" criaria uma pasta do disco escondida)
+    function arrastando(e: DragEvent) {
+        if (!e.dataTransfer?.types?.includes("Files")) return
+        e.preventDefault()
+    }
+    function soltar(e: DragEvent) {
+        const arquivos = Array.from(e.dataTransfer?.files || [])
+        if (!arquivos.length) return
+        e.preventDefault()
+        e.stopPropagation()
+        if (readOnly) return
+        const caminhos = arquivos.map((f) => (window as any).api.showFilePath(f)).filter(Boolean)
+        const aba = (e.target instanceof Element ? (e.target.closest("[data-aba]") as HTMLElement | null) : null)?.dataset.aba || ""
+        const categoria = aba === PASTA_SIRVO ? null : idDaAba(aba)
+        importarSoltos(caminhos, categoria)
     }
 </script>
 
-<NavigationSections {sections} active={activeSubTab} extra={["all", "__fora__", "inputs", "online", "pasta:raiz"]} padrao="all" on:rename={updateName}>
-    <div slot="section_0">
-        {#if $tela !== "mostrar"}
-            <AliancaLinhaAdd rotulo="pasta de mídia" titulo="Nova pasta de mídia" desligada={readOnly} on:click={novaPasta} />
-        {/if}
-    </div>
-</NavigationSections>
-<!-- C6: "＋ pasta" (pasta do sistema) e uma linha quieta no fim das pastas -->
-<AliancaLinhaAdd rotulo="pasta" titulo="Adicionar uma pasta do computador" desligada={readOnly} on:click={addFolder} />
+<div class="bib" on:dragover={arrastando} on:drop={soltar}>
+    <NavigationSections {sections} active={activeSubTab} extra={["all", "__fora__", "inputs", "online", "pasta:raiz"]} padrao="all">
+        <div slot="section_0">
+            {#if $tela !== "mostrar"}
+                <AliancaLinhaAdd rotulo="categoria" titulo="Nova categoria de mídia" desligada={readOnly} on:click={novaPasta} />
+            {/if}
+        </div>
+    </NavigationSections>
+    <!-- cabine-5: no lugar do "＋ pasta" do computador -->
+    <AliancaLinhaAdd rotulo="importar mídia" titulo="Escolher vídeos e imagens (ficam onde estão; o app só registra)" desligada={readOnly} on:click={importar} />
+</div>
