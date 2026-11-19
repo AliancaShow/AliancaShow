@@ -426,10 +426,14 @@ function idDoShow(caminho: string): string | null {
     }
 }
 
+// app.isPackaged em vez de isProd para nao importar de ".." e criar ciclo
+export function bundledBiblesFolder() {
+    return app.isPackaged ? path.join(process.resourcesPath, "bibles") : path.join(__dirname, "..", "..", "..", "bundled-bibles")
+}
+
 export function installBundledBibles() {
     try {
-        // app.isPackaged em vez de isProd para nao importar de ".." e criar ciclo
-        const origem = app.isPackaged ? path.join(process.resourcesPath, "bibles") : path.join(__dirname, "..", "..", "..", "bundled-bibles")
+        const origem = bundledBiblesFolder()
         if (!doesPathExist(origem)) return
 
         const destino = getDataFolderPath("scriptures")

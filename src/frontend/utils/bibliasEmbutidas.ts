@@ -1,32 +1,29 @@
 import { Main } from "../../types/IPC/Main"
 import { requestMain } from "../IPC/main"
-import { scriptures } from "../stores"
+import { alertMessage, scriptures } from "../stores"
+import { planejarBibliasEmbutidas } from "./bibliasEmbutidasLogica"
 
 /**
- * As Biblias que vao no instalador (bundled-bibles/, gerado por
- * scripts/gerarBiblias.js) precisam estar registradas em "scriptures" para
- * aparecer. O defaults.ts so vale em instalacao nova: o valor salvo vence o
- * default, entao numa maquina que ja tinha so a NVI a ARA nunca apareceria.
- *
- * Registra so o que existe no disco. Registrar sem o arquivo deixaria a
- * traducao na lista como "nao encontrada".
+ * As Biblias que vao no instalador (bundled-bibles/) precisam estar registradas
+ * em "scriptures" com o NOME DO ARQUIVO, senao o main nao as abre. Toda .fsb
+ * embutida e registrada na carga (a NVI primeiro); registro antigo com nome que
+ * nao casa e corrigido; o que nao tem lugar vira alerta (ver o plano).
+ * Nunca apaga registro do usuario.
  */
-const EMBUTIDAS: { [id: string]: { name: string; id: string; copyright: string } } = {
-    nvi: { name: "NVI", id: "nvi", copyright: "Nova Versão Internacional © Biblica, Inc." },
-    ara: { name: "ARA", id: "ara", copyright: "Almeida Revista e Atualizada © Sociedade Bíblica do Brasil" }
-}
-
 export async function registrarBibliasEmbutidas() {
-    const noDisco: { name: string }[] = (await requestMain(Main.READ_BIBLES_FOLDER, undefined as any)) || []
-    const nomes = new Set(noDisco.map((b) => b.name.toLowerCase()))
+    const noDisco: { name: string; embutida?: boolean }[] = (await requestMain(Main.READ_BIBLES_FOLDER, undefined as any)) || []
 
+    let erros: string[] = []
     scriptures.update((a) => {
-        const registrados = new Set(Object.values(a).map((b: any) => String(b?.name || "").toLowerCase()))
-        for (const [id, biblia] of Object.entries(EMBUTIDAS)) {
-            const nome = biblia.name.toLowerCase()
-            if (a[id] || registrados.has(nome) || !nomes.has(nome)) continue
-            a[id] = biblia as any
-        }
+        const plano = planejarBibliasEmbutidas(noDisco, a as any)
+        erros = plano.erros
+        for (const c of plano.corrigir) a[c.id] = { ...a[c.id], name: c.name, customName: c.customName } as any
+        for (const r of plano.registrar) a[r.id] = r.registro as any
         return a
     })
+
+    if (erros.length) {
+        console.error(erros.join("\n"))
+        alertMessage.set(erros.join("<br>"))
+    }
 }

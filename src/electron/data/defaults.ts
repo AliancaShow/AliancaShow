@@ -123,14 +123,9 @@ export const defaultSyncedSettings: { [key in SaveListSyncedSettings]: any } = {
     interactions: {},
     audioStreams: {},
     audioPlaylists: {},
-    // AliancaShow Teste: apenas a NVI. As 5 traducoes de API do FreeShow
-    // (KJV, ASV, WEB, WMB, BSB) foram removidas — todas em ingles e todas
-    // dependentes da chave de API do projeto original.
-    // "name" tem que casar com o arquivo Bibles/<name>.fsb (loadScripture
-    // monta o caminho a partir dele). Sem "api: true" = Biblia local.
-    scriptures: {
-        nvi: { name: "NVI", id: "nvi", copyright: "Nova Versão Internacional © Biblica, Inc." }
-    },
+    // AliancaShow: sem Biblia registrada aqui. As embutidas (bundled-bibles/ -> resources/bibles)
+    // sao registradas na carga com o nome do arquivo (bibliasEmbutidas.ts), NVI primeiro.
+    scriptures: {},
     scriptureSettings: {
         template: "scripture",
         versesPerSlide: 3,

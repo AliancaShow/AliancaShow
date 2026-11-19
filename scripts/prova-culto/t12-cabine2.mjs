@@ -2,6 +2,7 @@
 //   node scripts/prova-culto/t12-cabine2.mjs <pasta-de-prints>
 //   C1 cartao de midia: thumb = ao ar; faixa do nome so seleciona; ＋ com alvo de 38 px; duracao; no ar = cartao vermelho; clique no que ja esta no ar REINICIA (2o clique < 700 ms ignorado)
 import { mkdirSync, writeFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 import { join as juntar } from "node:path"
 import { join } from "node:path"
 import { abrir, clicarEm, esperar, localizar, mover, tecla } from "./lib.mjs"
@@ -290,7 +291,21 @@ S.activeShow.set({id:alvo[1].shows[i].id,index:i,type:"show"}); S.activeDrawerTa
 
     // ---------- D1: Ctrl+K, versiculo: um resultado POR Biblia instalada (a em uso primeiro)
     // o perfil de teste tem so a NVI de 564 bytes: a 2a Biblia (ARA) e gerada AQUI, no perfil da prova (nunca vai para o repo)
-    const PERFIL_DIR = (process.env.FS_PERFIL_DIR || "C:/Users/andre.zagato/Documents/ProjetosPessoais/aliancashow/bancada/prova-perfil-9223").split("\\").join("/")
+    // o perfil: FS_PERFIL_DIR se vier; senao o do Electron que atende ESTA porta CDP (--user-data-dir=<perfil>/ud na linha de comando dele); so no fim o padrao antigo
+    const descobrirPerfil = () => {
+        if (process.env.FS_PERFIL_DIR) return process.env.FS_PERFIL_DIR
+        try {
+            const porta = process.env.FS_CDP_PORTA || "9222"
+            const cmd = `Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'electron.exe' -and $_.CommandLine -match 'remote-debugging-port=${porta}( |$)' -and $_.CommandLine -notmatch '--type=' } | ForEach-Object { $_.CommandLine }`
+            const linha = execFileSync("powershell", ["-NoProfile", "-Command", cmd], { encoding: "utf8" })
+            const m = linha.match(/--user-data-dir=("([^"]+)"|(\S+))/)
+            const ud = m && (m[2] || m[3])
+            if (ud && /[\\/]ud$/.test(ud)) return ud.replace(/[\\/]ud$/, "")
+        } catch {}
+        return "C:/Users/andre.zagato/Documents/ProjetosPessoais/aliancashow/bancada/prova-perfil-9223"
+    }
+    const PERFIL_DIR = descobrirPerfil().split("\\").join("/")
+    console.log("perfil da prova:", PERFIL_DIR)
     // a ARA da prova tem o tamanho de uma Biblia de verdade (~4 MB: 66 livros, o 43 com o versiculo real): o texto que vai ao ar tem de ser o dela mesmo com o arquivo grande (achado 3)
     const enchimento = "Texto de enchimento so para dar corpo ao arquivo da prova, sem relacao com nenhum versiculo real da Biblia."
     const livrosAra = Array.from({ length: 66 }, (_, k) => k + 1).map((n) =>
