@@ -331,7 +331,7 @@
         height: 48px;
         padding: 0 70px 0 46px;
         border: 1px solid var(--luz-borda);
-        border-radius: 8px;
+        border-radius: var(--luz-raio-cartao);
         background: var(--luz-campo);
         color: inherit;
         font: inherit;
@@ -368,7 +368,7 @@
         align-items: center;
         gap: 10px;
         padding: 6px 10px;
-        border-radius: 8px;
+        border-radius: var(--luz-raio-cartao);
         cursor: pointer;
     }
     .linha.sel {
@@ -407,7 +407,7 @@
     .detalhe :global(mark) {
         background: var(--luz-hover);
         color: var(--luz-texto);
-        border-radius: 3px;
+        border-radius: var(--luz-raio-selo);
         padding: 0 2px;
     }
     .linha > .atalho {
@@ -420,7 +420,7 @@
         height: 32px;
         padding: 0 10px;
         border: 1px solid var(--luz-borda);
-        border-radius: 8px;
+        border-radius: var(--luz-raio-cartao);
         background: var(--luz-campo);
         color: inherit;
         font: inherit;
@@ -460,7 +460,7 @@
         padding: 1px 5px;
         margin-right: 3px;
         border: 1px solid var(--luz-borda);
-        border-radius: 5px;
+        border-radius: var(--luz-raio-thumb);
         background: var(--luz-campo);
         font: inherit;
         font-size: 11px;
