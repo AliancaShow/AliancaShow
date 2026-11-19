@@ -15,6 +15,7 @@
     import { activePage, activeProfile, activeShow, outputs, saved, showChangeProfileMenu, special } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
+    import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
     import AliancaEditarCentro from "./AliancaEditarCentro.svelte"
@@ -84,6 +85,8 @@
     }
 
     onMount(() => {
+        // Cabine 4: o Spotify para sozinho quando midia com som entra no ar (AliancaTela so existe na janela principal; idempotente, vale em todas as paginas)
+        iniciarSpotifyParaComSom()
         // dado salvo antigo ou fora dos limites: preso na carga
         try {
             aliancaTela.set(prender($aliancaTela, { w, h }))
