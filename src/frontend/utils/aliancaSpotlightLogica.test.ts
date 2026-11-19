@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { lerSoLivro, acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, MAX_VERSICULOS, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir } from "./aliancaSpotlightLogica"
+import { lerSoLivro, acaoDaTecla, ACOES_DO_APP, andar, enterRepetido, ESPERA_ENTER_MS, filtrarAcoes, conferirLivro, destinoDaTecla, MAX_VERSICULOS, enterDepoisDeFechar, ESPERA_POS_FECHAR_MS, indiceDaChave, LIVROS, lerReferencia, listaEmDia, SECOES, normalizar, rotuloDaReferencia, versiculosParaAbrir, assinaturaDoTemp, tocouNaBiblia } from "./aliancaSpotlightLogica"
 
 describe("spotlight: referencia de versiculo", () => {
     it("os 66 livros, em ordem, sem numero repetido", () => {
@@ -223,5 +223,19 @@ describe("cabine 18/nov, A6: so o nome do livro (sem capitulo) nao fica calado",
     })
     it("abreviatura de 2 letras (palavra comum de titulo), texto livre e referencia completa nao entram", () => {
         for (const q of ["is", "os", "at", "Ouvir", "amor de deus", "Jo 3:16", "Romanos 8", ""]) expect(lerSoLivro(q), q).toBeNull()
+    })
+})
+
+describe("outra Biblia vale so para aquele versiculo (revisao do PR #40, achado 3)", () => {
+    const saida = (c: string, texto: string) => ({ out: { slide: { id: "temp", categoryId: c, tempItems: [{ texto }] } } })
+    it("a assinatura so olha slides do Scripture (id temp) e guarda a Biblia e o texto", () => {
+        expect(assinaturaDoTemp([saida("nvi", "a"), { out: { slide: { id: "x" } } }, { out: null }, {}])).toEqual([{ c: "nvi", t: [{ texto: "a" }] }])
+    })
+    it("a Biblia escolhida so \"tocou\" quando o que esta no ar MUDOU e e dela", () => {
+        const antes = assinaturaDoTemp([saida("nvi", "Porque Deus tanto amou")])
+        expect(tocouNaBiblia(antes, antes, "ara")).toBe(false)
+        expect(tocouNaBiblia(antes, assinaturaDoTemp([saida("nvi", "outro")]), "ara")).toBe(false)
+        expect(tocouNaBiblia(antes, assinaturaDoTemp([saida("ara", "de tal maneira")]), "ara")).toBe(true)
+        expect(tocouNaBiblia([], assinaturaDoTemp([saida("ara", "de tal maneira")]), "ara")).toBe(true)
     })
 })

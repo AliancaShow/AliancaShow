@@ -14,7 +14,7 @@
     import { tick } from "svelte"
     import { quickSearchActive, activePopup } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
-    import { acaoDoResultado, buscarAcoes, buscarAudio, buscarMidia, buscarShows, buscarVersiculo, executarResultado, type Resultado } from "../../utils/aliancaSpotlight"
+    import { acaoDoResultado, buscarAcoes, buscarAudio, buscarMidia, buscarShows, buscarVersiculoEmPartes, executarResultado, type Resultado } from "../../utils/aliancaSpotlight"
     import { andar, destinoDaTecla, enterDepoisDeFechar, enterRepetido, indiceDaChave, listaEmDia, SECOES, type AcaoDeTecla } from "../../utils/aliancaSpotlightLogica"
     import { tela } from "../../utils/aliancaTela"
     import { escFechou } from "../../utils/aliancaToque"
@@ -131,16 +131,23 @@
         try {
             // primeira pintura: versiculo (le a Biblia ja carregada, nao espera disco), musicas e acoes juntos, na ordem das secoes; o selecionado e o topo.
             // Depois disso a selecao nunca mais sai do lugar: midia e audio (leem pasta) entram ABAIXO, cada um quando chega, sem esperar o outro
-            const versiculo = await buscarVersiculo(q)
+            // (achado 3 do PR #40) so a Biblia em uso entra na 1a pintura; as outras chegam depois, cada uma com o prazo dela, sem mexer na selecao
+            const partes = buscarVersiculoEmPartes(q)
+            const primeiro = await partes.primeiro
             if (minha !== busca) return
             selChave = null
-            porSecao = { versiculo, show: buscarShows(q), acao: buscarAcoes(q) }
+            porSecao = { versiculo: primeiro, show: buscarShows(q), acao: buscarAcoes(q) }
             void listaPintou(q)
+            const chegaram: (Resultado | undefined)[] = []
+            const outraBiblia = async (i: number, procurar: Promise<Resultado>) => {
+                chegaram[i] = await procurar
+                if (minha === busca) porSecao = { ...porSecao, versiculo: [...primeiro, ...chegaram.filter((x): x is Resultado => !!x)] }
+            }
             const entrar = async (id: "midia" | "audio", procurar: Promise<Resultado[]>) => {
                 const achados = await procurar
                 if (minha === busca) porSecao = { ...porSecao, [id]: achados }
             }
-            await Promise.all([entrar("midia", buscarMidia(q)), entrar("audio", buscarAudio(q))])
+            await Promise.all([entrar("midia", buscarMidia(q)), entrar("audio", buscarAudio(q)), ...partes.demais.map((p, i) => outraBiblia(i, p))])
         } catch (erro) {
             falhaAlta("spotlight-buscar", erro)
         } finally {
