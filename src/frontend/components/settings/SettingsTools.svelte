@@ -68,20 +68,19 @@
 {/if}
 
 <style>
+    /* C4: as ferramentas de cada pagina ficam numa fileira no pe da pagina (antes eram uma coluna a direita) */
     .bottom {
         display: flex;
-        flex-direction: column;
-        gap: 2px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
 
-        padding: 5px;
-        padding-bottom: 7px;
-
-        overflow-y: auto;
+        padding: 12px 32px 20px;
+        border-top: 1px solid var(--luz-linha);
     }
 
     .bottom :global(button) {
         justify-content: left;
-        /* border-width: 0; */
         box-shadow: none;
     }
 </style>

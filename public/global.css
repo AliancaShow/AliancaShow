@@ -344,6 +344,14 @@ body[data-tema="luz"] {
     --luz-barra-fundo: rgba(248, 248, 240, 0.12);
     --luz-barra-cheio: rgba(248, 248, 240, 0.5);
     --luz-raio: 14px;
+    /* C4: campos e botoes das telas de configuracao */
+    --luz-raio-campo: 6px;
+    --luz-raio-acao: 8px;
+    --luz-halo-foco: rgba(248, 248, 240, 0.12);
+    --luz-campo-h: 44px;
+    --luz-botao-h: 36px;
+    --luz-raio-chave: 11px;
+    --luz-raio-seg: 10px;
     --luz-fonte: "AliancaUI Archivo", "Segoe UI", system-ui, sans-serif;
 
     background: var(--luz-fundo);
@@ -385,5 +393,411 @@ body[data-tema="luz"] ::-webkit-scrollbar-thumb:hover {
         opacity: 1;
         transform: none;
     }
+}
+/* ===== C4 (cabine 18/nov): pele Luz das pecas de entrada (inputs/Material*) em Configuracoes, propriedades do Editar e popups =====
+   So CSS, so aqui: os Material*.svelte estao no fecho da janela de saida e nao podem mudar. O escopo e a classe `.luz-pele` (posta nas
+   cascas da janela PRINCIPAL), sob body[data-tema="luz"]: a saida nunca recebe o atributo, entao nada disto existe la. Cores e raios so por token. */
+/* as variaveis do FreeShow viram tokens Luz dentro da casca: toda peca que le --secondary/--primary herda o creme, sem vermelho */
+body[data-tema="luz"] .luz-pele {
+    --primary: var(--luz-painel-opaco);
+    --primary-darker: var(--luz-tinta);
+    --primary-darkest: var(--luz-campo);
+    --primary-lighter: var(--luz-borda);
+    --secondary: var(--luz-texto);
+    --secondary-text: var(--luz-tinta);
+    --secondary-opacity: var(--luz-mudo);
+    --text: var(--luz-texto);
+    --hover: var(--luz-hover);
+    --focus: var(--luz-hover);
+    font-family: var(--luz-fonte);
+}
+/* campo: 44 px, rotulo dentro em cima (10,5 mudo), valor 13, fundo campo, borda 1 px, raio 6, sem sublinhado animado */
+body[data-tema="luz"] .luz-pele .textfield {
+    height: var(--luz-campo-h);
+    min-height: var(--luz-campo-h);
+    margin-bottom: 8px;
+    border: 1px solid var(--luz-borda);
+    border-radius: var(--luz-raio-campo);
+    background: var(--luz-campo);
+    color: var(--luz-texto);
+    box-sizing: border-box;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+body[data-tema="luz"] .luz-pele .textfield:focus-within {
+    border-color: var(--luz-texto);
+    box-shadow: 0 0 0 3px var(--luz-halo-foco);
+}
+body[data-tema="luz"] .luz-pele .textfield .background,
+body[data-tema="luz"] .luz-pele .textfield .underline,
+body[data-tema="luz"] .luz-pele .togglefield .underline,
+body[data-tema="luz"] .luz-pele .checkboxfield .underline,
+body[data-tema="luz"] .luz-pele .togglefield .background,
+body[data-tema="luz"] .luz-pele .checkboxfield .background {
+    display: none;
+}
+/* rotulo: sem valor, e o proprio texto do campo (13, centrado); com valor ou em foco, sobe para o canto (10,5 mudo) */
+body[data-tema="luz"] .luz-pele .textfield > label {
+    left: 10px;
+    top: 13px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--luz-mudo);
+    opacity: 1;
+    line-height: 18px;
+    transition: none;
+}
+body[data-tema="luz"] .luz-pele .textfield .input:focus + label,
+body[data-tema="luz"] .luz-pele .textfield .input:not(:placeholder-shown) + label,
+body[data-tema="luz"] .luz-pele .textfield > label.selected,
+body[data-tema="luz"] .luz-pele .textfield > label.value-filled,
+body[data-tema="luz"] .luz-pele .textfield:has(input:focus) > label,
+body[data-tema="luz"] .luz-pele .textfield:focus-within > label {
+    top: 5px;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 13px;
+    color: var(--luz-mudo);
+    opacity: 1;
+}
+body[data-tema="luz"] .luz-pele .textfield .input,
+body[data-tema="luz"] .luz-pele .textfield .dropdown-trigger {
+    box-sizing: border-box;
+    height: 100%;
+    padding: 20px 10px 0;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--luz-texto);
+    border-radius: var(--luz-raio-campo);
+    background: transparent;
+}
+body[data-tema="luz"] .luz-pele .textfield .input.numberfield,
+body[data-tema="luz"] .luz-pele .textfield input.input {
+    padding-right: 32px;
+}
+body[data-tema="luz"] .luz-pele .textfield:not(:has(.input:focus)):not(:has(.remove:hover)) .input:not(:disabled):hover {
+    background: var(--luz-hover);
+}
+body[data-tema="luz"] .luz-pele .textfield .arrow {
+    transform: translateY(-8px);
+    color: var(--luz-mudo);
+}
+body[data-tema="luz"] .luz-pele .textfield .arrow.open {
+    transform: translateY(-8px) rotate(180deg);
+}
+body[data-tema="luz"] .luz-pele .textfield.disabled {
+    opacity: 0.4;
+}
+body[data-tema="luz"] .luz-pele .textfield.disabled label {
+    opacity: 1;
+}
+/* lista aberta do seletor: o pop opaco do tema */
+body[data-tema="luz"] .luz-pele .textfield .dropdown {
+    background: var(--luz-pop-opaco);
+    border: 0;
+    border-radius: var(--luz-raio-menu);
+    box-shadow: inset 0 0 0 1px var(--luz-borda), var(--luz-sombra-pop);
+    padding: 6px;
+    margin-top: 4px;
+}
+body[data-tema="luz"] .luz-pele .textfield .dropdown li {
+    border-radius: var(--luz-raio-item);
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 500;
+}
+body[data-tema="luz"] .luz-pele .textfield .dropdown li.selected {
+    color: var(--luz-texto);
+    background: var(--luz-hover);
+    font-weight: 600;
+}
+/* chave: ligada = creme com miolo escuro (o "ativo" das abas); nunca vermelha */
+body[data-tema="luz"] .luz-pele .togglefield:not(.small) {
+    height: var(--luz-campo-h);
+    margin-bottom: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--luz-borda);
+    border-radius: var(--luz-raio-campo);
+    background: var(--luz-campo);
+    box-sizing: border-box;
+}
+body[data-tema="luz"] .luz-pele .togglefield:not(.small) .toggle-label {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 1;
+    color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele .togglefield .switch {
+    width: 38px;
+    height: 22px;
+    border-radius: var(--luz-raio-chave);
+    background: var(--luz-barra-fundo);
+}
+body[data-tema="luz"] .luz-pele .togglefield .thumb {
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    background: var(--luz-texto-60);
+}
+body[data-tema="luz"] .luz-pele .togglefield:has(.hidden-input:checked) .switch {
+    background: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele .togglefield:has(.hidden-input:checked) .switch .thumb {
+    transform: translateX(16px);
+    background: var(--luz-tinta);
+}
+body[data-tema="luz"] .luz-pele .togglefield:not(.disabled):hover .hover,
+body[data-tema="luz"] .luz-pele .checkboxfield:not(.disabled):hover .hover {
+    background: var(--luz-hover);
+    border-radius: var(--luz-raio-campo);
+}
+body[data-tema="luz"] .luz-pele .togglefield:focus-visible,
+body[data-tema="luz"] .luz-pele .checkboxfield:focus-visible {
+    border-color: var(--luz-texto);
+    box-shadow: 0 0 0 3px var(--luz-halo-foco);
+}
+/* caixa de marcar: 18 px, raio 4, borda forte; marcada = creme */
+body[data-tema="luz"] .luz-pele .checkboxfield .custom-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--luz-raio-selo);
+    border: 1px solid var(--luz-borda-forte);
+    background: transparent;
+}
+body[data-tema="luz"] .luz-pele .checkboxfield:has(.hidden-input:checked) .custom-checkbox {
+    background: var(--luz-texto);
+    border-color: var(--luz-texto);
+    color: var(--luz-tinta);
+}
+body[data-tema="luz"] .luz-pele .checkboxfield .custom-checkbox .checkmark {
+    color: var(--luz-tinta);
+}
+body[data-tema="luz"] .luz-pele .checkboxfield .label-text {
+    font-size: 13px;
+    font-weight: 500;
+}
+/* linhas de campos: respiro de 8 px entre eles (a anatomia de campo vizinho colado era do FreeShow) */
+body[data-tema="luz"] .luz-pele div:has(> .textfield) {
+    gap: 8px;
+}
+body[data-tema="luz"] .luz-pele div:has(> .togglefield) {
+    gap: 8px;
+}
+body[data-tema="luz"] .luz-pele.luz-pele .textfield:not(:first-child),
+body[data-tema="luz"] .luz-pele.luz-pele .togglefield:not(:first-child),
+body[data-tema="luz"] .luz-pele.luz-pele .checkboxfield:not(:first-child) {
+    border-left: 1px solid var(--luz-borda) !important;
+}
+/* botoes: 36 px, raio 8; o unico primario (contained) e creme com tinta */
+body[data-tema="luz"] .luz-pele button.contained,
+body[data-tema="luz"] .luz-pele button.outlined {
+    border-radius: var(--luz-raio-acao);
+    font-size: 13px;
+    font-weight: 600;
+    min-height: var(--luz-botao-h);
+    padding: 0 14px;
+    border: 1px solid var(--luz-borda);
+    box-shadow: none;
+    filter: none;
+}
+body[data-tema="luz"] .luz-pele button.outlined {
+    background: var(--luz-campo) !important;
+    color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele button.contained {
+    background: var(--luz-texto) !important;
+    color: var(--luz-tinta);
+    border-color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele button.outlined:hover:not(:disabled):not(.isActive) {
+    background: var(--luz-hover) !important;
+    border-color: var(--luz-borda-forte);
+}
+body[data-tema="luz"] .luz-pele button.isActive {
+    border-bottom: 1px solid var(--luz-texto) !important;
+}
+body[data-tema="luz"] .luz-pele button:hover:not(:disabled) {
+    box-shadow: none;
+}
+body[data-tema="luz"] .luz-pele button:focus-visible:not(:disabled) {
+    outline: 2px solid var(--luz-anel);
+    outline-offset: 2px;
+}
+body[data-tema="luz"] .luz-pele button .ripple {
+    display: none;
+}
+/* grupos de botoes (B I U S, alinhamento): uma pastilha so, ativo = creme */
+body[data-tema="luz"] .luz-pele .toggles > label {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--luz-mudo);
+}
+
+/* secao: rotulo de 12 px em caixa alta + fio; a rara nasce recolhida e mostra o resumo do que tem dentro */
+body[data-tema="luz"] .luz-pele .luz-sec {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 22px 0 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--luz-fonte);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--luz-mudo);
+}
+body[data-tema="luz"] .luz-pele .luz-sec::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--luz-linha);
+}
+body[data-tema="luz"] .luz-pele .luz-sec.dob {
+    cursor: pointer;
+}
+body[data-tema="luz"] .luz-pele .luz-sec.dob:hover {
+    color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele .luz-sec small {
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--luz-fraco);
+}
+body[data-tema="luz"] .luz-pele .luz-sec svg {
+    flex-shrink: 0;
+}
+body[data-tema="luz"] .luz-pele h3.luz-sec svg {
+    display: none;
+}
+/* pecas pequenas: abas (seg), botao (bt), selo NOVO */
+body[data-tema="luz"] .luz-pele .luz-seg {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--luz-trilho);
+    box-shadow: inset 0 0 0 1px var(--luz-linha);
+    border-radius: var(--luz-raio-seg);
+    max-width: 100%;
+    overflow-x: auto;
+}
+body[data-tema="luz"] .luz-pele .luz-seg button {
+    height: 30px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--luz-raio-item);
+    background: transparent;
+    color: var(--luz-mudo);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+body[data-tema="luz"] .luz-pele .luz-seg button:hover:not(.a) {
+    color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele .luz-seg button.a {
+    background: var(--luz-texto);
+    color: var(--luz-tinta);
+}
+body[data-tema="luz"] .luz-pele .luz-tag-novo {
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: var(--luz-raio-selo);
+    padding: 2px 6px;
+    line-height: 14px;
+    background: var(--luz-ambar);
+    color: var(--luz-tinta);
+}
+body[data-tema="luz"] .luz-pele .luz-bt {
+    height: var(--luz-botao-h);
+    padding: 0 14px;
+    border: 1px solid var(--luz-borda);
+    border-radius: var(--luz-raio-acao);
+    background: var(--luz-campo);
+    color: var(--luz-texto);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+body[data-tema="luz"] .luz-pele .luz-bt:hover {
+    background: var(--luz-hover);
+    border-color: var(--luz-borda-forte);
+}
+body[data-tema="luz"] .luz-pele .luz-bt.fan {
+    background: transparent;
+    border-color: transparent;
+    color: var(--luz-mudo);
+}
+body[data-tema="luz"] .luz-pele .luz-bt.fan:hover {
+    color: var(--luz-texto);
+}
+body[data-tema="luz"] .luz-pele .luz-sec:disabled {
+    opacity: 1;
+    cursor: default;
+}
+body[data-tema="luz"] .luz-pele .luz-sec > button {
+    order: 3;
+}
+/* grupos de botoes alternaveis (B I U S, alinhamento): uma pastilha so, ativo = creme com tinta (o .highlight do FreeShow some) */
+body[data-tema="luz"] .luz-pele div:has(> button > .highlight) {
+    gap: 0;
+    height: var(--luz-botao-h);
+    margin-bottom: 8px;
+    border: 1px solid var(--luz-borda);
+    border-radius: var(--luz-raio-campo);
+    overflow: hidden;
+    background: var(--luz-campo);
+    box-sizing: border-box;
+}
+body[data-tema="luz"] .luz-pele div:has(> button > .highlight) > button {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    padding: 0;
+    border: 0 !important;
+    border-right: 1px solid var(--luz-borda) !important;
+    border-radius: 0;
+    background: transparent !important;
+    color: var(--luz-mudo);
+}
+body[data-tema="luz"] .luz-pele div:has(> button > .highlight) > button:last-child {
+    border-right: 0 !important;
+}
+body[data-tema="luz"] .luz-pele div:has(> button > .highlight) > button:has(.highlight.active) {
+    background: var(--luz-texto) !important;
+    color: var(--luz-tinta);
+}
+body[data-tema="luz"] .luz-pele div:has(> button > .highlight) > button:has(.highlight.active) svg,
+body[data-tema="luz"] .luz-pele div:has(> button > .highlight) > button:has(.highlight.active) svg path:not([fill="none"]) {
+    fill: var(--luz-tinta);
+}
+body[data-tema="luz"] .luz-pele .highlight {
+    display: none;
+}
+/* propriedades do Editar: o painel e estreito, entao as secoes ficam mais juntas */
+body[data-tema="luz"] .luz-pele[data-acao="editar-ferramentas"] .luz-sec {
+    margin: 14px 0 6px;
+}
+/* dica (i) de cada pagina: neutra, sem o azul do FreeShow */
+body[data-tema="luz"] .luz-pele .tip svg g {
+    fill: var(--luz-mudo) !important;
 }
 /* LUZ:FIM */
