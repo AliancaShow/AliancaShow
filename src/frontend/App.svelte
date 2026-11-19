@@ -18,11 +18,14 @@
     import { activeProfile, activeTimers, closeAd, currentWindow, disabledServers, events, language, loaded, localeDirection, outputDisplay, outputs, profiles, theme, themes, timers } from "./stores"
     import { focusArea, logerror, mainClick, toggleRemoteStream } from "./utils/common"
     import { iniciarMarcaDeTecla } from "./utils/aliancaModo"
+    import { iniciarSpotifyParaComSom } from "./utils/aliancaSpotifyComSom"
     import { keydown } from "./utils/shortcuts"
     import { startup } from "./utils/startup"
 
     startup()
     iniciarMarcaDeTecla()
+    // so a janela principal: a de saida nao conversa com o Spotify
+    $: if ($currentWindow === null) iniciarSpotifyParaComSom()
 
     ///// UPDATERS /////
 

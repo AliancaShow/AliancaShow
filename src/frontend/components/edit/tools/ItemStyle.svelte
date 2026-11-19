@@ -10,7 +10,7 @@
     import { addFilterString, addStyleString } from "../scripts/textStyle"
     import { setBoxInputValue } from "../values/boxes"
     import { itemSections } from "../values/item"
-    import { mapaDeGrupos } from "../../../utils/aliancaEditorLogica"
+    import { mapaDeBlocos } from "../../../utils/aliancaBlocosMapa"
     import EditValues from "./EditValues.svelte"
 
     export let allSlideItems: Item[]
@@ -19,7 +19,7 @@
     export let agrupar = false
 
     let currentItemSections = clone(itemSections)
-    $: grupos = agrupar ? mapaDeGrupos("item", "item", currentItemSections) : null
+    $: grupos = agrupar ? mapaDeBlocos("item", "item", currentItemSections) : null
 
     let data: { [key: string]: string } = {}
 
