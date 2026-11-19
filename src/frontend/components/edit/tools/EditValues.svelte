@@ -3,6 +3,7 @@
     import { actions, activeEdit, activePage, activeStage, outputs, timers } from "../../../stores"
     import { idDoInput, linhasFiltradas, secoesDoGrupo, type Grupo, type MapaGrupos } from "../../../utils/aliancaEditorLogica"
     import { timelineAtiva } from "../../../utils/aliancaModo"
+    import { resumoDaSecao, resumoDoGrupo } from "../../../utils/aliancaResumoSecao"
     import { throttle } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { mediaExtensions } from "../../../values/extensions"
@@ -315,6 +316,23 @@
     }
     $: marcas = grupos ? { mais: grupoAlterado("mais", { styles, item, customValues }), avancado: grupoAlterado("avancado", { styles, item, customValues }) } : { mais: false, avancado: false }
 
+    // C4: resumo do que ha dentro da secao RECOLHIDA (valores de agora) e do grupo fechado (quais secoes mexeram)
+    function resumoDe(entrada: Entrada, _updater: any = null): string {
+        const valores = entrada.linhas.flat().filter((i) => !i.hidden && i.type !== "tip" && i.type !== "toggle" && i.type !== "radio").map((i) => getValue(i))
+        const mudou = entrada.section.noReset || entrada.semReset ? false : !!hasChangedValues(entrada.id, null, entrada.ids, false)
+        return resumoDaSecao({ id: entrada.id, mudou, valores })
+    }
+    function nomeDaSecao(entrada: Entrada): string {
+        return entrada.rotulo || translateText(entrada.section.name || "edit." + entrada.id)
+    }
+    function resumoDeGrupo(g: Grupo, _updater: any = null): string {
+        if (!grupos) return ""
+        const nomes = secoesDoGrupo(grupos, g, sections)
+            .filter((s) => !sections[s.id].noReset && !!hasChangedValues(s.id, null, s.ids, false))
+            .map((s) => grupos?.rotulos[g + ":" + s.id] || translateText(sections[s.id].name || "edit." + s.id))
+        return resumoDoGrupo(nomes)
+    }
+
     ///
 
     function getOptions(options: string | any[]): any[] {
@@ -357,15 +375,12 @@
     {#each entradas as entrada}
         {#if entrada.cabecalho}
             <div class="section grupo">
-                <div class="title">
-                    <MaterialButton style="width: 100%;padding: 8px 12px;" on:click={() => alternarGrupo(entrada.cabecalho || "")}>
-                        <span style="display: flex;gap: 8px;align-items: center;">
-                            <p>{entrada.cabecalho === "mais" ? "Mais" : "Avançado"}</p>
-                            {#if marcas[entrada.cabecalho] && !gruposAbertos[entrada.cabecalho]}<span class="marca" title="Tem valor alterado aqui dentro">•</span>{/if}
-                        </span>
-                        <Icon id="arrow_back_modern" class="arrow {gruposAbertos[entrada.cabecalho] ? 'open' : ''}" size={0.6} style="opacity: 0.5;" white />
-                    </MaterialButton>
-                </div>
+                <button type="button" class="luz-sec dob" data-acao="editar-grupo" data-grupo={entrada.cabecalho} aria-expanded={!!gruposAbertos[entrada.cabecalho]} tabindex="-1" on:click={() => alternarGrupo(entrada.cabecalho || "")}>
+                    <Icon id="arrow_back_modern" class="arrow {gruposAbertos[entrada.cabecalho] ? 'open' : ''}" size={0.6} style="opacity: 0.6;" white />
+                    {entrada.cabecalho === "mais" ? "Mais" : "Avançado"}
+                    {#if marcas[entrada.cabecalho] && !gruposAbertos[entrada.cabecalho]}<span class="marca" title="Tem valor alterado aqui dentro">•</span>{/if}
+                    {#if !gruposAbertos[entrada.cabecalho]}<small>{resumoDeGrupo(entrada.cabecalho, { styles, item, customValues })}</small>{/if}
+                </button>
             </div>
         {:else}
             {@const id = entrada.id}
@@ -377,27 +392,26 @@
             <div class="section" style={expanded ? "margin-bottom: 3px;" : ""}>
                 {#if id !== "default" || entrada.rotulo}
                     <div class="title">
-                        <MaterialButton style="width: 100%;{hasChanged ? 'padding: 4px 12px;' : 'padding: 8px 12px;'}" disabled={hasChanged || fixa} on:click={() => toggleSection(id)}>
-                            <span style="display: flex;gap: 8px;align-items: center;">
-                                {#if entrada.rotulo && id === "default"}
-                                    <Icon id={entrada.ids ? "filter" : "item"} white />
-                                    <p>{entrada.rotulo}</p>
-                                {:else if id === "CSS"}
-                                    <Icon id="code" white />
-                                    <p>CSS</p>
-                                {:else}
-                                    <Icon {id} style="color: {sectionColors[id]};" white />
-                                    <p>{entrada.rotulo || translateText(section.name || "edit." + id)}</p>
-                                {/if}
-                            </span>
+                        <MaterialButton class="luz-sec{hasChanged || fixa ? "" : " dob"}" style="width: 100%;color: var(--luz-mudo);background: transparent;" disabled={hasChanged || fixa} on:click={() => toggleSection(id)}>
+                            {#if !hasChanged && !fixa}
+                                <Icon id={section.expandAutoValue && !expanded ? "add" : "arrow_back_modern"} class="arrow {expanded ? "open" : ""}" size={section.expandAutoValue && !expanded ? 0.9 : 0.6} style="opacity: 0.6;" white />
+                            {/if}
+                            {#if entrada.rotulo && id === "default"}
+                                <Icon id={entrada.ids ? "filter" : "item"} size={0.8} style="opacity: 0.6;" white />
+                                {entrada.rotulo}
+                            {:else if id === "CSS"}
+                                <Icon id="code" size={0.8} style="opacity: 0.6;" white />
+                                CSS
+                            {:else}
+                                <Icon {id} size={0.8} style="opacity: 0.6;" white />
+                                {entrada.rotulo || translateText(section.name || "edit." + id)}
+                            {/if}
+                            {#if !expanded}<small data-acao="secao-resumo">{resumoDe(entrada, { styles, item, customValues })}</small>{/if}
 
                             {#if hasChanged}
                                 <MaterialButton title="actions.reset" style="pointer-events: all;padding: 4px;" on:click={() => resetSection(id)}>
                                     <Icon id="reset" size={0.8} white />
                                 </MaterialButton>
-                            {:else if !fixa}
-                                <!-- paste / edit -->
-                                <Icon id={section.expandAutoValue && !expanded ? "add" : "arrow_back_modern"} class="arrow {expanded ? 'open' : ''}" size={section.expandAutoValue && !expanded ? 0.9 : 0.6} style="opacity: 0.5;" white />
                             {/if}
                         </MaterialButton>
                     </div>
@@ -451,7 +465,7 @@
 
 <style>
     .tools {
-        padding: 8px 5px;
+        padding: 0 12px;
 
         display: flex;
         flex-direction: column;
@@ -459,50 +473,28 @@
         gap: 2px;
     }
 
-    .title {
-        background-color: var(--primary-darker);
-        border-bottom: 1px solid var(--primary-lighter);
-
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-        overflow: hidden;
+    /* C4: titulo de secao = rotulo em caixa alta + fio (o visual e o .luz-sec de global.css); aqui so a seta que gira */
+    .title :global(svg.arrow),
+    .section :global(svg.arrow) {
+        transition: 0.1s transform ease;
+        transform: rotate(180deg);
     }
-    .title p {
-        font-weight: 500;
-        font-size: 0.8rem;
-        opacity: 0.8;
+    .title :global(svg.arrow.open),
+    .section :global(svg.arrow.open) {
+        transform: rotate(-90deg);
     }
-
-    .title :global(button) {
-        display: flex;
-        justify-content: space-between;
-
-        /* when disabled */
+    .title :global(button:disabled) {
         opacity: 1;
     }
 
     .marca {
-        color: var(--secondary);
+        color: var(--luz-laranja);
         font-size: 1.1rem;
         line-height: 1;
     }
 
-    .title :global(svg.arrow) {
-        transition: 0.1s transform ease;
-        transform: rotate(180deg);
-    }
-    .title :global(svg.arrow.open) {
-        transform: rotate(-90deg);
-    }
-
     .section {
-        border: 1px solid var(--primary-lighter);
-
-        border-radius: 6px;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-
-        /* overflow: hidden; */
+        border: 0;
     }
 
     /* toggle */
