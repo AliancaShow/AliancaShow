@@ -7,13 +7,13 @@
  * arquivo: "Nova Versao Internacional (NVI).fsb" -> id "nvi", sigla "NVI".
  */
 
-export type EntradaDoDisco = { name: string; embutida?: boolean }
+export type EntradaDoDisco = { name: string; embutida?: boolean; legado?: boolean }
 export type Registro = { name: string; id?: string; customName?: string; copyright?: string; api?: boolean; collection?: unknown; [chave: string]: any }
 export type Plano = {
     /** registros novos, na ordem em que entram (NVI primeiro: e a preferida num perfil novo) */
     registrar: { id: string; registro: Registro }[]
     /** registros antigos cujo nome nao casa com arquivo e que ganham o nome do arquivo embutido equivalente */
-    corrigir: { id: string; name: string; customName: string }[]
+    corrigir: { id: string; name: string; customName: string; copyright?: string }[]
     /** o que nao tem lugar: registro sem arquivo e sem equivalente embutido. Mostrado alto, nunca calado. */
     erros: string[]
 }
@@ -22,6 +22,10 @@ const norm = (s: string) =>
     String(s || "")
         .trim()
         .toLowerCase()
+        .replace(/\.fsb$/, "")
+
+/** atribuicao de licenca que o registro carrega (por id) */
+const COPYRIGHTS: { [id: string]: string } = { nvi: "Nova Versão Internacional © Biblica, Inc." }
 
 /** "Nova Versao Internacional (NVI)" -> "NVI"; sem parenteses, o nome inteiro */
 export function siglaDoArquivo(nome: string): string {
@@ -46,6 +50,11 @@ function ordenar(embutidas: EntradaDoDisco[]) {
     })
 }
 
+/** a Biblia (local) registrada e a mesma da embutida: mesmo id, mesma sigla no nome/customName */
+function mesmaBiblia(id: string, r: Registro, idBase: string, sigla: string) {
+    return norm(id) === idBase || norm(r?.id || "") === idBase || norm(r?.name) === norm(sigla) || norm(r?.customName || "") === norm(sigla) || idDoArquivo(r?.name) === idBase
+}
+
 export function planejarBibliasEmbutidas(noDisco: EntradaDoDisco[], registrados: { [id: string]: Registro }): Plano {
     const plano: Plano = { registrar: [], corrigir: [], erros: [] }
     const nomesNoDisco = new Set(noDisco.map((b) => norm(b.name)))
@@ -53,6 +62,7 @@ export function planejarBibliasEmbutidas(noDisco: EntradaDoDisco[], registrados:
     const ids = new Set(Object.keys(registrados))
     const nomesRegistrados = new Set(Object.values(registrados).map((r) => norm(r?.name)))
     const consumidos = new Set<string>()
+    const locais = () => Object.entries(registrados).filter(([, r]) => r && !r.api && !r.collection)
 
     for (const arquivo of embutidas) {
         const nome = arquivo.name
@@ -61,25 +71,44 @@ export function planejarBibliasEmbutidas(noDisco: EntradaDoDisco[], registrados:
 
         const sigla = siglaDoArquivo(nome)
         const idBase = idDoArquivo(nome)
+        const candidatos = locais().filter(([id, r]) => !consumidos.has(id) && mesmaBiblia(id, r, idBase, sigla))
 
-        // registro antigo que e a mesma Biblia com outro nome (id "nvi"/nome "NVI"), cujo nome nao casa com arquivo nenhum
-        const antigo = Object.entries(registrados).find(([id, r]) => !consumidos.has(id) && !r?.api && !r?.collection && !nomesNoDisco.has(norm(r?.name)) && (norm(id) === idBase || norm(r?.name) === norm(sigla) || norm(r?.id || "") === idBase))
+        // "ja tenho": registro da mesma Biblia cujo arquivo existe e e equivalente (NVI.fsb ~ Nova Versao Internacional (NVI).fsb).
+        // Arquivo existente de OUTRA Biblia (importada a mao) nao conta: id/sigla ocupados por ela nao sao "tenho".
+        if (candidatos.some(([, r]) => nomesNoDisco.has(norm(r.name)) && idDoArquivo(r.name) === idBase)) continue
+
+        // registro antigo da mesma Biblia, sem arquivo nenhum: ganha o nome do arquivo embutido
+        const antigo = candidatos.find(([, r]) => !nomesNoDisco.has(norm(r.name)))
         if (antigo) {
             consumidos.add(antigo[0])
-            plano.corrigir.push({ id: antigo[0], name: nome, customName: antigo[1].customName || sigla })
+            const cr = antigo[1].copyright ? undefined : COPYRIGHTS[idBase]
+            plano.corrigir.push({ id: antigo[0], name: nome, customName: antigo[1].customName || sigla, ...(cr ? { copyright: cr } : {}) })
             continue
         }
 
         let id = idBase
         while (ids.has(id)) id += "-embutida"
         ids.add(id)
-        plano.registrar.push({ id, registro: { name: nome, id, customName: sigla } })
+        plano.registrar.push({ id, registro: { name: nome, id, customName: sigla, ...(COPYRIGHTS[idBase] ? { copyright: COPYRIGHTS[idBase] } : {}) } })
     }
 
-    // o que sobrou sem arquivo (nem equivalente): erro alto
+    // o que sobrou sem arquivo (nem equivalente): erro alto. ".fsb" no nome e a pasta legada (Documentos/Bibles, marcada legado) contam como existentes.
     for (const [id, r] of Object.entries(registrados)) {
         if (!r || r.api || r.collection || consumidos.has(id)) continue
-        if (!nomesNoDisco.has(norm(r.name))) plano.erros.push(`A Bíblia "${r.customName || r.name}" está registrada, mas o arquivo "${r.name}.fsb" não existe em Documentos/AliancaShow/Bibles.`)
+        if (!nomesNoDisco.has(norm(r.name))) plano.erros.push(`A Bíblia "${r.customName || r.name}" está registrada, mas o arquivo "${String(r.name).replace(/\.fsb$/i, "")}.fsb" não existe em Documentos/AliancaShow/Bibles.`)
     }
     return plano
+}
+
+type AvisoDeps = { definirMensagem: (m: string) => void; abrirPopup: () => void; popupAtual: () => string | null | undefined }
+
+/** Mostra o erro ao operador (mensagem + popup "alert"). Nao atropela outro popup aberto (ex.: o da primeira execucao): devolve false para tentar de novo. */
+export function avisarErros(erros: string[], jaAvisados: Set<string>, deps: AvisoDeps): boolean {
+    const novos = erros.filter((e) => !jaAvisados.has(e))
+    if (!novos.length) return true
+    if (deps.popupAtual()) return false
+    novos.forEach((e) => jaAvisados.add(e))
+    deps.definirMensagem(novos.join("<br>"))
+    deps.abrirPopup()
+    return true
 }
