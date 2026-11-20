@@ -37,6 +37,7 @@ export const CLASSES: Record<string, string> = {
     "components/drawer/info/ScriptureInfo.svelte": "gesto: botao de pagina",
     "components/edit/tools/SlideStyle.svelte": "gesto: botao de pagina (editar o modelo)",
     "components/main/AliancaCorpoPagina.svelte": "gesto: botao Fechar do cabecalho das paginas do menu (volta a Mostrar ou a Editar, de onde veio)",
+    "components/main/AliancaModeloBiblia.svelte": "gesto: botao Editar modelo da Biblia (cabecalho da biblioteca, cabine-5)",
     "components/main/AliancaMenuApp.svelte": "gesto: menu do app",
     "components/main/AliancaSirvoPilula.svelte": "gesto: pilula Sirvo",
     "components/main/AliancaTelaoPilula.svelte": "gesto: pilula do telao",

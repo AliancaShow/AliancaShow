@@ -26,6 +26,7 @@
     import AliancaArvore from "./AliancaArvore.svelte"
     import AliancaMidiaControles from "./AliancaMidiaControles.svelte"
     import AliancaShowsLista from "./AliancaShowsLista.svelte"
+    import AliancaModeloBiblia from "./AliancaModeloBiblia.svelte"
 
     export let esq = 280
 
@@ -135,6 +136,9 @@
         {/if}
         {#if emMidia}
             <AliancaFiltros />
+        {/if}
+        {#if $activeDrawerTab === "scripture"}
+            <AliancaModeloBiblia />
         {/if}
         <span class="espaco"></span>
         {#if emMidia}
