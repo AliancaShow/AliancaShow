@@ -233,7 +233,8 @@
     .pop {
         position: absolute;
         z-index: 40;
-        bottom: 34px;
+        /* cabine-5: abre PARA BAIXO, sobre a lista. Para cima saia do painel (overflow: hidden) e sumia atras dos slides */
+        top: calc(100% + 6px);
         left: 0;
         width: 220px;
         display: flex;
