@@ -5,7 +5,7 @@ import { uid } from "uid"
 import { Main } from "../../types/IPC/Main"
 import { history } from "../components/helpers/history"
 import { requestMain } from "../IPC/main"
-import { activePage, loadedState, media, mediaFolders, mediaTags } from "../stores"
+import { activePage, loadedState, media, mediaFolders, mediaTags, special } from "../stores"
 import { newToast } from "./common"
 import { falhaAlta } from "./aliancaFalha"
 import { aceitarNaFoto } from "./aliancaConfigRascunho"
@@ -161,6 +161,12 @@ function dadosProntos(): boolean {
  */
 export async function migrarPastasDoDisco(): Promise<void> {
     if (migrando || !dadosProntos() || get(activePage) === "settings") return
+    // cabine-5 (aprovado pelo André 19/nov, "aprovo 2A"): arquivo sumido nao toca OUTRO de mesmo nome achado nas pastas do disco
+    // (as pastas continuam no store, escondidas). Uma vez so: se alguem religar em Informacoes da midia, fica religado.
+    if (!get(special).aliancaAutoLocalizarDecidido) {
+        special.update((a) => ({ ...a, autoLocateMedia: false, aliancaAutoLocalizarDecidido: true }))
+        aceitarNaFoto("special")
+    }
     const pendentes = Object.entries(get(mediaFolders))
         .map(([id, f]: any) => ({ id, ...f }))
         .filter((p) => p.path && !pastaJaMigrada(get(mediaTags), p.id))
