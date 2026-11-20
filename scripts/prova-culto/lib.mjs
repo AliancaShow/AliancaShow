@@ -78,3 +78,6 @@ export async function localizar(j, expr) {
     )
 }
 
+/** cabine-5: a raiz da Midia e a BIBLIOTECA (nao le mais as pastas do disco). As fumacas que clicam f1/v1 na raiz importam os dois para a raiz antes.
+ *  Usa a chave que o `media` ja tem (o perfil grava "C:/..." com barra). */
+export const BIB_RAIZ = `const _B=await import(U("utils/aliancaBibliotecaMidia")); const _r=Object.values(get(S.mediaFolders))[0].path; _B.importarCaminhos([_r+"/f1.png", _r+"/v1.mp4"], null); await esp(400);`

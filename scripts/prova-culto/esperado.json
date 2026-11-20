@@ -431,5 +431,203 @@
         "para": "Bíblia",
         "decisaoDeProduto": "André, 16/nov/2026: teclas 1 a 6 saem (plano-layout-f1-v4.md, decisão 12)",
         "porque": "o título da aba do topo perde o [N] da tecla (as teclas 1 a 6 saíram): \"Bíblia [6]\" vira \"Bíblia\""
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-1",
+        "fatia": "cabine5",
+        "passo": "E02-vai-preparar",
+        "fluxo": "principal.canais",
+        "caminho": "MAIN:READ_FOLDER/path/0",
+        "de": "__PERFIL__/midia",
+        "para": "<ausente>",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a raiz da Mídia é a biblioteca e não relê a pasta do disco ao ir para o Preparar; a migração da pasta do disco para categoria lê a pasta uma vez, com as subpastas (depth 30)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-2",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "MAIN:READ_FOLDER/depth",
+        "de": "<ausente>",
+        "para": 30,
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a raiz da Mídia é a biblioteca e não relê a pasta do disco ao ir para o Preparar; a migração da pasta do disco para categoria lê a pasta uma vez, com as subpastas (depth 30)"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-3",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/__PERFIL__/midia/v1.mp4/tags/0",
+        "de": "<ausente>",
+        "para": "a5d4de9f63c",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-4",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/__PERFIL__/midia/v1.mp4/tags/1",
+        "de": "<ausente>",
+        "para": "cat_f7",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-5",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/__PERFIL__/midia/v1.mp4/tags/2",
+        "de": "<ausente>",
+        "para": "alianca:bib",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-6",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/C:/x/y.mp4/info/codecs",
+        "de": "<ausente>",
+        "para": "[]",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-7",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/C:/x/y.mp4/info/mimeType",
+        "de": "<ausente>",
+        "para": "video/mp4",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-8",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/C:/x/y.mp4/info/mimeCodec",
+        "de": "<ausente>",
+        "para": "",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-9",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/__PERFIL__\\midia\\f1.png/tags/0",
+        "de": "<ausente>",
+        "para": "cat_f7",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5-10",
+        "fatia": "cabine5",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:MEDIA/__PERFIL__\\midia\\f1.png/tags/1",
+        "de": "<ausente>",
+        "para": "alianca:bib",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 3\"): a migração grava as tags da biblioteca (alianca:bib) e da categoria cat_f7 no `media`; o app manda o store inteiro para a saída, que só recebe mais tags (o y.mp4 com `info` viaja no mesmo envio); nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-1",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/capitalize_words",
+        "de": "<ausente>",
+        "para": "Jesus, Lord",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-2",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/autoBackupPrevious",
+        "de": "<ausente>",
+        "para": 1794662578348,
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-3",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/customUserDataLocation",
+        "de": "<ausente>",
+        "para": true,
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-4",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/cameraBad",
+        "de": "<ausente>",
+        "para": "[]",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-5",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/aliancaSirvoMontados/ev1",
+        "de": "<ausente>",
+        "para": "090fa9015be",
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-6",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/slideTimelineActive",
+        "de": "<ausente>",
+        "para": false,
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-7",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/autoLocateMedia",
+        "de": "<ausente>",
+        "para": false,
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
+    },
+    {
+        "tipo": "divergencia",
+        "id": "c5a-8",
+        "fatia": "cabine5-2a",
+        "passo": "C01-aba-midia",
+        "fluxo": "principal.canais",
+        "caminho": "OUTPUT:SPECIAL/aliancaAutoLocalizarDecidido",
+        "de": "<ausente>",
+        "para": true,
+        "porque": "cabine-5 (aprovado pelo André 19/nov, \"aprovo 2A\"): na primeira abertura da Mídia o app desliga uma vez a busca automática de arquivo de mesmo nome (special.autoLocateMedia=false); o app manda o `special` inteiro para a saída, que recebe as mesmas opções do perfil mais as duas chaves novas; nada do que a saída mostra muda"
     }
 ]

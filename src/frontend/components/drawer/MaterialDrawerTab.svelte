@@ -98,7 +98,7 @@
 <!-- leiaute v2: linha compacta da arvore (26 px; 28 nas pastas), sem icone de pasta e sem marcador vermelho. Contador a direita. -->
 <SelectElem style="width: 100%;" id={selectId} selectable={!noEdit} {draggable} borders="center" trigger="column" data={id}>
     <div class="envolve">
-    <button type="button" class="linha {className}" class:ativo={isActive} class:contorno={showOutline} class:sub={isSubmenu} tabindex="-1" on:click={(e) => (click({ detail: { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey } }), (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : null))} on:dblclick={dblclick} data-title={translateText(label)}>
+    <button type="button" class="linha {className}" class:ativo={isActive} class:contorno={showOutline} class:sub={isSubmenu} tabindex="-1" on:click={(e) => (click({ detail: { ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey } }), (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : null))} on:dblclick={dblclick} data-title={translateText(label)} data-aba={id}>
         <span class="rotulo">
             {#if noEdit || isSubmenu}
                 {#if label}

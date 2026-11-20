@@ -190,6 +190,12 @@
         display: flex;
         min-height: 0;
     }
+    /* cabine-5: no Svelte 3 a transicao de saida e global (fade do que esta no ar na previa do No ar),
+       entao o corpo antigo fica no DOM ate o fade acabar e o novo ja monta depois dele; os dois
+       dividiam a altura (Configuracoes na metade de baixo). O corpo que sai nunca e o ultimo div. */
+    .tela > .corpo:not(:last-of-type) {
+        display: none;
+    }
     .area {
         flex: 1;
         min-width: 0;

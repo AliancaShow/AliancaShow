@@ -37,12 +37,12 @@ export const EXCECOES = {
         "sha": "bf96cef8c00bec3e925bd74935e159bba906200eb46851c534480c123b640616"
     },
     "src/electron/IPC/responsesMain.ts": {
-        "motivo": "fatia 4 (aprovada 18/nov): novo canal `TOGGLE_DEVTOOLS` (sem efeito em producao; em dev abre o DevTools da janela principal). Nenhuma resposta existente muda | Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): READ_BIBLES_FOLDER devolve embutida/legado por Biblia",
-        "sha": "7618691b3f2c92fbbfda4a359bbf7cfd1d75feb623cfe41bb1f6263a0ef8d42f"
+        "motivo": "fatia 4 (aprovada 18/nov): novo canal `TOGGLE_DEVTOOLS` (sem efeito em producao; em dev abre o DevTools da janela principal). Nenhuma resposta existente muda | Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): READ_BIBLES_FOLDER devolve embutida/legado por Biblia | cabine-5 (aprovado pelo André 19/nov, \"aprovo 1, 2B e 3\"): canal novo ALIANCA_LIXEIRA (Apagar do computador da biblioteca de midia: caixa nativa + shell.trashItem + confere). Nenhuma resposta existente muda; a saida nao chama",
+        "sha": "6d3796b36e5bc3d9e3d7a3ec4ecbd547785383d8abbfc7489cfcb394d2b83f40"
     },
     "src/types/IPC/Main.ts": {
-        "motivo": "fatia 4 (aprovada 18/nov): tipo do canal novo `TOGGLE_DEVTOOLS`; so acrescenta | Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): READ_BIBLES_FOLDER devolve embutida/legado por Biblia",
-        "sha": "ac629ee8323f2e2c8046e15bad329dd4e8b87c477805334efa6dca924fe89ca6"
+        "motivo": "fatia 4 (aprovada 18/nov): tipo do canal novo `TOGGLE_DEVTOOLS`; so acrescenta | Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): READ_BIBLES_FOLDER devolve embutida/legado por Biblia | cabine-5 (aprovado pelo André 19/nov, \"aprovo 1, 2B e 3\"): tipo do canal novo ALIANCA_LIXEIRA; so acrescenta",
+        "sha": "e194d4d53011ca5a4c6e90084551ff62d4b2115f014c4245b54b65085e0d7117"
     },
     "src/electron/utils/menuTemplate.ts": {
         "motivo": "fatia 4 (aprovada 18/nov): tira `quick_start_guide` do menu (macOS); nada da saida usa",
@@ -89,8 +89,8 @@ export const EXCECOES = {
         "sha": "15c2507c81735c878439449294e47379f903e6455988fa3f04a876c8fd9f3de5"
     },
     "src/frontend/components/media/video/videoPlayer.ts": {
-        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): fim de video de pasta abre iniciarAutomacao() em try/finally; com o modo desligado devolve null e nada muda",
-        "sha": "fbce2acdc357ef958d2d3b003ca5c9f3a1fb28091b7fc8c4d28cce0ece3ce036"
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): fim de video de pasta abre iniciarAutomacao() em try/finally; com o modo desligado devolve null e nada muda | cabine-5 (aprovado pelo André 19/nov, \"aprovo 1, 2B e 3\"): arquivo que nao existe (locateMediaFile null) mostra aviso (newToast) antes do return false que ja existia; o que toca nao muda",
+        "sha": "01313e3166b78c45a8c74d6be4964e52fc079db447fb4139f5358982916af55f"
     },
     "src/frontend/components/timeline/ShowTimeline.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): linha do tempo move o telao como automacao (iniciarAutomacao em try/finally); modo desligado: identico",
@@ -145,7 +145,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "974d5c2eecad6f288a3a4fa985a5856c1814c8aa9ab69517b4c4dd0d3a057750"
+export const SHA_EXCECOES = "6933e5fe27ccfd11dcc04cb58b5b6dc9eecc0afe19ee06e653d8874c7555b44a"
 export const SHA_NOVOS = "fda7eab12fe65bd4b503d4f8a7e3a0c96831aa99a94b3bd1409990db7c3c5907"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
