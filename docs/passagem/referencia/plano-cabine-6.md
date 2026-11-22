@@ -133,6 +133,22 @@ Corte por vídeo existe (`aliancaSpotifyComSom*.ts`), sempre ligado, sem voltar;
 - **D11 — Áudio:** um áudio novo (arquivo ou Spotify) **para o Spotify**. O áudio da gaveta não volta mais depois do vídeo — André autorizou a correção (22/nov); diff de `audioFading.ts`/`videoPlayer.ts` será mostrado antes de aplicar, por ser fecho.
 - **D12 — "Substituir slide com modelo":** o André não se lembra da opção — provavelmente existia e ninguém achou. Reforça a 3a (indicador de origem).
 
+### Respostas do André ao board Rodada-cabine-6 (22/nov)
+- **D13 — Onde manda:** na tabela do Visual (P2). A tela de saídas só mostra o resumo.
+- **D14 — Etiqueta "modelo da saída": neutra.** Laranja só para problema.
+- **D15 — Trocar o Visual com slide no ar:** vale no próximo slide.
+- **D16 — Retorno tem leiaute próprio, fora dos modelos de saída.** Os modelos de retorno são completamente diferentes dos de saída; o Visual tem um **campo separado "Leiaute do retorno"** (não uma casa da tabela de modelos).
+- **D17 — Miniaturas do centro mostram como está configurada a tela principal.**
+- **D18 — "Aplicar" no slide:** fica a critério do desenho (manter com aviso quando nenhuma saída usa o slide).
+- **D19 — Tarja do pregador / título da mensagem = sobreposição**, e as sobreposições também entram no enquadramento por saída (cada saída posiciona a tarja no seu formato).
+- **D20 — Modelo aplicado é ESTAMPA, não vínculo.** Aplicar um modelo num slide/música cria uma cópia ("instância"); editar o modelo depois **não** muda o que já foi estampado — só muda se o operador reaplicar à mão. O formato de um modelo pode ser alterado. Já o **modelo de saída é aplicado na hora**, a cada exibição, sobre o conteúdo cru. (O motor já funciona assim: `mergeWithTemplate` copia; `style.template` aplica ao vivo. Falta a interface deixar isso explícito: "Reaplicar modelo".)
+- **D21 — Conteúdo sem modelo numa saída de outro formato** (ex.: apresentação 16:9 recebida de fora, no LED 14:5): encaixar sem distorcer (com barras), com aviso claro e sutil. Nunca esticar.
+- **D22 — "No ar" no formato 14:5:** não mover os botões das camadas; o espaço dos botões é regra, a imagem fica menor. Aceita ideias melhores.
+- **D23 — Área do LED:** hoje sempre no canto superior esquerdo, mas manter a opção de escolher canto/deslocamento (escondida em "avançado").
+- **D24 — "Testar" com culto no ar: bloqueado.**
+- **D25 — Transporte: botões Pausar e Parar.** O **Pausar desacelera numa curva até parar** (sem congelar brusco no ar). Vale para vídeo (e confirmar áudio/Spotify).
+- **D26 — Clicar num vídeo não mostra o vídeo grande no centro.** No lugar, um cartão grande com a miniatura do vídeo e talvez os controles. (Bônus: tira mais uma decodificação, o `VideoShow.svelte:364`.)
+
 ## Resultados das provas (22/nov, perfil de teste isolado, PC de dev RTX 3080 Ti)
 
 - **1.0 — LED: opção A escolhida.** Janela 896×320 na origem do monitor, `screen` nulo, cadeado, `outputResolutionAsRatio`: slide cai em x 0..895, y 0..319, os 4 cantos no pixel exato. Opção B (monitor inteiro + recorte) **reprovada**: `Zoomed` gera `margin-inline-start: 234.67px; margin-top: -176px`, slide desloca 234 px e perde os cantos 2 e 4.
