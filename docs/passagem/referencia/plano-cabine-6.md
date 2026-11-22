@@ -141,6 +141,19 @@ Corte por vídeo existe (`aliancaSpotifyComSom*.ts`), sempre ligado, sem voltar;
 - **D3 — "No ar" por captura da janela do telão funciona** (`getMediaSourceId` via `GET_WINDOWS` + `getUserMedia` desktop: 896×320 a ~27 fps). Custo exato não medido limpo (POC paralela contaminou). Filtrar sempre pelo id da janela, nunca pelo nome.
 - Pendente: repetir 1080p e o custo da captura sem processos paralelos; repetir na cabine com o vídeo real.
 
+### POC "decodifica uma vez, mostra N vezes" (`aliancashow\bancada\poc-video-unico`, fora do repo)
+3 saídas (960x540, LED 896x320 cover, 640x360) + principal com prévia, Electron 37.10.3 do repo, vídeo 60 s com código de barras do nº do quadro em cada quadro.
+| variante | 4K: decode do sistema | quadros perdidos | cadência | sincronia entre janelas |
+|---|---|---|---|---|
+| (a) hoje: um `<video>` por janela | **98% (saturado)** | **75%** | 174±175 ms | deriva até 28 quadros |
+| (b) captureStream compartilhado | 54% | ~22% nos filhos | 52±37 ms | 0…2 |
+| **(b2) 1 `<video>` + canvas em cada saída (window.open, mesmo processo)** | **32%** | **0** | **33,4±1,9 ms** | **0…1 quadro** |
+| (c) espelho por captura da janela | 45% | 0 | 33,3 ms | 0…1 (congela se a fonte for minimizada) |
+- **(b2) vence:** 1 decodificador e 1 processo para todas as saídas, enquadramento próprio por saída (cover no LED, contain nas outras), texto em DOM por cima, áudio toca uma vez só. Dono oculto precisa desenhar pelo rAF de uma janela filha visível (senão cai a 1 fps). O dono não pode ser a janela da interface.
+- **Riscos do port:** ponto único de falha (se o processo dono cai, todas as saídas morrem — detectar `render-process-gone` e recriar); as filhas abertas por `window.open` não têm preload/IPC, então todo o Svelte da saída tem de rodar no dono e montar em `child.document` — é reescrever o coração do fecho (`OutputLifecycle.createOutput`, `OutputSend`, `MainOutput`); previews da principal precisam virar captura de baixa taxa; nada validado na RX 580 nem com 3 monitores/DPI.
+- **(c)** fica como plano B barato para o retorno e o "No ar".
+- Próximo passo proposto: rodar `run.ps1` do POC **na cabine** (RX 580, sem outros apps) antes de decidir o port.
+
 ## Perguntas ainda abertas
 1. Escala do Windows em cada monitor da igreja (confirmar no local).
 2. Slides do telão desenhados em 14:5 (896×320) ou 16:9 encaixado?
