@@ -14,6 +14,8 @@
     import { getExtension, getFileName, getMediaType, removeExtension } from "../helpers/media"
     import { joinTimeBig } from "../helpers/time"
     import { fadePause, seekTo as spotifySeek, skipNext, skipPrev, spotifyIsFading, spotifyState, togglePlay } from "../output/preview/SpotifyManager"
+    import { alternarMudoDoSpotify, pararSpotify, volumeDoSpotify, volumeFimDoSpotify } from "../../utils/aliancaSpotifyCartao"
+    import { spotifyMudo, VOLUME_MAXIMO_SPOTIFY } from "../../utils/aliancaSpotifyCartaoLogica"
     import AliancaBarra from "./AliancaBarra.svelte"
     import AliancaTransporteLinha from "./AliancaTransporteLinha.svelte"
     import AliancaTransporteVideo from "./AliancaTransporteVideo.svelte"
@@ -127,6 +129,9 @@
     // ---------------- Spotify: so em Mostrar, onde o controlador escondido do Preview mantem o estado em dia ----------------
     $: temSpotify = $activePage === "show" && !!$spotifyState
     $: faltaSpotify = $spotifyState ? Math.max(0, Math.floor($spotifyState.durationSec - $spotifyState.positionSec)) : 0
+    // C2 linha 2: mudo + volume (volume do app no mixer do Windows, 0..1); o valor mostrado vem do estado, que o limitador atualiza na hora
+    $: volumeSpotify = Math.min(VOLUME_MAXIMO_SPOTIFY, Math.max(0, $spotifyState?.volume ?? 0))
+    $: mudoSpotify = spotifyMudo($spotifyState?.volume)
     const mmss = (s: number) => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0")
 
     // ---------------- a pilha ----------------
@@ -179,6 +184,10 @@
                             <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M12.5 3v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><path d="M3 3.2v9.6L10 8z" fill="currentColor" /></svg>
                         </button>
                     </div>
+                    <!-- 4b: Parar = pausar + voltar ao inicio; sempre no mesmo lugar (nada entra nem sai quando da play) -->
+                    <button type="button" class="q" tabindex="-1" disabled={$spotifyIsFading} aria-label="Parar Spotify" data-acao="spotify-parar" data-title="Parar (volta ao início)" on:mousedown|preventDefault on:click={pararSpotify}>
+                        <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4h8v8H4z" fill="currentColor" /></svg>
+                    </button>
                     <span class="nome" data-title={$spotifyState.title + " · " + $spotifyState.artist}>♫ {$spotifyState.title || "—"}<span class="sub"> · {$spotifyState.artist || ""}</span></span>
                     <span class="t1">−{mmss(faltaSpotify)}</span>
                 </div>
@@ -188,6 +197,14 @@
                     <button type="button" class="q" class:lig={$spotifyIsFading} tabindex="-1" disabled={$spotifyIsFading || !$spotifyState.isPlaying} aria-label="Sumir aos poucos" data-acao="spotify-crossfade" data-title="Crossfade: sumir aos poucos (fade)" on:mousedown|preventDefault on:click={fadePause}>
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4h3l7 8h3M1.5 12h3l7-8h3" /></svg>
                     </button>
+                    <!-- C2: mudo 24 px + volume 40 px, como o cartao de midia (AliancaTransporteLinha) -->
+                    <button type="button" class="q" class:lig={mudoSpotify} tabindex="-1" disabled={$spotifyIsFading} aria-pressed={mudoSpotify} aria-label="Mudo do Spotify" data-acao="spotify-mudo" data-title={mudoSpotify ? "Som desligado: ligar" : "Desligar o som"} on:mousedown|preventDefault on:click={alternarMudoDoSpotify}>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2.5 6h2.5l3-2.5v9L5 10H2.5z" />
+                            {#if mudoSpotify}<path d="M11 6l3 4 M14 6l-3 4" />{:else}<path d="M11 5.5a3.5 3.5 0 0 1 0 5" />{/if}
+                        </svg>
+                    </button>
+                    <div class="vol" data-acao="spotify-volume"><AliancaBarra valor={volumeSpotify} max={VOLUME_MAXIMO_SPOTIFY} desligada={$spotifyIsFading} rotulo="Volume do Spotify {Math.round(volumeSpotify * 100)}%" alto on:mover={(e) => volumeDoSpotify(e.detail)} on:soltar={(e) => volumeFimDoSpotify(e.detail)} /></div>
                 </div>
             </div>
         {/if}
@@ -322,6 +339,14 @@
     }
     .sub {
         color: var(--luz-mudo);
+    }
+    .vol {
+        flex: 0 0 40px;
+        display: flex;
+        margin: 0 2px;
+    }
+    .vol :global(.barra) {
+        margin: 0 2px;
     }
     .t1 {
         flex-shrink: 0;

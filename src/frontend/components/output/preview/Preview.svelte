@@ -3,6 +3,7 @@
     import { DEFAULT_WIDTH, isDarkTheme } from "../../../utils/common"
     import { formatSearch } from "../../../utils/search"
     import { teclaIgnorada } from "../../../utils/aliancaModo"
+    import { pararSpotifyComoAudio, pararSpotifyNoEsc } from "../../../utils/aliancaSpotifyCartao"
     import { getNormalizedKey, previewCtrlShortcuts, previewShortcuts } from "../../../utils/shortcuts"
     import { runAction } from "../../actions/actions"
     import AudioMeter from "../../drawer/audio/AudioMeter.svelte"
@@ -118,6 +119,9 @@
         }
 
         if (previewShortcuts[e.key]) {
+            // AliancaShow D9: o Spotify e a camada Audio. F4 e Esc (os atalhos moram no fecho, shortcuts.ts/clear.ts) tambem o param, com fade curto
+            if (e.key === "F4") pararSpotifyComoAudio()
+            else if (e.key === "Escape") pararSpotifyNoEsc()
             if (previewShortcuts[e.key](e)) e.preventDefault()
             return
         }
