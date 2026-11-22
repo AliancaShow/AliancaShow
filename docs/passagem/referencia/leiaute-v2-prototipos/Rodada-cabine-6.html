@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>AliançaShow — Rodada da cabine 6 · P1–P5 (tema Luz)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fundo:#0d0d0f; --painel:rgba(19,19,21,.62); --painel-opaco:#131315; --pop:#1c1c1f;
+  --texto:#f8f8f0; --mudo:rgba(248,248,240,.5); --fraco:rgba(248,248,240,.3);
+  --linha:rgba(248,248,240,.075); --borda:rgba(248,248,240,.13); --borda-forte:rgba(248,248,240,.3);
+  --campo:rgba(248,248,240,.06); --hover:rgba(248,248,240,.1); --trilho:rgba(0,0,0,.28);
+  --vermelho:#f21a27; --vermelho-lav:rgba(242,26,39,.12); --vermelho-claro:#ff9aa0;
+  --verde:#5ec48d; --verde-lav:rgba(94,196,141,.14); --verde-borda:rgba(94,196,141,.5);
+  --ambar:#f1d278; --laranja:#eba640; --laranja-lav:rgba(235,166,64,.14); --laranja-borda:rgba(235,166,64,.55); --tinta:#161616;
+  --rosa:#d98ab4; --fundo-cam:#8cc7a6;
+  --sombra-pop:0 18px 40px rgba(0,0,0,.5); --raio:14px;
+  --fonte:Archivo,"AliancaUI Archivo","Segoe UI",system-ui,sans-serif;
+  --roxo:radial-gradient(90% 120% at 22% 18%,#5b3aa8 0%,transparent 60%),radial-gradient(80% 110% at 85% 90%,#b4366b 0%,transparent 62%),linear-gradient(160deg,#1d1446,#120a22);
+  --noite:radial-gradient(100% 130% at 60% 30%,#1c4a66 0%,#06141c 80%);
+  --z:1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050506;color:var(--texto);font-family:var(--fonte);font-variation-settings:"wdth" 96;-webkit-font-smoothing:antialiased;font-size:13px}
+button{font:inherit;color:inherit}
+p{margin:0}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+svg.i.s14{width:14px;height:14px} svg.i.s18{width:18px;height:18px} svg.i.s12{width:12px;height:12px} svg.i.s22{width:22px;height:22px}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(248,248,240,.14);border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+
+/* ============ mesa (o board) ============ */
+.cab-mesa{position:sticky;left:0;top:0;z-index:50;display:flex;align-items:center;gap:16px;padding:14px 28px;background:#050506;border-bottom:1px solid var(--linha);width:100vw}
+.cab-mesa h1{margin:0;font-size:17px;font-weight:700;font-variation-settings:"wdth" 118;letter-spacing:-.01em;white-space:nowrap}
+.cab-mesa h1 span{color:var(--mudo);font-weight:500}
+.cab-mesa .z{margin-left:auto;display:flex;gap:2px;padding:3px;background:var(--trilho);border-radius:10px;box-shadow:inset 0 0 0 1px var(--linha)}
+.cab-mesa .z button{height:30px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:var(--mudo);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.cab-mesa .z button.a{background:var(--texto);color:var(--tinta)}
+.cab-mesa nav{display:flex;gap:6px}
+.cab-mesa nav a{color:var(--mudo);text-decoration:none;font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;border:1px solid var(--borda);white-space:nowrap}
+.cab-mesa nav a:hover{color:var(--texto);background:var(--hover)}
+.mesa{display:flex;gap:96px;padding:36px 28px 80px;width:max-content;zoom:var(--z);align-items:flex-start}
+.prancha{width:1920px;flex-shrink:0}
+.prancha>header{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
+.prancha>header b{font-family:Montserrat,"Arial Black",sans-serif;font-weight:900;font-size:34px;letter-spacing:-.02em}
+.prancha>header span{font-size:17px;font-weight:600;font-variation-settings:"wdth" 110}
+.prancha>header em{font-style:normal;color:var(--mudo);font-size:13px;margin-left:auto}
+.quadro{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--fundo);border-radius:6px;box-shadow:0 0 0 1px var(--borda)}
+.quadro .luz{position:absolute;inset:0;pointer-events:none;opacity:.55;background:radial-gradient(70% 90% at 78% 28%,#5b3aa8 0%,transparent 62%),radial-gradient(60% 80% at 25% 90%,#b4366b 0%,transparent 60%),linear-gradient(160deg,#2a1650,#120a22)}
+.quadro .veu{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 100% at 60% 40%,transparent 30%,#0d0d0f 95%)}
+.quadro>.c{position:absolute;inset:0}
+.faixa-det{width:1920px;margin-top:16px;padding:20px 24px;background:var(--fundo);border-radius:6px;box-shadow:0 0 0 1px var(--borda);display:flex;gap:40px;align-items:flex-start}
+.notas{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:16px}
+.notas div{font-size:15px;line-height:1.45;color:rgba(248,248,240,.82)}
+.notas h4{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--mudo)}
+.leg{font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--mudo);text-transform:uppercase}
+.leg b{color:var(--texto)}
+.cota{font-size:12px;color:var(--mudo);line-height:1.4}
+.cota b{color:var(--texto);font-weight:600}
+.cota p+p{margin-top:7px}
+.lado{position:absolute;left:1430px;top:24px;width:466px}
+.lado .leg{margin:0 0 10px}
+.lado .leg.n{margin-top:26px}
+.div-app{position:absolute;left:1404px;top:0;bottom:0;width:1px;background:var(--linha)}
+
+/* ============ peças comuns ============ */
+.p{background:var(--painel);border-radius:14px;box-shadow:inset 0 0 0 1px var(--linha)}
+.po{background:var(--painel-opaco);border-radius:14px;box-shadow:inset 0 0 0 1px var(--linha)}
+.rot{font-size:12px;font-weight:600;color:var(--mudo);letter-spacing:.04em}
+.ib{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--borda);border-radius:6px;background:var(--campo);color:var(--texto);cursor:pointer;flex-shrink:0}
+.ib.lig{background:var(--texto);color:var(--tinta);border-color:var(--texto)}
+.seg{display:flex;gap:2px;padding:3px;background:var(--trilho);box-shadow:inset 0 0 0 1px var(--linha);border-radius:10px}
+.seg button{height:30px;padding:0 16px;border:0;border-radius:7px;background:transparent;color:var(--mudo);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button.a{background:var(--texto);color:var(--tinta)}
+.tag{font-size:10px;font-weight:700;border-radius:4px;padding:2px 6px;line-height:14px;display:inline-block;letter-spacing:.04em;white-space:nowrap}
+.tag.ar{background:var(--vermelho);color:#fff}
+.tag.novo{background:var(--ambar);color:var(--tinta)}
+.tag.ok{background:var(--verde-lav);color:var(--verde)}
+.tag.lar{background:var(--laranja);color:var(--tinta)}
+.tag.lin{box-shadow:inset 0 0 0 1px var(--borda-forte);color:var(--texto)}
+.tag.mu{box-shadow:inset 0 0 0 1px var(--borda);color:var(--mudo)}
+.t-txt{font-family:Montserrat,"Arial Black",sans-serif;font-weight:900;color:#fff;text-align:center;line-height:1.08;text-shadow:0 2px 10px rgba(0,0,0,.45)}
+.dig{font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;color:#fff;letter-spacing:.04em}
+
+/* casca do app */
+.topo{height:56px;display:flex;align-items:center;gap:12px;padding:0 12px 0 4px}
+.marca{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700;font-variation-settings:"wdth" 118;letter-spacing:-.01em;padding:0 10px 0 14px}
+.marca span{color:rgba(248,248,240,.42);font-weight:500;margin-left:-4px}
+.pil{height:32px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:16px;font-size:12px;font-weight:600;white-space:nowrap}
+.pil i{width:7px;height:7px;border-radius:4px;background:currentColor}
+.pil.vis{box-shadow:inset 0 0 0 1px var(--borda-forte);background:var(--campo)}
+.pil.vis small{font-size:12px;color:var(--mudo);font-weight:500}
+.cf-lista{width:236px;flex-shrink:0;padding:12px 8px;border-right:1px solid var(--linha);display:flex;flex-direction:column;gap:2px}
+.cf-lista .it{height:36px;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(248,248,240,.8);position:relative}
+.cf-lista .it.a{background:var(--hover);color:var(--texto);font-weight:600}
+.cf-lista .it.a::before{content:"";position:absolute;left:-8px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--texto)}
+.cf-lista .it svg{color:var(--mudo)}
+.cf-lista hr{border:0;border-top:1px solid var(--linha);margin:8px 10px;width:auto}
+.sec{display:flex;align-items:center;gap:10px;margin:22px 0 10px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--mudo)}
+.sec::after{content:"";flex:1;height:1px;background:var(--linha)}
+.sec small{font-weight:400;letter-spacing:0;color:var(--fraco)}
+.cp{position:relative;height:44px;border:1px solid var(--borda);border-radius:6px;background:var(--campo);padding:20px 10px 0;font-size:13px;font-weight:500;display:flex;align-items:flex-start;gap:8px;min-width:0;flex:1}
+.cp>label{position:absolute;left:10px;top:5px;font-size:10.5px;font-weight:500;color:var(--mudo);white-space:nowrap;letter-spacing:.01em}
+.cp .v{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:18px}
+.cp .v i{font-style:normal;color:var(--mudo);font-weight:400}
+.cp .dir{position:absolute;right:8px;top:0;bottom:0;display:flex;align-items:center;gap:4px;color:var(--mudo)}
+.lin{display:flex;gap:8px;margin-bottom:8px;align-items:stretch}
+.bt{height:36px;padding:0 14px;border:1px solid var(--borda);border-radius:8px;background:var(--campo);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.bt.pri{background:var(--texto);color:var(--tinta);border-color:var(--texto)}
+.bt.fan{background:transparent;border-color:transparent;color:var(--mudo)}
+.bt.tin{background:var(--tinta);color:var(--laranja);border-color:var(--tinta)}
+.grp{display:flex;border:1px solid var(--borda);border-radius:6px;overflow:hidden;background:var(--campo);height:36px;flex:1}
+.grp button{flex:1;border:0;border-right:1px solid var(--borda);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mudo);font-weight:700;font-size:14px}
+.grp button:last-child{border-right:0}
+.grp button.a{background:var(--texto);color:var(--tinta)}
+.menu{width:252px;background:var(--pop);border-radius:12px;box-shadow:inset 0 0 0 1px var(--borda),var(--sombra-pop);padding:6px;display:flex;flex-direction:column}
+.menu .mi{height:38px;display:flex;align-items:center;gap:12px;padding:0 10px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.menu .mi svg{color:var(--mudo)}
+.menu .mi.h{background:var(--hover)}.menu .mi.h svg{color:var(--texto)}
+.menu .mi small{margin-left:auto;font-size:11px;color:var(--mudo)}
+.menu hr{border:0;border-top:1px solid var(--linha);margin:5px 10px}
+.menu .tit{height:28px;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--mudo)}
+.aviso{min-height:48px;display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--laranja);color:var(--tinta);border-radius:8px}
+.aviso b{font-size:16px;font-weight:700}
+.aviso span{font-size:13px;font-weight:500;opacity:.9}
+.hach{background-image:repeating-linear-gradient(135deg,rgba(248,248,240,.07) 0 2px,transparent 2px 8px)}
+
+/* ============ P1 — mapa de monitores ============ */
+.mapa{display:flex;gap:24px;align-items:flex-start}
+.mon-c{display:flex;flex-direction:column;gap:6px}
+.mon-c .cab{height:20px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--mudo);white-space:nowrap}
+.mon-c .pe{font-size:12px;color:var(--mudo)}
+.mon-c .pe b{color:var(--texto);font-weight:600}
+.mon{position:relative;border-radius:6px;background:var(--campo);box-shadow:inset 0 0 0 1px var(--borda-forte);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:12px;font-weight:600}
+.mon .n{position:absolute;right:8px;bottom:4px;font-family:Montserrat,sans-serif;font-weight:900;font-size:30px;color:rgba(248,248,240,.14);line-height:1}
+.mon small{font-size:11px;color:var(--mudo);font-weight:500}
+.mon.minha{box-shadow:0 0 0 2px var(--vermelho);overflow:visible}
+.mon.cabine{box-shadow:inset 0 0 0 1px var(--borda);color:var(--mudo)}
+.mon.sumiu{background:var(--laranja-lav);box-shadow:none;outline:2px dashed var(--laranja);outline-offset:-2px;color:var(--laranja)}
+.mon .area{position:absolute;left:0;top:0;background:rgba(242,26,39,.3);box-shadow:inset 0 0 0 2px var(--vermelho);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;line-height:1.2;border-radius:6px 0 0 0}
+.mon .area small{color:rgba(255,255,255,.85);font-weight:600}
+.mon .fora{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:500;color:var(--mudo)}
+.mon .ret{position:absolute;inset:0;background:var(--hover);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.sd-l{display:flex;align-items:center;gap:10px;height:60px;padding:0 12px;border-radius:8px;background:var(--campo);box-shadow:inset 0 0 0 1px var(--linha);position:relative}
+.sd-l .nm{font-size:13px;font-weight:600}
+.sd-l small{display:block;font-size:11.5px;color:var(--mudo);font-weight:400;margin-top:2px}
+.sd-l.a{background:var(--hover);box-shadow:inset 0 0 0 1px var(--borda-forte)}
+.sd-l.a::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--vermelho)}
+.sd-l .dir{margin-left:auto;display:flex;align-items:center;gap:6px}
+.anc{width:44px;height:44px;flex:none;border:1px solid var(--borda);border-radius:6px;background:var(--campo);display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:7px}
+.anc i{border-radius:2px;background:rgba(248,248,240,.14)}
+.anc i.a{background:var(--texto)}
+.rad{flex:1;min-width:0;border-radius:8px;border:1px solid var(--borda);background:var(--campo);padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.rad .bo{width:18px;height:18px;border-radius:9px;border:1.5px solid var(--borda-forte);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center}
+.rad h5{margin:0 0 4px;font-size:14px;font-weight:700}
+.rad p{font-size:12.5px;line-height:1.4;color:var(--mudo)}
+.rad.a{border-color:var(--laranja-borda);background:var(--laranja-lav)}
+.rad.a .bo{border-color:var(--laranja)}
+.rad.a .bo::after{content:"";width:8px;height:8px;border-radius:4px;background:var(--laranja)}
+.rad.n.a{border-color:var(--borda-forte);background:var(--hover)}
+.rad.n.a .bo{border-color:var(--texto)}.rad.n.a .bo::after{background:var(--texto)}
+.teste{position:relative;background:#000;box-shadow:inset 0 0 0 1px #fff;background-image:linear-gradient(rgba(255,255,255,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.28) 1px,transparent 1px);background-size:32px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+.teste .k{position:absolute;width:26px;height:26px;background:#fff;color:#000;font-family:Montserrat,sans-serif;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center}
+.teste .k.a{left:0;top:0}.teste .k.b{right:0;top:0}.teste .k.c{left:0;bottom:0}.teste .k.d{right:0;bottom:0}
+.teste .cz{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--vermelho)}
+.teste .cz.v{left:50%;right:auto;top:0;bottom:0;width:1px;height:auto}
+
+/* ============ P2 — Visual ============ */
+.vis-c{padding:12px;border-radius:8px;background:var(--campo);box-shadow:inset 0 0 0 1px var(--linha);display:flex;flex-direction:column;gap:6px}
+.vis-c.a{background:var(--hover);box-shadow:inset 0 0 0 1px var(--borda-forte)}
+.vis-c b{font-size:14px;font-weight:700}
+.vis-c small{font-size:11.5px;color:var(--mudo);line-height:1.35}
+.mtz{display:grid;gap:8px;align-items:stretch}
+.mtz .h{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--mudo);display:flex;align-items:center;gap:6px;padding:0 2px}
+.mtz .sd{border-radius:8px;background:var(--trilho);box-shadow:inset 0 0 0 1px var(--linha);padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0}
+.mtz .sd b{font-size:14px;font-weight:700}
+.mtz .sd small{font-size:11.5px;color:var(--mudo)}
+.cel{border-radius:8px;border:1px solid var(--borda);background:var(--campo);padding:8px 10px;display:flex;align-items:center;gap:10px;min-width:0;position:relative}
+.cel .mn{flex-shrink:0;width:44px;border-radius:3px;background:var(--roxo);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px var(--borda)}
+.cel .tx{flex:1;min-width:0}
+.cel .tx b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cel .tx small{display:block;font-size:11px;color:var(--mudo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cel>svg{color:var(--mudo)}
+.cel.slide{border-style:dashed;background:transparent}
+.cel.slide .tx b{color:rgba(248,248,240,.8);font-weight:500}
+.cel.dif{box-shadow:0 0 0 2px var(--ambar)}
+.cel.mini{padding:5px 8px}
+.cel.mini .tx b{font-size:12px}
+
+/* ============ P3 — Modelos ============ */
+.tr{width:200px;flex-shrink:0;padding:6px;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--linha)}
+.tr .no{height:30px;flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 8px 0 2px;border-radius:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.tr .no .st{width:18px;display:flex;justify-content:center;color:var(--mudo)}
+.tr .f{height:28px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 8px 0 24px;border-radius:6px;font-size:13px;font-weight:500;color:rgba(248,248,240,.8);white-space:nowrap}
+.tr .ct{margin-left:auto;padding-left:8px;font-size:11px;font-weight:500;color:var(--mudo);font-variant-numeric:tabular-nums}
+.tr .sel{background:var(--hover);color:var(--texto);font-weight:600}
+.tr .sel .ct{color:var(--texto)}
+.tr .mais{color:var(--mudo)}
+.md{background:var(--campo);border-radius:8px;padding:4px;box-shadow:inset 0 0 0 1px var(--linha);display:flex;flex-direction:column}
+.md .th{border-radius:5px;background:var(--roxo);position:relative;overflow:hidden}
+.md .pe{display:flex;align-items:center;gap:6px;padding:6px 4px 3px 6px;min-width:0}
+.md .pe b{flex:1;min-width:0;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.md .uso{padding:0 6px 5px;font-size:11px;color:var(--mudo)}
+.md.a{background:var(--hover);box-shadow:inset 0 0 0 1px var(--borda-forte)}
+.alvo{border-radius:8px;border:1px solid var(--borda);background:var(--campo);padding:10px;display:flex;flex-direction:column;gap:8px;width:196px}
+.alvo .fm{height:98px;display:flex;align-items:center;justify-content:center}
+.alvo .fm i{display:block;border-radius:3px;background:var(--hover);box-shadow:inset 0 0 0 1.5px var(--borda-forte)}
+.alvo b{font-size:13px;font-weight:700}
+.alvo small{font-size:11.5px;color:var(--mudo)}
+.alvo.a{border-color:var(--texto);box-shadow:0 0 0 3px rgba(248,248,240,.12)}
+.alvo.a .fm i{background:var(--texto);box-shadow:none}
+.cx{position:absolute;border:1px dashed rgba(248,248,240,.45);border-radius:2px}
+.cx.sel{border:1.5px solid var(--texto)}
+.cx.sel::before,.cx.sel::after{content:"";position:absolute;width:7px;height:7px;background:var(--texto);border-radius:1px}
+.cx.sel::before{left:-4px;top:-4px}.cx.sel::after{right:-4px;bottom:-4px}
+.papel{position:absolute;left:-1px;top:-19px;height:18px;padding:0 7px;border-radius:4px 4px 0 0;font-size:10px;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:4px;white-space:nowrap;color:var(--tinta)}
+.papel.ver{background:var(--verde)}.papel.ref{background:var(--ambar)}.papel.vs{background:var(--rosa)}.papel.let{background:var(--texto)}.papel.tit{background:var(--vermelho-claro)}
+.pch{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;border:1px solid var(--borda);border-radius:15px;font-size:12px;font-weight:600;white-space:nowrap}
+.pch i{width:8px;height:8px;border-radius:2px}
+.pch.a{background:var(--texto);color:var(--tinta);border-color:var(--texto)}
+.pch.off{opacity:.38}
+.tam{height:26px;display:inline-flex;align-items:center;gap:7px;padding:0 10px;border-radius:6px;background:var(--texto);color:var(--tinta);font-size:12px;font-weight:700;white-space:nowrap}
+.tam i{display:block;background:var(--tinta);border-radius:1px}
+
+/* ============ P4 — No ar, camadas, transporte ============ */
+.col{display:flex;flex-direction:column;gap:10px;padding:12px;position:relative}
+.slot{height:32px;flex-shrink:0;margin:-12px -12px 0;padding:0 12px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between}
+.slot small{font-size:11px;color:var(--mudo)}
+.prog-l{display:flex;gap:4px;align-items:stretch;flex-shrink:0}
+.prog{flex:1;min-width:0;border-radius:6px;background:#000;position:relative;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 2px var(--vermelho)}
+.prog.quieto{box-shadow:inset 0 0 0 1px var(--borda)}
+.cam{width:30px;flex-shrink:0;display:flex;flex-direction:column;gap:3px}
+.cam .ic{flex:1 1 0;min-height:26px;width:30px;border:1px solid var(--borda);border-radius:5px;background:var(--campo);display:flex;align-items:center;justify-content:center;padding:0;color:var(--fraco);position:relative}
+.cam .ic.tem{color:var(--cor);background:color-mix(in srgb,var(--cor) 16%,transparent);border-color:color-mix(in srgb,var(--cor) 55%,transparent)}
+.cam .ic.x{color:var(--vermelho-claro);border-color:rgba(242,26,39,.5);background:var(--vermelho-lav)}
+.cam.rot .ic{width:auto}
+.tk{border-radius:8px;background:var(--trilho);padding:6px 8px 4px 6px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tk-a{display:flex;align-items:center;gap:6px;height:24px;min-width:0}
+.tk-b{display:flex;align-items:center;gap:2px;height:24px}
+.tk .q{width:24px;height:24px;border-radius:6px;border:0;padding:0;background:transparent;color:rgba(248,248,240,.6);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+.tk .q.p{box-shadow:inset 0 0 0 1px var(--borda);color:rgba(248,248,240,.85)}
+.tk .q.lig{color:var(--texto);background:var(--hover)}
+.tk .grp3{display:flex;gap:2px}
+.tk .nm{flex:1;min-width:0;font-size:12px;font-weight:500;color:rgba(248,248,240,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk .nm i{font-style:normal;color:var(--mudo)}
+.tk .t1{flex-shrink:0;min-width:40px;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:rgba(248,248,240,.85)}
+.bar{flex:1;height:24px;position:relative;cursor:pointer;margin:0 6px 0 4px}
+.bar::before{content:"";position:absolute;left:0;right:0;top:10.5px;height:3px;border-radius:2px;background:rgba(248,248,240,.12)}
+.bar i{position:absolute;left:0;top:10.5px;height:3px;border-radius:2px;background:rgba(248,248,240,.5)}
+.bar b{position:absolute;top:7.5px;width:9px;height:9px;margin-left:-4.5px;border-radius:5px;background:rgba(248,248,240,.85)}
+.bar.vol{width:40px;flex:none;margin:0 2px}
+.outras .seg{border-radius:7px;padding:2px;flex:1}
+.outras .seg button{height:26px;flex:1;justify-content:center;padding:0 8px;font-size:12px;border-radius:5px}
+.rt-it{height:34px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:6px;font-size:13px;white-space:nowrap}
+.rt-it svg{color:var(--mudo)}
+.rt-it.a{background:var(--hover);font-weight:600}
+.rt-it small{margin-left:auto;font-size:11px;color:var(--mudo)}
+.sl{background:var(--campo);border-radius:8px;padding:4px;box-shadow:inset 0 0 0 1px var(--linha)}
+.sl .v{aspect-ratio:14/5;border-radius:5px;display:flex;align-items:center;justify-content:center;padding:6px;background:var(--noite);position:relative;overflow:hidden}
+.sl .r{height:24px;display:flex;align-items:center;gap:6px;padding:0 4px;font-size:11px;font-weight:600}
+.sl .r i{width:6px;height:6px;border-radius:3px}
+.sl .r span{margin-left:auto;color:var(--mudo);font-weight:500}
+.sl.ar{box-shadow:0 0 0 2px var(--vermelho);background:var(--vermelho)}
+.og{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:6px;font-size:12px;font-weight:500;white-space:nowrap;box-shadow:inset 0 0 0 1px var(--borda);color:rgba(248,248,240,.85)}
+.og b{font-weight:600;color:var(--texto)}
+.og.lar{box-shadow:inset 0 0 0 1px var(--laranja-borda);background:var(--laranja-lav)}
+.og.lar em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.04em;background:var(--laranja);color:var(--tinta);border-radius:3px;padding:1px 5px;line-height:14px}
+.og.vis{box-shadow:inset 0 0 0 1px var(--borda-forte);background:var(--campo)}
+.num{width:16px;height:16px;border-radius:8px;background:var(--texto);color:var(--tinta);font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ============ P5 — retorno ============ */
+.palco{width:900px;height:506px;background:#000;border-radius:6px;box-shadow:0 0 0 1px var(--borda-forte);position:relative;overflow:hidden;color:#fff}
+.palco .rel{position:absolute;font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;letter-spacing:.02em}
+.palco .at{position:absolute;left:40px;right:40px;font-family:Montserrat,"Arial Black",sans-serif;font-weight:900;line-height:1.08;text-align:center}
+.palco .selo-v{position:absolute;display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border-radius:8px;background:rgba(248,248,240,.1);box-shadow:inset 0 0 0 1px rgba(248,248,240,.3);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.tabela{font-size:13px;line-height:1.35;border-collapse:collapse;width:100%}
+.tabela td,.tabela th{padding:7px 10px 7px 0;border-bottom:1px solid var(--linha);vertical-align:top;color:rgba(248,248,240,.82);text-align:left}
+.tabela th{font-size:11px;letter-spacing:.05em;color:var(--mudo);font-weight:700}
+.tabela td:first-child{color:var(--mudo);width:30%}
+.tabela b{color:var(--texto);font-weight:600}
+.perg{display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:1.45;color:rgba(248,248,240,.82)}
+.perg div{display:flex;gap:12px}
+.perg b{color:var(--texto)}
+.perg .num{width:22px;height:22px;border-radius:11px;font-size:12px;margin-top:1px;background:var(--laranja)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-play" viewBox="0 0 16 16"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 16 16"><path d="M5 3v10M11 3v10" stroke-width="2.6"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 16 16"><rect x="4" y="4" width="8" height="8" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 16 16"><path d="M12.5 3.5v9L6 8z" fill="currentColor" stroke="none"/><path d="M4 3.5v9" stroke-width="2"/></symbol>
+    <symbol id="i-next" viewBox="0 0 16 16"><path d="M3.5 3.5v9L10 8z" fill="currentColor" stroke="none"/><path d="M12 3.5v9" stroke-width="2"/></symbol>
+    <symbol id="i-vol" viewBox="0 0 16 16"><path d="M2.5 6h2.5l3-2.5v9L5 10H2.5zM11 5.5a3.5 3.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-xf" viewBox="0 0 16 16"><path d="M1.5 4h3l7 8h3M1.5 12h3l7-8h3"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.8v1.7M8 12.5v1.7M1.8 8h1.7M12.5 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke-width="1.9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8" stroke-width="1.9"/></symbol>
+    <symbol id="i-film" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 3v10M11 3v10M2 8h3M11 8h3"/></symbol>
+    <symbol id="i-nota" viewBox="0 0 16 16"><path d="M6 11.5v-8l7-1.5v8"/><circle cx="4.2" cy="11.5" r="1.8"/><circle cx="11.2" cy="10" r="1.8"/></symbol>
+    <symbol id="i-T" viewBox="0 0 16 16"><path d="M3.5 3.5h9M8 3.5V13"/></symbol>
+    <symbol id="i-img" viewBox="0 0 16 16"><path d="M2.5 3.5h11v9h-11zM2.5 10.5l3.5-3 2.5 2 2-1.5 3 2.5"/></symbol>
+    <symbol id="i-sobre" viewBox="0 0 16 16"><path d="M5.5 2.5h8v6h-8zM2.5 6.5v7h8"/></symbol>
+    <symbol id="i-x" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke-width="1.9"/></symbol>
+    <symbol id="i-dn" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></symbol>
+    <symbol id="i-rt" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></symbol>
+    <symbol id="i-lf" viewBox="0 0 16 16"><path d="M10 4L6 8l4 4"/></symbol>
+    <symbol id="i-tela" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="8.5" rx="1.5"/><path d="M6 14h4M8 11.5V14"/></symbol>
+    <symbol id="i-lupa" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></symbol>
+    <symbol id="i-livro" viewBox="0 0 16 16"><path d="M8 4c-1.5-1-3.5-1.2-5.5-1v9c2-.2 4 0 5.5 1 1.5-1 3.5-1.2 5.5-1V3c-2-.2-4 0-5.5 1zM8 4v9"/></symbol>
+    <symbol id="i-pasta" viewBox="0 0 16 16"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></symbol>
+    <symbol id="i-pinc" viewBox="0 0 16 16"><path d="M9 3l4 4-5.5 5.5H3.5V8.5z"/></symbol>
+    <symbol id="i-mod" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M4.5 6h7M4.5 8.5h4.5M9.5 11h2"/></symbol>
+    <symbol id="i-alerta" viewBox="0 0 16 16"><path d="M8 2.2l6.3 11H1.7zM8 6.5v3.2M8 11.6v.2" stroke-width="1.7"/></symbol>
+    <symbol id="i-grade" viewBox="0 0 16 16"><path d="M2 3h12v10H2zM2 8h12M6 3v10M10 3v10"/></symbol>
+    <symbol id="i-olho" viewBox="0 0 16 16"><path d="M1.5 8c1.6-3 3.8-4.5 6.5-4.5S12.900 5 14.500 8c-1.6 3-3.8 4.500-6.500 4.500S3.100 11 1.500 8z"/><circle cx="8" cy="8" r="2"/></symbol>
+    <symbol id="i-som" viewBox="0 0 16 16"><path d="M3 10V6M6 12V4M9 11V5M12 13V3"/></symbol>
+    <symbol id="i-al-d" viewBox="0 0 16 16"><path d="M2.5 4h11M6.5 8h7M4.500 12h9"/></symbol>
+    <symbol id="i-al-c" viewBox="0 0 16 16"><path d="M2.5 4h11M4.5 8h7M3.500 12h9"/></symbol>
+    <symbol id="i-al-e" viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h7M2.500 12h9"/></symbol>
+  </defs>
+</svg>
+
+<div class="cab-mesa">
+  <h1>aliança <span>show</span> &nbsp;·&nbsp; Rodada da cabine 6 <span>— telas, visual, modelos, no ar e retorno · segue as decisões D1–D12 de 22/nov · tema Luz, 1920×1080 a 100%</span></h1>
+  <nav><a href="#p1">P1 telas e saídas</a><a href="#p2">P2 visual</a><a href="#p3">P3 modelos</a><a href="#p4">P4 mostrar</a><a href="#p5">P5 retorno</a><a href="#perguntas">perguntas</a></nav>
+  <div class="z"><button data-z=".5">50%</button><button data-z=".75">75%</button><button data-z="1" class="a">100% · tamanho real</button></div>
+</div>
+
+<div class="mesa" id="mesa">
+
+<!-- =====================================================================  P1  -->
+<section class="prancha" id="p1">
+  <header><b>P1</b><span>Telas e saídas — cada saída é “um monitor + a área usada dele”</span><em>Configurações › Telas e saídas, em tamanho real · à direita: os estados que não cabem na mesma tela</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+    <div style="position:absolute;left:0;top:0;width:1404px;height:1080px;display:flex;flex-direction:column">
+      <div data-topo="config"></div>
+      <div class="po" style="flex:1;margin:0 8px 8px;display:flex;min-height:0">
+        <div data-cf="telas"></div>
+        <div style="flex:1;min-width:0;padding:18px 24px 0">
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:20px;font-weight:700;font-variation-settings:'wdth' 112">Telas e saídas</span><span class="cota">3 monitores ligados · escala do Windows 100% em todos</span></div>
+
+          <div class="sec" style="margin-top:14px">ONDE ESTÁ CADA TELA <small>o desenho é proporcional ao tamanho de verdade · clique num monitor para mover a saída escolhida para ele</small></div>
+          <div class="mapa">
+            <div class="mon-c">
+              <div class="cab">MONITOR 1</div>
+              <div class="mon cabine" style="width:384px;height:216px">Cabine<small>este programa fica aqui · não recebe saída</small><span class="n">1</span></div>
+              <div class="pe">1920×1080</div>
+            </div>
+            <div class="mon-c">
+              <div class="cab" style="color:var(--texto)"><span class="tag ar">SAÍDA ESCOLHIDA</span>MONITOR 2 · TELÃO LED</div>
+              <div class="mon minha" style="width:205px;height:154px">
+                <div class="fora hach" style="top:0;border-radius:6px"></div>
+                <div class="fora" style="top:64px">o LED não mostra esta parte</div>
+                <div class="area" style="width:179px;height:64px">Telão LED<small>896×320</small></div>
+                <span class="n">2</span>
+              </div>
+              <div class="pe">1024×768 · <b>usando 896×320</b></div>
+            </div>
+            <div class="mon-c">
+              <div class="cab">MONITOR 3 · RETORNO</div>
+              <div class="mon" style="width:384px;height:216px"><div class="ret">Retorno<small>monitor inteiro · 1920×1080</small></div><span class="n">3</span></div>
+              <div class="pe">1920×1080 · inteiro</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:24px;margin-top:6px">
+            <div style="width:330px;flex-shrink:0">
+              <div class="sec">TODAS AS SAÍDAS</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="sd-l a"><svg class="i s18"><use href="#i-tela"/></svg><div><span class="nm">Telão LED</span><small>Monitor 2 · só 896×320 do canto de cima</small></div><div class="dir"><span class="tag ok">LIGADA</span></div></div>
+                <div class="sd-l"><svg class="i s18" style="color:var(--mudo)"><use href="#i-tela"/></svg><div><span class="nm">Retorno</span><small>Monitor 3 inteiro · leiaute “Só texto”</small></div><div class="dir"><span class="tag ok">LIGADA</span></div></div>
+                <div class="sd-l"><svg class="i s18" style="color:var(--mudo)"><use href="#i-film"/></svg><div><span class="nm">OBS</span><small>Sem monitor · vai pela rede (NDI) · 1920×1080</small></div><div class="dir"><span class="tag mu">DESLIGADA</span></div></div>
+                <button class="bt fan" style="justify-content:flex-start;padding:0 8px"><svg class="i s14"><use href="#i-plus"/></svg>Nova saída</button>
+              </div>
+              <p class="cota" style="margin-top:10px">A linha marcada aqui e o monitor de moldura vermelha no mapa são <b>sempre a mesma saída</b>. Mudar numa, muda na outra, na hora.</p>
+            </div>
+
+            <div style="flex:1;min-width:0">
+              <div class="sec">TELÃO LED — ONDE ELA SAI</div>
+              <div class="lin">
+                <div class="cp" style="flex:1"><label>Nome</label><span class="v">Telão LED</span></div>
+                <div class="cp" style="flex:1.4"><label>Monitor</label><span class="v">Monitor 2 <i>· 1024×768</i></span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+              </div>
+              <div class="lin" style="align-items:center">
+                <div class="seg" style="flex-shrink:0"><button>Monitor inteiro</button><button class="a">Só uma parte</button></div>
+                <div class="cp"><label>Largura usada</label><span class="v">896 <i>px</i></span></div>
+                <div class="cp"><label>Altura usada</label><span class="v">320 <i>px</i></span></div>
+                <div class="anc" title="De que canto do monitor a área começa"><i class="a"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="cp" style="flex:1.3"><label>Começa no</label><span class="v">canto superior esquerdo</span></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;background:var(--trilho);box-shadow:inset 0 0 0 1px var(--linha)">
+                <span class="tam"><i style="width:28px;height:10px"></i>896×320 · 14:5</span>
+                <span style="font-size:13.5px;font-weight:500;flex:1">Telão LED: <b>Monitor 2</b> (1024×768) · usa só <b>896×320</b> a partir do <b>canto superior esquerdo</b>.</span>
+                <button class="bt"><svg class="i s14"><use href="#i-grade"/></svg>Testar</button>
+              </div>
+              <p class="cota" style="margin-top:6px">Não existe mais campo de “posição X / Y” na área de trabalho. O programa acha o monitor sozinho e faz a conta; a frase acima é o que fica guardado, e é gravada na hora (fechar o programa logo depois não perde).</p>
+
+              <div class="sec">O QUE ESTA SAÍDA MOSTRA</div>
+              <div style="display:flex;gap:8px">
+                <div class="rad n"><span class="bo"></span><div><h5>Mostra o slide como foi feito</h5><p>O slide sai com o modelo que foi posto nele e com os ajustes feitos à mão. Ajuste manual fica. Bom para um telão comum 16:9.</p></div></div>
+                <div class="rad a"><span class="bo"></span><div><h5>Aplica modelo próprio <span style="font-weight:500">(passa por cima)</span></h5><p style="color:rgba(248,248,240,.8)">Recebe só o texto e o vídeo e veste com o modelo desta saída. O estilo do slide não vale aqui. Bom para LED 14:5 e OBS.</p></div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+                <span class="cota">No Visual <b>Culto padrão</b>, esta saída usa:</span>
+                <span class="og lar">Música → <b>Letra LED</b></span><span class="og lar">Bíblia → <b>Versículo LED</b></span><span class="og lar">Aviso → <b>Aviso LED</b></span>
+                <button class="bt fan" style="height:26px;padding:0 6px;color:var(--texto)">Abrir Visual<svg class="i s14"><use href="#i-rt"/></svg></button>
+              </div>
+
+              <div class="sec">O QUE ESTÁ SAINDO AGORA NESTA SAÍDA <small>a área usada, desenhada na metade do tamanho</small></div>
+              <div style="display:flex;gap:20px;align-items:flex-start">
+                <div style="width:448px;height:160px;flex-shrink:0;border-radius:5px;background:var(--noite);box-shadow:0 0 0 2px var(--vermelho);display:flex;align-items:center;justify-content:center"><span class="t-txt" style="font-size:27px">TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO</span></div>
+                <div class="cota"><p><b>896×320 · formato 14:5.</b> Os modelos desta saída são desenhados neste tamanho (P3); nada é esticado.</p><p>Escala do Windows neste monitor: <b>100%</b>. Se fosse outra, o programa faria a conta sozinho e mostraria aqui.</p><p>Se o que aparece aqui não é o que aparece no LED: botão <b>Testar</b>.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="div-app"></div>
+
+    <div class="lado">
+      <div class="leg">Sempre dá para ver <b>quem está em qual monitor</b></div>
+      <div style="display:flex;gap:14px">
+        <div style="width:146px"><div class="mon" style="width:146px;height:82px"><div class="ret">Retorno</div></div><p class="cota" style="margin-top:6px"><b>Ocupado por outra saída.</b> Mostra o nome dela, em cinza.</p></div>
+        <div style="width:146px"><div class="mon minha" style="width:146px;height:82px;background:var(--vermelho-lav)">Telão LED<small style="color:var(--vermelho-claro)">✓ escolhida</small></div><p class="cota" style="margin-top:6px"><b>É a saída escolhida.</b> Moldura vermelha + nome + “escolhida”.</p></div>
+        <div style="width:146px"><div class="mon" style="width:146px;height:82px;box-shadow:inset 0 0 0 2px var(--texto)">Mover para cá?<small>clique confirma abaixo</small></div><p class="cota" style="margin-top:6px"><b>Clicado.</b> Pergunta antes de mover; nunca muda calado.</p></div>
+      </div>
+      <p class="cota" style="margin-top:8px">Defeito de hoje: clicar no monitor às vezes não mostra a saída como escolhida. Agora o mapa só desenha o que está gravado — se moveu, a moldura vermelha <b>já está</b> no monitor novo; se não moveu, aparece o motivo.</p>
+
+      <div class="leg n">Botão <b>Testar</b> — o que aparece no LED por 10 s</div>
+      <div class="teste" style="width:448px;height:160px">
+        <i class="cz"></i><i class="cz v"></i>
+        <span class="k a">1</span><span class="k b">2</span><span class="k c">3</span><span class="k d">4</span>
+        <b style="font-size:17px;background:#000;padding:0 8px;position:relative">Telão LED · 896×320</b>
+        <span style="font-size:12px;background:#000;padding:0 8px;position:relative">Monitor 2 · some sozinho em 8 s</span>
+      </div>
+      <p class="cota" style="margin-top:8px">Borda branca de 1 ponto em toda a volta e os quatro cantos numerados. <b>Se dá para ver 1, 2, 3 e 4 e a borda inteira no LED, está certo.</b> Faltou um canto: a área está errada. O teste cobre o que estiver no ar e devolve sozinho.</p>
+
+      <div class="leg n">Monitor sumiu — <b>avisa alto</b>, nunca cai calado</div>
+      <div class="aviso" style="align-items:flex-start;padding:12px 14px">
+        <svg class="i s22" style="margin-top:2px"><use href="#i-alerta"/></svg>
+        <div style="flex:1"><b>Monitor do telão não encontrado</b><br><span>O Telão LED estava no Monitor 2 (1024×768). Nada está indo para o LED.</span>
+          <div style="display:flex;gap:8px;margin-top:10px"><button class="bt tin">Procurar de novo</button><button class="bt" style="background:transparent;border-color:rgba(22,22,22,.45);color:var(--tinta)">Escolher outro monitor</button></div></div>
+      </div>
+      <div style="display:flex;gap:14px;margin-top:12px;align-items:flex-start">
+        <div class="mapa" style="gap:8px;flex-shrink:0">
+          <div class="mon cabine" style="width:96px;height:54px;font-size:11px">Cabine</div>
+          <div class="mon sumiu" style="width:52px;height:39px;font-size:10px;font-weight:700">?</div>
+          <div class="mon" style="width:96px;height:54px;font-size:11px"><div class="ret">Retorno</div></div>
+        </div>
+        <p class="cota">A mesma faixa laranja aparece no alto da página <b>Mostrar</b>, não só aqui. O lugar do monitor fica tracejado no mapa. Quando o LED volta, a saída volta para a mesma área sem ninguém mexer, e a faixa some.</p>
+      </div>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>REGRAS</h4>Saída = monitor + área usada, sempre em relação ao monitor (“Monitor 2 · só 896×320 do canto superior esquerdo”). Retorno = Monitor 3 inteiro. O formato da área (14:5) é o formato em que os modelos dessa saída são desenhados. Cada saída escolhe: mostra o slide como foi feito, ou aplica modelo próprio.</div>
+    <div><h4>O QUE MUDA EM RELAÇÃO A HOJE</h4>Somem as coordenadas da área de trabalho e a briga entre o mapa e a janela “Tamanho”. O mapa passa a desenhar a área usada por cima do monitor. Entram o botão Testar, o estado “escolhida” que não falha, a gravação imediata e o aviso laranja quando o monitor some.</div>
+    <div><h4>O QUE NÃO MUDA</h4>Clicar num monitor continua pedindo confirmação antes de mover, com “Desfazer” por 10 s. A cabine continua recusando receber saída. Continua valendo: não mover saída durante o culto.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  P2  -->
+<section class="prancha" id="p2">
+  <header><b>P2</b><span>Visual — um nome para “qual modelo cada saída usa em cada tipo de conteúdo”</span><em>como os Looks do ProPresenter · Configurações › Visual, em tamanho real · à direita: onde se troca e onde se vê</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+    <div style="position:absolute;left:0;top:0;width:1404px;height:1080px;display:flex;flex-direction:column">
+      <div data-topo="config"></div>
+      <div class="po" style="flex:1;margin:0 8px 8px;display:flex;min-height:0">
+        <div data-cf="visual"></div>
+        <div style="flex:1;min-width:0;padding:18px 24px 0">
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:20px;font-weight:700;font-variation-settings:'wdth' 112">Visual</span><span class="cota">Um Visual diz, para cada saída, que modelo veste cada tipo de conteúdo. Só um vale por vez.</span></div>
+          <div style="display:flex;gap:24px;margin-top:18px">
+            <div style="width:236px;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
+              <div class="rot" style="margin-bottom:2px">VISUAIS</div>
+              <div class="vis-c a"><div style="display:flex;align-items:center;gap:8px"><b>Culto padrão</b><span class="tag ar" style="margin-left:auto">VALENDO</span></div><small>Domingo de manhã e de noite. LED com letra grande, OBS com tarja.</small></div>
+              <div class="vis-c"><div style="display:flex;align-items:center;gap:8px"><b>Impulso</b></div><small>Culto dos jovens. Letra do LED com a cara do Impulso.</small><button class="bt" style="height:30px;align-self:flex-start;margin-top:2px">Usar este agora</button></div>
+              <button class="bt fan" style="justify-content:flex-start;padding:0 8px"><svg class="i s14"><use href="#i-plus"/></svg>Novo visual</button>
+              <button class="bt fan" style="justify-content:flex-start;padding:0 8px;margin-top:-6px"><svg class="i s14"><use href="#i-mod"/></svg>Duplicar “Culto padrão”</button>
+            </div>
+
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:16px;font-weight:700">Culto padrão</span><span class="tag ar">VALENDO</span><span class="cota" style="margin-left:auto">Mudou uma casa? Vale no próximo slide que for ao ar.</span></div>
+              <div class="mtz" id="mtz1" style="grid-template-columns:200px 1fr 1fr 1fr"></div>
+
+              <div class="sec" style="margin-top:26px">O QUE MUDA NO “IMPULSO” <small>as casas com contorno amarelo são diferentes do Culto padrão</small></div>
+              <div class="mtz" id="mtz2" style="grid-template-columns:200px 1fr 1fr 1fr"></div>
+
+              <div style="display:flex;gap:28px;margin-top:22px">
+                <div class="cota" style="flex:1"><div class="leg" style="margin-bottom:6px">Como ler uma casa</div>
+                  <p><b>Nome de modelo</b> = a saída veste o conteúdo com esse modelo, por cima do estilo do slide. A miniatura tem o formato da saída.</p>
+                  <p><b>“Usa o slide”</b> (tracejado) = a saída mostra o slide como foi feito, com os ajustes à mão.</p>
+                  <p><b>Triângulo</b> = formato do slide diferente do formato da saída: vai sobrar faixa preta. Não proíbe, só avisa.</p></div>
+                <div class="cota" style="flex:1"><div class="leg" style="margin-bottom:6px">Ligação com a P1</div>
+                  <p>A escolha “mostra o slide como foi feito × aplica modelo próprio” de cada saída é a mesma coisa vista de longe: saída “como foi feito” = linha inteira em “usa o slide”.</p>
+                  <p>A lista de modelos de cada casa só traz modelos <b>do formato daquela saída</b> (P3). Modelo 16:9 não aparece na linha do LED.</p></div>
+              </div>
+
+              <div class="sec" style="margin-top:24px">O MESMO SLIDE, EM CADA SAÍDA <small>“Lugar Secreto · Coro” com o Visual Culto padrão — cada saída veste o texto com o modelo dela</small></div>
+              <div style="display:flex;gap:16px;align-items:flex-end">
+                <div style="width:392px"><div style="aspect-ratio:14/5;border-radius:5px;background:var(--noite);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px var(--borda)"><span class="t-txt" style="font-size:24px">TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO</span></div><p class="cota" style="margin-top:6px"><b>Telão LED</b> · 14:5 · modelo Letra LED</p></div>
+                <div style="width:249px"><div style="aspect-ratio:16/9;border-radius:5px;position:relative;overflow:hidden;background:repeating-conic-gradient(rgba(248,248,240,.07) 0 25%,transparent 0 50%) 0 0/14px 14px;box-shadow:0 0 0 1px var(--borda)"><div style="position:absolute;left:0;right:0;bottom:0;height:30%;background:rgba(13,13,15,.86);display:flex;align-items:center;justify-content:center"><span style="font-size:11.5px;font-weight:700;text-align:center;line-height:1.2">Tu és o meu abrigo, meu lugar seguro</span></div></div><p class="cota" style="margin-top:6px"><b>OBS</b> · 16:9 · modelo Tarja de baixo</p></div>
+                <div style="width:249px"><div style="aspect-ratio:16/9;border-radius:5px;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 0 1px var(--borda)"><span class="t-txt" style="font-size:15px">TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO</span><span class="t-txt" style="font-size:10px;color:var(--ambar)">EM TI EU POSSO DESCANSAR</span></div><p class="cota" style="margin-top:6px"><b>Retorno</b> · 16:9 · leiaute Só texto</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="div-app"></div>
+
+    <div class="lado">
+      <div class="leg">Onde se <b>troca</b> o Visual que está valendo — um lugar só</div>
+      <div class="po" style="padding:0 0 12px;overflow:hidden">
+        <div class="topo" style="padding:0 10px;justify-content:flex-end;gap:8px">
+          <span class="pil vis" style="box-shadow:inset 0 0 0 1px var(--texto)"><svg class="i s14"><use href="#i-mod"/></svg><small>Visual:</small>Culto padrão<svg class="i s14"><use href="#i-dn"/></svg></span>
+          <span class="pil" style="background:var(--vermelho-lav);color:var(--vermelho-claro)"><i></i>Telão LED no ar</span>
+        </div>
+        <div class="menu" style="margin:0 0 0 118px;width:290px">
+          <div class="tit">VISUAL QUE ESTÁ VALENDO</div>
+          <div class="mi h"><svg class="i s14" style="color:var(--texto)"><use href="#i-check"/></svg>Culto padrão<small>agora</small></div>
+          <div class="mi"><span style="width:14px"></span>Impulso</div>
+          <hr>
+          <div class="mi"><svg class="i s14"><use href="#i-gear"/></svg>Editar visuais…</div>
+        </div>
+      </div>
+      <p class="cota" style="margin-top:8px">A pílula fica na barra de cima, em <b>Mostrar</b> e em <b>Editar</b>, sempre no mesmo lugar. Trocar muda todas as saídas de uma vez. O que já está no ar <b>não pula</b>: o Visual novo entra no próximo slide (pergunta 3).</p>
+
+      <div class="leg n">Onde se <b>vê</b> — a linha de origem em Mostrar</div>
+      <div class="po" style="padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px">
+        <span class="og vis"><svg class="i s12"><use href="#i-mod"/></svg>Visual: <b>Culto padrão</b></span>
+        <span class="og lar">Telão LED: <b>Letra LED</b><em>MODELO DA SAÍDA</em></span>
+        <span class="og lar">OBS: <b>Tarja de baixo</b><em>MODELO DA SAÍDA</em></span>
+        <span class="og">Retorno: <b>Só texto</b></span>
+      </div>
+      <p class="cota" style="margin-top:8px">Fica embaixo do nome do item, na página Mostrar (P4). Responde “de onde vem a cara que está indo para cada tela”. Clicar numa etiqueta abre aquele modelo no editor.</p>
+
+      <div class="leg n">Quem vence — <b>de cima para baixo</b></div>
+      <table class="tabela">
+        <tr><td>1 · Saída com modelo próprio</td><td>Vale o <b>modelo do Visual</b> para aquele tipo de conteúdo. O estilo do slide é ignorado nessa saída.</td></tr>
+        <tr><td>2 · Casa em “usa o slide”</td><td>Vale o <b>modelo posto no slide</b> e os ajustes feitos à mão.</td></tr>
+        <tr><td>3 · Slide sem modelo</td><td>Vale o <b>padrão do tipo</b> (música nova, versículo novo) — P3, “padrão para novas”.</td></tr>
+      </table>
+
+      <div class="leg n">Nomes que mudam</div>
+      <p class="cota">“Estilos” e “Substituir slide com modelo” deixam de existir com esses nomes: viram <b>Visual</b> e a casa da tabela. Ninguém mais precisa achar uma opção escondida para descobrir por que o telão não obedeceu ao slide.</p>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>REGRAS</h4>Visual = tabela saídas × tipos de conteúdo (Música, Bíblia, Aviso). Cada casa é “usa o slide” ou o nome de um modelo do formato daquela saída. Há visuais com nome (“Culto padrão”, “Impulso”); um só vale por vez e troca-se na pílula da barra de cima.</div>
+    <div><h4>O QUE MUDA EM RELAÇÃO A HOJE</h4>Hoje o modelo da saída existe, mas mora escondido em “Estilos › Substituir slide com modelo” e ninguém sabia que estava ligado. Agora ele é a peça central, tem nome, tem página própria e aparece em Mostrar o tempo todo.</div>
+    <div><h4>PARA DECIDIR</h4>O leiaute do Retorno entra no Visual (como desenhado) ou fica só na saída? A troca de Visual com slide no ar vale já ou no próximo slide? Precisa de mais tipos além de Música, Bíblia e Aviso (Título/Pregador)?</div>
+  </div>
+</section>
+
+<!-- =====================================================================  P3  -->
+<section class="prancha" id="p3">
+  <header><b>P3</b><span>Modelos — raiz própria na biblioteca, desenhados no tamanho da tela, cada caixa com o seu papel</span><em>três recortes em tamanho real: a biblioteca · criar e editar · aplicar</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+
+    <!-- A · biblioteca -->
+    <div style="position:absolute;left:20px;top:20px;width:486px;height:1040px;display:flex;flex-direction:column">
+      <div class="leg" style="margin-bottom:8px"><b>A</b> · Biblioteca — “Modelos” saiu de Ferramentas</div>
+      <div class="po" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div style="height:48px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px;border-bottom:1px solid var(--linha)"><span class="rot">BIBLIOTECA</span><span style="flex:1"></span><button class="bt pri" style="height:30px"><svg class="i s14"><use href="#i-plus"/></svg>Novo modelo</button></div>
+        <div style="flex:1;display:flex;min-height:0">
+          <div class="tr">
+            <div class="no"><span class="st"><svg class="i s12"><use href="#i-rt"/></svg></span>Shows<span class="ct">212</span></div>
+            <div class="no"><span class="st"><svg class="i s12"><use href="#i-rt"/></svg></span>Mídia<span class="ct">96</span></div>
+            <div class="no"><span class="st"><svg class="i s12"><use href="#i-rt"/></svg></span>Bíblia</div>
+            <div class="no"><span class="st"><svg class="i s12"><use href="#i-dn"/></svg></span>Modelos<span class="tag novo" style="margin-left:6px">NOVO</span><span class="ct">15</span></div>
+            <div class="f">Música<span class="ct">6</span></div>
+            <div class="f sel">Bíblia<span class="ct">3</span></div>
+            <div class="f">Aviso / Slide<span class="ct">4</span></div>
+            <div class="f">Retorno<span class="ct">2</span></div>
+            <div class="no" style="margin-top:2px"><span class="st"><svg class="i s12"><use href="#i-dn"/></svg></span>Ferramentas</div>
+            <div class="f">Funções<span class="ct">9</span></div>
+            <div class="f">Calendário</div>
+            <div class="f">Sobreposições<span class="ct">17</span></div>
+            <div style="flex:1"></div>
+            <p class="cota" style="padding:8px">“Retorno” é o que hoje se chama “Telas e monitor de retorno”. A palavra “tela” não é mais usada para modelo.</p>
+          </div>
+          <div style="flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;height:24px"><b style="font-size:13px">Modelos de Bíblia</b><span class="cota">3</span></div>
+            <div class="md a"><div class="th" style="aspect-ratio:14/5" data-bib="s"></div><div class="pe"><b>Versículo LED</b><span class="tag lin">LED · 896×320</span></div><div class="uso">Em uso: Culto padrão › Telão LED</div></div>
+            <div class="md"><div class="th" style="aspect-ratio:16/9;background:var(--noite);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:0 20px"><span class="t-txt" style="font-size:13px;font-weight:800">O que habita no esconderijo do Altíssimo descansa à sombra do Onipotente</span><span style="font-size:10px;font-weight:700;color:var(--ambar)">Salmos 91:1 · ARA</span></div><div class="pe"><b>Versículo cheio</b><span class="tag lin">FULL HD · 16:9</span></div><div class="uso">Padrão para versículos novos</div></div>
+            <div class="md"><div class="th" style="aspect-ratio:16/9;background:repeating-conic-gradient(rgba(248,248,240,.06) 0 25%,transparent 0 50%) 0 0/16px 16px"><div style="position:absolute;left:0;right:0;bottom:0;height:34%;background:rgba(13,13,15,.86);display:flex;flex-direction:column;justify-content:center;gap:3px;padding:0 12px"><span style="font-size:10.5px;font-weight:700;line-height:1.2">O que habita no esconderijo do Altíssimo descansa à sombra do Onipotente</span><span style="font-size:9px;font-weight:700;color:var(--ambar)">Salmos 91:1 · ARA</span></div></div><div class="pe"><b>Versículo tarja</b><span class="tag lin">OBS · 16:9</span></div><div class="uso">Em uso: Culto padrão › OBS</div></div>
+            <p class="cota">Cada cartão aparece <b>no formato para o qual foi desenhado</b> e diz onde está sendo usado. Dá para ver de longe qual é o do LED.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B · criar + editar -->
+    <div style="position:absolute;left:526px;top:20px;width:968px;height:1040px;display:flex;flex-direction:column">
+      <div class="leg" style="margin-bottom:8px"><b>B1</b> · Novo modelo — a primeira pergunta é para qual tela</div>
+      <div class="po" style="padding:14px 16px;display:flex;gap:22px;align-items:flex-start;flex-shrink:0">
+        <div style="width:188px;flex-shrink:0">
+          <div class="rot" style="margin-bottom:8px">PARA QUE CONTEÚDO?</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span class="pch">Música</span><span class="pch a">Bíblia</span><span class="pch">Aviso / Slide</span>
+          </div>
+          <p class="cota" style="margin-top:10px">Define os papéis de caixa que fazem sentido.</p>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="rot" style="margin-bottom:8px">PARA QUAL TELA?</div>
+          <div style="display:flex;gap:10px;align-items:stretch">
+            <div class="alvo a"><div class="fm"><i style="width:168px;height:60px"></i></div><b>Telão LED</b><small>896×320 · 14:5</small></div>
+            <div class="alvo"><div class="fm"><i style="width:168px;height:94px"></i></div><b>Full HD</b><small>1920×1080 · 16:9</small></div>
+            <div class="alvo"><div class="fm"><i style="width:168px;height:94px"></i></div><b>OBS</b><small>1920×1080 · 16:9 · fundo transparente</small></div>
+            <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;min-width:0">
+              <p class="cota">As opções vêm das <b>saídas cadastradas</b> (P1), mais o Full HD comum. O retângulo é o formato de verdade.</p>
+              <button class="bt pri" style="align-self:flex-end">Criar modelo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="leg" style="margin:16px 0 8px"><b>B2</b> · O editor — a tela de desenho tem o formato da saída, e o tamanho nunca some</div>
+      <div class="po" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0">
+        <div style="height:48px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 12px 0 14px;border-bottom:1px solid var(--linha)">
+          <svg class="i s14" style="color:var(--mudo)"><use href="#i-lf"/></svg><span class="cota">Modelos / Bíblia /</span><b style="font-size:14px">Versículo LED</b>
+          <span class="tam" style="margin-left:6px"><i style="width:28px;height:10px"></i>Telão LED · 896×320 · 14:5</span>
+          <span style="flex:1"></span>
+          <button class="bt" style="height:32px"><svg class="i s14"><use href="#i-plus"/></svg>Caixa de texto</button>
+          <button class="bt pri" style="height:32px">Aplicar<svg class="i s14"><use href="#i-dn"/></svg></button>
+        </div>
+        <div style="flex:1;display:flex;min-height:0">
+          <div style="flex:1;min-width:0;padding:16px 20px;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:center;font-size:11px;font-weight:600;color:var(--mudo);width:640px;margin:0 auto 4px;border-bottom:1px solid var(--borda);padding-bottom:3px;position:relative">896 px de largura &nbsp;×&nbsp; 320 px de altura</div>
+            <div style="position:relative;width:640px;height:229px;margin:22px auto 0;background:var(--noite);box-shadow:0 0 0 1px var(--borda-forte)" id="tela-ed">
+              
+              <div class="cx" style="left:22px;top:26px;width:596px;height:128px;display:flex;align-items:center"><span class="papel ver">VERSÍCULO</span><span class="t-txt" style="font-size:25px;font-weight:800;text-align:left;line-height:1.12">O que habita no esconderijo do Altíssimo e descansa à sombra do Onipotente</span></div>
+              <div class="cx sel" style="left:330px;top:182px;width:230px;height:32px;display:flex;align-items:center;justify-content:flex-end"><span class="papel ref">REFERÊNCIA</span><span style="font-size:17px;font-weight:700;color:var(--ambar);font-variation-settings:'wdth' 110">Salmos 91:1</span></div>
+              <div class="cx" style="left:568px;top:182px;width:50px;height:32px;display:flex;align-items:center;justify-content:center"><span class="papel vs">VERSÃO</span><span style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7)">ARA</span></div>
+            </div>
+            <p class="cota" style="width:640px;margin:10px auto 0">Três caixas, três papéis: o <b>versículo</b> grande à esquerda, a <b>referência</b> embaixo à direita em amarelo e a <b>versão</b> pequena ao lado. A etiqueta colorida em cima de cada caixa aparece sempre no editor (nunca vai para o telão).</p>
+
+            <div class="rot" style="width:640px;margin:18px auto 8px">PRÉVIA COM TEXTO DE VERDADE <span style="font-weight:400;letter-spacing:0;color:var(--fraco)">— curto, comprido e referência longa</span></div>
+            <div style="display:flex;gap:8px;width:640px;margin:0 auto">
+              <div style="flex:1"><div data-bib="c" style="aspect-ratio:14/5"></div><p class="cota" style="margin-top:4px">João 11:35 — sobra espaço</p></div>
+              <div style="flex:1"><div data-bib="l" style="aspect-ratio:14/5"></div><p class="cota" style="margin-top:4px">3 versículos — a letra encolhe até caber</p></div>
+              <div style="flex:1"><div data-bib="r" style="aspect-ratio:14/5"></div><p class="cota" style="margin-top:4px">referência longa não invade a versão</p></div>
+            </div>
+            <div style="flex:1"></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0 12px;width:640px;margin:0 auto"><svg class="i s14" style="color:var(--mudo)"><use href="#i-alerta"/></svg><span class="cota">O formato é escolhido ao criar e <b>não muda depois</b>. Para outra tela: “Duplicar para outra tela…” cria uma cópia no formato novo, para arrumar.</span></div>
+          </div>
+          <div style="width:280px;flex-shrink:0;border-left:1px solid var(--linha);padding:14px 14px 0">
+            <div class="rot" style="margin-bottom:8px">PAPEL DESTA CAIXA</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <span class="pch"><i style="background:var(--verde)"></i>Versículo</span>
+              <span class="pch a"><i style="background:var(--ambar)"></i>Referência</span>
+              <span class="pch"><i style="background:var(--rosa)"></i>Versão</span>
+              <span class="pch"><i style="background:var(--vermelho-claro)"></i>Título</span>
+              <span class="pch off"><i style="background:var(--texto)"></i>Letra</span>
+            </div>
+            <p class="cota" style="margin-top:8px">O texto cai na caixa <b>pelo papel</b>, não pela ordem. “Letra” é de modelo de música, por isso está apagado aqui. Caixa sem papel = texto fixo (ex.: nome da igreja).</p>
+            <div class="sec">TEXTO</div>
+            <div class="lin"><div class="cp"><label>Fonte</label><span class="v">Archivo Expandida</span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div></div>
+            <div class="lin"><div class="cp"><label>Tamanho</label><span class="v">24 <i>px na tela</i></span></div><div class="cp" style="flex:.7"><label>Cor</label><span class="v" style="display:flex;align-items:center;gap:6px"><i style="width:12px;height:12px;border-radius:3px;background:var(--ambar);display:block"></i>Âmbar</span></div></div>
+            <div class="lin"><div class="grp"><button><svg class="i"><use href="#i-al-e"/></svg></button><button><svg class="i"><use href="#i-al-c"/></svg></button><button class="a"><svg class="i"><use href="#i-al-d"/></svg></button></div></div>
+            <div class="sec">POSIÇÃO NA TELA DE 896×320</div>
+            <div class="lin"><div class="cp"><label>Da esquerda</label><span class="v">462 <i>px</i></span></div><div class="cp"><label>Do topo</label><span class="v">255 <i>px</i></span></div></div>
+            <div class="lin"><div class="cp"><label>Largura</label><span class="v">322 <i>px</i></span></div><div class="cp"><label>Altura</label><span class="v">45 <i>px</i></span></div></div>
+            <p class="cota">As medidas são da tela de verdade, não do desenho reduzido.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C · aplicar -->
+    <div style="position:absolute;left:1514px;top:20px;width:386px;height:1040px;display:flex;flex-direction:column">
+      <div class="leg" style="margin-bottom:8px"><b>C</b> · Aplicar ▾ — com prévia antes de valer</div>
+      <p class="cota" style="margin-bottom:10px">Exemplo num modelo de música 16:9, “Letra cheia”, com a música “Lugar Secreto” aberta.</p>
+      <div style="display:flex;justify-content:flex-end"><button class="bt pri" style="height:32px">Aplicar<svg class="i s14"><use href="#i-dn"/></svg></button></div>
+      <div class="menu" style="width:386px;margin-top:6px;box-shadow:inset 0 0 0 1px var(--borda)">
+        <div class="tit">APLICAR “LETRA CHEIA” EM…</div>
+        <div class="mi"><svg class="i s14"><use href="#i-T"/></svg>Neste slide<small>Coro · slide 4</small></div>
+        <div class="mi"><svg class="i s14"><use href="#i-sobre"/></svg>Nos slides selecionados<small>3 slides</small></div>
+        <div class="mi h"><svg class="i s14"><use href="#i-nota"/></svg>Na música inteira<small>12 slides</small></div>
+        <hr>
+        <div class="mi"><svg class="i s14"><use href="#i-plus"/></svg>Padrão para músicas novas<small>hoje: Letra simples</small></div>
+        <hr>
+        <div style="padding:6px 10px 4px">
+          <div class="rot" style="margin-bottom:8px">PRÉVIA · NA MÚSICA INTEIRA</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="flex:1"><div style="aspect-ratio:16/9;border-radius:5px;background:var(--noite);display:flex;align-items:flex-end;justify-content:flex-start;padding:10px"><span style="font-size:11px;font-weight:500;color:#fff;line-height:1.25">Tu és o meu abrigo<br>meu lugar seguro</span></div><div class="cota" style="margin-top:4px">Antes · Letra simples</div></div>
+            <svg class="i" style="color:var(--mudo);margin-bottom:18px"><use href="#i-rt"/></svg>
+            <div style="flex:1"><div style="aspect-ratio:16/9;border-radius:5px;background:var(--noite);display:flex;align-items:center;justify-content:center;padding:8px;box-shadow:0 0 0 2px var(--texto)"><span class="t-txt" style="font-size:15px">TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO</span></div><div class="cota" style="margin-top:4px"><b>Depois · Letra cheia</b></div></div>
+          </div>
+          <p class="cota" style="margin-top:10px"><b>2 slides têm ajuste feito à mão</b> (Ponte, Final). <span style="color:var(--texto)">☑ manter esses ajustes</span></p>
+          <div style="display:flex;gap:8px;margin-top:10px;padding:9px 10px;border-radius:7px;background:var(--laranja-lav);box-shadow:inset 0 0 0 1px var(--laranja-borda)">
+            <svg class="i s14" style="color:var(--laranja);margin-top:1px"><use href="#i-alerta"/></svg>
+            <p style="font-size:12px;line-height:1.4;color:rgba(248,248,240,.85)"><b style="color:var(--texto)">No Telão LED e no OBS nada muda:</b> essas saídas aplicam modelo próprio (Visual: Culto padrão). Isto vale no Editar e nas saídas que mostram o slide como foi feito.</p>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin:12px 0 4px"><button class="bt fan">Cancelar</button><button class="bt pri">Aplicar em 12 slides</button></div>
+        </div>
+      </div>
+      <div class="cota" style="margin-top:14px">
+        <p>Hoje aplicar é clicar no cartão do modelo: sem botão, sem prévia, e não dá para saber onde pegou. Agora há um botão com nome, a prévia mostra antes × depois, e o último botão diz <b>quantos slides</b> vão mudar.</p>
+        <p>“Padrão para músicas novas” é por tipo: um para Música, um para Bíblia, um para Aviso.</p>
+        <p>Depois de aplicar: “Desfazer” por 10 s, igual ao mover saída.</p>
+      </div>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>REGRAS</h4>“Modelos” é uma raiz da biblioteca, separada por tipo: Música, Bíblia, Aviso / Slide, Retorno. Todo modelo nasce para uma tela (LED 896×320, Full HD, OBS) e é desenhado nesse formato. Cada caixa de texto tem um papel visível: Letra, Versículo, Referência, Versão, Título.</div>
+    <div><h4>O QUE MUDA EM RELAÇÃO A HOJE</h4>Hoje todo modelo é desenhado em 16:9 e o do LED corta. A caixa do versículo e a da referência são distinguidas por um código que o operador não vê. Aplicar não tem botão nem prévia. Tudo isso passa a ser visível: tamanho, papel, onde está em uso, o que vai mudar.</div>
+    <div><h4>TESTE DE ACEITE</h4>Um voluntário cria do zero, sem ajuda e em menos de 5 minutos, um modelo de Bíblia para o LED com duas caixas (versículo e referência). A foto do telão bate com a miniatura e com o que a linha de origem diz.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  P4  -->
+<section class="prancha" id="p4">
+  <header><b>P4</b><span>Mostrar — o Spotify acende a camada Áudio, ganha volume, mudo e parar; e a página diz de onde vem o modelo de cada saída</span><em>página inteira em 1920×1080 · coluna No ar na largura mínima (300 px) · embaixo: os detalhes ampliados</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c" style="display:flex;flex-direction:column">
+    <div data-topo="Mostrar"></div>
+    <div style="flex:1;min-height:0;display:flex;gap:8px;padding:0 8px 8px">
+
+      <!-- roteiro -->
+      <div class="p" style="width:300px;flex-shrink:0;padding:12px;display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px"><span class="rot">ROTEIRO</span><span class="cota">Culto de domingo · 22/nov</span></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-film"/></svg>Contagem 5 min<small>5:00</small></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-img"/></svg>Boas-vindas<small>aviso</small></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-nota"/></svg>Que caia o Teu Espírito<small>música</small></div>
+        <div class="rt-it a"><svg class="i s14" style="color:var(--texto)"><use href="#i-nota"/></svg>Lugar Secreto<span class="tag ar" style="margin-left:auto">NO AR</span></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-livro"/></svg>Salmos 91:1-2<small>Bíblia</small></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-img"/></svg>Avisos da semana<small>aviso</small></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-img"/></svg>Oferta — Pix<small>aviso</small></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-film"/></svg>Vinheta da mensagem<small>0:40</small></div>
+        <div class="rt-it"><svg class="i s14"><use href="#i-livro"/></svg>Mensagem — textos<small>Bíblia</small></div>
+        <div style="flex:1"></div>
+        <button class="bt fan" style="justify-content:flex-start;padding:0 8px"><svg class="i s14"><use href="#i-plus"/></svg>Adicionar ao roteiro</button>
+      </div>
+
+      <!-- centro -->
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+        <div class="p" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
+          <div style="height:48px;flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 14px 0 16px">
+            <b style="font-size:16px;font-variation-settings:'wdth' 110">Lugar Secreto</b><span class="tag mu">MÚSICA</span><span class="cota">depois: Salmos 91:1-2</span>
+            <span style="flex:1"></span>
+            <span class="cota">Miniaturas:</span>
+            <div class="seg" style="padding:2px;border-radius:8px"><button class="a" style="height:26px;padding:0 10px;font-size:12px">como sai no Telão LED</button><button style="height:26px;padding:0 10px;font-size:12px">como o slide foi feito</button></div>
+          </div>
+          <div id="origem" style="flex-shrink:0;display:flex;align-items:center;gap:6px;padding:0 14px 10px 16px;border-bottom:1px solid var(--linha)">
+            <span class="og vis"><svg class="i s12"><use href="#i-mod"/></svg>Visual: <b>Culto padrão</b></span>
+            <span class="og lar">Telão LED: <b>Letra LED</b><em>MODELO DA SAÍDA</em></span>
+            <span class="og lar">OBS: <b>Tarja de baixo</b><em>MODELO DA SAÍDA</em></span>
+            <span class="og">Retorno: <b>Só texto</b></span>
+            <span style="flex:1"></span>
+            <span class="og" style="box-shadow:none;color:var(--mudo)">No slide: Letra cheia (da música) — não está em uso em nenhuma saída</span>
+          </div>
+          <div id="slides" style="flex:1;min-height:0;padding:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-content:start;overflow:hidden"></div>
+        </div>
+        <div class="po" style="height:300px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden">
+          <div style="height:44px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px"><span class="rot">BIBLIOTECA</span><div style="height:30px;width:300px;border:1px solid var(--borda);border-radius:8px;background:var(--campo);display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--mudo);font-size:12px;margin-left:12px"><svg class="i s14"><use href="#i-lupa"/></svg>Buscar música, versículo, mídia…</div></div>
+          <div style="flex:1;display:flex;min-height:0;border-top:1px solid var(--linha)">
+            <div class="tr" style="width:216px">
+              <div class="no sel"><span class="st"><svg class="i s12"><use href="#i-dn"/></svg></span>Shows<span class="ct">212</span></div>
+              <div class="f">Louvor<span class="ct">148</span></div>
+              <div class="f">Ceia<span class="ct">12</span></div>
+              <div class="f">Apresentações<span class="ct">52</span></div>
+              <div class="no"><span class="st"><svg class="i s12"><use href="#i-rt"/></svg></span>Mídia<span class="ct">96</span></div>
+              <div class="no"><span class="st"><svg class="i s12"><use href="#i-rt"/></svg></span>Bíblia</div>
+              <div class="no"><span class="st"><svg class="i s12"><use href="#i-rt"/></svg></span>Modelos<span class="tag novo" style="margin-left:6px">NOVO</span><span class="ct">15</span></div>
+              <div class="no"><span class="st"><svg class="i s12"><use href="#i-rt"/></svg></span>Ferramentas</div>
+            </div>
+            <div style="flex:1;min-width:0;padding:6px 12px">
+              <div class="rt-it a"><svg class="i s14"><use href="#i-nota"/></svg>Lugar Secreto<small>Louvor · no roteiro</small></div>
+              <div class="rt-it"><svg class="i s14"><use href="#i-nota"/></svg>Que caia o Teu Espírito<small>Louvor · no roteiro</small></div>
+              <div class="rt-it"><svg class="i s14"><use href="#i-nota"/></svg>Santo Espírito, vem<small>Louvor</small></div>
+              <div class="rt-it"><svg class="i s14"><use href="#i-nota"/></svg>Ousado amor<small>Louvor</small></div>
+              <div class="rt-it"><svg class="i s14"><use href="#i-nota"/></svg>A casa é Sua<small>Louvor</small></div>
+              <div class="rt-it"><svg class="i s14"><use href="#i-nota"/></svg>Deus de promessas<small>Louvor</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- no ar -->
+      <div id="noar"></div>
+    </div>
+  </div></div>
+
+  <div class="faixa-det">
+    <div style="width:700px;flex-shrink:0">
+      <div class="leg" style="margin-bottom:10px">Cartão do Spotify · <b>200%</b> — 60 px de altura, duas linhas de 24 px</div>
+      <div style="height:132px"><div style="width:276px;zoom:2;position:relative" id="anat"></div></div>
+      <div class="cota" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;margin-top:6px">
+        <p><span class="num">1</span> <b>Linha 1:</b> anterior · tocar/pausar · próxima · <b>parar</b> (novo) · nome · o que falta.</p>
+        <p style="margin:0"><span class="num">2</span> <b>Barra de posição:</b> <span id="med">~160</span> px nesta coluna de 300 — o alvo de clique é a linha inteira de 24 px.</p>
+        <p style="margin:0"><span class="num">3</span> <b>Casa fixa do crossfade:</b> sempre no mesmo lugar, tocando ou parado.</p>
+        <p style="margin:0"><span class="num">4</span> <b>Mudo (24 px) + volume (40 px):</b> novos. Mexem só no som do Spotify.</p>
+      </div>
+      <p class="cota" style="margin-top:8px"><b>Parar</b> = pausa e volta ao começo da faixa. É o mesmo que apertar F4 ou clicar na camada Áudio. O plano fala em ~185 px de barra; com o botão Parar na linha 1 e as margens deste desenho deu a medida acima — conferir no componente real.</p>
+    </div>
+
+    <div style="width:520px;flex-shrink:0">
+      <div class="leg" style="margin-bottom:10px">Camada <b>Áudio (F4)</b> — agora o Spotify conta</div>
+      <div style="display:flex;gap:26px">
+        <div><div class="cam" id="cam-a" style="height:150px"></div><p class="cota" style="margin-top:6px;width:130px"><b>Hoje.</b> Spotify tocando e a camada Áudio apagada.</p></div>
+        <div><div class="cam" id="cam-b" style="height:150px"></div><p class="cota" style="margin-top:6px;width:130px"><b>Novo.</b> Spotify tocando acende a camada, como um arquivo de áudio.</p></div>
+        <div style="flex:1" class="cota">
+          <p>De cima para baixo: sobreposição (F3), texto (F2), fundo (F1), <b>áudio (F4)</b>, limpar tudo (Esc).</p>
+          <p>Clicar na camada acesa, apertar <b>F4</b> ou <b>Esc</b> para o Spotify.</p>
+          <p>Dica ao passar o mouse: “Parar áudio · F4 — Spotify: Lugar Secreto”.</p>
+        </div>
+      </div>
+      <table class="tabela" style="margin-top:12px">
+        <tr><td>Entra um vídeo com som</td><td>Spotify <b>para</b> e <b>não volta sozinho</b> quando o vídeo acaba.</td></tr>
+        <tr><td>Entra outro áudio (arquivo)</td><td>Spotify <b>para</b>. Um áudio de cada vez.</td></tr>
+        <tr><td>Vídeo de fundo sem som</td><td>Spotify continua.</td></tr>
+        <tr><td>Áudio da gaveta</td><td>Mesma regra: derrubado por vídeo, <b>não volta</b> mais sozinho.</td></tr>
+      </table>
+    </div>
+
+    <div style="flex:1;min-width:0">
+      <div class="leg" style="margin-bottom:10px">Linha de origem — <b>de onde vem a cara</b> de cada saída</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px"><span class="og">Telão: <b>Letra cheia</b> (da música)</span><span class="cota">Saída que mostra o slide como foi feito. Cinza, discreta.</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="og lar">Telão LED: <b>Letra LED</b><em>MODELO DA SAÍDA</em></span><span class="cota">A saída passa por cima do slide. Etiqueta laranja.</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="og">Retorno: <b>Só texto</b></span><span class="cota">Retorno mostra o leiaute dele (P5).</span></div>
+      </div>
+      <div class="cota" style="margin-top:12px">
+        <p>Muda sozinha conforme o item: numa música mostra o modelo de Música de cada saída; num versículo, o de Bíblia.</p>
+        <p>As miniaturas do centro mostram, por padrão, <b>como sai na saída principal</b> (aqui, o LED em 14:5) — miniatura = telão. A chave ao lado troca para “como o slide foi feito”.</p>
+        <p>Na coluna No ar, embaixo da imagem do telão, a mesma informação em uma linha: “Letra LED · modelo da saída”.</p>
+        <p>Com a tela do telão em 14:5 a imagem fica baixa (86 px) e a faixa de camadas precisa de 142 px; o espaço que sobra embaixo da imagem recebe essa linha de origem, em vez de ficar preto.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="notas">
+    <div><h4>REGRAS</h4>O Spotify é uma mídia só de áudio: acende a camada Áudio, para com F4, Esc e “limpar tudo”, é derrubado pelo que derruba áudio e nunca volta sozinho. O cartão dele tem parar, mudo e volume. A linha de origem diz, por saída, qual modelo está valendo; laranja quando a saída passa por cima do slide.</div>
+    <div><h4>O QUE MUDA EM RELAÇÃO A HOJE</h4>Hoje a camada Áudio ignora o Spotify, o cartão não tem volume nem parar, e nada na página diz de onde vem o modelo. A coluna No ar passa a mostrar o telão no formato dele (14:5), e a barra de cima ganha a pílula do Visual.</div>
+    <div><h4>O QUE NÃO MUDA</h4>Altura do cartão (60 px), botões de 24 px, casa fixa do crossfade, a ordem das camadas e o “limpar tudo” com um clique — tudo como aprovado na prancha C2. O “No ar” continua com movimento de verdade, não vira quadro parado.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  P5  -->
+<section class="prancha" id="p5">
+  <header><b>P5</b><span>Retorno — dois tipos de leiaute, e é o leiaute que decide se o retorno toca vídeo</span><em>as duas telas do Monitor 3 (1920×1080) desenhadas a 47% · embaixo: onde se escolhe e os casos de borda</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+    <div style="position:absolute;left:40px;top:28px;width:900px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:18px;font-weight:700">Só texto</span><span class="tag ok">NÃO TOCA VÍDEO · LEVE</span><span class="cota" style="margin-left:auto">para quem canta e prega: letra, próxima, relógio</span></div>
+      <div class="palco">
+        <span class="rel" style="left:36px;top:26px;font-size:44px">10:42</span>
+        <span style="position:absolute;right:36px;top:30px;text-align:right;font-size:15px;font-weight:600;color:rgba(255,255,255,.6)">LOUVOR<br><span class="rel" style="position:static;font-size:30px;color:var(--verde)">−07:20</span></span>
+        <div class="at" style="top:128px;font-size:54px">TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO</div>
+        <div style="position:absolute;left:40px;right:40px;top:280px;height:1px;background:rgba(255,255,255,.2)"></div>
+        <span style="position:absolute;left:0;right:0;top:292px;text-align:center;font-size:13px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.45)">PRÓXIMO · CORO</span>
+        <div class="at" style="top:318px;font-size:34px;color:var(--ambar)">EM TI EU POSSO DESCANSAR<br>NADA VOU TEMER</div>
+        <div class="selo-v" style="left:36px;bottom:26px"><svg class="i s18"><use href="#i-play"/></svg>vídeo · 02:13 restantes</div>
+        <span style="position:absolute;right:36px;bottom:36px;font-size:15px;font-weight:600;color:rgba(255,255,255,.5)">Lugar Secreto · slide 4 de 12</span>
+      </div>
+      <div class="cota" style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:13px">
+        <p>Fundo preto, letra atual grande, próxima em amarelo, relógio e contagem.</p>
+        <p style="margin:0">Quando há vídeo no telão, aparece só o selo <b>“▶ vídeo · 02:13 restantes”</b>. O retorno não abre o vídeo.</p>
+        <p style="margin:0">Slideshow de imagens: selo <b>“imagens · 3 de 8”</b>.</p>
+        <p style="margin:0">É o leiaute que deixa o computador mais folgado: um vídeo a menos sendo tocado.</p>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:980px;top:28px;width:900px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:18px;font-weight:700">Espelho</span><span class="tag lar">TOCA O VÍDEO · PESA COMO MAIS UM TELÃO</span><span class="cota" style="margin-left:auto">para ver o que o público está vendo</span></div>
+      <div class="palco">
+        <div style="position:absolute;left:30px;top:26px;width:840px;height:300px;background:radial-gradient(60% 90% at 30% 40%,#c98a3a,#3a2412 75%);border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;overflow:hidden">
+          <span style="position:absolute;left:10px;top:10px" class="tag ar">TELÃO LED · AO VIVO</span>
+          <span style="position:absolute;right:10px;top:10px;display:flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:4px;background:rgba(0,0,0,.72);font-size:11px;font-weight:700"><svg class="i s12"><use href="#i-play"/></svg>VINHETA DA MENSAGEM · −0:27</span>
+          <span class="t-txt" style="font-size:46px;letter-spacing:.02em">TEMPO DA PALAVRA</span>
+        </div>
+        <span class="rel" style="left:36px;bottom:60px;font-size:60px">10:58</span>
+        <span style="position:absolute;left:36px;bottom:30px;font-size:15px;font-weight:600;color:rgba(255,255,255,.5)">depois: Mensagem — textos</span>
+        <span style="position:absolute;right:36px;bottom:56px;text-align:right;font-size:15px;font-weight:600;color:rgba(255,255,255,.6)">MENSAGEM<br><span class="rel" style="position:static;font-size:40px;color:var(--verde)">−35:00</span></span>
+      </div>
+      <div class="cota" style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:13px">
+        <p>Mostra o telão como ele está: letra, <b>vídeo andando</b> e <b>slideshow de imagens</b>.</p>
+        <p style="margin:0">Como o telão é uma faixa 14:5, o espelho ocupa a parte de cima e sobra espaço para relógio e contagem.</p>
+        <p style="margin:0">É o leiaute de espelho que já existe hoje e funciona; só ganha nome e lugar.</p>
+        <p style="margin:0">Custa um vídeo a mais tocando. Com vídeo pesado (4K), prefira “Só texto”.</p>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:40px;top:716px;width:1840px;height:1px;background:var(--linha)"></div>
+
+    <div style="position:absolute;left:40px;top:740px;width:560px">
+      <div class="leg" style="margin-bottom:10px">Onde se escolhe — <b>dois lugares, a mesma chave</b></div>
+      <div class="po" style="padding:12px 14px">
+        <div class="rot" style="margin-bottom:8px">CONFIGURAÇÕES › TELAS E SAÍDAS › RETORNO</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="cp" style="flex:1"><label>Leiaute do retorno</label><span class="v">Só texto <i>· não toca vídeo</i></span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+          <button class="bt"><svg class="i s14"><use href="#i-pinc"/></svg>Editar leiaute</button>
+        </div>
+      </div>
+      <div class="p" style="padding:12px;margin-top:10px;width:300px">
+        <div class="rot" style="margin-bottom:8px">MOSTRAR › OUTRAS TELAS</div>
+        <div class="outras"><div style="display:flex;align-items:center;gap:6px"><span style="width:20px;color:var(--mudo);display:flex;justify-content:center"><svg class="i s14"><use href="#i-dn"/></svg></span><div class="seg"><button class="a">Retorno</button><button>OBS</button></div></div></div>
+        <div style="display:flex;align-items:center;gap:6px;margin:8px 0 0 26px"><span class="cota">Leiaute:</span><div class="seg" style="padding:2px;border-radius:7px;flex:1"><button class="a" style="height:24px;flex:1;justify-content:center;padding:0 6px;font-size:12px;border-radius:5px">Só texto</button><button style="height:24px;flex:1;justify-content:center;padding:0 6px;font-size:12px;border-radius:5px">Espelho</button></div></div>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:640px;top:740px;width:620px">
+      <div class="leg" style="margin-bottom:10px">O que cada um mostra</div>
+      <table class="tabela">
+        <tr><th>No telão</th><th>Só texto</th><th>Espelho</th></tr>
+        <tr><td>Letra de música</td><td><b>Letra + próxima</b>, grande</td><td>O telão, igual ao público</td></tr>
+        <tr><td>Versículo</td><td><b>Texto + referência</b></td><td>O telão</td></tr>
+        <tr><td>Vídeo</td><td>Selo <b>▶ vídeo · 02:13 restantes</b></td><td><b>Vídeo andando</b></td></tr>
+        <tr><td>Slideshow de imagens</td><td>Selo <b>imagens · 3 de 8</b></td><td><b>As imagens trocando</b></td></tr>
+        <tr><td>Telão limpo</td><td>Relógio e contagem</td><td>Preto + relógio</td></tr>
+        <tr><td>Peso no computador</td><td><b>Nenhum vídeo a mais</b></td><td>Um vídeo a mais</td></tr>
+      </table>
+    </div>
+
+    <div style="position:absolute;left:1300px;top:740px;width:580px" class="cota">
+      <div class="leg" style="margin-bottom:10px">Regras</div>
+      <p style="font-size:13px"><b>Quem decide é o leiaute ativo.</b> Trocar para “Espelho” liga o vídeo no retorno; voltar para “Só texto” desliga. Não há outra opção escondida.</p>
+      <p style="font-size:13px"><b>Trocar durante o culto é seguro:</b> muda só o Monitor 3; o telão não pisca.</p>
+      <p style="font-size:13px"><b>Leiaute misto</b> (texto + um espelho pequeno) conta como Espelho: tem vídeo, pesa. A etiqueta do leiaute diz “toca vídeo” ou “não toca vídeo”, sempre.</p>
+      <p style="font-size:13px"><b>“Só retorno”</b> (tarja laranja aprovada na C3) continua igual: com ele ligado, o Espelho mostra o telão parado, que é o que o público vê.</p>
+      <p style="font-size:13px">Os leiautes de retorno moram em <b>Modelos › Retorno</b> (P3) e são desenhados em 1920×1080.</p>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>REGRAS</h4>Dois tipos de leiaute de retorno. “Só texto”: letra, próxima, relógio; não abre vídeo e mostra só o selo com o tempo que falta. “Espelho”: mostra o telão, inclusive vídeo e slideshow. O operador escolhe; a escolha decide se o retorno toca vídeo.</div>
+    <div><h4>O QUE MUDA EM RELAÇÃO A HOJE</h4>Hoje qualquer leiaute com “saída atual” abre o vídeo de novo, sem avisar, e isso pesa no computador. Agora cada leiaute carrega a etiqueta “toca vídeo / não toca vídeo”, e a troca fica a um clique na página Mostrar.</div>
+    <div><h4>PARA DECIDIR</h4>Qual dos dois é o padrão do domingo? O selo de vídeo no “Só texto” mostra também o nome do vídeo? O leiaute do retorno muda junto com o Visual (P2) ou é independente?</div>
+  </div>
+</section>
+
+<!-- =====================================================================  perguntas  -->
+<section class="prancha" id="perguntas" style="width:900px">
+  <header><b>?</b><span>Perguntas que o desenho levantou — para o dono decidir</span></header>
+  <div class="po perg" style="padding:24px 26px">
+    <div><span class="num">1</span><p><b>Onde manda: na saída ou na casa da tabela?</b> A P1 tem uma chave por saída (“como foi feito” × “modelo próprio”) e a P2 deixa cada casa escolher. Desenhei a chave da P1 como resumo da linha da P2. Se preferir só uma das duas, qual?</p></div>
+    <div><span class="num">2</span><p><b>Laranja para “modelo da saída”.</b> Na igreja o LED e o OBS <b>sempre</b> aplicam modelo próprio; então a etiqueta laranja fica acesa o culto inteiro — e laranja é também a cor de aviso, do “só retorno” e da camada Áudio. Mantém laranja (como pedido) ou vira uma etiqueta neutra, deixando o laranja só para problema?</p></div>
+    <div><span class="num">3</span><p><b>Trocar o Visual com slide no ar:</b> vale já (o telão muda de cara na hora) ou só no próximo slide? Desenhei “no próximo slide”.</p></div>
+    <div><span class="num">4</span><p><b>O Retorno entra no Visual?</b> Desenhei a linha do Retorno dentro da tabela (o Impulso poderia usar Espelho). A alternativa é o leiaute do retorno ficar só na saída.</p></div>
+    <div><span class="num">5</span><p><b>Miniaturas do centro:</b> mostram como sai no telão principal (14:5, com o modelo da saída) ou como o slide foi feito (16:9)? Desenhei “como sai no Telão LED” por padrão, com chave para trocar. E quem é a “saída principal” quando há LED e OBS?</p></div>
+    <div><span class="num">6</span><p><b>Para que serve o modelo do slide</b> se todas as saídas da igreja aplicam modelo próprio? Hoje ele só apareceria no Editar. Vale manter o “Aplicar ▾” com esse aviso, ou escondê-lo enquanto nenhuma saída “usa o slide”?</p></div>
+    <div><span class="num">7</span><p><b>“No ar” em 14:5:</b> a imagem do telão fica com 86 px de altura na coluna de 300 e a faixa de camadas precisa de 142. Usei a sobra para a linha de origem. Alternativa: deitar as camadas embaixo da imagem.</p></div>
+    <div><span class="num">8</span><p><b>Botão Parar no cartão:</b> pus na linha 1, depois de “próxima”. Ele tira espaço do nome da faixa. Vale ter o botão, ou basta a camada Áudio / F4? E vídeo também ganha Parar?</p></div>
+    <div><span class="num">9</span><p><b>Área do LED:</b> a área sempre começa no canto superior esquerdo, ou precisa mesmo do seletor de canto (e de um deslocamento em px)? Se for sempre o canto de cima, o seletor sai e a tela fica mais simples.</p></div>
+    <div><span class="num">10</span><p><b>“Testar” com culto no ar:</b> o padrão de teste cobre o telão por 10 s. Bloquear enquanto houver algo no ar, ou só pedir confirmação?</p></div>
+    <div><span class="num">11</span><p><b>Tipos de conteúdo:</b> bastam Música, Bíblia e Aviso? Onde entram tarja de nome do pregador e título de mensagem (hoje são sobreposições)?</p></div>
+    <div><span class="num">12</span><p><b>Mudar o formato de um modelo depois de criado:</b> desenhei como proibido (só “duplicar para outra tela”). Serve?</p></div>
+    <div><span class="num">13</span><p><b>Slide 16:9 em saída 14:5 em “usa o slide”:</b> desenhei aviso com triângulo e faixa preta. Ou deve ser proibido, já que “nunca esticar” (D1)?</p></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const u=(id,c='')=>`<svg class="i ${c}"><use href="#i-${id}"/></svg>`;
+
+/* ---------- casca ---------- */
+const pilVisual=`<span class="pil vis">${u('mod','s14')}<small>Visual:</small>Culto padrão${u('dn','s14')}</span>`;
+document.querySelectorAll('[data-topo]').forEach(e=>{
+  const m=e.dataset.topo;
+  e.outerHTML=`<div class="topo"><div class="marca">◗ aliança <span>show</span></div><div class="seg"><button class="${m==='Mostrar'?'a':''}">Mostrar</button><button>Editar</button></div><span style="flex:1"></span>${pilVisual}<span class="pil" style="background:var(--vermelho-lav);color:var(--vermelho-claro)"><i></i>Telão LED no ar</span><button class="ib ${m==='config'?'lig':''}" title="Configurações">${u('gear')}</button></div>`;
+});
+const CF=[['gear','Geral','geral'],['tela','Telas e saídas','telas'],['mod','Visual','visual',1],['som','Áudio','audio'],['pasta','Arquivos','arq'],['T','Atalhos','ata']];
+document.querySelectorAll('[data-cf]').forEach(e=>{
+  const a=e.dataset.cf;
+  e.outerHTML=`<div class="cf-lista"><div class="rot" style="padding:4px 10px 8px">CONFIGURAÇÕES</div>${CF.map(c=>`<div class="it ${c[2]===a?'a':''}">${u(c[0],'s14')}${c[1]}${c[3]?'<span class="tag novo" style="margin-left:auto">NOVO</span>':''}</div>`).join('')}<hr><div class="it">${u('olho','s14')}Sobre</div></div>`;
+});
+
+/* ---------- P2: tabelas ---------- */
+const mn=(f,txt)=>`<span class="mn" style="height:${f==='led'?16:25}px;${f==='obs'?'background:repeating-conic-gradient(rgba(248,248,240,.1) 0 25%,transparent 0 50%) 0 0/8px 8px':''}">${txt||''}</span>`;
+const cel=(o,mini)=>{
+  if(!o) return '<div></div>';
+  if(o.slide) return `<div class="cel slide ${o.dif?'dif':''} ${mini?'mini':''}">${u('T','s14')}<div class="tx"><b>usa o slide</b>${mini?'':`<small>${o.sub||'como foi feito, com ajustes à mão'}</small>`}</div>${o.al?`<span title="Formato diferente da saída" style="color:var(--ambar);display:flex">${u('alerta','s14')}</span>`:''}${u('dn','s14')}</div>`;
+  return `<div class="cel ${o.dif?'dif':''} ${mini?'mini':''}">${mini?'':mn(o.f)}<div class="tx"><b>${o.n}</b>${mini?'':`<small>${o.sub}</small>`}</div>${u('dn','s14')}</div>`;
+};
+const sdCel=(n,s,modo,mini)=>`<div class="sd" ${mini?'style="padding:6px 12px"':''}><b>${n}</b>${mini?'':`<small>${s}</small>`}${mini?'':(modo==='p'?'<span class="tag lar" style="align-self:flex-start">APLICA MODELO PRÓPRIO</span>':modo==='r'?'<span class="tag mu" style="align-self:flex-start">LEIAUTE DE RETORNO</span>':'<span class="tag mu" style="align-self:flex-start">SLIDE COMO FOI FEITO</span>')}</div>`;
+const cab=`<div></div><div class="h">${u('nota','s14')}MÚSICA</div><div class="h">${u('livro','s14')}BÍBLIA</div><div class="h">${u('img','s14')}AVISO</div>`;
+const retLin=(n,s,dif,mini)=>`<div class="cel ${dif?'dif':''} ${mini?'mini':''}" style="grid-column:2 / 5">${u('tela','s14')}<div class="tx"><b>${n}</b>${mini?'':`<small>${s}</small>`}</div>${u('dn','s14')}</div>`;
+document.getElementById('mtz1').innerHTML=cab+
+ sdCel('Telão LED','Monitor 2 · 896×320 · 14:5','p')+cel({n:'Letra LED',sub:'LED · 14:5',f:'led'})+cel({n:'Versículo LED',sub:'LED · 14:5',f:'led'})+cel({n:'Aviso LED',sub:'LED · 14:5',f:'led'})+
+ sdCel('OBS','rede · 1920×1080 · 16:9','p')+cel({n:'Tarja de baixo',sub:'OBS · 16:9 · transparente',f:'obs'})+cel({n:'Versículo tarja',sub:'OBS · 16:9 · transparente',f:'obs'})+cel({slide:1,sub:'o aviso vai inteiro, como foi feito'})+
+ sdCel('Retorno','Monitor 3 · 1920×1080','r')+retLin('Só texto','não toca vídeo · vale para música, Bíblia e aviso');
+document.getElementById('mtz2').innerHTML=cab+
+ sdCel('Telão LED','','p',1)+cel({n:'Letra LED Impulso',dif:1},1)+cel({n:'Versículo LED Impulso',dif:1},1)+cel({slide:1,dif:1,al:1},1)+
+ sdCel('OBS','','p',1)+cel({n:'Tarja de baixo'},1)+cel({n:'Versículo tarja'},1)+cel({slide:1},1)+
+ sdCel('Retorno','','r',1)+retLin('Espelho','',1,1);
+
+/* ---------- P3: versículo no formato do LED ---------- */
+const BIB={
+ s:['O que habita no esconderijo do Altíssimo e descansa à sombra do Onipotente','Salmos 91:1',10.5],
+ c:['Jesus chorou.','João 11:35',13],
+ l:['O que habita no esconderijo do Altíssimo e descansa à sombra do Onipotente diz ao Senhor: Meu refúgio e meu baluarte, Deus meu, em quem confio. Pois ele te livrará do laço do passarinheiro','Salmos 91:1-3',6.6],
+ r:['O amor é paciente, é benigno; o amor não arde em ciúmes','1 Coríntios 13:4-7',9]
+};
+document.querySelectorAll('[data-bib]').forEach(e=>{
+  const b=BIB[e.dataset.bib];
+  e.style.cssText+=';position:relative;border-radius:5px;background:var(--noite);overflow:hidden';
+  e.innerHTML=`<span class="t-txt" style="position:absolute;left:4%;top:10%;width:92%;height:56%;display:flex;align-items:center;text-align:left;font-weight:800;font-size:${b[2]}px;line-height:1.14">${b[0]}</span><span style="position:absolute;right:11%;bottom:8%;font-size:7.5px;font-weight:700;color:var(--ambar);white-space:nowrap">${b[1]}</span><span style="position:absolute;right:4%;bottom:8%;font-size:6.5px;font-weight:700;color:rgba(255,255,255,.7)">ARA</span>`;
+});
+
+/* ---------- P4 ---------- */
+const SL=[['Verso 1','#5ec48d','SEI QUE ESTÁS AQUI<br>PERTO DE MIM'],['Verso 1','#5ec48d','TUA VOZ ME CHAMA<br>PELO NOME'],['Pré-coro','#f1d278','EU QUERO TE ENCONTRAR'],['Coro','#ff9aa0','TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO',1],['Coro','#ff9aa0','EM TI EU POSSO DESCANSAR<br>NADA VOU TEMER'],['Verso 2','#5ec48d','QUANDO A NOITE VEM<br>TU ÉS A MINHA LUZ'],['Verso 2','#5ec48d','TEU AMOR ME GUARDA<br>EM TODO TEMPO'],['Pré-coro','#f1d278','EU QUERO TE ENCONTRAR'],['Ponte','#d98ab4','ESCONDIDO EM TI<br>ESCONDIDO EM TI'],['Ponte','#d98ab4','NADA PODE ME TIRAR<br>DO TEU AMOR'],['Coro','#ff9aa0','TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO'],['Final','rgba(248,248,240,.5)','MEU LUGAR SECRETO']];
+document.getElementById('slides').innerHTML=SL.map((s,i)=>`<div class="sl ${s[3]?'ar':''}"><div class="v"><span class="t-txt" style="font-size:17px">${s[2]}</span>${s[3]?'<span class="tag ar" style="position:absolute;left:5px;top:5px;background:rgba(0,0,0,.72)">NO AR</span>':''}</div><div class="r"><i style="background:${s[3]?'#fff':s[1]}"></i>${s[0]}<span ${s[3]?'style="color:#fff"':''}>${i+1}</span></div></div>`).join('');
+
+const CAM=[['sobre','var(--rosa)','Limpar sobreposição · F3'],['T','var(--texto)','Limpar texto · F2'],['img','var(--fundo-cam)','Limpar fundo · F1'],['nota','var(--laranja)','Parar áudio · F4']];
+const camadas=(tem,extra='')=>CAM.map((k,i)=>`<button class="ic ${tem.includes(i)?'tem':''}" style="--cor:${k[1]}" title="${k[2]}">${u(k[0],'s14')}</button>`).join('')+`<button class="ic x" title="Limpar tudo (Esc)">${u('x','s14')}</button>`;
+function tk(o){
+  return `<div class="tk">
+    <div class="tk-a"><div class="grp3"><button class="q" title="Anterior">${u('prev','s14')}</button><button class="q p" title="Pausar">${u('pause','s14')}</button><button class="q" title="Próxima">${u('next','s14')}</button><button class="q" title="Parar: pausa e volta ao começo">${u('stop','s14')}</button></div>
+      <span class="nm" title="${o.nome}">${o.nome} <i>· ${o.sub}</i></span><span class="t1" title="Falta">${o.t1}</span></div>
+    <div class="tk-b"><div class="bar" title="Clique para pular, arraste para procurar"><i style="width:${o.p}%"></i><b style="left:${o.p}%"></b></div>
+      <button class="q lig" title="Crossfade">${u('xf','s14')}</button><button class="q" title="Desligar o som do Spotify">${u('vol','s14')}</button><div class="bar vol" title="Volume do Spotify"><i style="width:${o.v}%"></i><b style="left:${o.v}%"></b></div></div>
+  </div>`;
+}
+const SP={nome:'Lugar Secreto',sub:'Gabriela Rocha',t1:'−3:02',p:42,v:55};
+document.getElementById('noar').outerHTML=`<div class="p col" style="width:300px;flex-shrink:0" id="noar">
+  <div class="slot"><span class="rot">NO AR</span><small>Telão LED · 14:5</small></div>
+  <div class="prog-l"><div class="prog"><div style="aspect-ratio:14/5;background:var(--noite);display:flex;align-items:center;justify-content:center"><span class="t-txt" style="font-size:13px">TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 8px;background:var(--painel-opaco)"><span style="font-size:11px;color:var(--mudo)">Música →</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap">Letra LED<span class="tag lar" style="font-size:9px;padding:1px 4px">MODELO DA SAÍDA</span></span></div></div>
+    <div class="cam" style="min-height:142px">${camadas([1,2,3])}</div></div>
+  <div style="display:flex;flex-direction:column;gap:4px">${tk(SP)}</div>
+  <div class="outras" style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:6px"><span style="width:20px;color:var(--mudo);display:flex;justify-content:center">${u('dn','s14')}</span><div class="seg"><button class="a">Retorno</button><button>OBS</button></div></div>
+    <div class="prog quieto" style="flex:none;margin-left:26px;margin-right:34px;aspect-ratio:16/9;align-items:center;justify-content:center;gap:5px"><span class="t-txt" style="font-size:11px">TU ÉS O MEU ABRIGO<br>MEU LUGAR SEGURO</span><span style="font-size:8px;font-weight:700;color:var(--ambar);text-align:center">EM TI EU POSSO DESCANSAR</span></div>
+    <div style="margin-left:26px;display:flex;align-items:center;gap:6px"><span class="cota">Leiaute:</span><span class="tag mu">SÓ TEXTO · NÃO TOCA VÍDEO</span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span class="rot">MENSAGEM PRO PALCO</span><div class="cp" style="flex:none;padding-top:0;align-items:center"><span class="v" style="color:var(--mudo);font-weight:400">Pastor, 5 minutos</span></div></div>
+</div>`;
+document.getElementById('cam-a').innerHTML=camadas([1,2]);
+document.getElementById('cam-b').innerHTML=camadas([1,2,3]);
+
+/* anatomia a 200% + medida real da barra */
+(function(){
+  const a=document.getElementById('anat'); a.innerHTML=tk(SP);
+  const r=a.getBoundingClientRect(), z=r.width/276;
+  const pos=el=>{const q=el.getBoundingClientRect();return {l:(q.left-r.left)/z,t:(q.top-r.top)/z,w:q.width/z,h:q.height/z}};
+  const b=pos(a.querySelector('.tk-b .bar'));
+  const d=document.createElement('div');
+  d.style.cssText=`position:absolute;left:${b.l}px;top:${b.t}px;width:${b.w}px;height:${b.h}px;border:1px dashed var(--verde);border-radius:4px;background:rgba(94,196,141,.12);pointer-events:none`;
+  a.appendChild(d);
+  const marca=(el,n,dy)=>{const p=pos(el);const s=document.createElement('span');s.className='num';s.textContent=n;s.style.cssText=`position:absolute;left:${p.l+p.w/2-5}px;top:${p.t+dy}px;width:10px;height:10px;font-size:7px`;a.appendChild(s)};
+  marca(a.querySelector('[title^="Parar"]'),1,-11);
+  marca(a.querySelector('.tk-b .bar'),2,22);
+  marca(a.querySelector('[title="Crossfade"]'),3,22);
+  marca(a.querySelector('.bar.vol'),4,22);
+  const real=document.querySelector('#noar .tk-b .bar');
+  if(real){const k=real.closest('.quadro').getBoundingClientRect().width/1920;document.getElementById('med').textContent=Math.round(real.getBoundingClientRect().width/k)}
+})();
+
+/* zoom do board */
+document.querySelectorAll('.cab-mesa .z button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.cab-mesa .z button').forEach(x=>x.classList.remove('a'));b.classList.add('a');document.documentElement.style.setProperty('--z',b.dataset.z)});
+</script>
+</body>
+</html>

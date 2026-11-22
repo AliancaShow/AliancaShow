@@ -133,6 +133,14 @@ Corte por vídeo existe (`aliancaSpotifyComSom*.ts`), sempre ligado, sem voltar;
 - **D11 — Áudio:** um áudio novo (arquivo ou Spotify) **para o Spotify**. O áudio da gaveta não volta mais depois do vídeo — André autorizou a correção (22/nov); diff de `audioFading.ts`/`videoPlayer.ts` será mostrado antes de aplicar, por ser fecho.
 - **D12 — "Substituir slide com modelo":** o André não se lembra da opção — provavelmente existia e ninguém achou. Reforça a 3a (indicador de origem).
 
+## Resultados das provas (22/nov, perfil de teste isolado, PC de dev RTX 3080 Ti)
+
+- **1.0 — LED: opção A escolhida.** Janela 896×320 na origem do monitor, `screen` nulo, cadeado, `outputResolutionAsRatio`: slide cai em x 0..895, y 0..319, os 4 cantos no pixel exato. Opção B (monitor inteiro + recorte) **reprovada**: `Zoomed` gera `margin-inline-start: 234.67px; margin-top: -176px`, slide desloca 234 px e perde os cantos 2 e 4.
+- **Persistência confirmada:** aplicar A pelo caminho do popup deixa `saved=true`; fechar pelo X grava 1920×1080 no `settings.json` e a janela reabre errada. Com `save()` antes de fechar, fica 896×320. → fatia 1a.
+- **2.0 — vídeo:** a configuração da cabine faz **4 decodificações** por vídeo (No ar + Outras telas na principal, telão, retorno com "saída atual"). 4K: decodificador da GPU a 80% com 4; 65% com Outras telas recolhida; 54% com retorno só texto. CPU quase não muda — o custo é todo do decodificador. Sem quadros perdidos nesta máquina (muito mais forte que a da cabine). A oscilação ±6% do `videoSync` aparece só em 4K, mais no "No ar" (até 1,06).
+- **D3 — "No ar" por captura da janela do telão funciona** (`getMediaSourceId` via `GET_WINDOWS` + `getUserMedia` desktop: 896×320 a ~27 fps). Custo exato não medido limpo (POC paralela contaminou). Filtrar sempre pelo id da janela, nunca pelo nome.
+- Pendente: repetir 1080p e o custo da captura sem processos paralelos; repetir na cabine com o vídeo real.
+
 ## Perguntas ainda abertas
 1. Escala do Windows em cada monitor da igreja (confirmar no local).
 2. Slides do telão desenhados em 14:5 (896×320) ou 16:9 encaixado?
