@@ -32,6 +32,7 @@
     import AliancaTopo from "./AliancaTopo.svelte"
     import AnteparoDeModo from "./AnteparoDeModo.svelte"
     import FaixaDeFalha from "./FaixaDeFalha.svelte"
+    import AliancaQuedaSaida from "./AliancaQuedaSaida.svelte"
     import ProfileChangerMenu from "./ProfileChangerMenu.svelte"
 
     // as duas travas de gesto da fatia 2 (Esc que fechou algo segura o seguinte 700 ms; clique repetido no mesmo item < 700 ms e engolido). Ligadas
@@ -148,6 +149,7 @@
 <!-- motor: sem markup visivel, sempre montado -->
 <Preview escondida />
 <FaixaDeFalha />
+<AliancaQuedaSaida />
 <AnteparoDeModo />
 {#if $showChangeProfileMenu && $activeProfile !== null}
     <ProfileChangerMenu />

@@ -13,7 +13,7 @@
     import { ROTULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
     import { saidasDasAbas } from "../../utils/aliancaTransporteLogica"
     import { getResolution } from "../helpers/output"
-    import PreviewOutput from "../output/preview/PreviewOutput.svelte"
+    import AliancaCaptura from "../output/AliancaCaptura.svelte"
     import AliancaCamadas from "./AliancaCamadas.svelte"
     import AliancaChat from "./AliancaChat.svelte"
     import AliancaMensagemPalco from "./AliancaMensagemPalco.svelte"
@@ -81,7 +81,8 @@
 <div class="par">
     <div class="programa" class:ligado={$outputDisplay} data-acao="tela-principal">
         {#if principal}
-            <PreviewOutput outputId={principal} />
+            <!-- cabine 6 (fatia A, D3): captura ao vivo da janela do telao, sem decodificar o video de novo -->
+            {#key principal}<AliancaCaptura outputId={principal} proporcao="{resolucao.width}/{resolucao.height}" />{/key}
         {:else}
             <span class="vazio">Sem saída habilitada</span>
         {/if}

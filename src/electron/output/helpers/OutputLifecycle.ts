@@ -9,6 +9,7 @@ import { NdiSender } from "../../ndi/NdiSender"
 import { setDataNDI } from "../../ndi/talk"
 import { wait } from "../../utils/helpers"
 import { outputOptions } from "../../utils/windowOptions"
+import { ligarVigia, vigiarSaida } from "../aliancaVigiaSaida"
 import { OutputHelper } from "../OutputHelper"
 import { setOutputAlwaysOnTop } from "./OutputAlwaysOnTop"
 import { OutputVisibility } from "./OutputVisibility"
@@ -25,6 +26,8 @@ export class OutputLifecycle {
     }
 
     static initListeners() {
+        // AliancaShow cabine 6 (F1): vigia de queda das saidas + fonte de captura por id de saida
+        ligarVigia({ janelaDe: (id) => OutputHelper.getOutput(id)?.window })
         screen.on("display-metrics-changed", () => {
             setTimeout(() => this.restoreAllOutputBounds(), 500)
         })
@@ -78,7 +81,8 @@ export class OutputLifecycle {
         // invisible/capture outputs render DPI-corrected so capturePage() matches the configured resolution
         const resolvedBounds = output.invisible ? output.bounds : OutputVisibility.resolveOutputBounds(output)
         const renderBounds = OutputHelper.Bounds.getRenderBounds(output, resolvedBounds)
-        const outputWindow = this.createOutputWindow({ ...renderBounds, alwaysOnTop: output.alwaysOnTop !== false, backgroundColor: output.transparent ? "#00000000" : "#000000" }, id, output.name, output)
+        // AliancaShow cabine 6: janela opaca (preta) quando a saida nao e transparente: renderer morto nunca mostra a area de trabalho
+        const outputWindow = this.createOutputWindow({ ...renderBounds, alwaysOnTop: output.alwaysOnTop !== false, transparent: !!output.transparent, backgroundColor: output.transparent ? "#00000000" : "#000000" }, id, output.name, output)
         // const previewWindow = this.createPreviewWindow({ ...output.bounds, backgroundColor: "#000000" })
 
         OutputHelper.setOutput(id, { window: outputWindow, invisible: output.invisible, boundsLocked: output.boundsLocked, screen: output.screen, intendedBounds: resolvedBounds, transparent: output.transparent, webrtcData: output.webrtcData, rtmpData: output.rtmpData })
@@ -197,6 +201,8 @@ export class OutputLifecycle {
     }
 
     static setWindowListeners(window: BrowserWindow, { id, name }: { [key: string]: string }) {
+        vigiarSaida(window, id, name)
+
         window.on("ready-to-show", () => {
             // focus back on main window if output window is not on top
             const mainWindow = getMainWindow()
