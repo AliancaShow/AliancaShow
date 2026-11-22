@@ -15,6 +15,7 @@
     import { activePage, activeProfile, activeShow, outputs, saved, showChangeProfileMenu, special } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { vigiarAjustesDeMidia } from "../../utils/aliancaMidiaSalva"
+    import { vigiarConfiguracaoDasSaidas } from "../../utils/aliancaSaidasSalvas"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
@@ -39,6 +40,8 @@
     onDestroy(soltarTravas)
     // 22/nov: ajuste de imagem/video (encaixe, filtros, espelhar, volume...) marca "nao salvo"; antes fechar o app perdia o ajuste
     onDestroy(vigiarAjustesDeMidia())
+    // cabine 6 (1a): mudar tela/posicao/cadeado/recorte/estilo de uma saida marca "nao salvo"; antes fechar o app perdia a configuracao do LED
+    onDestroy(vigiarConfiguracaoDasSaidas())
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"
