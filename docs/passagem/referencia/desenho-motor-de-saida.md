@@ -129,3 +129,37 @@ Toda fatia: critério de entrega do `plano-cabine-6.md`, `ancora.mjs` rodado por
 4. Pode reservar uma janela na igreja, sem culto, para rodar a F0 (uns 30 min, com o vídeo real)?
 5. Vocês usam vídeos com legenda embutida? Se sim, entra uma fatia a mais.
 6. F2 e F3 vão num instalador só. Tudo bem receber as duas juntas, depois de eu testá-las separadas?
+
+---
+
+## Adendo (22/nov, noite): revisão cética + POC b3
+
+**Veredito da revisão: "go com mudanças".** POC b3 (`bancada/poc-video-unico/b3`, `run-b3.ps1`) testou os riscos com webPreferences iguais às da saída, em `file://` (produção, sandbox) e em http (dev).
+
+### Provado (PASS)
+- Filhas de `window.open` com URL real recebem o preload e falam IPC (8–19 ms); `did-create-window` entrega `BrowserWindow` controlável (bounds exatos, alwaysOnTop).
+- Motor e filhas no **mesmo processo**, em `file://` e em http.
+- `window.opener.document.querySelector('video')` funciona com contextIsolation, sem contorno.
+- 4K com dono oculto, desenho pelo rAF da filha **com portão** (só redesenha quando `totalVideoFrames` muda): 0/900 perdidos, 33,33±1,4 ms, decode ~43%.
+- Queda do motor: detectada em 22–46 ms; telas ficam **pretas** (não mostram a área de trabalho); recriação com as 3 filhas desenhando em **0,6–0,8 s**.
+
+### Reprovado / riscos novos
+- **Portão obrigatório:** desenhar a 60 Hz sem portão congelou o vídeo 4K.
+- **rVFC com dono oculto = 1 Hz:** não usar.
+- **`capturePage` de filha oculta trava** (NDI, saída invisível). Filha fora da tela captura sem carga e congela com carga. → saídas invisíveis/NDI continuam como janelas avulsas, ou visíveis fora da tela com folga medida.
+- **Thread única:** texto animado que mexe em layout em 3 saídas derrubou o vídeo de todas (247 quadros pulados, CPU 150%). Texto estático com troca de slide a cada 2 s ficou quase limpo (10 pulos/600). → animações só de compositor (transform/opacity) e medir as transições reais do Svelte.
+- Retomar após a queda deixa o vídeo ~0,4 s atrás do relógio → compensar.
+
+### Correções da revisão incorporadas
+- Chave do decodificador = **instância** em `playingVideos` (`${path}_${outputId}`), não o caminho.
+- `MediaItem.svelte` (vídeo dentro do slide) e YouTube/Vimeo (som na saída) entram no escopo.
+- `App.svelte` e `preload.ts` tratados como fecho (mudam a saída, apesar de fora do cálculo).
+- F1 + `OutputVisibility.ts`; F2 + `OutputSend.ts`, `CaptureLifecycle.ts`, `responsesMain.ts`; F3 + `Media.svelte`, `Background.svelte`, `MediaItem.svelte`, `videoPlayer.ts`; Prova do Culto: `cdp.mjs` não pode classificar o motor como saída.
+- Aceite da F4 = "0 decodificações do vídeo no ar na principal".
+- Janela opaca quando `!output.transparent`.
+- Aceite de disputa de thread: troca de slide com texto autoajustado ×3 durante 4K, 0 perdidos; motor oculto por 10 min; `unresponsive` vigiado; quedas deduplicadas.
+
+### Nova ordem
+1. **Passo intermediário (antes do motor):** previews da principal ("No ar", "Outras telas") e espelho do retorno (`Stagebox:395`) por **captura da janela do telão**; centro mostra cartão com miniatura em vez do vídeo (D26); vigia de queda (F1). Sem mexer em processos. Tira ~4 das ~5 decodificações.
+2. **F0 na igreja:** POC `run.ps1` + `run-b3.ps1` na RX 580 com 3 monitores, e medir o passo 1 no app real.
+3. Decidir F2/F3 (motor) com esses números.
