@@ -89,8 +89,8 @@ export const EXCECOES = {
         "sha": "15c2507c81735c878439449294e47379f903e6455988fa3f04a876c8fd9f3de5"
     },
     "src/frontend/components/media/video/videoPlayer.ts": {
-        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): fim de video de pasta abre iniciarAutomacao() em try/finally; com o modo desligado devolve null e nada muda | cabine-5 (aprovado pelo André 19/nov, \"aprovo 1, 2B e 3\"): arquivo que nao existe (locateMediaFile null) mostra aviso (newToast) antes do return false que ja existia; o que toca nao muda",
-        "sha": "01313e3166b78c45a8c74d6be4964e52fc079db447fb4139f5358982916af55f"
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): fim de video de pasta abre iniciarAutomacao() em try/finally; com o modo desligado devolve null e nada muda | cabine-5 (aprovado pelo André 19/nov, \"aprovo 1, 2B e 3\"): arquivo que nao existe (locateMediaFile null) mostra aviso (newToast) antes do return false que ja existia; o que toca nao muda | cabine-6 D25 (aprovado pelo André 22/nov, \"aprovo transporte\"): pausa suave: campo `rampa` no estado enviado as saidas (multiplica a velocidade durante a curva de 0,7 s), `sincronizarAgora()` empurra o estado a cada passo, e o volume nao e reposto enquanto a rampa corre. Sem pausa suave `rampa` e undefined e nada muda",
+        "sha": "c6968e50a7987273f751c7e44e7389a3be088692e1c28576df3e449d3a083fc3"
     },
     "src/frontend/components/timeline/ShowTimeline.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): linha do tempo move o telao como automacao (iniciarAutomacao em try/finally); modo desligado: identico",
@@ -127,6 +127,10 @@ export const EXCECOES = {
     "src/electron/output/helpers/OutputLifecycle.ts": {
         "motivo": "cabine-6 1a (aprovado pelo André 22/nov, \"aprovo resize\"): o handler de `resize` da janela de saida tinha a condicao invertida (veio assim do FreeShow 1.6.5): com mover desligado, todo resize feito pelo Windows (LED perde/volta sinal, DPI) gravava os limites. Agora espelha o `move`: so grava quando o operador esta movendo. Nada do que a saida desenha muda",
         "sha": "4993070ea33f4935c4bfbff64e5f1aa3b9c6caff440ba6d18642b518797ed691"
+    },
+    "src/frontend/components/media/Video.svelte": {
+        "motivo": "cabine-6 D25 (aprovado pelo André 22/nov, \"aprovo transporte\"): a velocidade alvo do sync passa a ser `targetPlaybackRate * (data.rampa ?? 1)`, para cada saida desacelerar junto com o relogio na pausa suave. Sem pausa suave `rampa` e undefined e o resultado e o mesmo de antes",
+        "sha": "462281eb6952cbe9beb8c96354cf347bbc030dd4e87a6804ba3627a279383177"
     }
 }
 
@@ -153,7 +157,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "3c9bef860a389713ac263195e9d37acff89680a941274a8af8cb07b552624b44"
+export const SHA_EXCECOES = "0aacf2024bf4d4419533ee321fcc71b8b405447d7478adc2996124d8165acd53"
 export const SHA_NOVOS = "fda7eab12fe65bd4b503d4f8a7e3a0c96831aa99a94b3bd1409990db7c3c5907"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")

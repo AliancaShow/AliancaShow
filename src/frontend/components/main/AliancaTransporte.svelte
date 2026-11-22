@@ -14,6 +14,7 @@
     import { getExtension, getFileName, getMediaType, removeExtension } from "../helpers/media"
     import { joinTimeBig } from "../helpers/time"
     import { fadePause, seekTo as spotifySeek, skipNext, skipPrev, spotifyIsFading, spotifyState, togglePlay } from "../output/preview/SpotifyManager"
+    import { chaveAudio, pararAudio, pausarAudioSuave, pausasSuaves, tocarAudio } from "../../utils/aliancaPausaSuave"
     import { alternarMudoDoSpotify, pararSpotify, volumeDoSpotify, volumeFimDoSpotify } from "../../utils/aliancaSpotifyCartao"
     import { spotifyMudo, VOLUME_MAXIMO_SPOTIFY } from "../../utils/aliancaSpotifyCartaoLogica"
     import AliancaBarra from "./AliancaBarra.svelte"
@@ -66,9 +67,17 @@
         clearInterval(passoAudio)
         passoAudio = undefined
     }
+    // D25: Pausar faz o volume cair a 0 em 0,7 s e pausa (o nivel volta, parado, para o play manual); clicar durante a curva cancela
+    $: pausandoAudio = !!idAudio && $pausasSuaves.has(chaveAudio(idAudio))
     function alternarAudio() {
         if ($outLocked || !idAudio) return
-        AudioPlayer.start(idAudio, { name: tocandoAudio?.name || "" }, { pauseIfPlaying: true, startAt: tempoAudio })
+        if (pausadoAudio || pausandoAudio) tocarAudio(idAudio, tempoAudio, tocandoAudio?.name || "")
+        else pausarAudioSuave(idAudio)
+    }
+    // D27: Parar = limpa este audio (o F4, so para ele)
+    function pararEsteAudio() {
+        if ($outLocked || !idAudio) return
+        pararAudio(idAudio)
     }
     let arrastoAudio = ""
     $: if (arrastoAudio && arrastoAudio !== idAudio) {
@@ -146,7 +155,7 @@
             <AliancaTransporteVideo fundo={v.fundo} idSaida={v.id} etiqueta={etiquetar ? nomeDaEtiqueta($outputs[v.id]?.name) : ""} noTelao={v.id === principal} />
         {/each}
         {#if temAudio}
-            <AliancaTransporteLinha tipo="audio" cor={COR_AUDIO} nome={nomeAudio} pausado={pausadoAudio} atual={tempoAudio} duracao={duracaoAudio} volume={volumeAudio} travada={$outLocked} on:alternar={alternarAudio} on:comecar={comecarAudio} on:mover={moverAudio} on:soltar={soltarAudio} on:volume={volumeDoAudio} on:volumefim={volumeFimDoAudio} />
+            <AliancaTransporteLinha tipo="audio" cor={COR_AUDIO} nome={nomeAudio} pausado={pausadoAudio || pausandoAudio} pausando={pausandoAudio} atual={tempoAudio} duracao={duracaoAudio} volume={volumeAudio} travada={$outLocked} on:alternar={alternarAudio} on:parar={pararEsteAudio} on:comecar={comecarAudio} on:mover={moverAudio} on:soltar={soltarAudio} on:volume={volumeDoAudio} on:volumefim={volumeFimDoAudio} />
         {/if}
         {#each lista as t (t.id)}
             {@const timer = $timers[t.id]}
