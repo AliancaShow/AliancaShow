@@ -22,6 +22,23 @@ describe("camadasDoNoAr", () => {
         expect(c.every((x) => x.desabilitada)).toBe(true)
         expect(tudoDesabilitado({ ...limpo, tudoLimpo: false, travada: true })).toBe(true)
     })
+    it("D9: Spotify tocando acende a camada Audio e habilita F4 e Limpar tudo, mesmo com o resto limpo", () => {
+        const e = { ...limpo, spotifyTocando: true }
+        const audio = camadasDoNoAr(e).find((x) => x.id === "audio")!
+        expect(audio.noAr).toBe(true)
+        expect(audio.desabilitada).toBe(false)
+        expect(tudoDesabilitado(e)).toBe(false)
+        expect(
+            camadasDoNoAr(e)
+                .filter((x) => x.noAr)
+                .map((x) => x.id)
+        ).toEqual(["audio"])
+    })
+    it("D9: Spotify tocando com a saida travada continua desabilitado", () => {
+        const e = { ...limpo, spotifyTocando: true, travada: true }
+        expect(camadasDoNoAr(e).find((x) => x.id === "audio")!.desabilitada).toBe(true)
+        expect(tudoDesabilitado(e)).toBe(true)
+    })
 })
 
 import { proporcaoDaSaida } from "./aliancaCamadasLogica"

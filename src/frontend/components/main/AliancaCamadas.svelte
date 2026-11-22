@@ -3,10 +3,16 @@
     // NAO le nem escreve o estado do Preview (autoChange/activeClear): deriva dos mesmos stores (aliancaCamadasLogica) e chama os mesmos
     // limpadores que as teclas F1-F4 de `previewShortcuts`. Respeita `outLocked`. "Limpar tudo" limpa com UM clique, como o Esc.
     import { clearAudio } from "../../audio/audioFading"
-    import { outLocked, outputs, playingAudio, playingMetronome, timelineRecordingAction } from "../../stores"
+    import { activePage, outLocked, outputs, playingAudio, playingMetronome, timelineRecordingAction } from "../../stores"
     import { camadasDoNoAr, COR_DA_CAMADA, tudoDesabilitado, type IdCamada } from "../../utils/aliancaCamadasLogica"
     import { clearAll, clearBackground, clearOverlays, clearSlide } from "../output/clear"
     import { isOutCleared } from "../helpers/output"
+    import { spotifyState } from "../output/preview/SpotifyManager"
+    import { pararSpotifyComoAudio } from "../../utils/aliancaSpotifyCartao"
+    import { spotifyNaCamadaAudio } from "../../utils/aliancaSpotifyCartaoLogica"
+
+    // D9: o Spotify e midia so de audio: tocando, acende a camada Audio; F4/Audio/"Limpar tudo" tambem o param (fade curto)
+    $: spotifyTocando = spotifyNaCamadaAudio($activePage, $spotifyState)
 
     $: audioLimpo = !Object.keys($playingAudio).length && !$playingMetronome
     $: audioSemMicrofone = !Object.values($playingAudio).filter((a) => !a.isMic).length && !$playingMetronome
@@ -18,7 +24,8 @@
         efeitosLimpos: isOutCleared("effects", $outputs, true),
         audioLimpo,
         tudoLimpo: isOutCleared(null, $outputs) && audioSemMicrofone,
-        travada: $outLocked
+        travada: $outLocked,
+        spotifyTocando
     }
     $: camadas = camadasDoNoAr(entrada)
     $: tudoOff = tudoDesabilitado(entrada)
@@ -46,6 +53,7 @@
         } else {
             clearAudio("", { clearPlaylist: true, clearMicrophones: true, commonClear: true })
             timelineRecordingAction.set({ id: "clear_audio" })
+            pararSpotifyComoAudio()
         }
     }
 
@@ -53,6 +61,7 @@
     function limparTudo() {
         if (tudoOff) return
         clearAll(true)
+        pararSpotifyComoAudio()
     }
 </script>
 

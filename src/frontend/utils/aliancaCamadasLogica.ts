@@ -8,6 +8,8 @@ export type EntradaCamadas = {
     audioLimpo: boolean
     tudoLimpo: boolean
     travada: boolean
+    /** D9: o Spotify tocando conta como audio no ar (acende a camada Audio, habilita F4 e "Limpar tudo") */
+    spotifyTocando?: boolean
 }
 
 export type IdCamada = "sobre" | "texto" | "fundo" | "audio"
@@ -22,11 +24,11 @@ export function camadasDoNoAr(e: EntradaCamadas): Camada[] {
         { id: "sobre", tecla: "F3", rotulo: "Limpar sobreposição · F3", noAr: !(e.sobreposicaoLimpa && e.efeitosLimpos), desabilitada: e.travada || (e.sobreposicaoLimpa && e.efeitosLimpos) },
         { id: "texto", tecla: "F2", rotulo: "Limpar texto · F2", noAr: !e.textoLimpo, desabilitada: e.travada || e.textoLimpo },
         { id: "fundo", tecla: "F1", rotulo: "Limpar fundo · F1", noAr: !e.fundoLimpo, desabilitada: e.travada || e.fundoLimpo },
-        { id: "audio", tecla: "F4", rotulo: "Parar áudio · F4", noAr: !e.audioLimpo, desabilitada: e.travada || e.audioLimpo }
+        { id: "audio", tecla: "F4", rotulo: "Parar áudio · F4", noAr: !e.audioLimpo || !!e.spotifyTocando, desabilitada: e.travada || (e.audioLimpo && !e.spotifyTocando) }
     ]
 }
 
-export const tudoDesabilitado = (e: EntradaCamadas) => e.travada || e.tudoLimpo
+export const tudoDesabilitado = (e: EntradaCamadas) => e.travada || (e.tudoLimpo && !e.spotifyTocando)
 
 /** "16:9", "3:1"... a partir da resolucao da saida (reduz por MDC; resolucao estranha vira "w×h"). */
 export function proporcaoDaSaida(w: number, h: number): string {
