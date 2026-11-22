@@ -6,6 +6,7 @@
     import { fadeinAllPlayingAudio, fadeoutAllPlayingAudio } from "../../audio/audioFading"
     import { media, outLocked, playerVideos, special } from "../../stores"
     import { arrastoVale, criarLimitador, prenderBusca, prenderVolume, type ArrastoMidia } from "../../utils/aliancaTransporteLogica"
+    import { chaveVideo, pararVideo, pausarVideoSuave, pausasSuaves, tocarVideo } from "../../utils/aliancaPausaSuave"
     import { splitPath } from "../helpers/get"
     import { getExtension, getMediaType, removeExtension } from "../helpers/media"
     import { VideoPlayer } from "../media/video/videoPlayer"
@@ -56,13 +57,21 @@
         if (escutaVideo) escutaVideo()
     })
 
+    // D25: Pausar desacelera em 0,7 s (aliancaPausaSuave); enquanto a curva corre o botao ja mostra "tocar", e clicar nele cancela (o video segue)
+    $: pausando = $pausasSuaves.has(chaveVideo(caminho))
+    $: pausadoNaTela = dadosVideo.pausado || pausando
     function alternarVideo() {
         if ($outLocked || !caminho) return
-        const estavaPausado = dadosVideo.pausado
-        dadosVideo.pausado = !estavaPausado
-        dadosVideo = dadosVideo
-        if (estavaPausado) VideoPlayer.play(caminho, idSaida)
-        else VideoPlayer.pause(caminho, idSaida)
+        if (pausadoNaTela) {
+            dadosVideo.pausado = false
+            dadosVideo = dadosVideo
+            tocarVideo(caminho, idSaida)
+        } else pausarVideoSuave(caminho, idSaida)
+    }
+    // D27: Parar = tira do ar (o F1, so para este arquivo)
+    function pararEsteVideo() {
+        if ($outLocked || !caminho) return
+        pararVideo(caminho)
     }
     function alternarRepetir() {
         if (!caminho) return
@@ -147,4 +156,27 @@
     }
 </script>
 
-<AliancaTransporteLinha tipo="video" cor={COR_VIDEO} nome={nomeVideo} saida={etiqueta} {noTelao} pausado={dadosVideo.pausado} atual={tempoVideo} duracao={dadosVideo.duracao} repetir={dadosVideo.repetir} mudo={dadosVideo.mudo} volume={tipoFundo === "player" ? null : volumeVideo} travada={$outLocked} on:alternar={alternarVideo} on:repetir={alternarRepetir} on:mudo={alternarMudo} on:comecar={comecarVideo} on:mover={moverVideo} on:soltar={soltarVideo} on:volume={volumeDoVideo} on:volumefim={volumeFimDoVideo} />
+<AliancaTransporteLinha
+    tipo="video"
+    cor={COR_VIDEO}
+    nome={nomeVideo}
+    saida={etiqueta}
+    {noTelao}
+    pausado={pausadoNaTela}
+    {pausando}
+    atual={tempoVideo}
+    duracao={dadosVideo.duracao}
+    repetir={dadosVideo.repetir}
+    mudo={dadosVideo.mudo}
+    volume={tipoFundo === "player" ? null : volumeVideo}
+    travada={$outLocked}
+    on:alternar={alternarVideo}
+    on:parar={pararEsteVideo}
+    on:repetir={alternarRepetir}
+    on:mudo={alternarMudo}
+    on:comecar={comecarVideo}
+    on:mover={moverVideo}
+    on:soltar={soltarVideo}
+    on:volume={volumeDoVideo}
+    on:volumefim={volumeFimDoVideo}
+/>

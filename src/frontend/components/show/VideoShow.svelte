@@ -6,12 +6,12 @@
     import { Main } from "../../../types/IPC/Main"
     import type { MediaStyle } from "../../../types/Main"
     import { requestMain, sendMain } from "../../IPC/main"
-    import { activeProject, activeRename, audioChannelsData, focusMode, media, mediaTags, outLocked, outputs, playingVideos, projects, videoMarkers } from "../../stores"
+    import { activeProject, activeRename, focusMode, media, mediaTags, outLocked, outputs, playingVideos, projects, videoMarkers } from "../../stores"
     import { translateText } from "../../utils/language"
     import Icon from "../helpers/Icon.svelte"
     import T from "../helpers/T.svelte"
     import { resolverFim } from "../../utils/aliancaPastasMidiaLogica"
-    import { enableSubtitle, encodeFilePath, getExtension, getFileName, getMediaLayerType, removeExtension } from "../helpers/media"
+    import { getExtension, getFileName, getMediaLayerType, removeExtension } from "../helpers/media"
     import { getFirstActiveOutput, setOutput } from "../helpers/output"
     import { joinTime, secondsToTime } from "../helpers/time"
     import FloatingInputs from "../input/FloatingInputs.svelte"
@@ -19,12 +19,12 @@
     import HoverButton from "../inputs/HoverButton.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import MediaPicker from "../inputs/MediaPicker.svelte"
-    import { SoftLoopSync } from "../media/video/softLoop"
     import { videoSync } from "../media/video/videoSync"
     import VideoSlider from "../output/VideoSlider.svelte"
     import { clearSlide } from "../output/clear"
     import MediaControls from "../output/tools/MediaControls.svelte"
     import Player from "../system/Player.svelte"
+    import AliancaCentroVideo from "../main/AliancaCentroVideo.svelte"
     import { formatVTT, SRTtoVTT } from "./media/subtitles"
 
     export let mediaPath: string
@@ -46,9 +46,6 @@
 
     export let mediaStyle: MediaStyle = {}
 
-    let softLoopVideo: HTMLVideoElement | null = null
-    let softLoopOpacity = 0
-
     let unsubscriber: Unsubscriber | null = null
     $: setTimeout(() => pathChanged(mediaPath, outputId))
     function pathChanged(path: string | undefined, outputId: string) {
@@ -67,8 +64,6 @@
             if (data.duration) videoData.duration = data.duration
             videoData.loop = playingInOutput ? data.loop : false
             if (data.softLoop !== undefined) videoData.softLoop = data.softLoop
-            if (data.softLoopOpacity !== undefined) softLoopOpacity = data.softLoopOpacity
-            softLoopAudioTime = data.currentTime
             // videoData.muted = data.muted
         })
     }
@@ -77,10 +72,13 @@
     })
 
     let videoTime = 0
+    let duracaoDoCartao = 0
     let videoData = { paused: true, muted: true, duration: 0, loop: false, softLoop: 0 }
     // (A7) o video do centro nasce parado e nunca sai do pause: nem pelo elemento, nem pela saida, nem por um estado velho
     $: if (!videoData) videoData = { paused: true, muted: true, duration: 0, loop: false, softLoop: 0 }
     $: if (type !== "player" && videoData && !videoData.paused) videoData.paused = true
+
+    $: if (type !== "player" && duracaoDoCartao && !videoData.duration) videoData.duration = duracaoDoCartao
 
     let prevId: string | undefined = undefined
     $: if (mediaPath !== prevId) {
@@ -114,20 +112,8 @@
 
     // WIP player video output time
 
-    let hasLoaded = false
-
     let manageSubtitles = false
     let timeMarkersEnabled = false
-
-    // (A7) o quadro parado do centro: um instante perto do comeco (o primeiro quadro costuma ser preto), nunca reproduzindo
-    const quadroParado = (duracao: number) => (duracao > 0 ? Math.min(1, duracao / 10) : 0)
-    function onLoad() {
-        hasLoaded = true
-        videoData.paused = true
-        if (type !== "player") videoTime = quadroParado(videoData.duration)
-
-        if (subtitle && video) enableSubtitle(video, subtitle)
-    }
 
     // player
     $: if (type === "player") playerLoad()
@@ -139,14 +125,6 @@
             videoData.paused = true
             videoTime = videoData.duration ? videoData.duration / 2 : 0
         }, 2000)
-    }
-
-    let video: HTMLVideoElement | undefined
-    function onPlay() {
-        if (hasLoaded) {
-            if (!playingInOutput) videoTime = 0
-            hasLoaded = false
-        }
     }
 
     let shouldLoop = false
@@ -201,8 +179,6 @@
             return a
         })
     }
-
-    $: if (video && mediaStyle.speed) video.playbackRate = Number(mediaStyle.speed)
 
     let edit = false
 
@@ -262,8 +238,6 @@
         })
     }
 
-    $: if (subtitle !== undefined && video) enableSubtitle(video, subtitle)
-
     // MARKER
 
     // TODO: history
@@ -308,71 +282,21 @@
         videoData.paused = false
         pausedByEdit = false
     }
-
-    $: mediaStyleString = `width: 100%;height: 100%;filter: ${mediaStyle.filter || ""};object-fit: ${mediaStyle.fit === "blur" ? "contain" : mediaStyle.fit || "contain"};transform: scale(${mediaStyle.flipped ? "-1" : "1"}, ${mediaStyle.flippedY ? "-1" : "1"});`
-    $: mediaStyleBlurString = `position: absolute;filter: ${mediaStyle.filter || ""} blur(${mediaStyle.fitOptions?.blurAmount ?? 6}px) opacity(${mediaStyle.fitOptions?.blurOpacity || 0.3});object-fit: cover;width: 100%;height: 100%;transform: scale(${mediaStyle.flipped ? "-1" : "1"}, ${mediaStyle.flippedY ? "-1" : "1"});`
-
-    let blurVideo: HTMLVideoElement | undefined
-    $: if (blurVideo && (videoTime < blurVideo.currentTime - 0.3 || videoTime > blurVideo.currentTime + 0.3)) blurVideo.currentTime = videoTime
-    $: if (!videoData.paused && blurVideo?.paused) blurVideo.play()
-    $: blurPausedState = videoData.paused
-
-    onDestroy(() => {
-        const cleanupVideo = (el: HTMLVideoElement | null | undefined) => {
-            if (!el) return
-            try {
-                el.pause()
-                el.removeAttribute("src")
-                el.load()
-            } catch (e) {
-                console.error("Error cleaning up video element in VideoShow:", e)
-            }
-        }
-        cleanupVideo(video)
-        cleanupVideo(blurVideo)
-        cleanupVideo(softLoopVideo)
-    })
-
-    // WIP if paused on mount, blur video does not get paused
-
-    // Soft loop
-
-    $: softLoopValue = videoData.softLoop ?? mediaStyle.softLoop ?? 0
-    $: fromTime = mediaStyle.fromTime || 0
-    $: toTime = mediaStyle.toTime || 0
-
-    const softLoopSync = new SoftLoopSync()
-    onDestroy(() => softLoopSync.destroy())
-
-    let softLoopAudioTime: number | undefined
-    $: effectiveSoftLoopOpacity = softLoopSync.update(softLoopOpacity, videoTime, fromTime, softLoopValue, video || null, softLoopVideo, videoData.paused, toTime, softLoopAudioTime)
 </script>
 
 {#key mediaPath || showId}
     <div id={mediaPath || showId} class="media context #media_preview" style="flex: 1;overflow: hidden;">
-        <!-- TODO: info about: CTRL click to play at current pos -->
-        <HoverButton hide={playingInOutput} icon="play" size={10} on:click={(e) => playVideo(e.ctrlKey || e.metaKey ? videoTime : 0)}>
-            {#if type === "player"}
+        {#if type === "player"}
+            <!-- TODO: info about: CTRL click to play at current pos -->
+            <HoverButton hide={playingInOutput} icon="play" size={10} on:click={(e) => playVideo(e.ctrlKey || e.metaKey ? videoTime : 0)}>
                 <Player id={showId} {outputId} preview />
-            {:else if mediaPath}
-                <!-- TODO: use Video.svelte element instead -->
-                <!-- TODO: on:error={videoError} - ERR_FILE_NOT_FOUND -->
-                {#if mediaStyle.fit === "blur"}
-                    <video style={mediaStyleBlurString} src={encodeFilePath(mediaPath)} bind:this={blurVideo} bind:paused={blurPausedState} loop={videoData.loop} muted />
-                {/if}
-                {@const mainVol = $audioChannelsData.main?.volume ?? 1}
-                <video style={mediaStyleString} src={encodeFilePath(mediaPath)} on:loadedmetadata={onLoad} on:playing={onPlay} bind:this={video} bind:currentTime={videoTime} bind:paused={videoData.paused} bind:duration={videoData.duration} bind:muted={videoData.muted} volume={Math.min(1, Math.max(0, mainVol))} loop={videoData.loop}>
-                    <track kind="captions" src="" label="No captions available" />
-                    {#each tracks as track}
-                        <track label={track.name} srclang={track.lang} kind="subtitles" src="data:text/vtt;charset=utf-8,{encodeURI(track.vtt)}" />
-                    {/each}
-                </video>
-
-                {#if softLoopValue > 0 && videoData.loop}
-                    <video style="{mediaStyleString} position: absolute;top: 0;left: 0;transition: 0.2s opacity;opacity: {effectiveSoftLoopOpacity};pointer-events: none;" bind:this={softLoopVideo} src={encodeFilePath(mediaPath)} muted loop={videoData.loop} />
-                {/if}
-            {/if}
-        </HoverButton>
+            </HoverButton>
+        {:else if mediaPath}
+            <!-- cabine 6 (D26): o centro mostra um CARTAO (miniatura, nome, duracao, tocar/pausar/parar), nunca abre o arquivo de video -->
+            <div class="cartao-centro">
+                <AliancaCentroVideo {mediaPath} nome={show?.name || removeExtension(getFileName(mediaPath))} bind:duracao={duracaoDoCartao} on:tocar={(e) => playVideo(e.detail.noPonto ? videoTime : 0)} />
+            </div>
+        {/if}
     </div>
 {/key}
 
@@ -455,12 +379,12 @@
         </FloatingInputs>
     {/if}
 
-    {#if playingInOutput}
-        <!-- controles de transporte: o operador aperta varias vezes de proposito (fora da trava de clique repetido) -->
+    {#if type === "player" && playingInOutput}
+        <!-- controles de transporte do player online: o operador aperta varias vezes de proposito (fora da trava de clique repetido) -->
         <div data-sem-trava style="display: contents;">
             <MediaControls {currentOutput} {outputId} big />
         </div>
-    {:else}
+    {:else if !playingInOutput}
         <FloatingInputs arrow={type === "video"} let:open>
             <div slot="menu" data-sem-trava style="display: flex;min-width: 500px;">
                 <!-- (A7) sem tocar/pausar/mudo da previa: o centro e um quadro parado; a barra so escolhe o quadro (e o ponto de partida do Ctrl+clique) -->
@@ -499,6 +423,14 @@
 {/if}
 
 <style>
+    .cartao-centro {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 16px;
+        display: flex;
+        overflow: auto;
+    }
     .scroll {
         display: flex;
         overflow-x: auto;
