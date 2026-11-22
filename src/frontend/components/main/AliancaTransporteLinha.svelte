@@ -1,6 +1,6 @@
 <script lang="ts">
     // Cabine 18/nov, C2: o cartao de transporte de UMA midia (video ou audio), compacto e quieto: 2 linhas de 24 px = 60 px.
-    //   linha 1: tocar/pausar, [ponto vermelho = esta no telao], nome, [etiqueta da saida, so quando ha duvida], o que FALTA (o decorrido so aparece enquanto se arrasta a barra)
+    //   linha 1: tocar/pausar (D25: pausa suave de 0,7 s), parar (D27: tira do ar), [ponto vermelho = esta no telao], nome, [etiqueta da saida, so quando ha duvida], o que FALTA (o decorrido so aparece enquanto se arrasta a barra)
     //   linha 2: barra (alvo de 24 px de altura, toda a largura que sobra), a casa fixa do repetir, mudo e volume
     // So apresentacao: quem liga ao player e o AliancaTransporteVideo / AliancaTransporte. O que a fonte nao tem (repetir/mudo no audio) chega `null` e a casa nao existe.
     import { createEventDispatcher } from "svelte"
@@ -19,8 +19,10 @@
     export let travada = false
     export let noTelao = false
     export let tipo: "video" | "audio" = "video"
+    /** D25: a pausa suave esta correndo (o botao ja mostra "tocar"; clicar cancela e a midia segue tocando) */
+    export let pausando = false
 
-    const dispatch = createEventDispatcher<{ alternar: void; comecar: number; mover: number; soltar: number; repetir: void; mudo: void; volume: number; volumefim: number }>()
+    const dispatch = createEventDispatcher<{ alternar: void; parar: void; comecar: number; mover: number; soltar: number; repetir: void; mudo: void; volume: number; volumefim: number }>()
     let total = false
     let arrastando = false
     $: falta = restante(duracao, atual)
@@ -31,7 +33,7 @@
 
 <div class="tk" data-transporte={tipo} data-sem-trava style="--cor: {cor}">
     <div class="tk-a">
-        <button type="button" class="q p" tabindex="-1" disabled={travada} aria-label={pausado ? "Tocar" : "Pausar"} data-title={pausado ? "Tocar" : "Pausar"} data-acao="transporte-tocar" on:mousedown|preventDefault on:click={() => dispatch("alternar")}>
+        <button type="button" class="q p" tabindex="-1" disabled={travada} aria-label={pausado ? "Tocar" : "Pausar"} data-title={pausando ? "Pausando… (clique: continuar tocando)" : pausado ? "Tocar" : "Pausar (desacelera até parar)"} data-pausando={pausando || null} data-acao="transporte-tocar" on:mousedown|preventDefault on:click={() => dispatch("alternar")}>
             <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
                 {#if pausado}
                     <path d="M4.5 2.8v10.4L13 8z" fill="currentColor" />
@@ -39,6 +41,10 @@
                     <path d="M5 3v10 M11 3v10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none" />
                 {/if}
             </svg>
+        </button>
+        <!-- D27: Parar = tira do ar (video: limpa o fundo daquele arquivo, como o F1; audio: limpa aquele audio, como o F4). Lugar fixo: nada entra nem sai ao dar play -->
+        <button type="button" class="q" tabindex="-1" disabled={travada} aria-label="Parar" data-title={tipo === "video" ? "Parar: tira o vídeo do ar" : "Parar: tira o áudio do ar"} data-acao="transporte-parar" on:mousedown|preventDefault on:click={() => dispatch("parar")}>
+            <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4h8v8H4z" fill="currentColor" /></svg>
         </button>
         {#if noTelao}<i class="pt" data-title="No telão" data-transporte-ponto></i>{/if}
         <span class="nome" data-title={nome}>{nome || "—"}</span>
