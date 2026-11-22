@@ -149,6 +149,10 @@ Corte por vídeo existe (`aliancaSpotifyComSom*.ts`), sempre ligado, sem voltar;
 - **D25 — Transporte: botões Pausar e Parar.** O **Pausar desacelera numa curva até parar** (sem congelar brusco no ar). Vale para vídeo (e confirmar áudio/Spotify).
 - **D26 — Clicar num vídeo não mostra o vídeo grande no centro.** No lugar, um cartão grande com a miniatura do vídeo e talvez os controles. (Bônus: tira mais uma decodificação, o `VideoShow.svelte:364`.)
 
+- **D27 — Parar = limpa** (tira o vídeo/áudio do ar). **Pausar suave** vale para vídeo **e áudio** (se possível). **Duração fixa de 0,7 s** (curva de desaceleração; nada de ajuste).
+- **D28 — Abaixo do "No ar" fica como está:** as abas de cada saída ("Outras telas"), que abrem ou fecham. Só muda por dentro: a prévia vem da captura da janela da saída (pode ser mais simples), sem decodificar o vídeo de novo.
+- **D29 — Passo intermediário do vídeo aprovado para preparo** (diffs em lote para o "aprovo"); teste na igreja (F0) em 23/nov.
+
 ## Resultados das provas (22/nov, perfil de teste isolado, PC de dev RTX 3080 Ti)
 
 - **1.0 — LED: opção A escolhida.** Janela 896×320 na origem do monitor, `screen` nulo, cadeado, `outputResolutionAsRatio`: slide cai em x 0..895, y 0..319, os 4 cantos no pixel exato. Opção B (monitor inteiro + recorte) **reprovada**: `Zoomed` gera `margin-inline-start: 234.67px; margin-top: -176px`, slide desloca 234 px e perde os cantos 2 e 4.
