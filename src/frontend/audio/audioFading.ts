@@ -3,7 +3,7 @@
 import { get } from "svelte/store"
 import { customActionActivation } from "../components/actions/actions"
 import { stopMetronome } from "../components/drawer/audio/metronome"
-import { activePlaylist, audioPlaylists, isFadingOut, playingAudio, special } from "../stores"
+import { activePlaylist, isFadingOut, playingAudio, special } from "../stores"
 import { AudioPlayer } from "./audioPlayer"
 import { AudioPlaylist } from "./audioPlaylist"
 import { AudioAnalyser } from "./audioAnalyser"
@@ -201,35 +201,17 @@ export function fadeoutAllPlayingAudio() {
     async function fadeoutAudio(path: string, audio: HTMLAudioElement) {
         const faded = await fadeAudio(path, audio, get(special).audio_fade_duration ?? 1.5)
         if (faded && !clearing.includes(path)) {
-            audio.pause()
-            // analyseAudio()
+            // derrubado pelo video: pausa de verdade (o cartao mostra pausado) e nunca volta sozinho (regra do Andre, 22/nov)
+            AudioPlayer.pause(path)
         }
     }
 }
 export function fadeinAllPlayingAudio() {
     if (!isAllAudioFading) return
     isFadingOut.set(false)
-
-    let fadeToVolume = 1
-    if (get(activePlaylist)?.id) {
-        const playlist = get(audioPlaylists)[get(activePlaylist).id]
-        fadeToVolume = (playlist?.volume ?? 1) * fadeToVolume
-    }
-
-    Object.entries(get(playingAudio)).forEach(([path, { audio, replayGainMultiplier }]) => {
-        if (audio && !clearing.includes(path)) {
-            fadeinAudio(path, audio, replayGainMultiplier || 1)
-        }
-    })
-
+    // Regra "nada volta sozinho" (Andre, 22/nov): o audio derrubado pelo video fica pausado;
+    // o operador retoma a mao (o play restaura o volume em audioPlayer.ts:323).
     isAllAudioFading = false
-
-    async function fadeinAudio(path: string, audio: HTMLAudioElement, gainMultiplier = 1) {
-        if (clearing.includes(path)) return
-        audio.play().catch(() => {})
-        await fadeAudio(path, audio, get(special).audio_fade_duration ?? 1.5, true, Math.min(1, fadeToVolume * gainMultiplier))
-        // if (faded) analyseAudio()
-    }
 }
 
 function stopFade(fadeId: string, result = true) {

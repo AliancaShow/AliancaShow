@@ -119,6 +119,10 @@ export const EXCECOES = {
     "src/frontend/utils/bibliasEmbutidas.ts": {
         "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): registra cada .fsb embutida sem duplicar NVI/ARA, corrige registro antigo e alerta alto quando falta arquivo; so roda na janela principal (updateSyncedSettings)",
         "sha": "9a11d8d01cf6312e4639768b765c5904ecb88c9c161e8428f1d97ce5fb29a824"
+    },
+    "src/frontend/audio/audioFading.ts": {
+        "motivo": "cabine-6 D11 (aprovado pelo André 22/nov, \"aprovo Fading\"): regra \"nada volta sozinho\": audio derrubado pelo video pausa de verdade (AudioPlayer.pause) e fadeinAllPlayingAudio nao religa mais. So a janela principal toca audio; a saida nao chama estas funcoes",
+        "sha": "45bb774c8372658b97a61ba7f8d2c307a223a106bb368f9295c898a9e318484b"
     }
 }
 
@@ -145,7 +149,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "6933e5fe27ccfd11dcc04cb58b5b6dc9eecc0afe19ee06e653d8874c7555b44a"
+export const SHA_EXCECOES = "d07e136cb2241c5e706241f0036c8f95395f86c482416ccff2811330015aca0d"
 export const SHA_NOVOS = "fda7eab12fe65bd4b503d4f8a7e3a0c96831aa99a94b3bd1409990db7c3c5907"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
