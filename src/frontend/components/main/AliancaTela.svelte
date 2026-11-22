@@ -14,6 +14,7 @@
     import Preview from "../output/preview/Preview.svelte"
     import { activePage, activeProfile, activeShow, outputs, saved, showChangeProfileMenu, special } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
+    import { vigiarAjustesDeMidia } from "../../utils/aliancaMidiaSalva"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
@@ -36,6 +37,8 @@
     // AGORA (na criacao, antes dos filhos): o ouvinte de Esc tem de rodar na captura ANTES dos popovers, que tambem capturam.
     const soltarTravas = ligarTravasDeToque()
     onDestroy(soltarTravas)
+    // 22/nov: ajuste de imagem/video (encaixe, filtros, espelhar, volume...) marca "nao salvo"; antes fechar o app perdia o ajuste
+    onDestroy(vigiarAjustesDeMidia())
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"
