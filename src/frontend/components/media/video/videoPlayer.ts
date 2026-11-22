@@ -66,12 +66,20 @@ export type PlayingVideoState = {
     softLoopOpacity?: number
     type?: "background" | "item"
     isFadingOut?: boolean
+    /** AliancaShow D25: multiplicador da velocidade durante a pausa suave (as saidas desaceleram junto com o relogio) */
+    rampa?: number
 }
 
 export class VideoPlayer {
     private static replayGainCache: Map<string, number> = new Map()
 
     private static isStarting = new Set<string>()
+    /** AliancaShow D25 (pausa suave, aliancaPausaSuave.ts): caminho -> multiplicador da velocidade enviado as saidas enquanto desacelera */
+    static rampa = new Map<string, number>()
+    /** AliancaShow D25: empurra o estado as saidas agora (a curva da pausa suave anda em passos de 35 ms, mais finos que o relogio de 100 ms) */
+    static sincronizarAgora() {
+        this.syncState()
+    }
     static async start(id: string, options: VideoOptions = {}, linkedOutputIds?: string[]): Promise<boolean> {
         if (!id) return false
 
@@ -788,7 +796,8 @@ export class VideoPlayer {
                         softLoop,
                         softLoopOpacity,
                         type: video.type || "background",
-                        isFadingOut: this.isFadingOut.includes(video.path)
+                        isFadingOut: this.isFadingOut.includes(video.path),
+                        rampa: this.rampa.get(video.path)
                     }
                 })
 
@@ -821,7 +830,7 @@ export class VideoPlayer {
                 } catch {}
                 delete (video as any).crossfadeAudio
             }
-            if (audio instanceof HTMLAudioElement && !this.isFadingOut.includes(video.path) && !this.isFadingIn.includes(video.path)) {
+            if (audio instanceof HTMLAudioElement && !this.isFadingOut.includes(video.path) && !this.isFadingIn.includes(video.path) && !this.rampa.has(video.path)) {
                 const vol = this.getVolume(video.path) * (video.replayGainMultiplier ?? 1)
                 audio.volume = Math.min(1, Math.max(0, vol))
                 AudioAnalyser.setSourceVolume(video.path, Math.max(0, vol))
@@ -841,7 +850,7 @@ export class VideoPlayer {
                 } catch {}
                 delete (video as any).crossfadeAudio
             }
-            if (audio instanceof HTMLAudioElement && !this.isFadingOut.includes(video.path) && !this.isFadingIn.includes(video.path)) {
+            if (audio instanceof HTMLAudioElement && !this.isFadingOut.includes(video.path) && !this.isFadingIn.includes(video.path) && !this.rampa.has(video.path)) {
                 const vol = this.getVolume(video.path) * (video.replayGainMultiplier ?? 1)
                 audio.volume = Math.min(1, Math.max(0, vol))
                 AudioAnalyser.setSourceVolume(video.path, Math.max(0, vol))

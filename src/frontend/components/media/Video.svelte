@@ -37,7 +37,7 @@
             let lastSyncedTime: number | null = null
             unsubscribeSync = videoSync(targetPath, outputId, (data) => {
                 const isSoftLoop = !!(data.softLoop && data.softLoop > 0)
-                syncVideoToAudio(video, data.currentTime, lastSyncedTime, isSoftLoop, targetPlaybackRate, data.isFadingOut)
+                syncVideoToAudio(video, data.currentTime, lastSyncedTime, isSoftLoop, targetPlaybackRate * (data.rampa ?? 1), data.isFadingOut)
                 if (data.currentTime !== undefined) lastSyncedTime = data.currentTime
 
                 if (videoData.loop !== data.loop) videoData.loop = data.loop
