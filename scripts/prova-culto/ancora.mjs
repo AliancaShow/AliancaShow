@@ -123,6 +123,10 @@ export const EXCECOES = {
     "src/frontend/audio/audioFading.ts": {
         "motivo": "cabine-6 D11 (aprovado pelo André 22/nov, \"aprovo Fading\"): regra \"nada volta sozinho\": audio derrubado pelo video pausa de verdade (AudioPlayer.pause) e fadeinAllPlayingAudio nao religa mais. So a janela principal toca audio; a saida nao chama estas funcoes",
         "sha": "45bb774c8372658b97a61ba7f8d2c307a223a106bb368f9295c898a9e318484b"
+    },
+    "src/electron/output/helpers/OutputLifecycle.ts": {
+        "motivo": "cabine-6 1a (aprovado pelo André 22/nov, \"aprovo resize\"): o handler de `resize` da janela de saida tinha a condicao invertida (veio assim do FreeShow 1.6.5): com mover desligado, todo resize feito pelo Windows (LED perde/volta sinal, DPI) gravava os limites. Agora espelha o `move`: so grava quando o operador esta movendo. Nada do que a saida desenha muda",
+        "sha": "4993070ea33f4935c4bfbff64e5f1aa3b9c6caff440ba6d18642b518797ed691"
     }
 }
 
@@ -149,7 +153,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "d07e136cb2241c5e706241f0036c8f95395f86c482416ccff2811330015aca0d"
+export const SHA_EXCECOES = "3c9bef860a389713ac263195e9d37acff89680a941274a8af8cb07b552624b44"
 export const SHA_NOVOS = "fda7eab12fe65bd4b503d4f8a7e3a0c96831aa99a94b3bd1409990db7c3c5907"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")

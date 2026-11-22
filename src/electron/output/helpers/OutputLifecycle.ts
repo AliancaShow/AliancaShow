@@ -221,7 +221,7 @@ export class OutputLifecycle {
 
         // @ts-ignore
         window.on("resize", (e: Electron.Event) => {
-            if (OutputHelper.Bounds.moveEnabled || OutputHelper.Bounds.updatingBounds || OutputHelper.getOutput(id).boundsLocked) return e.preventDefault()
+            if (!OutputHelper.Bounds.moveEnabled || OutputHelper.Bounds.updatingBounds || OutputHelper.getOutput(id).boundsLocked) return e.preventDefault()
 
             const bounds = window.getBounds()
             toApp(OUTPUT, { channel: "MOVE", data: { id, bounds } })
