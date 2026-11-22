@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>AliançaShow — Rodada da cabine 18/nov · C1–C6 (tema Luz)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fundo:#0d0d0f; --painel:rgba(19,19,21,.62); --painel-opaco:#131315; --pop:#1c1c1f;
+  --texto:#f8f8f0; --mudo:rgba(248,248,240,.5); --fraco:rgba(248,248,240,.3);
+  --linha:rgba(248,248,240,.075); --borda:rgba(248,248,240,.13); --borda-forte:rgba(248,248,240,.3);
+  --campo:rgba(248,248,240,.06); --hover:rgba(248,248,240,.1); --trilho:rgba(0,0,0,.28);
+  --vermelho:#f21a27; --vermelho-lav:rgba(242,26,39,.12); --vermelho-claro:#ff9aa0;
+  --verde:#5ec48d; --verde-lav:rgba(94,196,141,.14);
+  --ambar:#f1d278; --laranja:#eba640; --laranja-lav:rgba(235,166,64,.14); --tinta:#161616;
+  --sombra-pop:0 18px 40px rgba(0,0,0,.5); --raio:14px;
+  --fonte:Archivo,"AliancaUI Archivo","Segoe UI",system-ui,sans-serif;
+  --z:1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050506;color:var(--texto);font-family:var(--fonte);font-variation-settings:"wdth" 96;-webkit-font-smoothing:antialiased;font-size:13px}
+button{font:inherit;color:inherit}
+svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+svg.i.s14{width:14px;height:14px} svg.i.s18{width:18px;height:18px} svg.i.s12{width:12px;height:12px}
+svg.i.ch{fill:currentColor;stroke:none}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(248,248,240,.14);border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+
+/* ============ mesa (o board) ============ */
+.cab-mesa{position:sticky;left:0;top:0;z-index:50;display:flex;align-items:center;gap:16px;padding:14px 28px;background:#050506;border-bottom:1px solid var(--linha);width:100vw}
+.cab-mesa h1{margin:0;font-size:17px;font-weight:700;font-variation-settings:"wdth" 118;letter-spacing:-.01em}
+.cab-mesa h1 span{color:var(--mudo);font-weight:500}
+.cab-mesa .z{margin-left:auto;display:flex;gap:2px;padding:3px;background:var(--trilho);border-radius:10px;box-shadow:inset 0 0 0 1px var(--linha)}
+.cab-mesa .z button{height:30px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:var(--mudo);font-size:12px;font-weight:600;cursor:pointer}
+.cab-mesa .z button.a{background:var(--texto);color:var(--tinta)}
+.cab-mesa nav{display:flex;gap:6px}
+.cab-mesa nav a{color:var(--mudo);text-decoration:none;font-size:12px;font-weight:600;padding:6px 10px;border-radius:6px;border:1px solid var(--borda)}
+.cab-mesa nav a:hover{color:var(--texto);background:var(--hover)}
+.mesa{display:flex;gap:96px;padding:36px 28px 80px;width:max-content;zoom:var(--z);align-items:flex-start}
+.prancha{width:1920px;flex-shrink:0}
+.prancha>header{display:flex;align-items:baseline;gap:14px;margin-bottom:14px}
+.prancha>header b{font-family:Montserrat,"Arial Black",sans-serif;font-weight:900;font-size:34px;letter-spacing:-.02em}
+.prancha>header span{font-size:17px;font-weight:600;font-variation-settings:"wdth" 110}
+.prancha>header em{font-style:normal;color:var(--mudo);font-size:13px;margin-left:auto}
+.quadro{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--fundo);border-radius:6px;box-shadow:0 0 0 1px var(--borda)}
+.quadro .luz{position:absolute;inset:0;pointer-events:none;opacity:.55;background:radial-gradient(70% 90% at 78% 28%,#5b3aa8 0%,transparent 62%),radial-gradient(60% 80% at 25% 90%,#b4366b 0%,transparent 60%),linear-gradient(160deg,#2a1650,#120a22)}
+.quadro .veu{position:absolute;inset:0;pointer-events:none;background:radial-gradient(130% 100% at 60% 40%,transparent 30%,#0d0d0f 95%)}
+.quadro>.c{position:absolute;inset:0}
+.notas{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:16px}
+.notas div{font-size:15px;line-height:1.45;color:rgba(248,248,240,.82)}
+.notas h4{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--mudo)}
+.notas code{font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;color:var(--ambar)}
+.leg{position:absolute;font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--mudo);text-transform:uppercase}
+.leg b{color:var(--texto)}
+.cota{font-size:12px;color:var(--mudo);line-height:1.4}
+.cota b{color:var(--texto);font-weight:600}
+
+/* ============ peças comuns ============ */
+.p{background:var(--painel);border-radius:14px;box-shadow:inset 0 0 0 1px var(--linha)}
+.po{background:var(--painel-opaco);border-radius:14px;box-shadow:inset 0 0 0 1px var(--linha)}
+.rot{font-size:12px;font-weight:600;color:var(--mudo);letter-spacing:.04em}
+.ib{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--borda);border-radius:6px;background:var(--campo);color:var(--texto);cursor:pointer;flex-shrink:0}
+.ib:hover{background:var(--hover)}
+.ib.lig{background:var(--texto);color:var(--tinta);border-color:var(--texto)}
+.chip{height:30px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--borda);border-radius:15px;font-size:12px;font-weight:600;background:transparent}
+.chip.a{background:var(--texto);color:var(--tinta);border-color:var(--texto)}
+.seg{display:flex;gap:2px;padding:3px;background:var(--trilho);box-shadow:inset 0 0 0 1px var(--linha);border-radius:10px}
+.seg button{height:30px;padding:0 16px;border:0;border-radius:7px;background:transparent;color:var(--mudo);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.seg button.a{background:var(--texto);color:var(--tinta)}
+.tag{font-size:10px;font-weight:700;border-radius:4px;padding:2px 6px;line-height:14px;display:inline-block}
+.tag.ar{background:var(--vermelho);color:#fff}
+.tag.novo{background:var(--ambar);color:var(--tinta)}
+.tag.hoje{background:var(--verde-lav);color:var(--verde)}
+
+/* ============ C1 — cartão de mídia ============ */
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(166px,1fr));gap:10px;align-content:start}
+.mc{position:relative;background:var(--campo);border-radius:8px;padding:4px;box-shadow:inset 0 0 0 1px var(--linha);display:flex;flex-direction:column;min-width:0}
+.mc .th{position:relative;aspect-ratio:16/9;border-radius:5px;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#000}
+.mc .dur{position:absolute;top:5px;right:5px;height:18px;padding:0 5px;display:flex;align-items:center;gap:3px;border-radius:4px;background:rgba(0,0,0,.72);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff}
+.mc .mais{position:absolute;right:5px;bottom:5px;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(13,13,15,.86);box-shadow:inset 0 0 0 1px rgba(248,248,240,.3);color:var(--texto);cursor:pointer}
+.mc .mais.ok{color:var(--verde);box-shadow:inset 0 0 0 1px rgba(94,196,141,.5)}
+.mc .pe{height:30px;display:flex;align-items:center;gap:2px;padding:2px 0 0 6px;min-width:0}
+.mc .nm{flex:1;min-width:0;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc .eng{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;color:var(--mudo);cursor:pointer;flex-shrink:0}
+.mc .dica{position:absolute;left:5px;bottom:5px;height:20px;padding:0 7px 0 5px;display:none;align-items:center;gap:4px;border-radius:4px;background:rgba(13,13,15,.86);font-size:10px;font-weight:700;letter-spacing:.04em;color:#fff}
+.mc .selo{position:absolute;top:5px;left:5px;display:none}
+/* hover */
+.mc.hover,.mc:hover{background:var(--hover);box-shadow:inset 0 0 0 1px var(--borda-forte)}
+.mc.hover .dica,.mc:hover .dica{display:flex}
+.mc.hover .eng,.mc:hover .eng{color:var(--texto)}
+.mc.hover .th::after,.mc:hover .th::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 2px rgba(248,248,240,.85);border-radius:5px;pointer-events:none}
+/* no ar */
+.mc.ar{background:var(--vermelho);box-shadow:0 0 0 2px var(--vermelho)}
+.mc.ar .selo{display:block}
+.mc.ar .nm{color:#fff}.mc.ar .eng{color:rgba(255,255,255,.85)}
+.mc.ar .dica{display:none!important}
+.mc.ar .th::after{display:none}
+/* trava 400 ms */
+.mc.trava .th{filter:brightness(.6)}
+.mc.trava .th::before{content:"";position:absolute;left:0;bottom:0;height:3px;width:55%;background:#fff;z-index:2}
+/* arquivo sumiu */
+.mc.falta{box-shadow:inset 0 0 0 1px rgba(235,166,64,.55);background:var(--laranja-lav)}
+.mc.falta .th{cursor:not-allowed;background:#0b0b0a;color:var(--laranja);flex-direction:column;gap:4px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.mc.falta .nm{color:var(--laranja)}
+/* foco de teclado */
+.mc.foco{outline:2px solid var(--texto);outline-offset:2px}
+/* thumbs falsos */
+.t-txt{font-family:Montserrat,"Arial Black",sans-serif;font-weight:900;color:#fff;text-align:center;line-height:1.05;text-shadow:0 2px 10px rgba(0,0,0,.45)}
+.lg{font-family:Archivo,sans-serif;font-variation-settings:"wdth" 118;font-weight:700;letter-spacing:-.02em;color:#fff;font-size:17px;opacity:.95}
+.dig{font-family:"JetBrains Mono",Consolas,monospace;font-weight:700;color:#fff;letter-spacing:.04em}
+
+/* ============ biblioteca (recorte) ============ */
+.bib{display:flex;flex-direction:column;overflow:hidden}
+.bib-top{height:48px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px}
+.busca{height:32px;width:300px;border:1px solid var(--borda);border-radius:8px;background:var(--campo);display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--mudo);font-size:12px}
+.bib-corpo{flex:1;min-height:0;display:flex}
+.arv{width:228px;flex-shrink:0;padding:0 8px 8px;overflow:hidden;border-right:1px solid var(--linha)}
+.arv .g{font-size:11px;font-weight:600;color:var(--fraco);padding:10px 8px 4px}
+.arv .it{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;border-radius:6px;font-size:13px;font-weight:500}
+.arv .it.a{background:var(--hover);font-weight:600}
+.arv .it span{font-size:11px;color:var(--mudo);font-variant-numeric:tabular-nums}
+
+/* ============ C2 — coluna No ar + transporte ============ */
+.col{display:flex;flex-direction:column;gap:10px;padding:12px;position:relative}
+.col-cab{display:flex;align-items:baseline;justify-content:space-between}
+.col-cab small{font-size:11px;color:var(--mudo)}
+.prog-l{display:flex;gap:4px;align-items:stretch;flex-shrink:0}
+.prog{flex:1;min-width:0;aspect-ratio:16/9;border-radius:6px;background:#000;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--vermelho)}
+.prog.quieto{box-shadow:inset 0 0 0 1px var(--borda)}
+.prog.ret{box-shadow:0 0 0 2px var(--laranja)}
+.cam{width:30px;display:flex;flex-direction:column;gap:3px}
+.cam .ib{width:30px;height:auto;flex:1;color:var(--mudo)}
+.cam .ib.tem{color:var(--texto)}
+.cam .ib.x{color:var(--vermelho-claro);border-color:rgba(242,26,39,.5);background:var(--vermelho-lav)}
+.tcs{display:flex;flex-direction:column;gap:8px}
+.tc{background:var(--campo);border-radius:10px;box-shadow:inset 0 0 0 1px var(--linha);padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.tc-n{display:flex;align-items:center;gap:7px;min-width:0;height:18px}
+.tc-n .pt{width:8px;height:8px;border-radius:4px;background:var(--vermelho);flex-shrink:0}
+.tc-n .nm{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-n .nm i{font-style:normal;font-weight:400;color:var(--mudo)}
+.tc-n .sd{flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--texto);border-radius:4px;padding:0 6px;line-height:18px;box-shadow:inset 0 0 0 1px var(--borda-forte)}
+.tc-b{display:flex;align-items:center;gap:8px;height:18px}
+.tc-b .t0{width:34px;font-size:12px;color:var(--mudo);font-variant-numeric:tabular-nums}
+.tc-b .t1{width:50px;text-align:right;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.bar{flex:1;height:16px;position:relative;cursor:pointer}
+.bar::before{content:"";position:absolute;left:0;right:0;top:6px;height:4px;border-radius:2px;background:rgba(248,248,240,.14)}
+.bar i{position:absolute;left:0;top:6px;height:4px;border-radius:2px;background:var(--texto)}
+.bar b{position:absolute;top:2px;width:12px;height:12px;margin-left:-6px;border-radius:6px;background:var(--texto);box-shadow:0 0 0 3px rgba(13,13,15,.6)}
+.tc-c{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tc-c .g{display:flex;align-items:center;gap:4px}
+.tc-c .toca{width:44px;height:32px;border-radius:8px;border:0;background:var(--texto);color:var(--tinta);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.tc-c .ib{width:30px;height:30px}
+.tc-c .vol{width:56px;flex:none;margin-left:4px}
+.tc-c .vol b{width:10px;height:10px;top:3px;margin-left:-5px}
+.outras{display:flex;flex-direction:column;gap:6px}
+.outras .seg{border-radius:7px;padding:2px;flex:1}
+.outras .seg button{height:26px;flex:1;justify-content:center;padding:0 8px;font-size:12px;border-radius:5px}
+
+/* ============ C3 — só retorno ============ */
+.fx-ret{height:32px;flex-shrink:0;margin:-12px -12px 0;border-radius:14px 14px 0 0;background:var(--laranja);color:var(--tinta);display:flex;align-items:center;gap:8px;padding:0 5px 0 12px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.fx-ret span{font-weight:500;letter-spacing:0;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.fx-ret button{height:24px;padding:0 10px;border:0;border-radius:6px 10px 6px 6px;background:var(--tinta);color:var(--laranja);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
+.aviso{height:48px;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--laranja);color:var(--tinta);position:relative;overflow:hidden}
+.aviso b{font-size:16px;font-weight:700;white-space:nowrap}
+.aviso span{font-size:13px;font-weight:500;opacity:.9;white-space:nowrap}
+.aviso .seta{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.aviso .tempo{position:absolute;left:0;bottom:0;height:3px;width:62%;background:var(--tinta);opacity:.55}
+
+/* ============ casca do app (C3) ============ */
+.topo{height:56px;display:flex;align-items:center;gap:12px;padding:0 4px}
+.marca{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:700;font-variation-settings:"wdth" 118;letter-spacing:-.01em;padding:0 10px 0 6px}
+.marca span{color:rgba(248,248,240,.42);font-weight:500}
+.pil{height:32px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:16px;font-size:12px;font-weight:600}
+.pil i{width:7px;height:7px;border-radius:4px;background:currentColor}
+.rt-it{height:34px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:6px;font-size:13px}
+.rt-it.a{background:var(--hover);font-weight:600}
+.rt-it small{margin-left:auto;font-size:11px;color:var(--mudo)}
+.sl{background:var(--campo);border-radius:8px;padding:4px;box-shadow:inset 0 0 0 1px var(--linha)}
+.sl .v{aspect-ratio:16/9;border-radius:5px;display:flex;align-items:center;justify-content:center;padding:8px;background:radial-gradient(90% 120% at 22% 18%,#5b3aa8 0%,transparent 60%),radial-gradient(80% 110% at 85% 90%,#b4366b 0%,transparent 62%),linear-gradient(160deg,#1d1446,#120a22);font-size:12px;position:relative}
+.sl .r{height:24px;display:flex;align-items:center;gap:6px;padding:0 4px;font-size:11px;font-weight:600}
+.sl .r i{width:6px;height:6px;border-radius:3px}
+.sl.ar{box-shadow:0 0 0 2px var(--vermelho);background:var(--vermelho)}
+.sl.rt{box-shadow:0 0 0 2px var(--laranja);background:var(--laranja);color:var(--tinta)}
+
+/* ============ C4 — campos Luz ============ */
+.cf-lista{width:236px;flex-shrink:0;padding:12px 8px;border-right:1px solid var(--linha);display:flex;flex-direction:column;gap:2px}
+.cf-lista .it{height:36px;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(248,248,240,.8);position:relative}
+.cf-lista .it.a{background:var(--hover);color:var(--texto);font-weight:600}
+.cf-lista .it.a::before{content:"";position:absolute;left:-8px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--texto)}
+.cf-lista hr{border:0;border-top:1px solid var(--linha);margin:8px 10px}
+.sec{display:flex;align-items:center;gap:10px;margin:22px 0 8px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--mudo)}
+.sec::after{content:"";flex:1;height:1px;background:var(--linha)}
+.sec.dob{cursor:pointer}
+.sec small{font-weight:400;letter-spacing:0;color:var(--fraco)}
+.cp{position:relative;height:44px;border:1px solid var(--borda);border-radius:6px;background:var(--campo);padding:20px 10px 0;font-size:13px;font-weight:500;display:flex;align-items:flex-start;gap:8px;min-width:0;flex:1}
+.cp>label{position:absolute;left:10px;top:5px;font-size:10.5px;font-weight:500;color:var(--mudo);white-space:nowrap;letter-spacing:.01em}
+.cp>label u{text-decoration:none;display:inline-block;width:5px;height:5px;border-radius:3px;background:var(--texto);margin-left:5px;vertical-align:middle}
+.cp .v{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:18px}
+.cp .v i{font-style:normal;color:var(--mudo);font-weight:400}
+.cp .dir{position:absolute;right:8px;top:0;bottom:0;display:flex;align-items:center;gap:4px;color:var(--mudo)}
+.cp.foco{border-color:var(--texto);box-shadow:0 0 0 3px rgba(248,248,240,.12)}
+.cp.des{opacity:.4}
+.cp .mini{width:84px;position:absolute;right:42px;top:14px}
+.lin{display:flex;gap:8px;margin-bottom:8px;align-items:stretch}
+.tg{height:44px;display:flex;align-items:center;gap:12px;padding:0 10px 0 10px;border:1px solid var(--borda);border-radius:6px;background:var(--campo);flex:1;font-size:13px;font-weight:500;min-width:0}
+.tg small{display:block;font-size:11px;color:var(--mudo);font-weight:400}
+.sw{margin-left:auto;width:38px;height:22px;border-radius:11px;background:rgba(248,248,240,.14);position:relative;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:8px;background:rgba(248,248,240,.6)}
+.sw.on{background:var(--texto)}.sw.on::after{left:19px;background:var(--tinta)}
+.bt{height:36px;padding:0 14px;border:1px solid var(--borda);border-radius:8px;background:var(--campo);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.bt.pri{background:var(--texto);color:var(--tinta);border-color:var(--texto)}
+.bt.fan{background:transparent;border-color:transparent;color:var(--mudo)}
+.cor{width:44px;flex:none;height:44px;border:1px solid var(--borda);border-radius:6px;padding:5px;background:var(--campo)}
+.cor i{display:block;width:100%;height:100%;border-radius:3px}
+.grp{display:flex;border:1px solid var(--borda);border-radius:6px;overflow:hidden;background:var(--campo);height:36px;flex:1}
+.grp button{flex:1;border:0;border-right:1px solid var(--borda);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mudo);font-weight:700;font-size:14px}
+.grp button:last-child{border-right:0}
+.grp button.a{background:var(--texto);color:var(--tinta)}
+.ck{height:36px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500}
+.ck i{width:18px;height:18px;border-radius:4px;border:1px solid var(--borda-forte);display:flex;align-items:center;justify-content:center}
+.ck.on i{background:var(--texto);border-color:var(--texto);color:var(--tinta)}
+
+/* ============ C5 — menu ============ */
+.menu{width:252px;background:var(--pop);border-radius:12px;box-shadow:inset 0 0 0 1px var(--borda),var(--sombra-pop);padding:6px;display:flex;flex-direction:column}
+.menu .mi{height:38px;display:flex;align-items:center;gap:12px;padding:0 10px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer}
+.menu .mi svg{color:var(--mudo)}
+.menu .mi.h{background:var(--hover)}.menu .mi.h svg{color:var(--texto)}
+.menu .mi small{margin-left:auto;font-size:11px;color:var(--mudo)}
+.menu hr{border:0;border-top:1px solid var(--linha);margin:5px 10px}
+.menu .tit{height:28px;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--mudo)}
+.tela-ed{aspect-ratio:16/9;border-radius:4px;background:radial-gradient(90% 120% at 22% 18%,#5b3aa8 0%,transparent 60%),radial-gradient(80% 110% at 85% 90%,#b4366b 0%,transparent 62%),linear-gradient(160deg,#1d1446,#120a22);display:flex;align-items:center;justify-content:center;position:relative}
+.ed-top{height:48px;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px;border-bottom:1px solid var(--linha)}
+
+/* ============ rodada 2 — C2 compacto, C3 tarja no lugar do cabeçalho, C6 árvore ============ */
+.slot{height:32px;flex-shrink:0;margin:-12px -12px 0;padding:0 12px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between}
+.slot small{font-size:11px;color:var(--mudo)}
+.tk{border-radius:8px;background:var(--trilho);padding:6px 8px 4px 6px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tk-a{display:flex;align-items:center;gap:6px;height:24px;min-width:0}
+.tk-b{display:flex;align-items:center;gap:2px;height:24px}
+.tk .q{width:24px;height:24px;border-radius:6px;border:0;padding:0;background:transparent;color:rgba(248,248,240,.6);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+.tk .q:hover{background:var(--hover);color:var(--texto)}
+.tk .q.p{box-shadow:inset 0 0 0 1px var(--borda);color:rgba(248,248,240,.85)}
+.tk .q.lig{color:var(--texto);background:var(--hover)}
+.tk .grp3{display:flex;gap:2px}
+.tk .pt{width:6px;height:6px;border-radius:3px;background:var(--vermelho);flex-shrink:0}
+.tk .nm{flex:1;min-width:0;font-size:12px;font-weight:500;color:rgba(248,248,240,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk .nm i{font-style:normal;color:var(--mudo)}
+.tk .sd{flex-shrink:0;font-size:9.5px;font-weight:700;letter-spacing:.05em;color:var(--mudo);border-radius:4px;padding:0 5px;line-height:16px;box-shadow:inset 0 0 0 1px var(--borda)}
+.tk .t1{flex-shrink:0;min-width:44px;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;color:rgba(248,248,240,.85)}
+.tk .bar{height:24px;margin:0 6px 0 4px}
+.tk .bar::before{top:10.5px;height:3px;background:rgba(248,248,240,.12)}
+.tk .bar i{top:10.5px;height:3px;background:rgba(248,248,240,.5)}
+.tk .bar b{top:7.5px;width:9px;height:9px;margin-left:-4.5px;background:rgba(248,248,240,.85);box-shadow:none}
+.tk .bar.vol{width:40px;flex:none;margin:0 2px}
+.risc{position:relative;filter:grayscale(1)}
+.risc>.tcs{opacity:.34}
+.risc::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top right,transparent calc(50% - 1px),rgba(248,248,240,.75) calc(50% - 1px),rgba(248,248,240,.75) calc(50% + 1px),transparent calc(50% + 1px))}
+.fx-ret b.rc{flex-shrink:0;font-weight:700}
+.fx-ret.rec{background:var(--tinta);color:var(--laranja);box-shadow:inset 0 0 0 2px var(--laranja)}
+.fx-ret.rec span{opacity:1;font-weight:600;letter-spacing:0}
+.fx-ret.rec button{background:var(--laranja);color:var(--tinta)}
+@keyframes pisca{0%,40%,80%{background:var(--laranja);color:var(--tinta)}20%,60%,100%{background:var(--tinta);color:var(--laranja)}}
+.fx-ret.rec.vai{animation:pisca .9s steps(1,end) 1}
+.regua{position:absolute;left:20px;height:0;border-top:1px dashed rgba(248,248,240,.55);pointer-events:none;z-index:3}
+.regua span{position:absolute;left:0;top:-17px;font-size:11px;font-weight:600;color:var(--texto);background:var(--fundo);padding:0 4px;border-radius:3px;font-variant-numeric:tabular-nums}
+.tr{width:230px;padding:6px;display:flex;flex-direction:column;overflow:hidden}
+.tr .no{height:30px;flex-shrink:0;display:flex;align-items:center;gap:4px;padding:0 8px 0 2px;border-radius:6px;font-size:13px;font-weight:600}
+.tr .no .st{width:18px;display:flex;justify-content:center;color:var(--mudo)}
+.tr .f{height:28px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 8px 0 24px;border-radius:6px;font-size:13px;font-weight:500;color:rgba(248,248,240,.8);white-space:nowrap}
+.tr .f svg{color:var(--mudo)}
+.tr .f.n3{padding-left:36px}
+.tr .ct{margin-left:auto;padding-left:8px;font-size:11px;font-weight:500;color:var(--mudo);font-variant-numeric:tabular-nums}
+.tr .sel{background:var(--hover);color:var(--texto);font-weight:600}
+.tr .sel .ct{color:var(--texto)}
+.tr .rt{flex-shrink:0;font-size:11px;font-weight:600;color:var(--fraco);padding:9px 8px 4px 24px}
+.tr .mais{color:var(--mudo);cursor:pointer}
+.tr .fio{flex-shrink:0;height:1px;background:var(--linha);margin:5px 8px 5px 24px}
+.tr .bvelho{flex-shrink:0;margin:6px 8px 6px 24px;height:30px;border:1px solid var(--borda-forte);border-radius:4px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:rgba(248,248,240,.8)}
+.tabela{font-size:13px;line-height:1.35;border-collapse:collapse;width:100%}
+.tabela td{padding:6px 10px 6px 0;border-bottom:1px solid var(--linha);vertical-align:top;color:rgba(248,248,240,.82)}
+.tabela td:first-child{color:var(--mudo);width:42%}
+.tabela b{color:var(--texto);font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ícones -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-play" viewBox="0 0 16 16"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 16 16"><path d="M5 3v10M11 3v10" stroke-width="2.6"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 16 16"><path d="M12.5 3.5v9L6 8z" fill="currentColor" stroke="none"/><path d="M4 3.5v9" stroke-width="2"/></symbol>
+    <symbol id="i-next" viewBox="0 0 16 16"><path d="M3.5 3.5v9L10 8z" fill="currentColor" stroke="none"/><path d="M12 3.5v9" stroke-width="2"/></symbol>
+    <symbol id="i-loop" viewBox="0 0 16 16"><path d="M3 7.5V7a2.5 2.5 0 0 1 2.5-2.5H13M11 2.5l2 2-2 2M13 8.5V9a2.5 2.5 0 0 1-2.5 2.5H3M5 9.5l-2 2 2 2"/></symbol>
+    <symbol id="i-vol" viewBox="0 0 16 16"><path d="M2.5 6h2.5l3-2.5v9L5 10H2.5zM11 5.5a3.5 3.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-xf" viewBox="0 0 16 16"><path d="M1.5 4.5h2.6c1 0 1.7.4 2.3 1.3l3.2 4.4c.6.9 1.3 1.3 2.3 1.3h2.6M1.5 11.5h2.6c1 0 1.7-.4 2.3-1.3M9.6 5.8c.6-.9 1.3-1.3 2.3-1.3h2.6M12.7 2.7l1.8 1.8-1.8 1.8M12.7 9.7l1.8 1.8-1.8 1.8"/></symbol>
+    <symbol id="i-xf2" viewBox="0 0 16 16"><path d="M1.5 4h3l7 8h3M1.5 12h3l7-8h3"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.8v1.7M8 12.5v1.7M1.8 8h1.7M12.5 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke-width="1.9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8" stroke-width="1.9"/></symbol>
+    <symbol id="i-film" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M5 3v10M11 3v10M2 8h3M11 8h3"/></symbol>
+    <symbol id="i-nota" viewBox="0 0 16 16"><path d="M6 12V3.5l7-1.5v8.5"/><circle cx="4.3" cy="12" r="1.7"/><circle cx="11.3" cy="10.5" r="1.7"/></symbol>
+    <symbol id="i-T" viewBox="0 0 16 16"><path d="M3 4V3h10v1M8 3v10M6 13h4"/></symbol>
+    <symbol id="i-img" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2.5 11l3.5-3.5 3 3 2-2 2.5 2.5"/><circle cx="10.5" cy="6" r="1"/></symbol>
+    <symbol id="i-cam" viewBox="0 0 16 16"><rect x="1.5" y="4" width="9" height="8" rx="1.5"/><path d="M10.5 7l4-2.2v6.4l-4-2.2"/></symbol>
+    <symbol id="i-timer" viewBox="0 0 16 16"><circle cx="8" cy="9" r="5"/><path d="M8 6.2V9l1.8 1.3M6.5 1.8h3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.4 1.6"/></symbol>
+    <symbol id="i-cam2" viewBox="0 0 16 16"><path d="M3 5.5h7v7H3zM6 3h7v7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke-width="1.9"/></symbol>
+    <symbol id="i-dn" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></symbol>
+    <symbol id="i-rt" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></symbol>
+    <symbol id="i-lf" viewBox="0 0 16 16"><path d="M10 4L6 8l4 4"/></symbol>
+    <symbol id="i-tela" viewBox="0 0 16 16"><rect x="1.5" y="3" width="13" height="8.5" rx="1.5"/><path d="M6 14h4M8 11.5V14"/></symbol>
+    <symbol id="i-lupa" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></symbol>
+    <symbol id="i-lista" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h10"/></symbol>
+    <symbol id="i-menos" viewBox="0 0 16 16"><path d="M3 8h10" stroke-width="1.9"/></symbol>
+    <symbol id="i-lapis" viewBox="0 0 16 16"><path d="M3 13l.6-2.8L10.8 3l2.2 2.2-7.2 7.2z"/></symbol>
+    <symbol id="i-som" viewBox="0 0 16 16"><path d="M3 10V6M6 12V4M9 11V5M12 13V3"/></symbol>
+    <symbol id="i-rede" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></symbol>
+    <symbol id="i-pasta" viewBox="0 0 16 16"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></symbol>
+    <symbol id="i-gente" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c.6-2.6 2.5-4 5-4s4.4 1.4 5 4"/></symbol>
+    <symbol id="i-pinc" viewBox="0 0 16 16"><path d="M9 3l4 4-5.5 5.5H3.5V8.5z"/></symbol>
+    <symbol id="i-mais3" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="12.5" cy="8" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-al-e" viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h7M2.5 12h9"/></symbol>
+    <symbol id="i-al-c" viewBox="0 0 16 16"><path d="M2.5 4h11M4.5 8h7M3.5 12h9"/></symbol>
+    <symbol id="i-al-d" viewBox="0 0 16 16"><path d="M2.5 4h11M6.5 8h7M4.5 12h9"/></symbol>
+    <symbol id="i-al-j" viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></symbol>
+    <symbol id="i-v-t" viewBox="0 0 16 16"><path d="M2.5 3h11M5 6h6v6H5z"/></symbol>
+    <symbol id="i-v-m" viewBox="0 0 16 16"><path d="M2 8h2M12 8h2M5 5h6v6H5z"/></symbol>
+    <symbol id="i-v-b" viewBox="0 0 16 16"><path d="M2.5 13h11M5 4h6v6H5z"/></symbol>
+    <symbol id="i-cad" viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></symbol>
+  </defs>
+</svg>
+
+<div class="cab-mesa">
+  <h1>aliança <span>show</span> &nbsp;·&nbsp; Rodada da cabine 18/nov <span>— desenho C1–C6, rodada 2 (retorno do dono), tema Luz, 1920×1080 a 100%</span></h1>
+  <nav><a href="#c1">C1 mídia</a><a href="#c2">C2 transporte</a><a href="#c3">C3 só retorno</a><a href="#c4">C4 config / propriedades</a><a href="#c5">C5 menu ＋</a><a href="#c6">C6 árvore</a><a href="#critica">autocrítica</a></nav>
+  <div class="z"><button data-z=".5">50%</button><button data-z=".75">75%</button><button data-z="1" class="a">100% · tamanho real</button></div>
+</div>
+
+<div class="mesa" id="mesa">
+
+<!-- =====================================================================  C1  -->
+<section class="prancha" id="c1">
+  <header><b>C1</b><span><span class="tag hoje" style="font-size:12px;vertical-align:3px;margin-right:8px">APROVADA</span>Grade de mídia — cartão com respiro, nome dentro, clique simples = ao ar</span><em>recorte da biblioteca em escala real + estados + zonas de clique a 200%</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+    <div class="leg" style="left:20px;top:16px">Biblioteca › Mídia · <b>escala real</b> · 1500 × 476 (7 colunas, 2,9 linhas visíveis — hoje são 8 colunas e 3,2 linhas)</div>
+    <div class="po bib" style="position:absolute;left:20px;top:40px;width:1500px;height:476px">
+      <div class="bib-top">
+        <span class="rot" style="margin-right:6px">BIBLIOTECA</span>
+        <span class="chip a">Vídeo</span><span class="chip">Áudio</span><span class="chip">Foto</span>
+        <span style="flex:1"></span>
+        <span class="cota" style="margin-right:6px">39 mídias</span>
+        <button class="ib" title="Cartões menores"><svg class="i"><use href="#i-menos"/></svg></button>
+        <button class="ib" title="Cartões maiores"><svg class="i"><use href="#i-plus"/></svg></button>
+        <button class="ib" title="Ver em lista"><svg class="i"><use href="#i-lista"/></svg></button>
+        <div class="busca"><svg class="i s14"><use href="#i-lupa"/></svg>Buscar música, trecho da letra ou versículo</div>
+      </div>
+      <div class="bib-corpo">
+        <div class="arv">
+          <div class="it">Shows</div><div class="it a">Mídia</div>
+          <div class="g">Pastas de mídia</div>
+          <div class="it a">Mídias <span>39</span></div><div class="it">Do Sirvo</div>
+          <div class="g">Pastas</div>
+          <div class="it">Aberturas e contadores <span>18</span></div>
+          <div class="it">Do ProPresenter (triar) <span>3</span></div>
+          <div class="it">Entrada (triar) <span>9</span></div>
+          <div class="it">Eventos <span>8</span></div>
+          <div class="it">Fundos <span>10</span></div>
+          <div class="it">Fundos OneDrive <span>3</span></div>
+          <div class="it">Imagens <span>3</span></div>
+        </div>
+        <div class="grade" id="g1" style="flex:1;padding:4px 12px 0 12px;overflow:hidden"></div>
+      </div>
+    </div>
+
+    <!-- anatomia 200% -->
+    <div class="leg" style="left:1552px;top:16px">Anatomia · <b>200%</b></div>
+    <div style="position:absolute;left:1560px;top:44px"><div id="anat" style="position:relative;width:166px;zoom:2"></div></div>
+    <div style="position:absolute;left:1552px;top:336px;width:348px" class="cota">
+      <p style="margin:0 0 7px"><b>1 · Duração</b> no canto superior direito do thumb (11 px, fundo preto 72%). Vídeo em repetição ganha ↻ ao lado. Imagem não tem selo.</p>
+      <p style="margin:0 0 7px"><b>2 · ＋ roteiro</b> 26 px dentro do thumb, canto inferior direito. Já no roteiro vira ✓ verde (clicar de novo adiciona outra vez).</p>
+      <p style="margin:0 0 7px"><b>3 · Nome</b> 12 px semibold dentro do cartão, reticências no fim; nome inteiro na dica.</p>
+      <p style="margin:0"><b>4 · Engrenagem</b> 24 px na linha do nome, alinhada à direita (ajustes da mídia: fim, camada, filtros).</p>
+    </div>
+
+    <!-- estados -->
+    <div class="leg" style="left:20px;top:540px">Estados · <b>escala real</b></div>
+    <div id="estados" style="position:absolute;left:20px;top:566px;display:flex;gap:22px"></div>
+
+    <!-- zonas -->
+    <div class="leg" style="left:20px;top:770px">Zonas de clique · <b>200%</b> — o thumb é o único gatilho de “ao ar”</div>
+    <div style="position:absolute;left:20px;top:798px"><div style="width:166px;zoom:2">
+      <div class="mc" style="pointer-events:none">
+        <div class="th" style="background:rgba(242,26,39,.16);box-shadow:inset 0 0 0 1px var(--vermelho)">
+          <span style="font-size:8px;font-weight:700;color:var(--vermelho-claro);letter-spacing:.04em;text-align:center;line-height:1.3">CLIQUE SIMPLES<br>VAI AO AR</span>
+          <div style="position:absolute;right:0;bottom:0;width:38px;height:38px;border-radius:8px 0 5px 0;background:rgba(94,196,141,.22);box-shadow:inset 0 0 0 1px var(--verde)"></div>
+          <span class="mais" style="pointer-events:none"><svg class="i s14"><use href="#i-plus"/></svg></span>
+        </div>
+        <div class="pe" style="background:rgba(248,248,240,.1);border-radius:0 0 5px 5px;margin-top:2px;padding-top:0;height:28px">
+          <span class="nm" style="font-size:8px;color:var(--mudo);letter-spacing:.03em">SELECIONA · ARRASTA</span>
+          <span class="eng" style="background:rgba(248,248,240,.16);color:var(--texto)"><svg class="i s14"><use href="#i-gear"/></svg></span>
+        </div>
+      </div>
+    </div></div>
+    <div style="position:absolute;left:396px;top:798px;width:560px" class="cota">
+      <p style="margin:0 0 8px"><b style="color:var(--vermelho-claro)">Vermelho — thumb:</b> clique simples manda ao ar (decisão B1). Segue a trava de 400 ms: o segundo clique dentro da janela é engolido e o cartão escurece com uma barra enchendo, para o operador ver que o primeiro valeu.</p>
+      <p style="margin:0 0 8px"><b style="color:var(--verde)">Verde — ＋ roteiro:</b> o alvo real é 38 × 38 e encosta nas duas bordas do thumb (o desenho é 26). Errar o ＋ por 6 px para cima ou para a esquerda ainda cai no ＋, não no ar. Não existe alvo de “ao ar” entre o ＋ e a borda.</p>
+      <p style="margin:0 0 8px"><b>Cinza — faixa do nome:</b> zona segura. Clique só seleciona (e é por onde se arrasta para o roteiro sem medo). A engrenagem mora aqui, longe do gatilho.</p>
+      <p style="margin:0"><b>Arrastar ≠ clicar:</b> soltar depois de mover mais de 4 px nunca vai ao ar. Cartão que já está no ar não reinicia no clique (reiniciar é no transporte) — pergunta 1.</p>
+    </div>
+    <div style="position:absolute;left:1000px;top:770px;width:520px">
+      <div class="leg" style="position:static;margin-bottom:10px">Leitura a 2 m</div>
+      <div class="cota">
+        <p style="margin:0 0 8px">O que precisa ser lido de longe é <b>o que está no ar</b>: o cartão inteiro vira vermelho (moldura + faixa do nome cheia), não só um contorno fino. Nome e duração são leitura de mão no mouse (60–80 cm) e ficam em 12 / 11 px, como o resto do board.</p>
+        <p style="margin:0 0 8px"><b>Hover nunca é vermelho.</b> Vermelho continua significando só “no ar”: o hover é contorno claro + etiqueta “▶ AO AR” que avisa o que o clique faz.</p>
+        <p style="margin:0"><b>Arquivo sumiu</b> quebra alto: cartão laranja, sem clique, com o motivo escrito — nunca um X mudo.</p>
+      </div>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>O QUE MUDOU</h4>Gap de 10 px e cada mídia vira um cartão fechado: thumb, nome e engrenagem na mesma peça. O ＋ roteiro e a duração entram no thumb; os dois botões soltos (＋ e ▶) ao lado do nome somem — o ▶ deixa de existir porque o clique no thumb já é “ao ar”.</div>
+    <div><h4>POR QUÊ</h4>Hoje thumbs colados e nome + botões numa régua contínua não deixam ver de quem é cada botão. Com clique simples valendo, o desenho separa as zonas: thumb = ao ar, faixa do nome = segura. Custa 1 coluna (8→7) e ~0,3 linha visível; os botões −/＋ de tamanho continuam.</div>
+    <div><h4>CUSTO NO CÓDIGO</h4>Reaproveita <code>drawer/media/MediaCard.svelte</code> (já tem <code>.rn</code>/<code>.rmais</code> nossos) e <code>MediaGrid.svelte</code> (gap): reestrutura de marcação + CSS, sem componente novo. Duração: o FreeShow só lê ao carregar o vídeo — precisa guardar em cache por arquivo. Não toca a janela de saída.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  C2  -->
+<section class="prancha" id="c2">
+  <header><b>C2</b><span>Faixa de transporte do No ar — versão 2, compacta e quieta: duas linhas, 60 px por mídia</span><em>300, 360 e 420 px em escala real · embaixo de cada uma, a versão anterior (100 px) riscada</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+    <div id="c2cols" style="position:absolute;left:20px;top:28px;display:flex;gap:30px;align-items:flex-start"></div>
+
+    <div style="position:absolute;left:1230px;top:28px;width:670px">
+      <div class="leg" style="position:static;margin-bottom:10px">Anatomia · <b>200%</b> — a área tracejada é o alvo de clique da barra</div>
+      <div style="height:128px"><div style="width:335px;zoom:2;position:relative" id="c2anat"></div></div>
+      <div class="cota" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px 24px">
+        <p style="margin:0"><b>Linha 1 (24 px):</b> tocar/pausar, nome, e o que falta. O decorrido saiu — aparece no lugar do “−falta” enquanto se arrasta a barra.</p>
+        <p style="margin:0"><b>Linha 2 (24 px):</b> barra + casa fixa (repetir ou crossfade) + mudo + volume. Nada entra nem sai quando dá play.</p>
+        <p style="margin:0"><b>Barra:</b> traço de 3 px, mas o alvo tem a linha inteira de <b>24 px de altura</b> e toda a largura que sobra: ~160 px na coluna de 300, ~280 na de 420 (hoje: ~40 px). Clique em qualquer ponto pula; arrastar acompanha.</p>
+        <p style="margin:0"><b>Quieto de propósito:</b> sem botão creme cheio, sem borda nos ícones, texto a 80%, fundo só um trilho escuro. O único ponto de cor é a bolinha vermelha de 6 px = “isto está no telão”. O telão continua sendo a coisa mais forte da coluna.</p>
+        <p style="margin:0"><b>Botões de 24 px</b> com ícone de 14: são alvos de mouse, não de leitura. “Ligado” (repetir, crossfade) = ícone claro sobre fundo leve, não inversão.</p>
+        <p style="margin:0"><b>Etiqueta de saída:</b> mesma regra aprovada — só quando há dúvida (mídias diferentes por saída, ou mídia em parte delas). Neutra e pequena; “Primária” não aparece nunca.</p>
+      </div>
+
+      <div class="leg" style="position:static;margin:26px 0 10px">Altura por mídia</div>
+      <table class="tabela">
+        <tr><td>Hoje (linha única espremida)</td><td><b>36 px</b> — barra de ~40 px, nome escondido, 2ª mídia atrás de “+1”</td></tr>
+        <tr><td>Versão anterior desta prancha</td><td><s>100 px</s> — recusada: grande e com o mesmo peso do telão</td></tr>
+        <tr><td>Versão 2</td><td><b>60 px</b> — vídeo + Spotify = 124 px (antes 208)</td></tr>
+      </table>
+      <p class="cota" style="margin:12px 0 0">Com três mídias a pilha tem 188 px e ainda cabe sem rolar numa coluna de 1024 de altura. Do quarto cartão em diante ela rola por dentro (a pilha é um box com divisória, como os outros).</p>
+
+      <div class="leg" style="position:static;margin:26px 0 10px">Crossfade</div>
+      <p class="cota" style="margin:0">Fica sempre na casa fixa do cartão do Spotify, parado ou tocando. O desenho pedido (duas setas cruzadas) é praticamente o ícone de “aleatório” do Spotify — pergunta aberta 2. Alternativa pronta para trocar: duas rampas que se cruzam, sem ponta de seta <svg class="i" style="vertical-align:-3px;color:var(--texto)"><use href="#i-xf2"/></svg>, que só significa fusão.</p>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>O QUE MUDOU (V2)</h4>O cartão de três linhas e 100 px virou uma faixa de duas linhas e 60 px, sem botão creme, sem bordas, contraste baixo. A barra de tempo continua larga e ganhou alvo de 24 px de altura com traço de 3 px. O decorrido saiu da tela; fica só o que falta.</div>
+    <div><h4>POR QUÊ</h4>O dono: a barra tem de ser confortável para pular trecho, mas o transporte não pode disputar atenção com o telão. Então o tamanho foi para o alvo de clique (invisível), não para o desenho. Lugar fixo dos botões e regra da etiqueta de saída continuam como aprovado.</div>
+    <div><h4>CUSTO NO CÓDIGO</h4>O mesmo de antes: só a apresentação de <code>AliancaTransporteLinha.svelte</code> (mesmas props e eventos), <code>AliancaBarra.svelte</code> reaproveitada com alvo mais alto, e a regra de <code>saida</code> + fim do “+1” em <code>AliancaTransporte.svelte</code>. Não toca a janela de saída.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  C3  -->
+<section class="prancha" id="c3">
+  <header><b>C3</b><span>Só retorno — uma tarja só, no lugar do cabeçalho “NO AR”; a recusa aparece nela mesma</span><em>coluna No ar de 400 px em escala real: desligado × ligado × recusa · as réguas atravessam as três</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+    <div id="c3cols" style="position:absolute;left:110px;top:70px;display:flex;gap:40px;align-items:flex-start"></div>
+    <div id="c3reguas"></div>
+    <div class="cota" style="position:absolute;left:110px;top:690px;width:1280px">As linhas tracejadas marcam, em px a partir do topo da coluna, o fim da faixa de cima, o topo e o pé da tela do telão, e o topo e o pé da outra tela. As posições foram <b>medidas na coluna “desligado”</b> e as linhas atravessam as três: ligar o modo ou receber uma recusa <b>não desloca nada</b> — só mudam a cor e o texto dos primeiros 32 px.</div>
+
+    <div style="position:absolute;left:110px;top:770px;width:1280px;display:flex;gap:40px">
+      <div style="width:400px">
+        <div class="leg" style="position:static;margin-bottom:8px">A mesma faixa em <b>300 px</b> (largura mínima)</div>
+        <div style="width:300px;display:flex;flex-direction:column;gap:8px" id="c3min"></div>
+      </div>
+      <div style="flex:1" class="cota">
+        <div class="leg" style="position:static;margin-bottom:8px">O que acontece numa recusa</div>
+        <p style="margin:0 0 7px"><b>0 s</b> — a tarja pisca duas vezes (0,9 s) e fica <b>invertida</b>: fundo escuro, letra e contorno laranja. Texto: “Não foi ao ar: <i>nome do item</i>”. O nome é a parte que encolhe com reticências; “Não foi ao ar” nunca corta.</p>
+        <p style="margin:0 0 7px"><b>5 s</b> — volta a “SÓ RETORNO · telão parado”. Outra recusa nesse intervalo reinicia a contagem e troca o nome; não empilha.</p>
+        <p style="margin:0 0 7px"><b>Desligar</b> é o mesmo botão, no mesmo pixel, nos dois estados — nenhum botão novo nasce com o aviso. Clique na coluna “Recusa” acima para ver piscar.</p>
+        <p style="margin:0"><b>No centro não aparece nada.</b> O cabeçalho do item (“Que caia o Teu Espírito · depois: Lugar Secreto”) fica como está, e o toast do canto deixa de existir.</p>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:1440px;top:24px;width:460px" class="cota">
+      <div class="leg" style="position:static;margin-bottom:10px">Por que não empurra</div>
+      <p style="margin:0 0 8px">A coluna No ar passa a ter <b>sempre</b> uma faixa de 32 px no topo, com os cantos de cima do painel. Desligado, ela é o cabeçalho “NO AR · Telão 16:9”. Ligado, a mesma faixa vira a tarja laranja. Mesma altura, mesma margem.</p>
+      <p style="margin:0 0 8px">O que o cabeçalho dizia não se perde: com o modo ligado o telão está parado, e isso está escrito na tarja (“telão parado”) e no cadeado “PARADO” dentro da tela.</p>
+      <p style="margin:0 0 8px">As colunas da C2 já usam a mesma faixa de 32 px.</p>
+      <div class="leg" style="position:static;margin:22px 0 10px">Um laranja só</div>
+      <p style="margin:0 0 8px">Na tela inteira há <b>uma</b> barra laranja: a tarja. A moldura fina da aba Retorno e o selo “NO RETORNO” repetem a cor em traço, para ligar “o que mudou” ao modo, sem virar outra barra.</p>
+      <p style="margin:0">Vermelho continua só no telão. Ele segue vermelho com o modo ligado porque o telão <b>está</b> no ar — só não muda.</p>
+      <div class="leg" style="position:static;margin:22px 0 10px">Leitura a 2 m</div>
+      <p style="margin:0">Laranja cheio, 32 px, no topo da coluna: dá para ver do fundo da cabine que o modo está ligado. A recusa se distingue pelo movimento (pisca) e pela inversão, não por texto pequeno.</p>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>O QUE MUDOU (V2)</h4>Saiu o aviso laranja do cabeçalho central: fica só a tarja em cima do No ar. Ela ocupa o lugar do cabeçalho “NO AR · Telão 16:9” (32 px nos dois casos), então ligar o modo não empurra a coluna. A recusa troca o texto da própria tarja por 5 s, com pisca e inversão.</div>
+    <div><h4>POR QUÊ</h4>Duas barras laranja disputavam a atenção, e uma faixa que nasce em cima da coluna desloca tela, transporte e chat no meio do culto. Um lugar só para o modo: quem vê a recusa já está olhando para o botão que resolve, e ele não mudou de posição.</div>
+    <div><h4>CUSTO NO CÓDIGO</h4>Só <code>AliancaNoAr.svelte</code>: o cabeçalho e a <code>.faixa-retorno</code> viram a mesma faixa com três estados; <code>recusarNoModo()</code> passa a escrever nela em vez de abrir o toast. Nenhum componente novo (o aviso central da versão anterior foi cortado). Não toca a janela de saída.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  C4  -->
+<section class="prancha" id="c4">
+  <header><b>C4</b><span><span class="tag hoje" style="font-size:12px;vertical-align:3px;margin-right:8px">APROVADA</span>Configurações e propriedades do Editar no tema Luz</span><em>Telas e saídas (1180 × 1000) · propriedades de Caixa de texto (380 × 1000) · peças</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+
+    <!-- CONFIGURAÇÕES -->
+    <div class="po" style="position:absolute;left:20px;top:40px;width:1180px;height:1000px;display:flex;flex-direction:column;overflow:hidden">
+      <div style="height:56px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 12px 0 20px;border-bottom:1px solid var(--linha)">
+        <span style="font-size:17px;font-weight:700;font-variation-settings:'wdth' 118;letter-spacing:-.01em">Configurações</span>
+        <span style="flex:1"></span>
+        <span style="font-size:12px;color:var(--laranja);font-weight:600">2 alterações não salvas</span>
+        <button class="bt fan">Descartar</button><button class="bt pri">Salvar</button><button class="bt">Fechar</button>
+      </div>
+      <div style="flex:1;min-height:0;display:flex">
+        <div class="cf-lista">
+          <div class="it"><svg class="i"><use href="#i-gear"/></svg>Geral</div>
+          <div class="it a"><svg class="i"><use href="#i-tela"/></svg>Telas e saídas</div>
+          <div class="it"><svg class="i"><use href="#i-pinc"/></svg>Estilos</div>
+          <div class="it"><svg class="i"><use href="#i-som"/></svg>Áudio</div>
+          <div class="it"><svg class="i"><use href="#i-rede"/></svg>Conexão</div>
+          <div class="it"><svg class="i"><use href="#i-pasta"/></svg>Arquivos</div>
+          <div class="it"><svg class="i"><use href="#i-gente"/></svg>Perfis</div>
+          <div class="it"><svg class="i"><use href="#i-mais3"/></svg>Outros</div>
+          <hr>
+          <div class="it"><span style="width:16px;display:flex;justify-content:center"><i style="width:7px;height:7px;border-radius:4px;background:var(--verde);box-shadow:0 0 0 3px rgba(94,196,141,.28)"></i></span>Sirvo</div>
+          <div class="it"><svg class="i"><use href="#i-rede"/></svg>Controle remoto</div>
+          <hr>
+          <div class="it"><svg class="i"><use href="#i-cam2"/></svg>Monitor de retorno<svg class="i s14" style="margin-left:auto;color:var(--mudo)"><use href="#i-rt"/></svg></div>
+        </div>
+        <div style="flex:1;min-width:0;padding:24px 32px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:16px">
+            <span style="font-size:22px;font-weight:700;font-variation-settings:'wdth' 112;letter-spacing:-.01em">Telas e saídas</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
+            <div class="seg">
+              <button class="a"><i style="width:7px;height:7px;border-radius:4px;background:var(--vermelho)"></i>Telão</button>
+              <button>Retorno</button>
+              <button>NDI Live <span class="tag novo">NOVO</span></button>
+            </div>
+            <button class="bt"><svg class="i s14"><use href="#i-plus"/></svg>Nova saída</button>
+            <span style="flex:1"></span>
+            <button class="bt fan" style="color:var(--texto)"><svg class="i s14"><use href="#i-tela"/></svg>Identificar telas</button>
+          </div>
+
+          <div style="display:flex;gap:32px">
+           <div style="width:560px;flex-shrink:0">
+            <div class="sec">SAÍDA</div>
+            <div class="lin"><div class="tg">Habilitada<small></small><span class="sw on"></span></div></div>
+            <div class="lin">
+              <div class="cp"><label>Nome</label><span class="v">Telão</span></div>
+            </div>
+            <div class="lin">
+              <div class="cp"><label>Estilo ativo<u title="diferente do padrão"></u></label><span class="v">Padrão Aliança — Montserrat 900</span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+              <button class="ib" style="width:44px;height:44px" title="Editar estilo"><svg class="i"><use href="#i-lapis"/></svg></button>
+            </div>
+
+            <div class="sec">JANELA</div>
+            <div class="lin">
+              <div class="cp"><label>Tela de saída</label><span class="v">Monitor 2 · EPSON PJ <i>· 1920 × 1080</i></span><span class="dir"><svg class="i s14"><use href="#i-cad"/></svg><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+            </div>
+            <div class="lin"><div class="tg"><div>Sempre no topo<small>A janela de saída fica acima de qualquer outro programa</small></div><span class="sw on"></span></div></div>
+            <div class="lin"><div class="tg"><div>Fundo transparente<small>Para chroma / alfa em mesa de corte</small></div><span class="sw"></span></div></div>
+
+            <div class="sec">NDI®</div>
+            <div class="lin"><div class="tg"><div>Enviar esta saída por NDI<small>Aparece na rede como “AliancaShow NDI - Telão”</small></div><span class="sw on"></span></div></div>
+            <div class="lin">
+              <div class="cp"><label>Tamanho</label><span class="v">1920 × 1080</span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+              <div class="cp"><label>Quadros por segundo</label><span class="v">30</span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+            </div>
+            <div class="lin">
+              <div class="cp foco"><label>Nome na rede</label><span class="v">AliancaShow NDI - Telão<span style="display:inline-block;width:1px;height:14px;background:var(--texto);vertical-align:-2px;margin-left:1px"></span></span></div>
+              <div class="cp"><label>Grupos (separados por vírgula)</label><span class="v"><i>public</i></span></div>
+            </div>
+            <div class="lin"><div class="tg">Áudio do programa no NDI<span class="sw on"></span></div></div>
+
+            <div class="sec dob"><svg class="i s14"><use href="#i-rt"/></svg>BLACKMAGIC DESIGN <small>nenhuma placa encontrada</small></div>
+            <div class="sec dob"><svg class="i s14"><use href="#i-rt"/></svg>RTMP · WEBRTC <small>desligado</small></div>
+           </div>
+
+           <div style="flex:1;min-width:0;padding-top:22px">
+             <div class="rot" style="margin-bottom:8px">ONDE ESTÁ CADA TELA</div>
+             <div style="height:150px;border-radius:10px;background:var(--trilho);box-shadow:inset 0 0 0 1px var(--linha);display:flex;align-items:center;justify-content:center;gap:8px">
+               <div style="width:112px;height:63px;border-radius:5px;border:1px solid var(--borda-forte);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--mudo)"><b style="font-size:17px;color:var(--texto)">1</b>Cabine</div>
+               <div style="width:112px;height:63px;border-radius:5px;background:var(--vermelho);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:#fff"><b style="font-size:17px">2</b>Telão</div>
+               <div style="width:76px;height:63px;border-radius:5px;border:1px solid var(--borda-forte);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--mudo)"><b style="font-size:17px;color:var(--texto)">3</b>Retorno</div>
+             </div>
+             <p class="cota" style="margin:10px 0 0">A tela vermelha é a que esta saída ocupa agora. Clique em outra para mover a saída.</p>
+             <div class="rot" style="margin:26px 0 8px">TODAS AS SAÍDAS</div>
+             <div style="border-radius:10px;box-shadow:inset 0 0 0 1px var(--linha);overflow:hidden;font-size:13px">
+               <div style="height:40px;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--hover)"><i style="width:7px;height:7px;border-radius:4px;background:var(--vermelho)"></i><b style="font-weight:600">Telão</b><span style="margin-left:auto;color:var(--mudo);font-size:12px">Monitor 2 + NDI</span></div>
+               <div style="height:40px;display:flex;align-items:center;gap:10px;padding:0 12px;border-top:1px solid var(--linha)"><i style="width:7px;height:7px;border-radius:4px;background:var(--verde)"></i>Retorno<span style="margin-left:auto;color:var(--mudo);font-size:12px">Monitor 3 · palco “Palavra”</span></div>
+               <div style="height:40px;display:flex;align-items:center;gap:10px;padding:0 12px;border-top:1px solid var(--linha)"><i style="width:7px;height:7px;border-radius:4px;background:var(--verde)"></i>NDI Live <span class="tag novo">NOVO</span><span style="margin-left:auto;color:var(--mudo);font-size:12px">só NDI · 1080p30</span></div>
+             </div>
+           </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPRIEDADES DO EDITAR -->
+    <div class="po" style="position:absolute;left:1224px;top:40px;width:380px;height:1000px;display:flex;flex-direction:column;overflow:hidden">
+      <div style="padding:12px 12px 10px;border-bottom:1px solid var(--linha)">
+        <div class="seg"><button class="a" style="flex:1;justify-content:center;padding:0">Texto</button><button style="flex:1;justify-content:center;padding:0">Item</button><button style="flex:1;justify-content:center;padding:0">Slide</button><button style="flex:1;justify-content:center;padding:0">Filtros</button></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;font-weight:600"><svg class="i"><use href="#i-T"/></svg>Caixa de texto <span style="color:var(--mudo);font-weight:400">· 1 de 2 itens</span></div>
+      </div>
+      <div style="flex:1;min-height:0;padding:0 12px;overflow:hidden">
+        <div class="sec" style="margin-top:14px"><svg class="i s14"><use href="#i-dn"/></svg>FONTE</div>
+        <div class="lin">
+          <div class="cp"><label>Família</label><span class="v" style="font-family:Montserrat;font-weight:900">Montserrat</span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+          <div class="cor" title="Cor do texto"><i style="background:#fff"></i></div>
+        </div>
+        <div class="lin">
+          <div class="cp" style="flex:0 0 132px"><label>Tamanho<u></u></label><span class="v">100 <i>px</i></span><span class="dir" style="right:4px;gap:0"><svg class="i s14"><use href="#i-menos"/></svg><svg class="i s14" style="margin-left:8px"><use href="#i-plus"/></svg></span></div>
+          <div class="cp"><label>Ajuste automático</label><span class="v">Encolher para caber</span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+        </div>
+        <div class="lin">
+          <div class="grp"><button class="a">B</button><button style="font-style:italic;font-family:Georgia,serif">I</button><button style="text-decoration:underline">U</button><button style="text-decoration:line-through">S</button></div>
+        </div>
+
+        <div class="sec"><svg class="i s14"><use href="#i-dn"/></svg>ALINHAMENTO</div>
+        <div class="lin">
+          <div class="grp" style="flex:4"><button><svg class="i"><use href="#i-al-e"/></svg></button><button class="a"><svg class="i"><use href="#i-al-c"/></svg></button><button><svg class="i"><use href="#i-al-d"/></svg></button><button><svg class="i"><use href="#i-al-j"/></svg></button></div>
+          <div class="grp" style="flex:3"><button><svg class="i"><use href="#i-v-t"/></svg></button><button class="a"><svg class="i"><use href="#i-v-m"/></svg></button><button><svg class="i"><use href="#i-v-b"/></svg></button></div>
+        </div>
+
+        <div class="sec"><svg class="i s14"><use href="#i-dn"/></svg>TEXTO</div>
+        <div class="lin">
+          <div class="cp"><label>Espaço entre letras</label><span class="v">0 <i>px</i></span><div class="bar mini"><i style="width:75%"></i><b style="left:75%"></b></div><span class="dir" style="right:4px;gap:0"><svg class="i s14"><use href="#i-menos"/></svg><svg class="i s14" style="margin-left:8px"><use href="#i-plus"/></svg></span></div>
+        </div>
+        <div class="lin">
+          <div class="cp"><label>Espaço entre palavras</label><span class="v">0 <i>px</i></span><div class="bar mini"><i style="width:33%"></i><b style="left:33%"></b></div><span class="dir" style="right:4px;gap:0"><svg class="i s14"><use href="#i-menos"/></svg><svg class="i s14" style="margin-left:8px"><use href="#i-plus"/></svg></span></div>
+        </div>
+        <div class="lin">
+          <div class="cp"><label>Caixa<u></u></label><span class="v">MAIÚSCULAS</span><span class="dir"><svg class="i s14"><use href="#i-dn"/></svg></span></div>
+        </div>
+        <div class="ck"><i></i>Não quebrar linha</div>
+
+        <div class="sec" style="margin-top:14px"><svg class="i s14"><use href="#i-dn"/></svg>LINHAS</div>
+        <div class="lin">
+          <div class="cp"><label>Altura da linha</label><span class="v">1,1 <i>em</i></span><div class="bar mini"><i style="width:22%"></i><b style="left:22%"></b></div><span class="dir" style="right:4px;gap:0"><svg class="i s14"><use href="#i-menos"/></svg><svg class="i s14" style="margin-left:8px"><use href="#i-plus"/></svg></span></div>
+        </div>
+        <div class="lin">
+          <div class="cp"><label>Espaço entre linhas</label><span class="v">0</span></div>
+          <div class="cor" title="Fundo da linha: nenhum"><i style="background:linear-gradient(135deg,transparent 46%,var(--vermelho-claro) 46%,var(--vermelho-claro) 54%,transparent 54%);box-shadow:inset 0 0 0 1px var(--borda)"></i></div>
+        </div>
+
+        <div class="sec dob"><svg class="i s14"><use href="#i-rt"/></svg>CONTORNO <small>desligado</small></div>
+        <div class="sec dob"><svg class="i s14"><use href="#i-rt"/></svg>SOMBRA <small>0 · 2 · 10 px · preto 45%</small></div>
+        <div class="sec dob"><svg class="i s14"><use href="#i-rt"/></svg>ACORDES <small>desligado</small></div>
+        <div class="sec dob"><svg class="i s14"><use href="#i-rt"/></svg>ROLAGEM E ESPECIAIS</div>
+      </div>
+      <div style="height:56px;flex-shrink:0;border-top:1px solid var(--linha);display:flex;align-items:center;gap:8px;padding:0 12px">
+        <button class="bt fan" style="padding:0 8px">Redefinir</button><span style="flex:1"></span><button class="bt">Aplicar a todos os slides</button>
+      </div>
+    </div>
+
+    <!-- PEÇAS -->
+    <div style="position:absolute;left:1628px;top:40px;width:272px">
+      <div class="leg" style="position:static;margin-bottom:10px">Peças · uma régua só</div>
+      <div class="cota">
+        <p style="margin:0 0 6px"><b>Campo</b> 44 px, rótulo dentro em cima (10,5 px mudo), valor 13 px. Fundo campo, borda 1 px, raio 6. Sem sublinhado animado.</p>
+        <div class="lin"><div class="cp"><label>Rótulo</label><span class="v">Valor</span></div></div>
+        <div class="lin"><div class="cp foco"><label>Em foco</label><span class="v">borda clara + halo</span></div></div>
+        <div class="lin"><div class="cp"><label>Mudou do padrão<u></u></label><span class="v">ponto no rótulo</span></div></div>
+        <div class="lin"><div class="cp des"><label>Desligado</label><span class="v">40% de opacidade</span></div></div>
+        <p style="margin:12px 0 6px"><b>Chave</b> ligada = creme com miolo escuro (o mesmo “ativo” das abas). Nunca vermelha, nunca verde.</p>
+        <div class="lin"><div class="tg">Ligada<span class="sw on"></span></div><div class="tg">Desligada<span class="sw"></span></div></div>
+        <p style="margin:12px 0 6px"><b>Número com régua</b>: o controle deslizante mora dentro do campo, com − e ＋ de 22 px.</p>
+        <div class="lin"><div class="cp"><label>Opacidade</label><span class="v">80 <i>%</i></span><div class="bar mini"><i style="width:80%"></i><b style="left:80%"></b></div><span class="dir" style="right:4px;gap:0"><svg class="i s14"><use href="#i-menos"/></svg><svg class="i s14" style="margin-left:8px"><use href="#i-plus"/></svg></span></div></div>
+        <p style="margin:12px 0 6px"><b>Botões</b> 36 px, raio 8. Um só primário por tela.</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="bt pri">Salvar</button><button class="bt">Fechar</button><button class="bt fan">Descartar</button></div>
+        <p style="margin:12px 0 6px"><b>Seção</b>: rótulo 12 px caixa alta + fio. Seção recolhida mostra o resumo do que tem dentro.</p>
+        <div class="sec" style="margin:6px 0"><svg class="i s14"><use href="#i-dn"/></svg>ABERTA</div>
+        <div class="sec dob" style="margin:6px 0"><svg class="i s14"><use href="#i-rt"/></svg>FECHADA <small>resumo</small></div>
+        <p style="margin:14px 0 6px"><b>Tipos</b></p>
+        <div style="font-size:22px;font-weight:700;font-variation-settings:'wdth' 112">Título de página 22</div>
+        <div style="font-size:17px;font-weight:700;font-variation-settings:'wdth' 118">Título de janela 17</div>
+        <div style="font-size:13px;font-weight:500">Valor e item de lista 13</div>
+        <div style="font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--mudo)">SEÇÃO 12</div>
+        <div style="font-size:10.5px;color:var(--mudo)">Rótulo de campo 10,5</div>
+        <p style="margin:14px 0 0">Vermelho só marca a saída que está no ar. Dourado só o que é <span class="tag novo">NOVO</span>. Laranja = aviso / não salvo.</p>
+      </div>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>O QUE MUDOU</h4>Lista lateral, campos, chaves, réguas e botões passam a usar os tokens Luz (Archivo, fundo campo, borda 1 px, raio 6–8, ativo = creme). Seções viram rótulo + fio; as raras (Blackmagic, RTMP, Contorno, Sombra) nascem recolhidas com resumo. Saídas viram abas, com mapa das telas ao lado.</div>
+    <div><h4>POR QUÊ</h4>São as duas telas onde o FreeShow antigo ainda aparece inteiro (roxo/rosa, sublinhado animado, fonte do sistema). O desenho mantém de propósito a anatomia dos campos do FreeShow — rótulo dentro, valor embaixo — para ser troca de pele, não reescrita de 30 telas.</div>
+    <div><h4>CUSTO NO CÓDIGO</h4>Troca de pele nos <code>inputs/Material*.svelte</code> (~12 peças) sob o escopo Luz + casca de <code>Settings.svelte</code>/<code>SettingsTabs.svelte</code> e <code>edit/tools/EditValues.svelte</code>. Vale para todo popup que usa as mesmas peças (sem modo antigo). Novo de verdade: mapa das telas e resumo de seção recolhida. Não toca a janela de saída.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  C5  -->
+<section class="prancha" id="c5">
+  <header><b>C5</b><span><span class="tag hoje" style="font-size:12px;vertical-align:3px;margin-right:8px">A APROVADA</span>Menu “＋ adicionar item” do Editar no tema Luz</span><em>recorte do centro do Editar em escala real · opção A aprovada · B descartada</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+
+    <!-- A: menu ancorado -->
+    <div class="leg" style="left:20px;top:16px">A · menu ancorado no botão ＋ — <b>aprovada</b> · <b>escala real</b></div>
+    <div class="po" style="position:absolute;left:20px;top:40px;width:1100px;height:620px;overflow:hidden">
+      <div class="ed-top">
+        <span style="font-size:17px;font-weight:600">Que caia o Teu Espírito</span><span style="color:var(--mudo)">· slide 3 de 14 · Coro</span>
+        <span style="flex:1"></span>
+        <button class="bt pri" style="height:32px"><svg class="i s14"><use href="#i-plus"/></svg>Adicionar item<svg class="i s14"><use href="#i-dn"/></svg></button>
+        <span style="width:1px;height:20px;background:var(--linha);margin:0 4px"></span>
+        <button class="ib"><svg class="i"><use href="#i-menos"/></svg></button>
+        <span style="width:52px;text-align:center;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums">100%</span>
+        <button class="ib"><svg class="i"><use href="#i-plus"/></svg></button>
+      </div>
+      <div style="position:absolute;left:24px;right:24px;top:72px;bottom:24px;display:flex;align-items:center;justify-content:center">
+        <div class="tela-ed" style="height:100%"><div class="t-txt" style="font-size:44px;outline:1px dashed rgba(255,255,255,.6);outline-offset:14px">QUE CAIA O<br>TEU ESPÍRITO</div></div>
+      </div>
+      <div class="menu" style="position:absolute;right:138px;top:46px">
+        <div class="tit">ADICIONAR AO SLIDE</div>
+        <div class="mi h"><svg class="i s18"><use href="#i-T"/></svg>Caixa de texto</div>
+        <hr>
+        <div class="mi"><svg class="i s18"><use href="#i-img"/></svg>Mídia</div>
+        <div class="mi"><svg class="i s18"><use href="#i-cam"/></svg>Câmera</div>
+        <hr>
+        <div class="mi"><svg class="i s18"><use href="#i-timer"/></svg>Temporizador</div>
+        <div class="mi"><svg class="i s18"><use href="#i-clock"/></svg>Relógio</div>
+        <hr>
+        <div class="mi"><svg class="i s18"><use href="#i-mais3"/></svg>Mais<small>10</small><svg class="i s14" style="color:var(--mudo)"><use href="#i-rt"/></svg></div>
+      </div>
+    </div>
+
+    <!-- Mais aberto -->
+    <div class="leg" style="left:1150px;top:16px">“Mais” aberto — troca o conteúdo no mesmo lugar</div>
+    <div class="menu" style="position:absolute;left:1150px;top:40px">
+      <div class="mi" style="font-weight:600"><svg class="i s18" style="color:var(--texto)"><use href="#i-lf"/></svg>Mais itens</div>
+      <hr>
+      <div class="mi"><svg class="i s18"><use href="#i-lista"/></svg>Lista</div>
+      <div class="mi"><svg class="i s18"><use href="#i-al-j"/></svg>Tabela</div>
+      <div class="mi h"><svg class="i s18"><use href="#i-som"/></svg>Gráfico</div>
+      <div class="mi"><svg class="i s18"><use href="#i-check"/></svg>Ícone</div>
+      <hr>
+      <div class="mi"><svg class="i s18"><use href="#i-clock"/></svg>Eventos da agenda</div>
+      <div class="mi"><svg class="i s18"><use href="#i-pinc"/></svg>Variável</div>
+      <div class="mi"><svg class="i s18"><use href="#i-rede"/></svg>Página da web</div>
+      <div class="mi"><svg class="i s18"><use href="#i-cam2"/></svg>Espelho de outro slide</div>
+      <div class="mi"><svg class="i s18"><use href="#i-film"/></svg>Marcador de slides</div>
+      <div class="mi"><svg class="i s18"><use href="#i-nota"/></svg>Visualizador de áudio</div>
+    </div>
+    <div class="cota" style="position:absolute;left:1430px;top:44px;width:460px">
+      <p style="margin:0 0 8px"><b>Mesma peça dos outros menus do board:</b> fundo opaco #1c1c1f, raio 12, borda 1 px, sombra do pop. Linhas de 38 px com raio 7, ícone de traço 18 px, Archivo 13.</p>
+      <p style="margin:0 0 8px"><b>Sai</b> o vidro borrado, as pílulas pretas de raio 50 e o botão laranja redondo com X. O gatilho vira um botão com nome — “＋ Adicionar item ▾” — na barra do Editar, ao lado do zoom.</p>
+      <p style="margin:0 0 8px"><b>Abre para baixo, colado no botão</b>, alinhado pela direita. Fecha com Esc, clique fora ou escolha. É o único momento em que algo cobre a tela do slide, e só enquanto o operador está com o menu na mão.</p>
+      <p style="margin:0 0 8px"><b>“Mais”</b> não abre um segundo menu ao lado: o conteúdo troca dentro da mesma caixa, com “‹ Mais itens” para voltar. Os dez itens do FreeShow continuam todos lá.</p>
+      <p style="margin:0"><b>Teclado:</b> ↑ ↓ andam, Enter escolhe, ← volta do “Mais”. O primeiro item nasce marcado.</p>
+    </div>
+
+    <!-- B: sem menu -->
+    <div class="leg" style="left:20px;top:690px">B · alternativa sem menu — <b>descartada pelo dono em 18/nov</b> (fica só o registro)</div>
+    <div class="po risc" style="position:absolute;left:20px;top:714px;width:1100px;height:326px;overflow:hidden;opacity:.4">
+      <div class="ed-top">
+        <span style="font-size:17px;font-weight:600">Que caia o Teu Espírito</span><span style="color:var(--mudo)">· slide 3 de 14</span>
+        <span style="flex:1"></span>
+        <span class="rot" style="margin-right:4px">ADICIONAR</span>
+        <button class="ib" title="Caixa de texto" style="width:34px"><svg class="i s18"><use href="#i-T"/></svg></button>
+        <button class="ib" title="Mídia" style="width:34px"><svg class="i s18"><use href="#i-img"/></svg></button>
+        <button class="ib" title="Câmera" style="width:34px"><svg class="i s18"><use href="#i-cam"/></svg></button>
+        <button class="ib" title="Temporizador" style="width:34px"><svg class="i s18"><use href="#i-timer"/></svg></button>
+        <button class="ib" title="Relógio" style="width:34px"><svg class="i s18"><use href="#i-clock"/></svg></button>
+        <button class="bt" style="height:30px;padding:0 8px 0 10px">Mais<svg class="i s14"><use href="#i-dn"/></svg></button>
+        <span style="width:1px;height:20px;background:var(--linha);margin:0 4px"></span>
+        <button class="ib"><svg class="i"><use href="#i-menos"/></svg></button>
+        <span style="width:52px;text-align:center;font-size:12px;font-weight:600">100%</span>
+        <button class="ib"><svg class="i"><use href="#i-plus"/></svg></button>
+      </div>
+      <div style="position:absolute;left:24px;right:24px;top:72px;height:520px;display:flex;justify-content:center">
+        <div class="tela-ed" style="height:100%"><div class="t-txt" style="font-size:44px;margin-top:-150px">QUE CAIA O<br>TEU ESPÍRITO</div></div>
+      </div>
+    </div>
+    <div class="cota" style="position:absolute;left:1150px;top:714px;width:740px">
+      <p style="margin:0 0 8px"><b>Decisão: opção A aprovada.</b> O menu ancorado no botão “＋ Adicionar item ▾” é o que vai para o código. A barra de ícones (B) foi descartada: ícone sem nome é pior para quem edita pouco.</p>
+      <p style="margin:0">O item novo nasce no centro do slide já selecionado, com as propriedades dele abertas no painel da direita (C4).</p>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>O QUE MUDOU</h4>O menu deixa de ser uma bolha de vidro com pílulas pretas flutuando no canto inferior do slide e vira o menu padrão do Luz, pendurado num botão com nome na barra do Editar. “Mais” troca o conteúdo no lugar em vez de abrir outro menu.</div>
+    <div><h4>POR QUÊ</h4>Era a última peça com cara de FreeShow no Editar (raio 25–50, blur, botão laranja). Ancorar no topo tira o menu de cima do slide na maior parte do tempo e põe o gatilho onde o olho já está — ao lado do zoom.</div>
+    <div><h4>CUSTO NO CÓDIGO</h4>Reaproveita <code>edit/ItemAddMenu.svelte</code> inteiro (lista vem de <code>itensDoMenuAdicionar</code>, que já agrupa o “Mais”): muda o CSS e a âncora (hoje <code>bottom:70px; right:12px</code>) e o gatilho vai para <code>AliancaEditarFerramentas</code>. Não toca a janela de saída.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  C6  -->
+<section class="prancha" id="c6">
+  <header><b>C6</b><span><span class="tag novo" style="font-size:12px;vertical-align:3px;margin-right:8px">NOVA</span>Árvore da biblioteca — cinco raízes, um nível de filhos, contador à direita</span><em>coluna de 230 px em escala real · antes (duas pastas abertas, lado a lado) × depois (três estados)</em></header>
+  <div class="quadro"><div class="luz"></div><div class="veu"></div><div class="c">
+    <div class="leg" style="left:20px;top:16px">Antes · hoje — 8 raízes, rótulos no meio, “Tudo” e “Sem etiqueta” como itens</div>
+    <div id="c6antes" style="position:absolute;left:20px;top:40px;display:flex;gap:16px"></div>
+    <div style="position:absolute;left:518px;top:270px;font-size:34px;color:var(--mudo)">→</div>
+    <div class="leg" style="left:580px;top:16px">Depois · proposta — clicar na raiz mostra tudo e abre os filhos</div>
+    <div id="c6depois" style="position:absolute;left:580px;top:40px;display:flex;gap:16px"></div>
+
+    <div style="position:absolute;left:1340px;top:16px;width:560px">
+      <div class="leg" style="position:static;margin-bottom:10px">Para onde foi cada coisa</div>
+      <table class="tabela">
+        <tr><td>Shows › Tudo</td><td>Some. <b>Clicar em Shows</b> é “tudo”.</td></tr>
+        <tr><td>Shows › Sem etiqueta</td><td>Sai da árvore. Vira o filtro <b>“Sem categoria · 14”</b> no cabeçalho da lista, e só aparece enquanto existir algum (ver abaixo).</td></tr>
+        <tr><td>Rótulo “Categorias”</td><td>Some. As categorias vêm direto embaixo de Shows.</td></tr>
+        <tr><td>Botão “Nova categoria”</td><td>Linha quieta <b>＋ categoria</b> no fim dos filhos.</td></tr>
+        <tr><td>Mídia › “Pastas de mídia” › Mídias</td><td>Some. <b>Clicar em Mídia</b> é “todas as mídias”.</td></tr>
+        <tr><td>Mídia › Tudo / rótulo “Pastas”</td><td>Somem. As pastas vêm direto, e <b>＋ pasta</b> no fim.</td></tr>
+        <tr><td>Do Sirvo</td><td>Uma pasta como as outras, com contador.</td></tr>
+        <tr><td>Áudio (raiz)</td><td><b>Dentro de Mídia</b>, depois do fio, com ícone.</td></tr>
+        <tr><td>Entradas: telas, câmeras, NDI</td><td><b>Dentro de Mídia</b>, uma linha só “Entradas”. Os três tipos viram filtro no cabeçalho da lista.</td></tr>
+        <tr><td>Bíblia</td><td>Continua raiz (vai ao ar todo culto). Filhos = as versões instaladas.</td></tr>
+        <tr><td>Sobreposições</td><td>Continua raiz (vai ao ar). Filhos = categorias, sem “Tudo”/“Sem etiqueta”, mesma regra de Shows.</td></tr>
+        <tr><td>Modelos, Funções, Calendário</td><td>Juntos na raiz <b>Ferramentas</b>: não vão ao ar, servem para montar. Um filho cada.</td></tr>
+      </table>
+
+      <div class="leg" style="position:static;margin:22px 0 10px">Onde fica o “Sem etiqueta” · cabeçalho da lista, escala real</div>
+      <div class="po" style="height:48px;display:flex;align-items:center;gap:8px;padding:0 12px 0 16px">
+        <span style="font-size:13px;font-weight:600">Shows</span><span class="cota">212</span>
+        <span style="flex:1"></span>
+        <span class="chip" style="gap:6px;border-color:rgba(235,166,64,.5);color:var(--laranja)">Sem categoria <b style="font-variant-numeric:tabular-nums">14</b></span>
+        <div class="busca" style="width:240px"><svg class="i s14"><use href="#i-lupa"/></svg>Buscar música ou trecho</div>
+      </div>
+      <p class="cota" style="margin:8px 0 0">É uma pendência de arrumação, não um lugar: o filtro some quando o número chega a zero. Só aparece com a raiz selecionada (dentro de uma categoria não faz sentido).</p>
+
+      <div class="leg" style="position:static;margin:22px 0 10px">Regras</div>
+      <div class="cota">
+        <p style="margin:0 0 6px"><b>Uma raiz aberta por vez</b> (como hoje). Com a maior aberta — Mídia, 8 pastas + Áudio + Entradas + “＋ pasta” — a árvore tem 16 linhas e cabe, justa, na biblioteca de 476 px.</p>
+        <p style="margin:0 0 6px"><b>Raiz selecionada</b> = fundo claro na própria raiz (está mostrando tudo). <b>Filho selecionado</b> = fundo no filho; a raiz fica só aberta.</p>
+        <p style="margin:0 0 6px"><b>Contador sempre à direita</b>, 11 px. Raiz mostra o total; categoria vazia mostra 0.</p>
+        <p style="margin:0"><b>Sem ícone de pasta</b> em cada linha — só Áudio e Entradas levam ícone, porque não são pastas.</p>
+      </div>
+    </div>
+
+    <div class="cota" style="position:absolute;left:20px;top:556px;width:476px">
+      <p style="margin:0 0 6px"><b>Hoje:</b> para ver todos os shows são dois cliques (Shows, depois “Tudo”). Rótulos cinza (“Categorias”, “Pastas de mídia”, “Pastas”) criam um terceiro nível que não é clicável. Áudio fica em outra raiz, longe das mídias.</p>
+      <p style="margin:0">Raízes: Shows, Mídia, Áudio, Bíblia, Sobreposições, Modelos, Funções, Calendário.</p>
+    </div>
+    <div class="cota" style="position:absolute;left:580px;top:556px;width:722px;display:grid;grid-template-columns:230px 230px 230px;gap:16px">
+      <p style="margin:0"><b>Shows aberto, “Louvor” selecionado.</b> Seis categorias direto embaixo. Clicar de novo em Shows volta para tudo.</p>
+      <p style="margin:0"><b>Mídia selecionada (tudo).</b> Pastas direto; depois do fio, Áudio e Entradas, que agora moram aqui.</p>
+      <p style="margin:0"><b>Ferramentas aberta.</b> O que serve para montar, não para mandar ao ar.</p>
+    </div>
+
+    <div style="position:absolute;left:20px;top:690px;width:1282px">
+      <div class="leg" style="position:static;margin-bottom:10px">As outras duas raízes abertas · escala real</div>
+      <div id="c6outras" style="display:flex;gap:16px;align-items:flex-start"></div>
+    </div>
+  </div></div>
+  <div class="notas">
+    <div><h4>O QUE MUDOU</h4>De 8 raízes para 5 (Shows, Mídia, Bíblia, Sobreposições, Ferramentas). Somem os itens “Tudo” e “Sem etiqueta” e os três rótulos de seção; a raiz passa a ser o “tudo”. Áudio e Entradas entram em Mídia. Os botões largos “Nova categoria/pasta” viram uma linha “＋ categoria”.</div>
+    <div><h4>POR QUÊ</h4>O pedido do dono: clicar no nome mostra tudo, e embaixo vêm os filhos sem intermediário. O mesmo princípio decide o resto: o que vai ao ar ganha raiz; o que só ajuda a montar (Modelos, Funções, Calendário) divide uma. “Sem etiqueta” é pendência, então vira filtro que some quando zera.</div>
+    <div><h4>CUSTO NO CÓDIGO</h4><code>aliancaArvoreLogica.ts</code> (<code>NOS</code> ganha pai/filhos; os ids de aba do FreeShow continuam, então os painéis de conteúdo são reaproveitados) + <code>AliancaArvore.svelte</code>. Em <code>drawer/navigation/*Tabs.svelte</code> saem as linhas <code>all</code>/<code>unlabeled</code> e os rótulos. Novo: filtro “Sem categoria” no cabeçalho da lista. Aba salva antiga é saneada na carga. Não toca a janela de saída.</div>
+  </div>
+</section>
+
+<!-- =====================================================================  AUTOCRÍTICA  -->
+<section class="prancha" id="critica" style="width:900px">
+  <header><b>✓</b><span>Autocrítica da rodada 2 e perguntas abertas</span></header>
+  <div class="po" style="padding:24px 28px;font-size:15px;line-height:1.5;color:rgba(248,248,240,.85)">
+    <p style="margin:0 0 14px;color:var(--mudo);font-size:13px">Situação: C1 aprovada (sem mudança) · C2 refeita · C3 refeita · C4 aprovada · C5 opção A aprovada, B descartada · C6 nova.</p>
+    <p style="margin:0 0 14px"><b style="color:var(--texto)">C2 — quieto demais?</b> A primeira tentativa da V2 tirava também o contorno do tocar/pausar; num trilho escuro ele sumia entre os outros ícones. Voltou um contorno de 1 px só nele. O “−falta” desceu de 14 bold para 12 semibold: deixa de ser lido a 2 m — é a troca pedida (o telão manda), mas fica registrada.</p>
+    <p style="margin:0 0 14px"><b style="color:var(--texto)">C2 — clique acidental.</b> O alvo da barra agora tem 24 px de altura: um clique mal mirado na linha de baixo pula o vídeo que está no ar. Por isso a barra tem folga dos botões vizinhos e o tocar/pausar ficou na linha de cima, longe dela.</p>
+    <p style="margin:0 0 14px"><b style="color:var(--texto)">C3 — a recusa passa despercebida?</b> Sem o aviso central, quem está com o olho na biblioteca vê só o movimento na borda direita. O pisca de 0,9 s e a inversão existem para isso; se no teste da cabine não bastar, o próximo passo é som curto, não uma segunda barra.</p>
+    <p style="margin:0 0 14px"><b style="color:var(--texto)">C3 — nada se desloca.</b> As réguas da prancha são medidas na coluna “desligado” e atravessam as outras duas. O preço: a coluna tem 32 px de cabeçalho sempre. Em 300 px o nome do item recusado corta com reticências; “Não foi ao ar” e “Desligar” nunca cortam.</p>
+    <p style="margin:0 0 14px"><b style="color:var(--texto)">C6 — o que pode dar errado.</b> “Ferramentas” é um nome inventado por mim; Modelos, Funções e Calendário tinham raiz própria por decisão anterior do dono. “Entradas” vira uma linha só e os três tipos (tela, câmera, NDI) viram filtro — um clique a mais para quem usa câmera todo culto. E “Online”, que ainda aparece no print de hoje, não tem lugar na proposta.</p>
+    <p style="margin:0 0 20px"><b style="color:var(--texto)">Densidade.</b> A árvore mais longa aberta (Mídia) tem 16 linhas numa biblioteca de 476 px: cabe, sem sobra. Uma 9ª pasta de mídia já faz rolar.</p>
+
+    <div class="rot" style="margin-bottom:10px">PERGUNTAS ABERTAS — SÓ O DONO RESPONDE</div>
+    <ol style="margin:0;padding-left:22px">
+      <li style="margin-bottom:8px"><b style="color:var(--texto)">Clique em vídeo que já está no ar:</b> reinicia (como no ProPresenter) ou não faz nada? A C1 está desenhada como “não faz nada; reiniciar é no transporte”.</li>
+      <li style="margin-bottom:8px"><b style="color:var(--texto)">Ícone de crossfade:</b> duas setas cruzadas é quase o “aleatório” do Spotify. Mantém, ou troca pelas duas rampas cruzadas sem seta (mostradas na C2)?</li>
+      <li style="margin-bottom:8px"><b style="color:var(--texto)">C6 · Ferramentas:</b> pode juntar Modelos, Funções e Calendário numa raiz só? O nome serve?</li>
+      <li style="margin-bottom:8px"><b style="color:var(--texto)">C6 · Sobreposições:</b> raiz própria (como desenhei, porque vai ao ar) ou também dentro de Ferramentas?</li>
+      <li style="margin-bottom:8px"><b style="color:var(--texto)">C6 · Sem etiqueta:</b> filtro “Sem categoria” no cabeçalho da lista (some quando zera) — ou some de vez?</li>
+      <li style="margin-bottom:8px"><b style="color:var(--texto)">C6 · Entradas:</b> uma linha só com filtro de tipo na lista, ou três linhas (Telas, Câmeras, NDI) dentro de Mídia?</li>
+      <li><b style="color:var(--texto)">C6 · Online:</b> pode sumir da árvore?</li>
+    </ol>
+  </div>
+</section>
+
+</div>
+
+<script>
+const u=(id,c='')=>`<svg class="i ${c}"><use href="#i-${id}"/></svg>`;
+const BG={
+ verm:'radial-gradient(120% 140% at 30% 20%,#b5121c,#5a0a10 70%)',
+ vinho:'radial-gradient(120% 140% at 30% 20%,#6a1f26,#2a0d10 75%)',
+ amar:'radial-gradient(120% 140% at 30% 20%,#f4e08a,#d6b84a 80%)',
+ azul:'radial-gradient(120% 140% at 30% 20%,#3d9be0,#144f9a 80%)',
+ bege:'linear-gradient(135deg,#efe3cf,#d9c4a2)',
+ couro:'linear-gradient(135deg,#8a5a34,#5e3a1e)',
+ templo:'radial-gradient(90% 120% at 70% 30%,#c98a3a,#3a2412 70%)',
+ pb:'linear-gradient(160deg,#3a3f47,#101216)',
+ teal:'radial-gradient(100% 130% at 50% 40%,#12506a,#06202c 80%)',
+ fogo:'radial-gradient(60% 80% at 50% 55%,#7a2a18,#120606 80%)',
+ preto:'#050505',
+ evan:'linear-gradient(180deg,#7fb0d8,#c9a46a)',
+ br:'radial-gradient(90% 120% at 40% 60%,#2f7a3a,#3a1410 80%)'
+};
+const logo='<span class="lg">◗ aliança</span>';
+const M=[
+ {n:'04',bg:'verm',c:logo},
+ {n:'3DIA_MOTION_01',d:'0:30',bg:'bege',c:'<span class="dig" style="color:#8a5a34;font-size:26px">05:00</span>',lp:1},
+ {n:'3DIA_MOTION_02',d:'0:30',bg:'couro',c:''},
+ {n:'3DIA_MOTION_03',d:'0:15',bg:'couro',c:''},
+ {n:'ABERTURA_TEMPLO',d:'1:12',bg:'templo',c:'',st:'hover'},
+ {n:'ABERTURA_VIGILIA',d:'0:58',bg:'pb',c:'<span style="font-size:7px;letter-spacing:.2em;color:#ddd">VIGÍLIA · VIRA A NOITE</span>'},
+ {n:'Aliança_BG_Fundo',d:'0:20',bg:'amar',c:logo,lp:1,rot:1},
+ {n:'Aliança_BG_Fundo_Azul',d:'0:20',bg:'azul',c:logo,lp:1},
+ {n:'Aliança_BG_Fundo_Vinho',d:'0:20',bg:'vinho',c:logo,lp:1},
+ {n:'Aliança_BG_Fundo_Vermelho',d:'0:20',bg:'verm',c:logo,lp:1},
+ {n:'ALIANCA_Oferta_Pix',bg:'verm',c:'<span class="t-txt" style="font-size:11px;font-weight:800">vamos ofertar<br><span style="font-size:7px;font-weight:600">pix 10.669.987/0001-95</span></span>'},
+ {n:'ALIANCA_Oferta_QR',bg:'verm',c:'<span class="t-txt" style="font-size:11px;font-weight:800">vamos ofertar</span>'},
+ {n:'Artboard 1',bg:'evan',c:'<span class="t-txt" style="font-size:13px;color:#3a2a14;text-shadow:none">EVANGELHO</span>'},
+ {n:'Artboard 1-1',bg:'pb',c:'<span class="t-txt" style="font-size:10px;font-weight:800">Saia do Comodismo!</span>'},
+ {n:'Batismo17Mai',bg:'linear-gradient(#fff,#eef4ff)',c:'<span class="t-txt" style="font-size:15px;color:#1e4fb8;text-shadow:none">batismo<br>nas águas</span>'},
+ {n:'BR-AP-ALIANCA',d:'0:45',bg:'br',c:''},
+ {n:'CONTADOR 1 min',d:'1:00',bg:'teal',c:'<span class="dig" style="font-size:26px">00:59</span>'},
+ {n:'CONTADOR 5 min',d:'5:00',bg:'teal',c:'<span class="dig" style="font-size:26px">04:59</span>',rot:1},
+ {n:'CONTAGEM FOGOS',d:'0:10',bg:'fogo',c:''},
+ {n:'CONTAGEM TEMPLO',d:'0:10',bg:'preto',c:'<span style="font-size:15px;letter-spacing:.1em;color:#777;font-weight:300">CINCO</span>'},
+ {n:'CRONÔMETRO 30 min',d:'30:00',bg:'preto',c:'<span class="dig" style="font-size:28px;border:1px solid #555;border-radius:8px;padding:2px 10px">29:33</span>',st:'ar'},
+ {n:'CRONOMETRO_ANTIGO',bg:'preto',st:'falta'},
+ {n:'Fundo com logo',bg:'preto',c:'<span style="font-size:7px;letter-spacing:.3em;color:#bbb">MINISTÉRIO ◗ ALIANÇA</span>'},
+ {n:'Fundo_Louvor_Dourado',d:'0:30',bg:'linear-gradient(135deg,#b89a3a,#5a4612)',c:'',lp:1},
+ {n:'Fundo_Louvor_Noite',d:'0:30',bg:'pb',c:'',lp:1},
+ {n:'Fundo_Oração',d:'0:40',bg:'linear-gradient(135deg,#2a1a3a,#0a0612)',c:'',lp:1},
+ {n:'Ceia_Fundo',d:'0:25',bg:'linear-gradient(135deg,#d6b84a,#8a6a14)',c:'',lp:1},
+ {n:'Aviso_Kids',bg:'azul',c:'<span class="t-txt" style="font-size:12px">KIDS</span>'}
+];
+function card(m,st){
+  st=st||m.st||'';
+  const bg=BG[m.bg]||m.bg;
+  if(st==='falta') return `<div class="mc falta"><div class="th">${u('x','s18')}<span>ARQUIVO NÃO ENCONTRADO</span></div><div class="pe"><span class="nm">${m.n}</span><span class="eng">${u('gear','s14')}</span></div></div>`;
+  return `<div class="mc ${st}"><div class="th" style="background:${bg}">${m.c||''}
+    <span class="selo tag ar">NO AR</span>
+    ${m.d?`<span class="dur">${m.lp?u('loop','s12'):''}${m.d}</span>`:''}
+    <span class="dica">${u('play','s12')}AO AR</span>
+    <span class="mais ${m.rot?'ok':''}" title="${m.rot?'Já está no roteiro — adicionar de novo':'Adicionar ao fim do roteiro'}">${u(m.rot?'check':'plus','s14')}</span>
+  </div><div class="pe"><span class="nm" title="${m.n}">${m.n}</span><span class="eng" title="Ajustes desta mídia">${u('gear','s14')}</span></div></div>`;
+}
+document.getElementById('g1').innerHTML=M.map(m=>card(m)).join('');
+document.getElementById('anat').innerHTML=card({n:'Aliança_BG_Fundo',d:'0:20',bg:'amar',c:logo,lp:1})+
+ `<span style="position:absolute;right:-9px;top:1px;font-size:8px;font-weight:700;background:var(--texto);color:var(--tinta);border-radius:6px;width:12px;height:12px;display:flex;align-items:center;justify-content:center">1</span>
+  <span style="position:absolute;right:-9px;top:76px;font-size:8px;font-weight:700;background:var(--texto);color:var(--tinta);border-radius:6px;width:12px;height:12px;display:flex;align-items:center;justify-content:center">2</span>
+  <span style="position:absolute;left:-9px;top:108px;font-size:8px;font-weight:700;background:var(--texto);color:var(--tinta);border-radius:6px;width:12px;height:12px;display:flex;align-items:center;justify-content:center">3</span>
+  <span style="position:absolute;right:-9px;top:108px;font-size:8px;font-weight:700;background:var(--texto);color:var(--tinta);border-radius:6px;width:12px;height:12px;display:flex;align-items:center;justify-content:center">4</span>`;
+const E=[
+ ['Repouso',{n:'ABERTURA_TEMPLO',d:'1:12',bg:'templo'},''],
+ ['Hover — avisa o que o clique faz',{n:'ABERTURA_TEMPLO',d:'1:12',bg:'templo'},'hover'],
+ ['Clicado — trava de 400 ms',{n:'ABERTURA_TEMPLO',d:'1:12',bg:'templo'},'hover trava'],
+ ['No ar',{n:'ABERTURA_TEMPLO',d:'1:12',bg:'templo'},'ar'],
+ ['Já no roteiro (✓)',{n:'CONTADOR 5 min',d:'5:00',bg:'teal',c:'<span class="dig" style="font-size:26px">04:59</span>',rot:1},''],
+ ['Imagem — sem duração',{n:'ALIANCA_Oferta_Pix',bg:'verm',c:'<span class="t-txt" style="font-size:11px;font-weight:800">vamos ofertar</span>'},''],
+ ['Arquivo sumiu — não clica',{n:'CRONOMETRO_ANTIGO',bg:'preto'},'falta'],
+ ['Foco do teclado',{n:'Aliança_BG_Fundo_Azul',d:'0:20',bg:'azul',c:logo,lp:1},'foco']
+];
+document.getElementById('estados').innerHTML=E.map(e=>`<div style="width:166px">${card(e[1],e[2]||' ')}<div class="cota" style="margin-top:8px">${e[0]}</div></div>`).join('');
+
+/* ---------- transporte ---------- */
+function tcOld(o){
+  const sp=o.tipo==='spotify';
+  return `<div class="tc">
+    <div class="tc-n">${o.telao?'<i class="pt"></i>':''}<span style="color:var(--mudo);display:flex">${u(sp?'nota':'film','s14')}</span><span class="nm">${o.nome}${o.sub?` <i>· ${o.sub}</i>`:''}</span>${o.saida?`<span class="sd">${o.saida}</span>`:''}</div>
+    <div class="tc-b"><span class="t0">${o.t0}</span><div class="bar"><i style="width:${o.p}%"></i><b style="left:${o.p}%"></b></div><span class="t1">${o.t1}</span></div>
+    <div class="tc-c"><div class="g">${sp?`<button class="ib">${u('prev','s14')}</button>`:''}<button class="toca">${u(o.pausado?'play':'pause')}</button>${sp?`<button class="ib">${u('next','s14')}</button>`:''}</div>
+      <div class="g"><button class="ib ${(sp?o.xf:o.loop)?'lig':''}">${u(sp?'xf':'loop')}</button><button class="ib">${u('vol')}</button><div class="bar vol"><i style="width:${o.v}%"></i><b style="left:${o.v}%"></b></div></div></div>
+  </div>`;
+}
+function tk(o){
+  const sp=o.tipo==='spotify';
+  return `<div class="tk">
+    <div class="tk-a"><div class="grp3">${sp?`<button class="q" title="Anterior">${u('prev','s14')}</button>`:''}<button class="q p" title="${o.pausado?'Tocar':'Pausar'}">${u(o.pausado?'play':'pause','s14')}</button>${sp?`<button class="q" title="Próxima">${u('next','s14')}</button>`:''}</div>
+      ${o.telao?'<i class="pt" title="No telão"></i>':''}<span class="nm" title="${o.nome}">${o.nome}${o.sub?` <i>· ${o.sub}</i>`:''}</span>${o.saida?`<span class="sd" title="Este cartão comanda: ${o.saida}">${o.saida}</span>`:''}<span class="t1" title="Falta — clique troca por duração total">${o.t1}</span></div>
+    <div class="tk-b"><div class="bar" title="Clique para pular, arraste para procurar"><i style="width:${o.p}%"></i><b style="left:${o.p}%"></b></div>
+      ${sp?`<button class="q ${o.xf?'lig':''}" title="Crossfade">${u('xf','s14')}</button>`:`<button class="q ${o.loop?'lig':''}" title="Repetir">${u('loop','s14')}</button>`}<button class="q" title="Desligar o som">${u('vol','s14')}</button><div class="bar vol"><i style="width:${o.v}%"></i><b style="left:${o.v}%"></b></div></div>
+  </div>`;
+}
+const camadas=(tem)=>`<div class="cam">${['cam2','T','img','nota'].map((k,i)=>`<button class="ib ${tem.includes(i)?'tem':''}">${u(k,'s14')}</button>`).join('')}<button class="ib x" title="Limpar tudo">${u('x','s14')}</button></div>`;
+const SLOT='<div class="slot"><span class="rot">NO AR</span><small>Telão · 16:9</small></div>';
+function colNoAr(o){
+  return `<div class="p col" style="width:${o.w}px;${o.h?`height:${o.h}px`:''}">
+    ${o.slot||SLOT}
+    <div class="prog-l"><div class="prog ${o.progCls||''}" data-m="telao">${o.prog}</div>${camadas(o.tem||[2])}</div>
+    ${o.cards&&o.cards.length?`<div class="tcs" style="gap:4px">${o.cards.map(tk).join('')}</div>`:''}
+    <div class="outras"><div style="display:flex;align-items:center;gap:6px"><span style="width:20px;color:var(--mudo);display:flex;justify-content:center">${u(o.ret?'dn':'rt','s14')}</span><div class="seg">${(o.abas||['Retorno']).map((a,i)=>`<button class="${i===0?'a':''}">${a}</button>`).join('')}</div></div>
+      ${o.ret?`<div class="prog ${o.retCls||'quieto'}" data-m="outra" style="flex:none;margin-left:26px;margin-right:34px">${o.ret}</div>`:''}
+    </div>
+    ${o.extra||''}
+  </div>`;
+}
+const crono='<span class="dig" style="font-size:SZpx;border:1px solid #555;border-radius:10px;padding:4px 16px">29:33</span>';
+const V1={tipo:'video',telao:1,nome:'CRONÔMETRO 30 min',t0:'0:29',t1:'−30:26',p:4,loop:0,v:80};
+const V2={tipo:'video',nome:'Vinheta_Transmissão_Domingo',t0:'0:08',t1:'−0:22',p:27,loop:1,v:100,saida:'NDI LIVE'};
+const SP={tipo:'spotify',nome:'Lugar Secreto',sub:'Gabriela Rocha',t0:'2:14',t1:'−3:02',p:42,xf:1,v:55};
+const rotulo=(t,s)=>`<div style="margin-bottom:10px"><div class="leg" style="position:static">${t}</div><div class="cota" style="margin-top:2px;height:36px">${s}</div></div>`;
+const velho=(cards,h)=>`<div style="margin-top:22px"><div class="leg" style="position:static;margin-bottom:8px">Versão anterior · <s>${h} px</s> · descartada</div><div class="risc"><div class="tcs">${cards.map(tcOld).join('')}</div></div></div>`;
+const C2=[
+ [300,'<b>300 px</b> · 1 mídia','O caso de todo domingo: 60 px, sem etiqueta de saída.',30,[2],['Retorno'],[V1],100],
+ [360,'<b>360 px</b> · vídeo + Spotify','124 px no total. Crossfade na casa fixa, ligado.',36,[2,3],['Retorno'],[V1,SP],208],
+ [420,'<b>420 px</b> · saídas com mídias diferentes','188 px. Aqui a etiqueta de saída aparece; no Spotify, nunca.',44,[2,3],['Retorno','NDI Live'],[{...V1,saida:'TELÃO'},V2,{...SP,pausado:1,xf:0}],316]
+];
+document.getElementById('c2cols').innerHTML=C2.map(c=>`<div style="width:${c[0]}px">${rotulo(c[1],c[2])}${colNoAr({w:c[0],prog:crono.replace('SZ',c[3]),tem:c[4],abas:c[5],cards:c[6]})}${velho(c[6],c[7])}</div>`).join('');
+(function(){
+  const a=document.getElementById('c2anat'); a.innerHTML=tk({...SP});
+  const b=a.querySelector('.tk-b .bar'), r=a.getBoundingClientRect(), q=b.getBoundingClientRect(), z=2;
+  const d=document.createElement('div');
+  d.style.cssText=`position:absolute;left:${(q.left-r.left)/z}px;top:${(q.top-r.top)/z}px;width:${q.width/z}px;height:${q.height/z}px;border:1px dashed var(--verde);border-radius:4px;background:rgba(94,196,141,.12);pointer-events:none`;
+  a.appendChild(d);
+})();
+
+/* ---------- C3: três estados da coluna ---------- */
+const tarja=(rec)=>rec
+ ?`<div class="fx-ret rec" role="alert">${u('x','s14')}<b class="rc">Não foi ao ar:</b><span>ABERTURA_TEMPLO</span><button title="Volta a mandar para o telão">Desligar</button></div>`
+ :`<div class="fx-ret" role="status">${u('cam2','s14')}SÓ RETORNO<span>· telão parado</span><button title="Volta a mandar para o telão">Desligar</button></div>`;
+const telao=(parado)=>'<span class="t-txt" style="font-size:20px">SANTO ESPÍRITO,<br>VEM</span>'+(parado?'<span style="position:absolute;right:8px;top:8px;display:flex;align-items:center;gap:4px;height:20px;padding:0 7px 0 5px;border-radius:4px;background:rgba(0,0,0,.72);font-size:10px;font-weight:700;letter-spacing:.04em">'+u('cad','s12')+'PARADO</span>':'');
+const resto=`<div style="display:flex;flex-direction:column;gap:6px;margin-top:4px"><span class="rot">MENSAGEM PRO PALCO</span><div class="cp" style="flex:none;padding-top:0;align-items:center"><span class="v" style="color:var(--mudo);font-weight:400">Pastor, 5 minutos</span></div></div>`;
+const retOn='<span class="t-txt" style="font-size:18px">QUE CAIA O<br>TEU ESPÍRITO</span><span class="tag" style="position:absolute;top:8px;left:8px;background:var(--laranja);color:var(--tinta)">NO RETORNO</span>';
+const retOff='<span class="t-txt" style="font-size:18px">SANTO ESPÍRITO,<br>VEM</span>';
+const E3=[
+ ['Desligado','A faixa de cima é o cabeçalho de sempre.',{}],
+ ['Só retorno ligado','A mesma faixa vira a tarja. Telão parado; o retorno segue o operador.',{slot:tarja(0),retCls:'ret',ret:retOn,p:1}],
+ ['Recusa (5 s) — clique para ver piscar','Mídia clicada com o modo ligado: a tarja pisca e troca o texto.',{slot:tarja(1),retCls:'ret',ret:retOn,p:1,id:'c3rec'}]
+];
+document.getElementById('c3cols').innerHTML=E3.map(e=>`<div style="width:400px;position:relative" ${e[2].id?`id="${e[2].id}" `:''}><div style="position:absolute;top:-46px;left:0;right:0"><div class="leg" style="position:static"><b>${e[0]}</b></div><div class="cota">${e[1]}</div></div>${colNoAr({w:400,h:590,slot:e[2].slot,prog:telao(e[2].p),tem:[1],abas:['Retorno','NDI Live'],retCls:e[2].retCls,ret:e[2].ret||retOff,extra:resto})}</div>`).join('');
+document.getElementById('c3rec').onclick=function(){const t=this.querySelector('.fx-ret');t.classList.remove('vai');void t.offsetWidth;t.classList.add('vai')};
+document.getElementById('c3min').innerHTML=[SLOT,tarja(0),tarja(1)].map(t=>`<div class="p" style="padding:12px 12px 0;height:32px;overflow:hidden">${t}</div>`).join('');
+/* réguas: medidas na coluna "desligado", desenhadas através das três */
+(function(){
+  const cols=document.getElementById('c3cols'), c0=cols.children[0].querySelector('.col'), quadro=cols.closest('.quadro');
+  const zq=quadro.getBoundingClientRect(), zc=c0.getBoundingClientRect(), k=zq.width/1920;
+  const y0=(zc.top-zq.top)/k, pts=[];
+  const add=(el,borda)=>{const r=el.getBoundingClientRect();pts.push(Math.round((r[borda]-zc.top)/k))};
+  add(c0.querySelector('.slot'),'bottom');
+  const t=c0.querySelector('[data-m=telao]'); add(t,'top'); add(t,'bottom');
+  const o=c0.querySelector('[data-m=outra]'); add(o,'top'); add(o,'bottom');
+  document.getElementById('c3reguas').innerHTML=pts.map((p,i)=>`<div class="regua" style="top:${y0+p}px;width:1390px"><span style="${i%2?'top:3px':''}">${p} px</span></div>`).join('');
+})();
+
+/* ---------- C6: árvore ---------- */
+function arv(l,h){
+  return `<div class="po tr" style="height:${h||500}px">`+l.map(x=>{
+    const [k,n,c,f]=x;
+    if(k==='R') return `<div class="no ${f==='sel'?'sel':''}"><span class="st">${u(f?'dn':'rt','s14')}</span>${n}${c!=null?`<span class="ct">${c}</span>`:''}</div>`;
+    if(k==='r') return `<div class="rt">${n}</div>`;
+    if(k==='-') return `<div class="fio"></div>`;
+    if(k==='+') return `<div class="f mais">${u('plus','s12')}${n}</div>`;
+    if(k==='B') return `<div class="bvelho">${u('plus','s12')}${n}</div>`;
+    return `<div class="f ${k==='f3'?'n3':''} ${f==='sel'?'sel':''}">${typeof f==='string'&&f!=='sel'?u(f,'s14'):''}${n}${c!=null?`<span class="ct">${c}</span>`:''}</div>`;
+  }).join('')+`</div>`;
+}
+const cats=[['f','Louvor',148],['f','Palavra',22],['f','Avisos',11],['f','Apresentações',9],['f','Kids',8],['f','Ceia e batismo',0]];
+const pastas=[['f','Aberturas e contadores',18],['f','Eventos',8],['f','Fundos',10],['f','Fundos OneDrive',3],['f','Imagens',3],['f','Do ProPresenter (triar)',3],['f','Entrada (triar)',9],['f','Do Sirvo',4]];
+const R=(a)=>[['R','Shows',212,a==='s'?1:0],['R','Mídia',39,a==='m'?1:0],['R','Bíblia',3,a==='b'?1:0],['R','Sobreposições',17,a==='o'?1:0],['R','Ferramentas',null,a==='f'?1:0]];
+const ins=(base,i,filhos)=>[...base.slice(0,i+1),...filhos,...base.slice(i+1)];
+document.getElementById('c6antes').innerHTML=
+  arv([['R','Shows',null,1],['f','Tudo',212,'sel'],['f','Sem etiqueta',14],['r','Categorias'],...cats.map(c=>['f3',c[1],c[2]]),['B','Nova categoria'],['R','Mídia'],['R','Áudio'],['R','Bíblia'],['R','Sobreposições'],['R','Modelos'],['R','Funções'],['R','Calendário']])+
+  arv([['R','Shows'],['R','Mídia',null,1],['r','Pastas de mídia'],['f3','Mídias',39,'sel'],['f3','Do Sirvo'],['B','Nova pasta de mídia'],['f','Tudo',39],['f','Entradas'],['f','Online'],['r','Pastas'],['f3','Aberturas e contadores',18],['f3','Eventos',8],['f3','Fundos',10],['f3','Imagens',3],['R','Áudio'],['R','Bíblia']]);
+const dS=ins(R('s'),0,[['f','Louvor',148,'sel'],...cats.slice(1),['+','categoria']]);
+const dM=ins(R('m'),1,[...pastas,['-'],['f','Áudio',27,'nota'],['f','Entradas',5,'cam'],['+','pasta']]); dM[1][3]='sel';
+const dF=ins(R('f'),4,[['f','Modelos',12,'sel'],['f','Funções',9],['f','Calendário',null]]);
+document.getElementById('c6depois').innerHTML=arv(dS)+arv(dM)+arv(dF);
+const dB=ins(R('b'),2,[['f','NVI',null,'sel'],['f','Almeida Revista e Atualizada',null],['f','NVT',null],['+','Bíblia']]);
+const dO=ins(R('o'),3,[['f','Avisos',6],['f','Logos',4],['f','Tarjas de nome',5,'sel'],['f','Redes sociais',2],['+','categoria']]);
+document.getElementById('c6outras').innerHTML=`<div>${arv(dB,280)}</div><div>${arv(dO,310)}</div><div class="cota" style="width:520px;padding-top:4px"><p style="margin:0 0 6px"><b>Bíblia:</b> a raiz abre a versão em uso; os filhos são as versões instaladas. Se não houver nenhuma, a lista diz “nenhuma Bíblia instalada” alto (defeito A6).</p><p style="margin:0"><b>Sobreposições:</b> igual a Shows — raiz = todas, categorias direto, “＋ categoria” no fim, e o mesmo filtro “Sem categoria” no cabeçalho da lista.</p></div>`;
+
+/* zoom do board */
+document.querySelectorAll('.cab-mesa .z button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.cab-mesa .z button').forEach(x=>x.classList.remove('a'));b.classList.add('a');document.documentElement.style.setProperty('--z',b.dataset.z)});
+</script>
+</body>
+</html>
