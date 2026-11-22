@@ -51,6 +51,12 @@
                 "p, \"menu-app\""
             ]
         },
+        "components/main/AliancaModeloBiblia.svelte": {
+            "classe": "gesto: botao Editar modelo da Biblia (cabecalho da biblioteca, cabine-5)",
+            "chamadas": [
+                "\"edit\", \"botao-de-pagina\""
+            ]
+        },
         "components/main/AliancaSirvoPilula.svelte": {
             "classe": "gesto: pilula Sirvo",
             "chamadas": [

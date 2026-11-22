@@ -12,7 +12,7 @@ const SEM_MARCA = "a lista nova nao mostra essa marca"
 export const NOVOS: Layout = {
     // biblioteca
     show_drawer: ["alianca_editar", "alianca_roteiro", "alianca_agora"],
-    media_card: ["edit", "alianca_roteiro", "SEPARATOR", "play_no_audio", "play_no_filters", "createSlideshow", "SEPARATOR", "favourite", "SEPARATOR", "alianca_mover", "alianca_fim", "alianca_camada", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open"],
+    media_card: ["edit", "alianca_roteiro", "SEPARATOR", "play_no_audio", "play_no_filters", "createSlideshow", "SEPARATOR", "favourite", "SEPARATOR", "alianca_mover", "alianca_fim", "alianca_camada", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open", "SEPARATOR", "alianca_tirar_bib", "alianca_apagar_pc"],
     audio_button: ["edit", "alianca_roteiro", "alianca_agora", "SEPARATOR", "effects_library_add", "favourite", "SEPARATOR", "alianca_mover", "SEPARATOR", "system_open"],
     audio_button_playlist: ["edit", "alianca_agora", "SEPARATOR", "remove"],
     overlay_card: ["edit", "alianca_roteiro", "alianca_agora", "SEPARATOR", "overlay_actions", "display_duration", "SEPARATOR", "lock_to_output", "place_under_slide", "SEPARATOR", "rename", "recolor", "duplicate", "delete"],
@@ -31,6 +31,10 @@ export const NOVOS: Layout = {
     player_button: ["alianca_agora", "SEPARATOR", "GROUP_open", "player_tag_set", "player_tag_filter", "SEPARATOR", "rename", "delete"],
     audio_effect_button: ["alianca_agora", "SEPARATOR", "GROUP_rename_only", "remove", "SEPARATOR", "system_open"],
     audio_stream: ["alianca_agora", "SEPARATOR", "GROUP_edit", "delete"],
+    // cabine-5: os 3 tipos da pasta de midia saem do submenu "Tipo" para a raiz (o menu e curto)
+    category_media_button: ["GROUP_rename_only", "delete_remove", "SEPARATOR", "type_default", "type_background", "type_foreground", "SEPARATOR", "system_open"],
+    // cabine-5: a arvore da Biblia nao tem mais Colecoes (decisao do Andre, 19/nov)
+    category_scripture: ["newScripture"],
     // roteiro: itens
     project_show: ["alianca_editar", "alianca_agora_item", "SEPARATOR", "alianca_subir", "alianca_descer", "SEPARATOR", "alianca_tirar"],
     project_show_placeholder: ["alianca_subir", "alianca_descer", "SEPARATOR", "alianca_tirar"],
@@ -70,6 +74,8 @@ export const REMOVIDOS: { [layout: string]: { [item: string]: string } } = {
     player_button: {},
     audio_effect_button: {},
     audio_stream: {},
+    category_media_button: { media_type: "os tres tipos (Padrao, Plano de fundo, Primeiro plano) foram para a raiz do menu" },
+    category_scripture: { createCollection: "a Biblia nao tem mais Colecoes na arvore (decisao do Andre, 19/nov); as que existem ficam guardadas" },
     project_show: { GROUP_rename_only: "o nome do show se edita no editor (Editar); a lista nova nao renomeia no lugar", remove: "Tirar do roteiro", mark_played: SEM_MARCA, private: "show privado nao tem marca na lista nova" },
     project_show_placeholder: { remove: "Tirar do roteiro" },
     project_show_placeholder_template: { GROUP_rename_only: "a lista nova nao renomeia no lugar", remove: "Tirar do roteiro" },
@@ -101,4 +107,3 @@ export function semDestinoPorLayout(antigos: Layout): { [layout: string]: string
     }
     return falhas
 }
-

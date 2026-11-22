@@ -9,7 +9,7 @@
 //   F. botao direito num bloco: Editar titulo (cursor no titulo), Mover, Novo bloco, Tirar
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar, tecla } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, tecla, BIB_RAIZ } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-6"
 mkdirSync(saida, { recursive: true })
@@ -87,6 +87,8 @@ window.__n=0; window.__m=0; window.__sig=''; S.outputs.subscribe((o)=>{window.__
       ok("A1 clique numa linha de show: abre no centro (previa) e zero escritas em outputs", (await dom(`get(S.activeShow)?.id`)) === id && (await escritas()) === 0, `n=${await escritas()}`)
       ok("A1b nada foi ao ar", !(await algoNoAr())) }
     await noDaArvore("Mídia")
+    // cabine-5: a raiz da Midia e a biblioteca; poe f1/v1 nela
+    await j.ev(`${BIB_RAIZ} return 1`); await esperar(1200)
     { const a = await localizar(j, `document.querySelector('[data-regiao=biblioteca] [class*="#media_card"]')`)
       await j.ev(`window.__n=0; return 1`)
       await clicarEm(j, a.x, a.y); await esperar(900)

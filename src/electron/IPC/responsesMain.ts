@@ -1,5 +1,6 @@
 import type { BrowserWindow, DesktopCapturerSource } from "electron"
-import { app, desktopCapturer, screen, shell, systemPreferences } from "electron"
+import { app, desktopCapturer, dialog, screen, shell, systemPreferences } from "electron"
+import fs from "fs"
 import os from "os"
 import path from "path"
 import { getMainWindow, isProd, mainWindow, maximizeMain, setGlobalMenu } from ".."
@@ -128,6 +129,7 @@ export const mainResponses: MainResponses = {
     [Main.ALIANCA_PASTA_ONLINE]: () => getDataFolderPath("onlineMedia"),
     [Main.ALIANCA_CRIAR_PASTAS]: (data) => criarPastasOnline(data),
     [Main.ALIANCA_APAGAR]: (data) => apagarDaPastaOnline(data.caminho),
+    [Main.ALIANCA_LIXEIRA]: (data) => mandarParaLixeira(data.caminho),
     [Main.MEDIA_IS_DOWNLOADED]: async (data) => await checkIfMediaDownloaded(data),
     [Main.NOW_PLAYING]: (data) => setPlayingState(data),
     [Main.NOW_PLAYING_UNSET]: () => unsetPlayingAudio(),
@@ -553,3 +555,22 @@ export function createLog(err: Error) {
 //     })
 //     return encodedFiles
 // }
+
+// cabine-5 (aprovado pelo André 19/nov): "Apagar do computador" da biblioteca de midia. Quem decide e o processo principal (caixa nativa), nao a tela.
+const MIDIA_LIXEIRA = /\.(mp4|mov|mkv|avi|webm|m4v|mpg|mpeg|wmv|ogv|flv|3gp|jpg|jpeg|png|gif|webp|bmp|svg|tif|tiff|jfif|avif|heic)$/i
+async function mandarParaLixeira(caminho: string): Promise<{ ok: boolean; mensagem: string }> {
+    const alvo = path.resolve(caminho || "")
+    const st = fs.statSync(alvo, { throwIfNoEntry: false })
+    if (!st || !st.isFile() || !MIDIA_LIXEIRA.test(alvo)) return { ok: false, mensagem: "Recusado: não é um vídeo ou imagem que exista: " + caminho }
+    const opcoes: Electron.MessageBoxOptions = { type: "warning", buttons: ["Apagar (vai para a Lixeira)", "Cancelar"], defaultId: 1, cancelId: 1, title: "Apagar do computador", message: `Mandar "${path.basename(alvo)}" para a Lixeira?`, detail: path.dirname(alvo) }
+    const janela = getMainWindow()
+    const r = janela ? await dialog.showMessageBox(janela, opcoes) : await dialog.showMessageBox(opcoes)
+    if (r.response !== 0) return { ok: false, mensagem: "" }
+    try {
+        await shell.trashItem(alvo)
+    } catch (e) {
+        return { ok: false, mensagem: "A Lixeira não aceitou o arquivo (rede/OneDrive?): " + caminho }
+    }
+    if (fs.existsSync(alvo)) return { ok: false, mensagem: "O arquivo continua no lugar depois da Lixeira: " + caminho }
+    return { ok: true, mensagem: "" }
+}

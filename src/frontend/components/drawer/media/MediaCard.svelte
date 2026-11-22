@@ -11,6 +11,7 @@
     import { autorizarAr, gavetaNaoToca, podeMarcar } from "../../../utils/aliancaGavetaToque"
     import { chaveDe } from "../../../utils/aliancaGavetaLogica"
     import { camadaNaHora, ehAbaDePasta, pastaDaMidia, resolverFim, tagsSemPasta } from "../../../utils/aliancaPastasMidiaLogica"
+    import { BIB } from "../../../utils/aliancaBibliotecaMidiaLogica"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
     import { doesMediaExist, getMediaLayerType, getMediaStyle, getMediaType, isLocalFile, loadThumbnail } from "../../helpers/media"
@@ -161,7 +162,11 @@
     let wait = false
     function click(e: any) {
         // C1: arquivo que sumiu nunca vai ao ar nem marca (o cartao laranja ja diz por que)
-        if (falta) return
+        if (falta) {
+            // cabine-5: offline fala alto (o arquivo foi apagado ou movido); "Tirar da biblioteca" no botao direito
+            newToast(`Arquivo não encontrado (offline): ${path}`)
+            return
+        }
         // modo LISTA (revisao do PR #40, achado 10): a mesma zona segura do cartao em grade - so o thumb (.card) manda ao ar; o nome da linha so seleciona e arrasta
         const foraDoThumb = !gridCartao && e?.target instanceof Element && !e.target.closest(".card")
         if (gavetaNaoToca()) {
@@ -273,7 +278,7 @@
         isFavourite = mediaData?.favourite === true
         icon = type === "video" ? "movie" : "image"
         // AliancaShow F7: o selo de etiquetas nao mostra a pasta (ela tem o proprio chip)
-        tags = tagsSemPasta(mediaData?.tags, $mediaTags)
+        tags = tagsSemPasta(mediaData?.tags, $mediaTags).filter((t) => t !== BIB)
     }
 
     // chips da pasta (so nas vistas "pasta:*"): o que o video faz ao terminar e em qual camada; borda = ajuste proprio da midia
@@ -300,8 +305,10 @@
                 delete a[path].cropping
             } else if (key === "tags") {
                 // a pasta (F7) nao e uma etiqueta comum: "remover etiquetas" a preserva
+                // cabine-5: nem a marca da biblioteca (BIB): "remover etiquetas" nao tira a midia da biblioteca
                 const pasta = pastaDaMidia(a[path].tags, get(mediaTags))
-                a[path].tags = pasta ? [pasta] : []
+                const naBib = (a[path].tags || []).includes(BIB)
+                a[path].tags = [...(pasta ? [pasta] : []), ...(naBib ? [BIB] : [])]
             } else {
                 delete a[path][key]
             }
@@ -399,7 +406,7 @@
         {#if estado === "falta" && gridCartao}
             <div class="sumiu" data-acao="midia-sumiu">
                 <Icon size={1.4} id="close" white />
-                <span>ARQUIVO NÃO ENCONTRADO</span>
+                <span>OFFLINE · arquivo não encontrado</span>
             </div>
         {:else if failed}
             <div class="icon">

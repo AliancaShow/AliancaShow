@@ -26,6 +26,7 @@
     import AliancaArvore from "./AliancaArvore.svelte"
     import AliancaMidiaControles from "./AliancaMidiaControles.svelte"
     import AliancaShowsLista from "./AliancaShowsLista.svelte"
+    import AliancaModeloBiblia from "./AliancaModeloBiblia.svelte"
 
     export let esq = 280
 
@@ -136,6 +137,9 @@
         {#if emMidia}
             <AliancaFiltros />
         {/if}
+        {#if $activeDrawerTab === "scripture"}
+            <AliancaModeloBiblia />
+        {/if}
         <span class="espaco"></span>
         {#if emMidia}
             <AliancaMidiaControles />
@@ -233,7 +237,8 @@
     .pop {
         position: absolute;
         z-index: 40;
-        bottom: 34px;
+        /* cabine-5: abre PARA BAIXO, sobre a lista. Para cima saia do painel (overflow: hidden) e sumia atras dos slides */
+        top: calc(100% + 6px);
         left: 0;
         width: 220px;
         display: flex;

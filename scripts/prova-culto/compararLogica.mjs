@@ -6,7 +6,7 @@ import { ATRIBUTOS_DOM, ESTADOS_CULTO, normalizarAtributo } from "./aparencia/fv
 export const TETO_RUIDO = 80
 
 /** fatias que podem declarar excecoes no esperado.json (outra fatia reprova no esquema) */
-export const FATIAS_VALIDAS = ["0b", "0c", "1a", "1b"]
+export const FATIAS_VALIDAS = ["0b", "0c", "1a", "1b", "cabine5", "cabine5-2a"]
 /** teto de itens declarados por fatia: conta TODOS os tipos (divergencia, efeitoMinimo, dom...), exceto `aposentar` */
 export const TETO_PADRAO = 10
 export const TETO_POR_FATIA = {

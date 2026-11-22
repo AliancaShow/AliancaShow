@@ -11,32 +11,8 @@ import { Main } from "../../types/IPC/Main"
 import { clone } from "../components/helpers/array"
 import { refreshOut } from "../components/helpers/output"
 import { sendMain } from "../IPC/main"
-import {
-    alertUpdates,
-    audioChannelsData,
-    audioEffects,
-    autoOutput,
-    autosave,
-    disabledServers,
-    eqPresets,
-    formatNewShow,
-    fullColors,
-    groupNumbers,
-    labelsDisabled,
-    language,
-    maxConnections,
-    outputs,
-    ports,
-    remotePassword,
-    serverData,
-    slidesOptions,
-    special,
-    splitLines,
-    theme,
-    themes,
-    timeFormat,
-    transitionData
-} from "../stores"
+import { alertUpdates, audioChannelsData, audioEffects, autoOutput, autosave, disabledServers, eqPresets, formatNewShow, fullColors, groupNumbers, labelsDisabled, language, maxConnections, outputs, ports, remotePassword, serverData, slidesOptions, special, splitLines, theme, themes, timeFormat, transitionData } from "../stores"
+import { falhaAlta } from "./aliancaFalha"
 import { contarMudancas, lojasMudadas, restaurarSaidas, vistaDasSaidas, type Foto } from "./aliancaConfigRascunhoLogica"
 import { setLanguage } from "./language"
 import { send } from "./request"
@@ -97,6 +73,17 @@ function recontar() {
 function pedirRecontagem() {
     if (agenda) return
     agenda = setTimeout(recontar, 150)
+}
+
+/**
+ * cabine-5: uma loja mudada FORA de Configuracoes, por algo que se grava sozinho (a migracao da biblioteca de midia mexe em `mediaTags`),
+ * entra na foto: nao e "alteracao nao salva" e o Descartar nao pode desfaze-la. So com Configuracoes fechada (quem chama confere).
+ */
+export function aceitarNaFoto(nome: string) {
+    if (!temFoto) return
+    const loja = lojasDeConfiguracao()[nome]
+    if (!loja) return falhaAlta("config-rascunho", `aceitarNaFoto: loja desconhecida "${nome}"`)
+    foto[nome] = clone(get(loja))
 }
 
 /** tira a foto do estado de agora (a primeira vez que Configuracoes abre, e depois de cada Salvar confirmado ou Descartar que desfez tudo) */

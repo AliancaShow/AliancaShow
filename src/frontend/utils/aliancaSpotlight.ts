@@ -7,7 +7,7 @@
 // Trocar de tela so pela porta (`trocarTela(..., "spotlight")`) e so quando o resultado vive em outra tela (numa pagina do menu).
 // Sem `.subscribe` no nivel do modulo (a janela de saida importa a arvore de stores).
 import { get } from "svelte/store"
-import { activeDrawerTab, activeEdit, activePopup, activeProfile, activeShow, audioFolders, categories, focusMode, mediaFolders, openScripture, outLocked, outputs, quickSearchActive, scriptures, settingsTab, shows, textCache, drawerTabsData } from "../stores"
+import { activeDrawerTab, activeEdit, activePopup, activeProfile, activeShow, audioFolders, categories, focusMode, media, openScripture, outLocked, outputs, quickSearchActive, scriptures, settingsTab, shows, textCache, drawerTabsData } from "../stores"
 import { loadJsonBible } from "../components/drawer/bible/scripture"
 import { setDrawerTabData } from "../components/helpers/historyHelpers"
 import { openShow } from "../components/helpers/show"
@@ -17,6 +17,7 @@ import { porShowNoFim, executarComandoNovo } from "./aliancaBiblioteca"
 import { listarBiblioteca, type LinhaDaBiblioteca } from "./aliancaBibliotecaLogica"
 import { prepararEdicaoDoShow } from "./aliancaEditarAcoes"
 import { falhaAlta } from "./aliancaFalha"
+import { caminhosDaBiblioteca } from "./aliancaBibliotecaMidiaLogica"
 import { alternarTelaCheia, salvarAgora } from "./aliancaJanela"
 import { acaoDaTecla, assinaturaDoTemp, conferirLivro, filtrarAcoes, lerReferencia, lerSoLivro, MAX_VERSICULOS, MAXIMO_POR_SECAO, rotuloDaReferencia, tocouNaBiblia, versiculosParaAbrir, type AcaoDeTecla, type ReferenciaBiblica, type TelaDoSpotlight, type TipoDeResultado } from "./aliancaSpotlightLogica"
 import { MOTIVO_TRAVADA, tocarShowNoAr } from "./aliancaTocarNoAr"
@@ -70,6 +71,19 @@ export function buscarShows(consulta: string): Resultado[] {
     }
 }
 
+// cabine-5 (André, 19/nov): a mídia do Ctrl+K é a da BIBLIOTECA (o que foi importado ou migrado), não as pastas do disco
+function midiaDaBiblioteca(consulta: string): Resultado[] {
+    const q = formatSearch(consulta)
+    return caminhosDaBiblioteca(get(media))
+        .filter((c) => formatSearch(c.split(/[\\/]/).pop() || "").includes(q))
+        .slice(0, MAXIMO_POR_SECAO.midia)
+        .map((c) => {
+            const nome = c.split(/[\\/]/).pop() || c
+            const tipo = /\.(mp4|mov|mkv|avi|webm|m4v|mpg|mpeg|wmv|ogv|flv|3gp)$/i.test(c) ? "video" : "image"
+            return { chave: "midia:" + c, tipo: "midia" as const, titulo: nome, detalhe: c.replace(/[\\/][^\\/]*$/, ""), icone: tipo === "video" ? "movie" : "image", id: c, arquivo: { nome, tipo } }
+        })
+}
+
 async function arquivosDe(consulta: string, pastas: { [id: string]: { path?: string } }, tipo: "midia" | "audio"): Promise<Resultado[]> {
     const caminhos = Object.values(pastas)
         .map((a) => a.path!)
@@ -77,14 +91,12 @@ async function arquivosDe(consulta: string, pastas: { [id: string]: { path?: str
     if (!caminhos.length) return []
     const achados = (await getMediaResults(formatSearch(consulta), caminhos)).slice(0, MAXIMO_POR_SECAO[tipo])
     // a pasta de midia pode ter audio e vice-versa: cada secao fica com o seu tipo
-    return achados
-        .filter((a) => (tipo === "audio" ? a.data?.type === "audio" : a.data?.type !== "audio"))
-        .map((a) => ({ chave: tipo + ":" + a.id, tipo, titulo: a.name, detalhe: String(a.id).replace(/[\\/][^\\/]*$/, ""), icone: a.icon, id: a.id, arquivo: { nome: a.data?.name || a.name, tipo: a.data?.type || "media" } }))
+    return achados.filter((a) => (tipo === "audio" ? a.data?.type === "audio" : a.data?.type !== "audio")).map((a) => ({ chave: tipo + ":" + a.id, tipo, titulo: a.name, detalhe: String(a.id).replace(/[\\/][^\\/]*$/, ""), icone: a.icon, id: a.id, arquivo: { nome: a.data?.name || a.name, tipo: a.data?.type || "media" } }))
 }
 
 export async function buscarMidia(consulta: string): Promise<Resultado[]> {
     try {
-        return consulta.trim().length < 2 ? [] : await arquivosDe(consulta, get(mediaFolders) as any, "midia")
+        return consulta.trim().length < 2 ? [] : midiaDaBiblioteca(consulta)
     } catch (erro) {
         falhaAlta("spotlight-midia", erro)
         return []

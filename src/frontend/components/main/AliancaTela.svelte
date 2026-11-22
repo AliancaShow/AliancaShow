@@ -14,6 +14,7 @@
     import Preview from "../output/preview/Preview.svelte"
     import { activePage, activeProfile, activeShow, outputs, saved, showChangeProfileMenu, special } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
+    import { vigiarAjustesDeMidia } from "../../utils/aliancaMidiaSalva"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
@@ -36,6 +37,8 @@
     // AGORA (na criacao, antes dos filhos): o ouvinte de Esc tem de rodar na captura ANTES dos popovers, que tambem capturam.
     const soltarTravas = ligarTravasDeToque()
     onDestroy(soltarTravas)
+    // 22/nov: ajuste de imagem/video (encaixe, filtros, espelhar, volume...) marca "nao salvo"; antes fechar o app perdia o ajuste
+    onDestroy(vigiarAjustesDeMidia())
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"
@@ -189,6 +192,12 @@
         flex: 1;
         display: flex;
         min-height: 0;
+    }
+    /* cabine-5: no Svelte 3 a transicao de saida e global (fade do que esta no ar na previa do No ar),
+       entao o corpo antigo fica no DOM ate o fade acabar e o novo ja monta depois dele; os dois
+       dividiam a altura (Configuracoes na metade de baixo). O corpo que sai nunca e o ultimo div. */
+    .tela > .corpo:not(:last-of-type) {
+        display: none;
     }
     .area {
         flex: 1;

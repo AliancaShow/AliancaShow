@@ -23,6 +23,8 @@ import { history } from "../helpers/history"
 import { loadShows } from "../helpers/setShow"
 import { swichProjectItem } from "../helpers/showActions"
 import { getExtension, getMediaType } from "../helpers/media"
+import { alvosDoMenu } from "../../utils/aliancaPastasMidia"
+import { apagarDoComputador, tirarDaBiblioteca } from "../../utils/aliancaBibliotecaMidia"
 import { contextMenuItems, contextMenuLayouts, type ContextMenuItem } from "./contextMenus"
 import { menuClick } from "./menuClick"
 
@@ -36,7 +38,15 @@ const ITENS: { [id: string]: ContextMenuItem } = {
     alianca_descer: { label: "Mover para baixo", icon: "down", iconColor: "#93f190", translate: false },
     alianca_tirar: { label: "Tirar do roteiro", icon: "delete", iconColor: "#ff6b54", translate: false },
     alianca_titulo: { label: "Editar título", icon: "rename", iconColor: "#6effbe", translate: false },
-    alianca_novo_bloco: { label: "Novo bloco", icon: "section", iconColor: "var(--secondary)", translate: false }
+    alianca_novo_bloco: { label: "Novo bloco", icon: "section", iconColor: "var(--secondary)", translate: false },
+    // cabine-5: os 3 tipos foram para a raiz do menu da pasta de midia; sem o titulo "Tipo" do submenu, o rotulo diz o que e
+    type_default: { label: "Tipo: Padrão", icon: "autofill", translate: false },
+    type_background: { label: "Tipo: Plano de fundo", icon: "type_background", translate: false },
+    type_foreground: { label: "Tipo: Primeiro plano", icon: "type_foreground", translate: false },
+    // cabine-5: some do programa; o arquivo fica no computador (Ctrl+Z desfaz). "Apagar do computador" espera o aprovo do fecho (IPC da Lixeira)
+    alianca_tirar_bib: { label: "Tirar da biblioteca", icon: "remove", iconColor: "#ff6b54", translate: false },
+    // cabine-5 (aprovado 19/nov): Lixeira do Windows, com a caixa de confirmacao nativa
+    alianca_apagar_pc: { label: "Apagar do computador", icon: "delete", iconColor: "#ff6b54", translate: false }
 }
 
 import { NOVOS, REMOVIDOS, semDestinoPorLayout, type Layout } from "./aliancaMenusBibliotecaLayouts"
@@ -255,6 +265,8 @@ const ACOES: { [id: string]: (c: Chamada) => void } = {
     alianca_subir: ({ contextElem }) => mover(contextElem, -1),
     alianca_descer: ({ contextElem }) => mover(contextElem, 1),
     alianca_tirar: ({ contextElem }) => tirar(contextElem),
+    alianca_tirar_bib: ({ sel }) => void tirarDaBiblioteca(alvosDoMenu((sel?.data || []) as any)),
+    alianca_apagar_pc: ({ sel }) => void apagarDoComputador(alvosDoMenu((sel?.data || []) as any)),
     alianca_titulo: ({ contextElem }) => {
         const r = itemDoRoteiro(contextElem)
         if (!r) return
@@ -299,4 +311,3 @@ export function acaoDaBiblioteca(chamada: Chamada): boolean {
     }
     return true
 }
-

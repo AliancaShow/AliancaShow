@@ -264,14 +264,18 @@
     {#if enablePreview}
         <PreviewOutputs />
 
-        <div class="top">
-            <MaterialButton class="hide" icon="hide" style="z-index: 2;" title="preview._hide_preview" on:click={() => (enablePreview = false)} />
-            <!-- disable before hiding: disableTransitions={!enablePreview} -->
-            <MultiOutputs />
-            <div class="preview-meter">
-                <AudioMeter channelId="main" preview />
+        <!-- cabine-5: escondida, ninguem ve: sem os espelhos de saida (cada um tocava o video do fundo, um por saida) nem os medidores.
+             Os temporizadores e atalhos (ShowActions/ClearButtons abaixo) continuam montados -->
+        {#if !escondida}
+            <div class="top">
+                <MaterialButton class="hide" icon="hide" style="z-index: 2;" title="preview._hide_preview" on:click={() => (enablePreview = false)} />
+                <!-- disable before hiding: disableTransitions={!enablePreview} -->
+                <MultiOutputs />
+                <div class="preview-meter">
+                    <AudioMeter channelId="main" preview />
+                </div>
             </div>
-        </div>
+        {/if}
     {:else}
         <Button on:click={() => (enablePreview = true)} style="width: 100%;" center dark>
             <Icon id="eye" right />

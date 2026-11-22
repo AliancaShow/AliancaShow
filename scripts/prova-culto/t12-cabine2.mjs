@@ -5,7 +5,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import { join as juntar } from "node:path"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar, mover, tecla } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, mover, tecla, BIB_RAIZ } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-cabine2"
 mkdirSync(saida, { recursive: true })
@@ -32,7 +32,7 @@ const nRoteiro = () => dom(`(get(S.projects)[get(S.activeProject)]?.shows||[]).l
 
 try {
     await j.enviar("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false })
-    await j.ev(`S.activePopup.set(null); S.outLocked.set(false); S.activeProject.set("f3"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("media"); await esp(2500); return 1`)
+    await j.ev(`S.activePopup.set(null); S.outLocked.set(false); S.activeProject.set("f3"); T.trocarTela("show","segmentado"); S.activeDrawerTab.set("media"); ${BIB_RAIZ} await esp(2500); return 1`)
     await limpar()
 
     // ---------- C1: anatomia
@@ -154,7 +154,7 @@ try {
     await esperar(5200)
     ok("C3 passados 5 s volta a SÓ RETORNO", (await dom(`document.querySelector('[data-acao=faixa-so-retorno]').innerText.includes('SÓ RETORNO')`)) === true)
     // achado 1 (PR #40): duas recusas, a 2a mostra a 2a (nome do item clicado), nunca a antiga
-    await j.ev(`S.activeDrawerTab.set("media"); S.drawerTabsData.update(a=>{a.media={...(a.media||{}),activeSubTab:"all"};return a}); await esp(1200); return 1`)
+    await j.ev(`S.activeDrawerTab.set("media"); ${BIB_RAIZ} S.drawerTabsData.update(a=>{a.media={...(a.media||{}),activeSubTab:"all"};return a}); await esp(1200); return 1`)
     const tarjaTxt = () => dom(`document.querySelector('[data-acao=tarja-recusa]')?.innerText ?? null`)
     const cf = await caixa(`${cartao("f1")}.querySelector('.card')`)
     await clicarEm(j, cf.x + cf.w / 2, cf.y + cf.h / 2)
