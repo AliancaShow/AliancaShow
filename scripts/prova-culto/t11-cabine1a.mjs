@@ -2,7 +2,7 @@
 //   node scripts/prova-culto/t11-cabine1a.mjs <pasta-de-prints>
 //   A1  saida de rede (NDI, `invisible`) habilitada vira aba na coluna No ar
 //   A6  Ctrl+K: sem Biblia diz "Nenhuma Bíblia instalada" (referencia e so o nome do livro); aba velha cai na primeira Biblia; "João" so avisa que falta o capitulo
-//   A7  o video do centro (previa de um item de video) NUNCA toca: nem sozinho, nem com a saida tocando, nem depois de parada
+//   A7  o video do centro (previa de um item de video) e um CARTAO (D26): miniatura, nome e transporte, sem nenhum <video> no centro
 //   A8  o seletor de dia lista os proximos cultos do Sirvo sem projeto (a lista de Configuracoes > Sirvo)
 //   A9  voltar de Configuracoes para Editar com um bloco aberto no centro: sem "editar-tipo-desconhecido" (varias vezes)
 //   A10 a faixa de cima (roteiro/centro) nunca colapsa, nem com a biblioteca pedindo mais altura do que cabe
@@ -77,29 +77,22 @@ try {
     await j.ev(`S.quickSearchActive.set(false); S.drawerTabsData.update(a=>{a.scripture=${JSON.stringify(JSON.parse(guardada).d || { enabled: true })};return a}); return 1`)
     await esperar(300)
 
-    // ---------- A7: o video do centro nunca toca
+    // ---------- A7 (D26, cabine 6): o video do centro e um CARTAO (miniatura, nome, duracao, transporte): nunca abre o arquivo num <video>
     await j.ev(`S.activeProject.set("f3"); S.activeShow.set({id:${JSON.stringify(VIDEO)},index:0,type:"video"}); T.trocarTela("show","segmentado"); await esp(2500); return 1`)
-    const central = () => dom(`(()=>{const v=document.querySelector('#showArea video'); return v? {paused:v.paused, t:Math.round(v.currentTime*100)/100, d:Math.round((v.duration||0)*10)/10, ready:v.readyState} : null})()`)
+    const central = () => dom(`(()=>{const c=document.querySelector('#showArea [data-acao=centro-video]'); return {videos:document.querySelectorAll('#showArea video').length, cartao:!!c, noAr:!!c?.dataset.noAr, nome:c?.querySelector('.nome')?.innerText||"", mini:!!c?.querySelector('img'), pausar:!!c && !c.querySelector('[data-acao=centro-pausar]').disabled, parar:!!c && !c.querySelector('[data-acao=centro-parar]').disabled}})()`)
     const c0 = await central()
-    ok("A7a a previa do centro e um video PARADO (quadro parado), sem iniciar sozinho", !!c0 && c0.paused && c0.ready >= 1, JSON.stringify(c0))
+    ok("A7a o centro mostra o cartao do video (com miniatura) e NENHUM <video>", c0.cartao && c0.videos === 0 && c0.mini && !c0.noAr, JSON.stringify(c0))
     await esperar(1500)
     const c1 = await central()
-    ok("A7b continua parado e no mesmo quadro depois de 1,5 s", !!c1 && c1.paused && c1.t === c0.t, JSON.stringify({ c0, c1 }))
-    await print("a7-central-parado")
-    // a saida toca o video: o centro nao acompanha nem toca
+    ok("A7b nada comeca sozinho: continua cartao, sem <video>, fora do ar", c1.cartao && c1.videos === 0 && !c1.noAr && !c1.pausar && !c1.parar, JSON.stringify(c1))
+    await print("a7-central-cartao")
+    // a saida toca o video: o cartao diz "no ar" e libera Pausar/Parar; o centro continua sem decodificar
     await j.ev(`const O=await import(U("components/helpers/output")); O.setOutput("background",{path:${JSON.stringify(VIDEO)},type:"video",name:"v1.mp4",loop:true,muted:true}); await esp(2500); return 1`)
-    const tocando = await dom(`JSON.stringify(Object.values(get(S.playingVideoState)).map(v=>({p:v.paused,t:Math.round((v.currentTime||0)*10)/10})))`)
     const c2 = await central()
-    await esperar(1500)
-    const c3 = await central()
-    ok("A7c com a SAIDA tocando o video, o do centro segue parado e no mesmo quadro", !!c2 && c2.paused && !!c3 && c3.paused && c3.t === c2.t, JSON.stringify({ tocando, c2, c3 }))
-    // pausa a saida (o caso do teste do André: "parado no ar"): o do centro continua parado
-    await j.ev(`const S2=await import(U("components/helpers/output")); const V=get(S.playingVideoState); const k=Object.keys(V)[0]; const P=await import(U("components/media/video/videoPlayer")); void P; S.playingVideoState.update(a=>{if(k) a[k]={...a[k],paused:true}; return a}); await esp(1500); return 1`)
-    const c4 = await central()
-    ok("A7d com a saida pausada, o centro continua parado", !!c4 && c4.paused && c4.t === c2.t, JSON.stringify(c4))
+    ok("A7c com a SAIDA tocando o video, o cartao diz no ar, libera Pausar e Parar, e o centro segue sem <video>", c2.cartao && c2.noAr && c2.pausar && c2.parar && c2.videos === 0, JSON.stringify(c2))
     await j.ev(`const C=await import(U("components/output/clear")); C.clearAll(true); await esp(1200); return 1`)
     const c5 = await central()
-    ok("A7e depois de limpar a saida, o centro continua parado", !!c5 && c5.paused, JSON.stringify(c5))
+    ok("A7e depois de limpar a saida, o cartao volta a fora do ar (nada volta sozinho)", c5.cartao && !c5.noAr && c5.videos === 0, JSON.stringify(c5))
     ok("A7f nao ha botao de tocar/pausar/mudo da previa no menu do centro", await dom(`!document.querySelector('#showArea ~ * [data-sem-trava] [title*="media.play"], #showArea ~ * [data-sem-trava] [title*="media.pause"]')`))
 
     // ---------- A8: o seletor lista os cultos do Sirvo
