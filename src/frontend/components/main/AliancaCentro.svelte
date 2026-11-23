@@ -5,6 +5,7 @@
     import { colunasDaGrade } from "../../utils/aliancaTelaLogica"
     import Show from "../show/Show.svelte"
     import AliancaCentroCabecalho from "./AliancaCentroCabecalho.svelte"
+    import AliancaOrigemModelo from "./AliancaOrigemModelo.svelte"
 
     let largura = 1274
     $: colunas = colunasDaGrade(largura)
@@ -17,6 +18,8 @@
 </script>
 
 <AliancaCentroCabecalho />
+<!-- cabine 6 (V1, P4): de onde vem a cara de cada saida -->
+<AliancaOrigemModelo />
 <div class="corpo" bind:this={corpo} data-acao="grade-slides">
     <Show {colunas} />
 </div>

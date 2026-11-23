@@ -1,8 +1,10 @@
 <script lang="ts">
     import { uid } from "uid"
     import type { AspectRatio, Resolution, Styles } from "../../../../types/Settings"
-    import { activeDrawerTab, activeEdit, activeStyle, outputs, styles, templates } from "../../../stores"
+    import { activeDrawerTab, activeEdit, activeStyle, outputs, settingsTab, special, styles, templates } from "../../../stores"
+    import { configSecao } from "../../../utils/aliancaConfigSecao"
     import { trocarTela } from "../../../utils/aliancaTela"
+    import { saidasNormais, visualAtivo } from "../../../utils/aliancaVisualLogica"
     import { translateText } from "../../../utils/language"
     import { transitionTypes } from "../../../utils/transitions"
     import { mediaExtensions } from "../../../values/extensions"
@@ -142,6 +144,16 @@
         updateStyle(value, "templateScripture" + type)
     }
 
+    // cabine 6 (V1, D13): estilo usado por uma saida normal com um Visual valendo = os campos de modelo sao do Visual (somente leitura aqui)
+    $: saidasDoEstilo = saidasNormais($outputs)
+        .filter((s) => styleId && s.estilo === styleId)
+        .map((s) => s.nome)
+    $: visualDaqui = saidasDoEstilo.length ? visualAtivo($special) : null
+    function abrirVisual() {
+        settingsTab.set("styles")
+        configSecao.set("visual")
+    }
+
     // METADATA
 
     $: metadataDisplayLabel = metadataDisplay === "default" ? "example.default" : metadataDisplayValues.find((a) => a.id === metadataDisplay)?.name || ""
@@ -184,22 +196,73 @@
 
 <MaterialPopupButton label="settings.lines" disabled={!activeLayers.includes("slide")} value={maxLines} name={maxLines.toString()} popupId="max_lines" icon="lines" data={{ styleId }} on:change={(e) => updateStyle(e.detail, "lines")} allowEmpty />
 
-<InputRow>
-    <!-- WIP doubleClick ?? -->
-    <MaterialPopupButton label="settings.override_with_template" disabled={!activeLayers.includes("slide")} value={templateOverride} name={$templates[templateOverride]?.name} popupId="select_template" icon="templates" on:change={(e) => updateStyle(e.detail, "template")} allowEmpty />
-    {#if templateOverride && $templates[templateOverride]}
-        <MaterialButton title="titlebar.edit" icon="edit" on:click={() => editTemplate(templateOverride)} />
-    {/if}
-</InputRow>
+{#if visualDaqui}
+    <!-- cabine 6 (V1, D13): quem manda nos modelos de uma saida e o Visual; aqui so se le -->
+    <div class="definidoNoVisual" data-acao="estilo-definido-no-visual">
+        <div class="linha"><span class="rot">{translateText("settings.override_with_template")}</span><b>{templateOverride ? $templates[templateOverride]?.name || "modelo não existe mais" : "usa o slide"}</b></div>
+        <div class="linha"><span class="rot">{translateText("settings.override_scripture_with_template")}</span><b>{templateOverrideScripture ? $templates[templateOverrideScripture]?.name || "modelo não existe mais" : "usa o slide"}</b></div>
+        <div class="linha"><span class="cota">Definido no Visual “{visualDaqui.nome}” (esta saída: {saidasDoEstilo.join(", ")})</span><button type="button" class="abrir" data-acao="estilo-abrir-visual" on:click={abrirVisual}>Abrir Visual</button></div>
+    </div>
+{:else}
+    <InputRow>
+        <!-- WIP doubleClick ?? -->
+        <MaterialPopupButton label="settings.override_with_template" disabled={!activeLayers.includes("slide")} value={templateOverride} name={$templates[templateOverride]?.name} popupId="select_template" icon="templates" on:change={(e) => updateStyle(e.detail, "template")} allowEmpty />
+        {#if templateOverride && $templates[templateOverride]}
+            <MaterialButton title="titlebar.edit" icon="edit" on:click={() => editTemplate(templateOverride)} />
+        {/if}
+    </InputRow>
 
-<InputRow>
-    <MaterialPopupButton id="scripture" label="settings.override_scripture_with_template" disabled={!activeLayers.includes("slide")} value={templateOverrideScripture || currentStyle.templateScripture_2 || currentStyle.templateScripture_3 || currentStyle.templateScripture_4} name={scriptureTemplateLabel} popupId="select_template" icon="templates" on:change={updateScriptureTemplate} allowEmpty />
-    {#if templateOverrideScripture && $templates[templateOverrideScripture]}
-        <MaterialButton title="titlebar.edit" icon="edit" on:click={() => editTemplate(templateOverrideScripture)} />
-    {/if}
-</InputRow>
+    <InputRow>
+        <MaterialPopupButton id="scripture" label="settings.override_scripture_with_template" disabled={!activeLayers.includes("slide")} value={templateOverrideScripture || currentStyle.templateScripture_2 || currentStyle.templateScripture_3 || currentStyle.templateScripture_4} name={scriptureTemplateLabel} popupId="select_template" icon="templates" on:change={updateScriptureTemplate} allowEmpty />
+        {#if templateOverrideScripture && $templates[templateOverrideScripture]}
+            <MaterialButton title="titlebar.edit" icon="edit" on:click={() => editTemplate(templateOverrideScripture)} />
+        {/if}
+    </InputRow>
+{/if}
 
 <MaterialPopupButton id={styleId} label="meta.display_metadata" disabled={!activeLayers.includes("slide")} value={metadataDisplay} defaultValue="default" name={metadataDisplayLabel} popupId="metadata_display" icon="info" data={{ type: "style" }} on:change={(e) => updateStyle({ ...metadata, display: e.detail }, "metadata")} />
 
 <!-- Overlays -->
 <!-- <Title label="preview.overlays" icon="overlays" /> -->
+
+<style>
+    /* cabine 6 (V1, D13): campos de modelo somente leitura quando o Visual manda */
+    .definidoNoVisual {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 4px 0 8px;
+        padding: 10px 12px;
+        border-radius: var(--luz-raio-cartao);
+        background: var(--luz-campo);
+        box-shadow: inset 0 0 0 1px var(--luz-linha);
+        font-size: 13px;
+        color: var(--luz-texto);
+    }
+    .definidoNoVisual .linha {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+    .definidoNoVisual .rot {
+        color: var(--luz-mudo);
+    }
+    .definidoNoVisual .cota {
+        flex: 1;
+        font-size: 12px;
+        color: var(--luz-mudo);
+    }
+    .definidoNoVisual .abrir {
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid var(--luz-borda);
+        border-radius: var(--luz-raio-botao);
+        background: var(--luz-campo);
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+</style>

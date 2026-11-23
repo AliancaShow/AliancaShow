@@ -57,6 +57,12 @@
                 "\"edit\", \"botao-de-pagina\""
             ]
         },
+        "components/main/AliancaOrigemModelo.svelte": {
+            "classe": "gesto: clique numa etiqueta da linha de origem abre o modelo no Editar (cabine 6, V1)",
+            "chamadas": [
+                "\"edit\", \"botao-de-pagina\""
+            ]
+        },
         "components/main/AliancaSirvoPilula.svelte": {
             "classe": "gesto: pilula Sirvo",
             "chamadas": [
@@ -74,6 +80,12 @@
             "chamadas": [
                 "\"show\", \"segmentado\"",
                 "\"edit\", \"segmentado\""
+            ]
+        },
+        "components/main/AliancaVisualPilula.svelte": {
+            "classe": "gesto: pilula do Visual, item Editar visuais (cabine 6, V1)",
+            "chamadas": [
+                "\"settings\", \"botao-de-pagina\""
             ]
         },
         "components/main/StatusIndicator.svelte": {

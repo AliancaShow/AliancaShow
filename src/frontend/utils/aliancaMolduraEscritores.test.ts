@@ -42,6 +42,8 @@ export const CLASSES: Record<string, string> = {
     "components/main/AliancaSirvoPilula.svelte": "gesto: pilula Sirvo",
     "components/main/AliancaTelaoPilula.svelte": "gesto: pilula do telao",
     "components/main/AliancaTopo.svelte": "gesto: segmentado Mostrar | Editar",
+    "components/main/AliancaVisualPilula.svelte": "gesto: pilula do Visual, item Editar visuais (cabine 6, V1)",
+    "components/main/AliancaOrigemModelo.svelte": "gesto: clique numa etiqueta da linha de origem abre o modelo no Editar (cabine 6, V1)",
     "components/main/StatusIndicator.svelte": "gesto: botao de pagina",
     "components/main/popups/MetadataDisplay.svelte": "gesto: botao de pagina (popup)",
     "components/main/popups/OutputSelector.svelte": "gesto: botao de pagina (popup)",

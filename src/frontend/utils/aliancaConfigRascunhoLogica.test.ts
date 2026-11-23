@@ -1,6 +1,29 @@
 // Configuracoes (C4): "N alteracoes nao salvas" e Descartar. Parte pura.
 import { describe, expect, it } from "vitest"
-import { contarMudancas, lojasMudadas, mudancasDaLoja, restaurarSaidas, textoDeAlteracoes, vistaDasSaidas } from "./aliancaConfigRascunhoLogica"
+import { aceitarCaminho, contarMudancas, lojasMudadas, mudancasDaLoja, restaurarSaidas, textoDeAlteracoes, vistaDasSaidas } from "./aliancaConfigRascunhoLogica"
+
+describe("aceitarCaminho (cabine 6, Visual)", () => {
+    it("so o caminho entra na foto; o resto da loja continua contando", () => {
+        const foto: any = { special: { a: 1, aliancaVisualAtivo: "x" }, styles: { s1: { template: "m1", name: "S" } }, outputs: { o: { stageOutput: "p1", name: "O" } } }
+        const agora: any = { special: { a: 2, aliancaVisualAtivo: "y" }, styles: { s1: { name: "S2" }, s2: { name: "novo" } }, outputs: { o: { stageOutput: "p2", name: "O2" } } }
+        aceitarCaminho(foto, agora, ["special", "aliancaVisualAtivo"])
+        aceitarCaminho(foto, agora, ["styles", "s1", "template"])
+        aceitarCaminho(foto, agora, ["styles", "s2"])
+        aceitarCaminho(foto, agora, ["outputs", "o", "stageOutput"])
+        expect(foto.special).toEqual({ a: 1, aliancaVisualAtivo: "y" })
+        expect(foto.styles.s1).toEqual({ name: "S" }) // template limpo entrou; o nome mexido a mao nao
+        expect(foto.styles.s2).toEqual({ name: "novo" })
+        expect(foto.outputs.o).toEqual({ stageOutput: "p2", name: "O" })
+        expect(contarMudancas(foto, agora)).toBe(3) // special.a, styles.s1 (nome), outputs.o (nome)
+    })
+    it("saida que nao esta na foto fica de fora; loja sem foto e ignorada", () => {
+        const foto: any = { outputs: {} }
+        aceitarCaminho(foto, { outputs: { n: { style: "s" } } }, ["outputs", "n", "style"])
+        expect(foto.outputs).toEqual({})
+        aceitarCaminho(foto, { special: { a: 1 } }, ["special", "a"])
+        expect(foto.special).toBeUndefined()
+    })
+})
 
 describe("mudancasDaLoja", () => {
     it("igual = nada mudou", () => {

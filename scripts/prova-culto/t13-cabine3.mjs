@@ -50,7 +50,7 @@ try {
     ok("A1 Configuracoes abre com o titulo", /^Configurações/.test(await cabine()), await cabine())
     ok("A2 tres botoes no cabecalho: Descartar (desligado), Salvar, Fechar", await dom(`(()=>{const q=(a)=>document.querySelector('[data-acao='+a+']'); return !!q('pagina-descartar') && q('pagina-descartar').disabled && !!q('pagina-salvar') && !!q('pagina-fechar')})()`))
     const lista = await dom(`(()=>{const l=document.querySelector('[data-acao=config-lista]').getBoundingClientRect(); return {w:Math.round(l.width), itens:[...document.querySelectorAll('[data-acao=config-itens] .it')].map(b=>b.innerText.trim())}})()`)
-    ok("A3 lista lateral de 236 px com as 8 paginas + Sirvo + Controle remoto + Monitor de retorno", lista.w === 236 && lista.itens.join("|") === "Geral|Telas e saídas|Estilos|Áudio|Conexão|Arquivos|Perfis|Outros|Sirvo|Controle remoto|Monitor de retorno", JSON.stringify(lista))
+    ok("A3 lista lateral de 236 px com as 8 paginas + Visual + Sirvo + Controle remoto + Monitor de retorno", lista.w === 236 && lista.itens.join("|") === "Geral|Telas e saídas|Visual|Estilo da saída|Áudio|Conexão|Arquivos|Perfis|Outros|Sirvo|Controle remoto|Monitor de retorno", JSON.stringify(lista))
     const pri = await token("background: var(--luz-texto); color: var(--luz-tinta)")
     const sa = await cs(`document.querySelector('[data-acao=pagina-salvar]')`, ["backgroundColor", "color", "height", "borderTopLeftRadius"])
     const fe = await cs(`document.querySelector('[data-acao=pagina-fechar]')`, ["backgroundColor", "height"])

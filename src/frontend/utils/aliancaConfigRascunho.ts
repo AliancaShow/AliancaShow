@@ -13,7 +13,7 @@ import { refreshOut } from "../components/helpers/output"
 import { sendMain } from "../IPC/main"
 import { alertUpdates, audioChannelsData, audioEffects, autoOutput, autosave, disabledServers, eqPresets, formatNewShow, fullColors, groupNumbers, labelsDisabled, language, maxConnections, outputs, ports, remotePassword, serverData, slidesOptions, special, splitLines, theme, themes, timeFormat, transitionData } from "../stores"
 import { falhaAlta } from "./aliancaFalha"
-import { contarMudancas, lojasMudadas, restaurarSaidas, vistaDasSaidas, type Foto } from "./aliancaConfigRascunhoLogica"
+import { aceitarCaminho, contarMudancas, lojasMudadas, restaurarSaidas, vistaDasSaidas, type Foto } from "./aliancaConfigRascunhoLogica"
 import { setLanguage } from "./language"
 import { send } from "./request"
 import { getSyncedSettings } from "./save"
@@ -84,6 +84,26 @@ export function aceitarNaFoto(nome: string) {
     const loja = lojasDeConfiguracao()[nome]
     if (!loja) return falhaAlta("config-rascunho", `aceitarNaFoto: loja desconhecida "${nome}"`)
     foto[nome] = clone(get(loja))
+}
+
+/**
+ * cabine 6 (Visual, V1): o Visual vale na hora, inclusive com Configuracoes aberta. Cada caminho escrito por ele ([loja, chave, ...], ex.
+ * ["styles", id, "template"], ["outputs", id, "stageOutput"], ["special", "aliancaVisuais"]) entra na foto: nao conta como "nao salvo" e o
+ * Descartar nao o desfaz. So o caminho: o resto da loja continua no rascunho.
+ */
+export function aceitarCaminhosNaFoto(caminhos: string[][]) {
+    if (!temFoto) return
+    const todas = lojasDeConfiguracao()
+    const agora: Foto = {}
+    for (const c of caminhos) {
+        const loja = c[0]
+        if (loja in agora) continue
+        if (loja === "outputs") agora.outputs = vistaDasSaidas(get(outputs))
+        else if (todas[loja]) agora[loja] = get(todas[loja])
+        else return falhaAlta("config-rascunho", `aceitarCaminhosNaFoto: loja desconhecida "${loja}"`)
+    }
+    for (const c of caminhos) aceitarCaminho(foto, agora, c)
+    if (paradas.length) pedirRecontagem()
 }
 
 /** tira a foto do estado de agora (a primeira vez que Configuracoes abre, e depois de cada Salvar confirmado ou Descartar que desfez tudo) */
