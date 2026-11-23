@@ -101,8 +101,8 @@ export const EXCECOES = {
         "sha": "fb5b607e4f98f7623a7b710cc3199d22477e8dcd29933acdbec6544c2401b3c2"
     },
     "src/frontend/components/stage/Stagebox.svelte": {
-        "motivo": "rodada da cabine (A4/A5, aprovada pelo André 18/nov): item 'saida atual' sem fonte explicita mostra o conteudo da saida em vez de desenhar o proprio retorno dentro dele (recursao no modo so retorno). Com fonte explicita: identico",
-        "sha": "914b0c518b72d4ce000a721292dd2cd2b64c461ee1c686a01b1bc2975d8f8bd9"
+        "motivo": "rodada da cabine (A4/A5, aprovada pelo André 18/nov): item 'saida atual' sem fonte explicita mostra o conteudo da saida em vez de desenhar o proprio retorno dentro dele (recursao no modo so retorno). Com fonte explicita: identico | cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): o item \"saida atual\" mostra a captura ao vivo da janela da saida (AliancaCaptura) em vez de decodificar o video de novo; quando mira a propria janela (so retorno) continua com <Output mirror>",
+        "sha": "2735e739240fa8e1b590c4602a67ab4e37ea0ae757778c9d372a9b20f61b9dbb"
     },
     "src/frontend/components/slide/Textbox.svelte": {
         "motivo": "rodada da cabine (A4/A5, aprovada pelo André 18/nov): autosize de PALCO nao mede nem usa cache com caixa escondida/0x0 (cache envenenado a 800 px). Slides do telao nao passam pela guarda",
@@ -125,12 +125,20 @@ export const EXCECOES = {
         "sha": "45bb774c8372658b97a61ba7f8d2c307a223a106bb368f9295c898a9e318484b"
     },
     "src/electron/output/helpers/OutputLifecycle.ts": {
-        "motivo": "cabine-6 1a (aprovado pelo André 22/nov, \"aprovo resize\"): o handler de `resize` da janela de saida tinha a condicao invertida (veio assim do FreeShow 1.6.5): com mover desligado, todo resize feito pelo Windows (LED perde/volta sinal, DPI) gravava os limites. Agora espelha o `move`: so grava quando o operador esta movendo. Nada do que a saida desenha muda",
-        "sha": "4993070ea33f4935c4bfbff64e5f1aa3b9c6caff440ba6d18642b518797ed691"
+        "motivo": "cabine-6 1a (aprovado pelo André 22/nov, \"aprovo resize\"): o handler de `resize` da janela de saida tinha a condicao invertida (veio assim do FreeShow 1.6.5): com mover desligado, todo resize feito pelo Windows (LED perde/volta sinal, DPI) gravava os limites. Agora espelha o `move`: so grava quando o operador esta movendo. Nada do que a saida desenha muda | cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): liga o vigia de queda/travamento das saidas (aliancaVigiaSaida: render-process-gone, unresponsive e batimento de 1 s; recarrega a janela e avisa alto na principal) e cria a janela opaca (`transparent: !!output.transparent`) para renderer morto nunca mostrar a area de trabalho",
+        "sha": "6a44a17bfd6d784424f205ae8a84aa7d8a6a0188b0074a382dafa612c3c43541"
     },
     "src/frontend/components/media/Video.svelte": {
         "motivo": "cabine-6 D25 (aprovado pelo André 22/nov, \"aprovo transporte\"): a velocidade alvo do sync passa a ser `targetPlaybackRate * (data.rampa ?? 1)`, para cada saida desacelerar junto com o relogio na pausa suave. Sem pausa suave `rampa` e undefined e o resultado e o mesmo de antes",
         "sha": "462281eb6952cbe9beb8c96354cf347bbc030dd4e87a6804ba3627a279383177"
+    },
+    "src/frontend/components/output/layers/Media.svelte": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): com o contexto previaSemVideo (so a previa desenhada da janela principal liga) o video vira miniatura parada (AliancaMiniaturaVideo); na janela de saida o contexto nunca existe e o ramo e o mesmo de antes",
+        "sha": "3550c45e1f197549a567f0c2ee85b0305918cbbc8812ffe187bd2befacd74b6d"
+    },
+    "src/frontend/components/slide/views/MediaItem.svelte": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): mesma regra para video dentro do slide: miniatura parada so na previa desenhada da janela principal; na saida o ramo original fica igual",
+        "sha": "af0ba9c1200de72bba4738b4008dd0503b3a312346f2e5d580182148e40dca0b"
     }
 }
 
@@ -154,11 +162,43 @@ export const NOVOS_NO_FECHO = {
     "src/frontend/utils/bibliasEmbutidasLogica.ts": {
         "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): logica pura do registro (sem efeito colateral); entra no fecho via bibliasEmbutidas.ts",
         "sha": "63db7ef3fe23133f6e4f21f83dd4fa34fc857399291413469ca970c5c7cff2d5"
+    },
+    "src/frontend/components/output/AliancaCaptura.svelte": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): captura ao vivo da janela de uma saida (getUserMedia desktop pelo id da janela), com selo de estado; na saida so e usada pelo Stagebox \"saida atual\"",
+        "sha": "6c809bab3ad80a065db9bf0760eb2c416bc167176787e7e82a9b816d065ec4e1"
+    },
+    "src/frontend/utils/aliancaCaptura.ts": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): pede a fonte de captura da janela por id de saida (canal ALIANCA_FONTE_SAIDA) e gerencia as trilhas",
+        "sha": "9f5e5ffab06c88bae27d0b290c65dc9a457fe2bf53566f97a5ef97870a9cc9de"
+    },
+    "src/frontend/utils/aliancaCapturaLogica.ts": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): logica pura da captura (estado da saida -> captura, quadro parado ou selo; espelhoDeSiMesmo)",
+        "sha": "7fbc9ddcb824306a5e385f509220f3d4e8d35e2a02cbe86b5a3bbf2d6c5bc8c5"
+    },
+    "src/types/aliancaSaidaCanais.ts": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): tipos do canal ALIANCA_FONTE_SAIDA e do aviso de queda; so acrescenta",
+        "sha": "2a34f0214e8ae805ce233d7b46a5ff5aed37ef84c8e51b9feaed7beb169f3a22"
+    },
+    "src/electron/output/aliancaVigiaSaida.ts": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): vigia de queda/travamento das janelas de saida (processo principal); recarrega e avisa a principal",
+        "sha": "a3721b8dc174ce6e1167c5ba3918cee3caf6cf1b04e6f33cf84034d50c3b2e6b"
+    },
+    "src/electron/output/aliancaVigiaLogica.ts": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): logica pura do vigia (quedas deduplicadas; 3 em 60 s = fora do ar)",
+        "sha": "5103b1c1a0ea40a7a70ddbdf39f96ca9e61e32da84064fae488a4ad8c69c4028"
+    },
+    "src/frontend/utils/aliancaPreviaSemVideo.ts": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): contexto Svelte que so a previa desenhada da janela principal liga; na janela de saida devolve sempre false",
+        "sha": "ad0f56cf34132b44df395a414642ecbc71122c4589199a556fc9d0597b93aad4"
+    },
+    "src/frontend/components/media/AliancaMiniaturaVideo.svelte": {
+        "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): miniatura parada do video (mesmo encaixe), usada so com previaSemVideo ligado",
+        "sha": "04922194a3ab7c1baca3ccf0e3934775d3f9b3d3640e0c560945ef655c4da25a"
     }
 }
 
-export const SHA_EXCECOES = "0aacf2024bf4d4419533ee321fcc71b8b405447d7478adc2996124d8165acd53"
-export const SHA_NOVOS = "fda7eab12fe65bd4b503d4f8a7e3a0c96831aa99a94b3bd1409990db7c3c5907"
+export const SHA_EXCECOES = "ef539245ecb2ed13a436b7db8520648ab26b3f832b44772deea3ab6c69048b44"
+export const SHA_NOVOS = "bfc6c9807f7402ae838a2dff3b9fae4d9d4bddc4fcaf4482bd43c508c43c16da"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
