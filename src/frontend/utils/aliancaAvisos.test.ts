@@ -41,4 +41,17 @@ describe("a fila dos avisos (store)", () => {
             ["toast.inexistente (mensa", "aviso"]
         ])
     })
+    it("aviso fixo (saida fora do ar) nao sai pelo x; resolver tira; o historico guarda cada passo da mesma chave", () => {
+        avisar("Telão CAIU", "erro", "queda-saida:t", { fixo: true })
+        avisar("Telão FORA DO AR", "erro", "queda-saida:t", { fixo: true, soma: false })
+        dispensarAviso(get(avisos)[0].id)
+        expect(get(avisos).map((a) => [a.texto, a.fixo, a.vezes])).toEqual([["Telão FORA DO AR", true, 1]])
+        avisar("Telão caiu e voltou", "erro", "queda-saida:t", { soma: false })
+        expect(get(avisos)[0].fixo).toBeUndefined()
+        dispensarAviso(get(avisos)[0].id)
+        expect(get(avisos)).toEqual([])
+        expect(get(historicoDeAvisos).map((a) => a.texto)).toEqual(["Telão caiu e voltou", "Telão FORA DO AR", "Telão CAIU"])
+        // o historico e um {#each} com chave: id repetido quebra a lista
+        expect(new Set(get(historicoDeAvisos).map((a) => a.id)).size).toBe(3)
+    })
 })

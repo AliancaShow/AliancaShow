@@ -6,7 +6,10 @@
 //   - o historico curto ("ultimos avisos").
 
 export type Nivel = "info" | "aviso" | "erro"
-export type Aviso = { id: number; chave: string; texto: string; nivel: Nivel; em: number; vezes: number }
+/** `fixo`: o assunto ainda esta acontecendo (a saida esta FORA DO AR): a linha nao tem x e `tirarId` recusa; so `tirarChave` (resolveu) tira */
+export type Aviso = { id: number; chave: string; texto: string; nivel: Nivel; em: number; vezes: number; fixo?: boolean }
+/** o que entra na fila. `soma: false` = a mesma chave muda de estado (caiu -> voltou) sem contar mais uma vez */
+export type NovoAviso = { chave: string; texto: string; nivel: Nivel; fixo?: boolean; soma?: boolean }
 
 export const INFO_MS = 5000
 export const HISTORICO_MAX = 30
@@ -58,13 +61,16 @@ export const RESOLVE: { se: string; quando: string }[] = [
 ]
 
 /** poe um aviso na fila. A mesma chave nao empilha: atualiza texto/nivel, soma as vezes e volta a contar o tempo */
-export function acrescentar(lista: Aviso[], novo: { chave: string; texto: string; nivel: Nivel }, id: number, agora: number): Aviso[] {
+export function acrescentar(lista: Aviso[], novo: NovoAviso, id: number, agora: number): Aviso[] {
     const resolvidos = RESOLVE.filter((r) => r.quando === novo.chave).map((r) => r.se)
     const base = lista.filter((a) => !resolvidos.includes(a.chave))
     const i = base.findIndex((a) => a.chave === novo.chave)
-    if (i < 0) return [...base, { id, chave: novo.chave, texto: novo.texto, nivel: novo.nivel, em: agora, vezes: 1 }]
-    const antigo = base[i]
-    return [...base.slice(0, i), ...base.slice(i + 1), { ...antigo, texto: novo.texto, nivel: novo.nivel, em: agora, vezes: antigo.vezes + 1 }]
+    const fixo = novo.fixo ? { fixo: true } : {}
+    if (i < 0) return [...base, { id, chave: novo.chave, texto: novo.texto, nivel: novo.nivel, em: agora, vezes: 1, ...fixo }]
+    const antigo: Aviso = { ...base[i] }
+    delete antigo.fixo
+    const vezes = novo.soma === false ? antigo.vezes : antigo.vezes + 1
+    return [...base.slice(0, i), ...base.slice(i + 1), { ...antigo, texto: novo.texto, nivel: novo.nivel, em: agora, vezes, ...fixo }]
 }
 
 /** info passa sozinho; aviso e erro nunca vencem (ficam ate resolver ou ate o x) */
@@ -73,7 +79,8 @@ export function vencer(lista: Aviso[], agora: number): Aviso[] {
     return fica.length === lista.length ? lista : fica
 }
 
-export const tirarId = (lista: Aviso[], id: number): Aviso[] => lista.filter((a) => a.id !== id)
+/** o x: nunca tira um aviso `fixo` (o que ainda esta acontecendo so sai quando resolve) */
+export const tirarId = (lista: Aviso[], id: number): Aviso[] => (lista.some((a) => a.id === id && !a.fixo) ? lista.filter((a) => a.id !== id) : lista)
 export const tirarChave = (lista: Aviso[], chave: string): Aviso[] => (lista.some((a) => a.chave === chave) ? lista.filter((a) => a.chave !== chave) : lista)
 
 const PESO: Record<Nivel, number> = { erro: 2, aviso: 1, info: 1 }
@@ -88,8 +95,33 @@ export function principal(lista: Aviso[]): { aviso: Aviso | null; outros: number
     return { aviso: melhor, outros: melhor ? lista.length - 1 : 0 }
 }
 
-/** historico: o mais novo em cima, no maximo HISTORICO_MAX; a mesma chave seguida nao repete a linha */
+/** historico: o mais novo em cima, no maximo HISTORICO_MAX; a mesma mensagem (chave e texto) seguida nao repete a linha. A mesma chave com
+ *  texto novo (a saida caiu -> voltou) entra como linha nova: o historico guarda cada passo */
 export function noHistorico(hist: Aviso[], a: Aviso): Aviso[] {
-    const sem = hist[0]?.chave === a.chave ? hist.slice(1) : hist
+    const sem = hist[0]?.chave === a.chave && hist[0]?.texto === a.texto ? hist.slice(1) : hist
     return [a, ...sem].slice(0, HISTORICO_MAX)
 }
+
+// ----- "Ultimos avisos": a altura da lista (divisoria arrastavel, gravada) -----
+/** px da lista aberta: minimo = umas 3 linhas; maximo absoluto, e nunca mais que LISTA_FRACAO da tela (o corpo segue usavel) */
+export const LISTA_LIMITES = [72, 480] as const
+export const LISTA_PADRAO = 132
+export const LISTA_FRACAO = 0.45
+export const CHAVE_ALTURA_LISTA = "aliancashow.avisos.altura-lista"
+
+const limLista = (v: number, telaH: number) => {
+    const teto = Math.max(LISTA_LIMITES[0], Math.min(LISTA_LIMITES[1], Math.floor(telaH * LISTA_FRACAO)))
+    return Math.round(Math.max(LISTA_LIMITES[0], Math.min(teto, v)))
+}
+
+/** o valor gravado (texto do armazenamento): numero finito vira px dentro dos limites; ausente ou torto = padrao */
+export function alturaSalvaDaLista(bruto: string | null): number {
+    const n = bruto === null || bruto.trim() === "" ? NaN : Number(bruto)
+    return Number.isFinite(n) ? Math.round(Math.max(LISTA_LIMITES[0], Math.min(LISTA_LIMITES[1], n))) : LISTA_PADRAO
+}
+
+/** a altura que vale nesta tela (a janela encolheu: a lista cede ate o minimo) */
+export const alturaDaLista = (salva: number, telaH: number) => limLista(salva, telaH)
+
+/** arrasto da divisoria que fica EM CIMA da lista: o mouse subindo (delta negativo) aumenta a lista */
+export const arrastarLista = (inicio: number, delta: number, telaH: number) => limLista(inicio - delta, telaH)

@@ -3,10 +3,34 @@
 // So a janela principal monta a linha; a janela de saida nunca importa este arquivo. Importa SO svelte/store e a logica: aliancaToque e a
 // midia sumida o usam sem arrastar language/stores (e os testes deles nao carregam o app inteiro).
 import { get, writable } from "svelte/store"
-import { acrescentar, noHistorico, textoDaMensagem, tirarChave, tirarId, vencer, type Aviso, type Nivel } from "./aliancaAvisosLogica"
+import { acrescentar, alturaSalvaDaLista, CHAVE_ALTURA_LISTA, noHistorico, textoDaMensagem, tirarChave, tirarId, vencer, type Aviso, type Nivel } from "./aliancaAvisosLogica"
 
 export const avisos = writable<Aviso[]>([])
 export const historicoDeAvisos = writable<Aviso[]>([])
+
+// a altura da lista "Ultimos avisos" (px), como as outras divisorias: sobrevive a fechar e abrir. Fica no armazenamento do app (como os blocos
+// do Editar, aliancaBlocosEstado): as divisorias da tela moram em `aliancaTela` (settings), que e do fecho da saida e nao muda por isto.
+function lerAlturaDaLista(): number {
+    if (typeof localStorage === "undefined") return alturaSalvaDaLista(null) // testes (node): sem armazenamento
+    try {
+        return alturaSalvaDaLista(localStorage.getItem(CHAVE_ALTURA_LISTA))
+    } catch (e) {
+        console.error("[AliancaShow] altura da lista de avisos: armazenamento ilegivel, vale o padrao", e)
+        return alturaSalvaDaLista(null)
+    }
+}
+export const alturaDaListaDeAvisos = writable<number>(lerAlturaDaLista())
+
+/** grava ao SOLTAR a divisoria. Sem armazenamento: devolve o erro (quem chama acende a falha alta) e a altura vale so ate fechar */
+export function gravarAlturaDaLista(px: number): unknown {
+    alturaDaListaDeAvisos.set(px)
+    try {
+        localStorage.setItem(CHAVE_ALTURA_LISTA, String(px))
+        return null
+    } catch (e) {
+        return e
+    }
+}
 
 let proximoId = 1
 let relogio: ReturnType<typeof setInterval> | null = null
@@ -24,13 +48,17 @@ function armarRelogio() {
     }, 500)
 }
 
-/** poe (ou atualiza) um aviso. `chave` identifica o assunto: a mesma chave substitui, `resolverAviso(chave)` tira */
-export function avisar(texto: string, nivel: Nivel, chave: string = texto): void {
+/**
+ * poe (ou atualiza) um aviso. `chave` identifica o assunto: a mesma chave substitui, `resolverAviso(chave)` tira.
+ * `fixo`: sem x enquanto o assunto dura (saida fora do ar). `soma: false`: troca de estado da mesma chave sem contar outra vez
+ */
+export function avisar(texto: string, nivel: Nivel, chave: string = texto, opcoes: { fixo?: boolean; soma?: boolean } = {}): void {
     const id = proximoId++
     const agora = Date.now()
-    avisos.update((l) => acrescentar(l, { chave, texto, nivel }, id, agora))
+    avisos.update((l) => acrescentar(l, { chave, texto, nivel, ...opcoes }, id, agora))
     const entrou = get(avisos).find((a) => a.chave === chave)
-    if (entrou) historicoDeAvisos.update((h) => noHistorico(h, entrou))
+    // no historico cada entrada tem id PROPRIO (a chave do {#each}): a mesma chave muda de texto (caiu -> voltou) e as duas linhas ficam
+    if (entrou) historicoDeAvisos.update((h) => noHistorico(h, { ...entrou, id }))
     if (nivel === "info") armarRelogio()
 }
 
@@ -39,7 +67,7 @@ export function resolverAviso(chave: string): void {
     avisos.update((l) => tirarChave(l, chave))
 }
 
-/** o x da linha */
+/** o x da linha (um aviso `fixo` nao sai: tirarId recusa) */
 export function dispensarAviso(id: number): void {
     avisos.update((l) => tirarId(l, id))
 }

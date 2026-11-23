@@ -20,6 +20,7 @@
     import { aplicarPadraoDaPartida } from "../../utils/aliancaTelaoPartida"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
+    import { ligarQuedasNosAvisos } from "../../utils/aliancaQuedaAvisos"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
     import AliancaEditarCentro from "./AliancaEditarCentro.svelte"
@@ -34,7 +35,6 @@
     import AliancaTopo from "./AliancaTopo.svelte"
     import AnteparoDeModo from "./AnteparoDeModo.svelte"
     import FaixaDeFalha from "./FaixaDeFalha.svelte"
-    import AliancaQuedaSaida from "./AliancaQuedaSaida.svelte"
     import AliancaAvisos from "./AliancaAvisos.svelte"
     import { falhas } from "../../utils/aliancaFalha"
     import ProfileChangerMenu from "./ProfileChangerMenu.svelte"
@@ -52,6 +52,8 @@
     // cabine 6 (Andre, 23/nov): o app abre com o telao ligado. Uma vez por perfil liga "Mostrar tela de saida ao iniciar" (autoOutput do
     // FreeShow, que so age na partida). Agora, na criacao: AliancaTela so existe depois de `loaded` e a partida liga 2,5 s depois disso.
     aplicarPadraoDaPartida()
+    // cabine 6 (F1): a janela de uma saida caiu/travou/fora do ar -> ERRO na linha de avisos do pe (antes, uma faixa fixa por cima do conteudo)
+    onDestroy(ligarQuedasNosAvisos())
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"
@@ -164,7 +166,6 @@
 <!-- motor: sem markup visivel, sempre montado -->
 <Preview escondida />
 <FaixaDeFalha />
-<AliancaQuedaSaida />
 <AnteparoDeModo />
 {#if $showChangeProfileMenu && $activeProfile !== null}
     <ProfileChangerMenu />
