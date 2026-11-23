@@ -3,12 +3,12 @@
     // Trocar muda todas as saidas de uma vez; o que esta no ar nao pula: entra no proximo slide (D15). Ponto laranja so para problema (D14).
     // O menu abre por clique no proprio botao e fecha por clique fora (AliancaCortina) ou Esc, como o menu do telao.
     import { onDestroy } from "svelte"
-    import { outputs, settingsTab, special, styles } from "../../stores"
+    import { outputs, settingsTab, special, stageShows, styles, templates } from "../../stores"
     import { configSecao } from "../../utils/aliancaConfigSecao"
     import { trocarTela } from "../../utils/aliancaTela"
     import { escFechou } from "../../utils/aliancaToque"
-    import { ativarVisual, aplicarVisualAtivo, problemasDoVisual, visualPendente } from "../../utils/aliancaVisualAplicador"
-    import { divergencias, lerVisuais, visualAtivo } from "../../utils/aliancaVisualLogica"
+    import { ativarVisual, aplicarVisualAtivo, visualPendente } from "../../utils/aliancaVisualAplicador"
+    import { divergencias, lerVisuais, planoDeEscrita, visualAtivo } from "../../utils/aliancaVisualLogica"
     import AliancaCortina from "./AliancaCortina.svelte"
 
     let aberto = false
@@ -16,7 +16,9 @@
     $: ativo = visualAtivo($special)
     $: esperando = $visualPendente.saidas.size > 0
     $: fora = ativo ? divergencias(ativo, $outputs, $styles, $visualPendente.chaves) : []
-    $: nProblemas = $problemasDoVisual.length + (fora.length ? 1 : 0)
+    // reativo: saida criada/apagada, modelo ou leiaute apagado aparecem na hora (nunca calado)
+    $: problemas = ativo ? planoDeEscrita(ativo, $outputs, $styles, $templates, $stageShows).problemas : []
+    $: nProblemas = problemas.length + (fora.length ? 1 : 0)
 
     function trocar(id: string) {
         aberto = false
