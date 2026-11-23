@@ -131,7 +131,7 @@
 {#if situacao === "defasado"}
     <div class="faixa" role="status" data-acao="editar-pendencia">
         <span class="txt">{faixaDefasada(nomesDefasadas)}</span>
-        <button type="button" class="mandar" data-acao="editar-mandar-pro-ar" disabled={$outLocked} title={$outLocked ? SAIDA_TRAVADA : ""} on:click={mandar}>{$outLocked ? "Saída travada" : "Mandar pro ar"}</button>
+        <button type="button" class="mandar" data-acao="editar-mandar-pro-ar" disabled={$outLocked} title={$outLocked ? SAIDA_TRAVADA : ""} on:click={mandar}>{$outLocked ? "Telão congelado" : "Mandar pro ar"}</button>
     </div>
 {:else if aoVivo}
     <div class="faixa aviso" role="status" data-acao="editar-aviso-ao-vivo"><span class="txt">{aoVivo}</span></div>

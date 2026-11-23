@@ -1,5 +1,5 @@
 // Visual (cabine 6, fatia V1; D6, D10, D13–D17): a parte pura. Um Visual diz, para cada saida, que modelo veste cada tipo de conteudo
-// ("usa o slide" ou o id de um modelo) e, para cada saida de retorno, o leiaute do retorno (campo separado, D16).
+// ("Sem modelo" = o slide como foi feito, ou o id de um modelo) e, para cada saida de retorno, o leiaute do retorno (campo separado, D16).
 // Ativar um Visual NAO cria motor novo: escreve os campos que ja existem (style.template = Musica e avisos, style.templateScripture = Biblia,
 // outputs[id].stageOutput = retorno). Quem escreve e aliancaVisualAplicador.ts; aqui so se calcula o que escrever, o que esta errado e a pendencia do D15.
 // Nada aqui importa loja nem o fecho da janela de saida.
@@ -12,7 +12,7 @@ export const COLUNAS = [
 
 export type Coluna = (typeof COLUNAS)[number]["id"]
 export type CampoDeEstilo = (typeof COLUNAS)[number]["campo"]
-/** "slide" = a saida mostra o slide como foi feito; qualquer outro texto = id de modelo */
+/** "slide" = Sem modelo (a saida mostra o slide como foi feito); qualquer outro texto = id de modelo */
 export type Casa = "slide" | string
 export type SaidaDoVisual = { [c in Coluna]?: Casa }
 export type Visual = {
@@ -25,6 +25,8 @@ export type Visual = {
 
 export const NOME_PADRAO = "Culto padrão"
 export const SLIDE: Casa = "slide"
+/** o rotulo da casa "slide" em toda a tela (casa, seletor, linha de origem, Estilo da saida, Saidas). Pedido do Andre, 23/nov */
+export const SEM_MODELO = "Sem modelo"
 
 type Saidas = { [id: string]: any }
 type Estilos = { [id: string]: any }
@@ -99,7 +101,7 @@ export function duplicar(v: Visual, visuais: Visual[], novoId: string): Visual {
     return { id: novoId, nome: nomeLivre(visuais, `${v.nome} (cópia)`), saidas: JSON.parse(JSON.stringify(v.saidas || {})), retorno: JSON.parse(JSON.stringify(v.retorno || {})) }
 }
 
-/** Visual novo: toda saida em "usa o slide" e o retorno como esta hoje */
+/** Visual novo: toda saida em "Sem modelo" e o retorno como esta hoje */
 export function novoVisual(visuais: Visual[], outputs: Saidas, novoId: string): Visual {
     const v: Visual = { id: novoId, nome: nomeLivre(visuais, "Visual novo"), saidas: {}, retorno: {} }
     for (const s of saidasNormais(outputs)) v.saidas[s.id] = { musica: SLIDE, biblia: SLIDE }
@@ -113,11 +115,11 @@ export type EscritaDeEstilo = { tipo: "estilo"; estilo: string; campo: CampoDeEs
 export type EscritaDeRetorno = { tipo: "retorno"; saida: string; valor: string }
 export type Escrita = EscritaDeEstilo | EscritaDeRetorno
 
+/**
+ * so problema de verdade fica laranja (D14 + pedido do Andre, 23/nov). Estilo dividido ou saida sem estilo NAO e problema: o aplicador da
+ * a saida um estilo so dela (copia exata, desenha igual) antes de escrever; ver `saidasParaSeparar`.
+ */
 export type Problema =
-    /** duas saidas dividem um estilo e o Visual pede modelos diferentes: nada e escrito nesse campo */
-    | { tipo: "estiloDividido"; estilo: string; coluna: Coluna; saidas: string[] }
-    /** a saida nao tem estilo e o Visual pede um modelo: sem estilo nao ha onde escrever */
-    | { tipo: "semEstilo"; saida: string; coluna: Coluna }
     /** o modelo da casa nao existe mais (a saida mostra o slide como foi feito) */
     | { tipo: "modeloSumiu"; saida: string; coluna: Coluna; modelo: string }
     /** o leiaute de retorno nao existe mais: nada e escrito */
@@ -126,8 +128,41 @@ export type Problema =
 export const chaveDaEscrita = (e: Escrita): string => (e.tipo === "estilo" ? `estilo:${e.estilo}:${e.campo}` : `retorno:${e.saida}`)
 
 /**
- * o que ativar `v` escreveria. So devolve escrita que muda algo (valor atual diferente). Um estilo dividido por saidas que pedem modelos
- * diferentes NUNCA e escrito calado: vira problema (a tela oferece dar um estilo proprio a saida, com confirmacao).
+ * as saidas que precisam de um estilo so delas para `v` valer: a saida sem estilo (ou com estilo apagado) que pede modelo, e, num estilo
+ * dividido por saidas que pedem coisas diferentes em alguma coluna, todas menos a primeira (a primeira fica com o estilo original).
+ * O aplicador da a cada uma uma copia exata do estilo atual (desenha igual) com o nome da saida e so depois escreve. Nunca na carga.
+ */
+export function saidasParaSeparar(v: Visual, outputs: Saidas, estilos: Estilos): string[] {
+    const r: string[] = []
+    const porEstilo = new Map<string, string[]>()
+    for (const s of saidasNormais(outputs)) {
+        const est = estiloDaSaida(outputs[s.id], estilos)
+        if (!est) {
+            if (COLUNAS.some((c) => casaDe(v, s.id, c.id) !== SLIDE)) r.push(s.id)
+            continue
+        }
+        porEstilo.set(est, [...(porEstilo.get(est) || []), s.id])
+    }
+    for (const ids of porEstilo.values()) {
+        if (ids.length < 2) continue
+        const [primeira, ...outras] = ids
+        const pedidoDe = (id: string) => COLUNAS.map((c) => casaDe(v, id, c.id)).join("\u0000")
+        if (outras.some((id) => pedidoDe(id) !== pedidoDe(primeira))) r.push(...outras)
+    }
+    return r
+}
+
+/** o nome do estilo proprio de uma saida: o nome dela (com numero se ja existir um estilo com esse nome) */
+export function nomeDoEstiloProprio(nomeDaSaida: string, estilos: Estilos): string {
+    const base = (nomeDaSaida || "Saída").trim() || "Saída"
+    const nomes = new Set(Object.values(estilos || {}).map((e: any) => String(e?.name || "").trim().toLowerCase()))
+    if (!nomes.has(base.toLowerCase())) return base
+    for (let i = 2; ; i++) if (!nomes.has(`${base} ${i}`.toLowerCase())) return `${base} ${i}`
+}
+
+/**
+ * o que ativar `v` escreveria. So devolve escrita que muda algo (valor atual diferente). Saida sem estilo ou estilo dividido com pedidos
+ * diferentes nao gera escrita (o aplicador separa antes: `saidasParaSeparar`); nada e escrito calado num estilo que outra saida usa.
  */
 export function planoDeEscrita(v: Visual, outputs: Saidas, estilos: Estilos, templates: Mapa = {}, leiautes: Mapa = {}): { escritas: Escrita[]; problemas: Problema[] } {
     const escritas: Escrita[] = []
@@ -135,10 +170,7 @@ export function planoDeEscrita(v: Visual, outputs: Saidas, estilos: Estilos, tem
     const porEstilo = new Map<string, string[]>()
     for (const s of saidasNormais(outputs)) {
         const est = estiloDaSaida(outputs[s.id], estilos)
-        if (!est) {
-            for (const c of COLUNAS) if (casaDe(v, s.id, c.id) !== SLIDE) problemas.push({ tipo: "semEstilo", saida: s.id, coluna: c.id })
-            continue
-        }
+        if (!est) continue
         porEstilo.set(est, [...(porEstilo.get(est) || []), s.id])
     }
     for (const s of saidasNormais(outputs))
@@ -149,10 +181,7 @@ export function planoDeEscrita(v: Visual, outputs: Saidas, estilos: Estilos, tem
     for (const [est, ids] of porEstilo) {
         for (const c of COLUNAS) {
             const pedidos = new Set(ids.map((id) => casaDe(v, id, c.id)))
-            if (pedidos.size > 1) {
-                problemas.push({ tipo: "estiloDividido", estilo: est, coluna: c.id, saidas: ids })
-                continue
-            }
+            if (pedidos.size > 1) continue // separar antes (saidasParaSeparar)
             const casa = [...pedidos][0]
             const valor = casa === SLIDE ? undefined : casa
             const atual = estilos[est]?.[c.campo] || undefined
@@ -182,7 +211,7 @@ export function dividemEstilo(outputs: Saidas, estilos: Estilos, outputId: strin
 
 /**
  * ao por `casa` na coluna de uma saida: precisa de estilo proprio? Sim se a saida nao tem estilo (e a casa e modelo) ou se divide o estilo
- * com outra saida que, no mesmo Visual, pede outra coisa nessa coluna.
+ * com outra saida que, no mesmo Visual, pede outra coisa nessa coluna. A tela nao pergunta: o aplicador separa sozinho (copia exata).
  */
 export function precisaDeEstiloProprio(v: Visual, outputs: Saidas, estilos: Estilos, outputId: string, coluna: Coluna, casa: Casa): "semEstilo" | "dividido" | null {
     if (!estiloDaSaida(outputs?.[outputId], estilos)) return casa === SLIDE ? null : "semEstilo"
@@ -295,12 +324,12 @@ export function linhaDeOrigem(v: Visual | null, coluna: Coluna, o: { outputs: Sa
         const pedido = v ? casaDe(v, s.id, coluna) : SLIDE
         const pendente = !!est && pend.has(`estilo:${est}:${campo}`)
         let problema = ""
-        let texto = usado ? o.templates?.[usado]?.name || "modelo sem nome" : "como o slide foi feito"
+        let texto = usado ? o.templates?.[usado]?.name || "modelo sem nome" : SEM_MODELO
         if (usado && !ehObjeto(o.templates?.[usado])) {
             texto = "modelo não existe mais"
-            problema = "o modelo desta saída foi apagado; ela mostra o slide como foi feito"
+            problema = "o modelo desta saída foi apagado; ela está sem modelo"
         } else if (v && !pendente && (pedido === SLIDE ? "" : pedido) !== usado) {
-            problema = !est && pedido !== SLIDE ? "a saída não tem estilo próprio: o modelo do Visual não pode valer" : "a saída não está como o Visual diz"
+            problema = "a saída não está como o Visual diz"
         }
         r.push({ saida: s.id, nome: s.nome, texto, problema, pendente })
     }
@@ -311,11 +340,9 @@ export function linhaDeOrigem(v: Visual | null, coluna: Coluna, o: { outputs: Sa
     return r
 }
 
-/** texto curto de um problema, para a tabela e a pilula */
+/** texto curto de um problema, para a tabela e o menu do telao */
 export function textoDoProblema(p: Problema, nomes: { saida: (id: string) => string; modelo?: (id: string) => string }): string {
     const col = COLUNAS.find((c) => c.id === (p as any).coluna)?.rotulo || ""
-    if (p.tipo === "estiloDividido") return `${p.saidas.map(nomes.saida).join(", ")} dividem o mesmo estilo e pedem modelos diferentes em ${col}: nada foi escrito nesse campo`
-    if (p.tipo === "semEstilo") return `${nomes.saida(p.saida)} não tem estilo próprio: o modelo de ${col} não pode valer`
     if (p.tipo === "modeloSumiu") return `${nomes.saida(p.saida)}: o modelo de ${col} não existe mais`
     return `${nomes.saida(p.saida)}: o leiaute do retorno não existe mais`
 }

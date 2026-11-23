@@ -147,6 +147,7 @@
 		}
 	],
 	"special": {
+		"aliancaTelaoNaPartida": true,
 		"capitalize_words": "Jesus, Lord",
 		"autoBackupPrevious": 1794662578348,
 		"customUserDataLocation": true,

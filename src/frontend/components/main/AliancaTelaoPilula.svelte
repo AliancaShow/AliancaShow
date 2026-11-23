@@ -1,16 +1,26 @@
 <script lang="ts">
-    // Leiaute v2, topo: a pilula do telao. Liga e desliga pela maquina de aliancaSaidaMenuLogica (1 s inerte, 3 s de janela, 0,8 s de
-    // trava). Desligar pede confirmacao num segundo botao ("Desligar mesmo"). So mouse: Enter e Espaco nao ligam nem desligam (botao sem
-    // foco por Tab; o keydown global tira o foco de qualquer BUTTON). Ctrl+O continua como esta (shortcuts.ts).
+    // Leiaute v2, topo: o botao UNICO do telao (cabine 6, pedido do Andre 23/nov: "o programa tem que iniciar com o telao ligado; e dai
+    // escolhemos congelar ou desligar. E nesse mesmo botao aparecer de forma abreviada o visual selecionado").
+    //   botao:  ponto + estado curto ("No ar" / "Congelado" / "Desligado") + " · " + o Visual que esta valendo + ▾. Clique abre o menu.
+    //   menu:   Congelar/Descongelar (outLocked: nada muda no telao ate descongelar), Ligar/Desligar, Voltar o que foi limpo; depois a lista
+    //           de Visuais (check no que vale) e "Editar visuais…".
+    // Liga e desliga pela maquina de aliancaSaidaMenuLogica (1 s inerte, 3 s de janela, 0,8 s de trava); desligar continua pedindo
+    // confirmacao num segundo botao ("Desligar mesmo"). So mouse: Enter e Espaco nao ligam nem desligam. Ctrl+O (liga/desliga) e Ctrl+L
+    // (congela) continuam como estao (shortcuts.ts). A partida com o telao ligado e o `autoOutput` do FreeShow (aliancaTelaoPartida.ts).
+    // Trocar o Visual muda todas as saidas de uma vez; o que esta no ar nao pula (D15), mas isso nao e anunciado aqui. Ponto laranja so
+    // para problema de verdade do Visual (modelo ou leiaute apagado, saida fora do Visual).
     import { onDestroy, onMount } from "svelte"
     import { get } from "svelte/store"
-    import { activePage, drawSettings, drawTool, outLocked, outputCache, outputDisplay, outputs, paintCache, settingsTab } from "../../stores"
+    import { activePage, drawSettings, drawTool, outLocked, outputCache, outputDisplay, outputs, paintCache, settingsTab, special, stageShows, styles, templates } from "../../stores"
+    import { configSecao } from "../../utils/aliancaConfigSecao"
     import { tela, trocarTela } from "../../utils/aliancaTela"
     import { escFechou } from "../../utils/aliancaToque"
     import { algoNoAr } from "../../utils/aliancaModo"
     import { desenhoAtivo } from "../../utils/aliancaPilulaLogica"
     import { motivoVoltarLimpo } from "../../utils/aliancaVoltarLimpoLogica"
-    import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
+    import { criarMaquinaDaSaida, itemDesabilitado, ROTULO_DESLIGAR_MESMO, ROTULOS, rotuloCurtoDoTelao, temSaidaHabilitada, type EstadoSaida } from "../../utils/aliancaSaidaMenuLogica"
+    import { ativarVisual, aplicarVisualAtivo, visualPendente } from "../../utils/aliancaVisualAplicador"
+    import { divergencias, lerVisuais, planoDeEscrita, visualAtivo } from "../../utils/aliancaVisualLogica"
     import { toggleOutputs } from "../helpers/output"
     import { restoreOutput } from "../output/clear"
     import { falhaAlta } from "../../utils/aliancaFalha"
@@ -22,9 +32,6 @@
 
     let estado: EstadoSaida = "desligado"
     let raiz: HTMLElement
-
-    // Em Mostrar liga com conteudo carregado (regra do Culto); em Editar vale a regra de hoje do Preparar.
-    $: emMostrar = $activePage === "show"
 
     const maquina = criarMaquinaDaSaida({
         ligar: () => toggleOutputs(null, { state: true }),
@@ -45,7 +52,7 @@
     onMount(() => iniciarSoRetorno((m) => falhaAlta("so-retorno", m)))
     onDestroy(() => maquina.destruir())
 
-    // cronometro "Telao no ar · mm:ss": comeca quando a saida entra no ar e zera quando sai
+    // cronometro "no ar ha mm:ss" (na dica do botao): comeca quando a saida entra no ar e zera quando sai
     let noArDesde = 0
     let tempoNoAr = "00:00"
     let cronometro: ReturnType<typeof setInterval> | null = null
@@ -72,11 +79,23 @@
 
     $: pergunta = estado === "perguntando" || estado === "armado"
     $: ligado = estado === "ligado" || pergunta || estado === "desligando"
-    $: rotulo = estado === "ligado" || pergunta || estado === "desligando" ? (estado === "desligando" ? "Desligando…" : `Telão no ar · ${tempoNoAr}`) : estado === "ligando" ? "Ligando…" : estado === "semResposta" ? "O telão não respondeu" : estado === "semTela" ? "Sem tela de saída" : "Ligar telão"
-    $: dica = estado === "desligadoNoAr" || estado === "desligadoDesenho" ? ROTULOS[estado].replace("pelo Culto", "em Mostrar") : estado === "semResposta" ? ROTULOS[estado].replace("o botão do Culto", "o botão de Mostrar").replace("Use o botão do Culto.", "Tente de novo em Mostrar.") : ROTULOS[estado]
-    $: desabilitada = itemDesabilitado(estado) && estado !== "semResposta"
+    $: curto = rotuloCurtoDoTelao(estado, $outLocked)
+    $: dicaDoEstado = estado === "desligadoNoAr" || estado === "desligadoDesenho" ? ROTULOS[estado].replace("pelo Culto", "em Mostrar") : estado === "semResposta" ? ROTULOS[estado].replace("o botão do Culto", "o botão de Mostrar").replace("Use o botão do Culto.", "Tente de novo em Mostrar.") : ROTULOS[estado]
+    $: ligarDesabilitado = itemDesabilitado(estado) && estado !== "semResposta"
+    $: rotuloLigar = ligado ? "Desligar telão" : estado === "semTela" ? "Configurar a tela de saída" : estado === "ligando" ? "Ligando…" : "Ligar telão"
+    $: subLigar = ligarDesabilitado ? dicaDoEstado : ligado ? "a tela fica preta até ligar de novo" : estado === "semTela" ? "nenhuma saída habilitada" : "o telão volta a mostrar o que está no ar"
 
-    // menu do telao (decisao 16): Travar saida e Voltar o que foi limpo. Abre so por clique no ▾; nada aqui toca em `outputs` sem um clique no item.
+    // o Visual que esta valendo (antes era a pilula separada "Visual: X")
+    $: visuais = lerVisuais($special)
+    $: ativo = visualAtivo($special)
+    $: fora = ativo ? divergencias(ativo, $outputs, $styles, $visualPendente.chaves) : []
+    // reativo: modelo ou leiaute apagado aparece na hora (nunca calado)
+    $: problemas = ativo ? planoDeEscrita(ativo, $outputs, $styles, $templates, $stageShows).problemas : []
+    $: nProblemas = problemas.length + (fora.length ? 1 : 0)
+    $: avisoVisual = visuais.length > 0 && (nProblemas > 0 || !ativo)
+
+    $: dica = curto.tom === "noAr" ? `Telão no ar há ${tempoNoAr}` : curto.tom === "congelado" ? "Telão congelado: nada muda nele até descongelar" : dicaDoEstado
+
     let menuAberto = false
     // Restaurar so vale 1 s depois de limpar (a mesma carencia do botao antigo de ClearButtons: o clique que limpou nao restaura)
     let restauraPronto = false
@@ -95,17 +114,43 @@
     $: podeRestaurar = !$outLocked && !!$outputCache && restauraPronto
     $: motivoRestaurar = motivoVoltarLimpo({ travada: $outLocked, haCache: !!$outputCache, pronto: restauraPronto })
     $: if (pergunta) menuAberto = false
-    function travar() {
+
+    function abrirOuFechar() {
+        if (pergunta) return maquina.cancelar()
+        if (!menuAberto) maquina.abrir()
+        menuAberto = !menuAberto
+    }
+    function congelar() {
         outLocked.set(!$outLocked)
         menuAberto = false
+    }
+    function ligarOuDesligar() {
+        if (ligarDesabilitado) return
+        // "Desligar" abre a pergunta "Desligar mesmo" no lugar do menu; "Ligar" liga; sem tela abre Configuracoes
+        menuAberto = false
+        maquina.cliqueNoItem()
     }
     function restaurar() {
         if (!podeRestaurar) return
         restoreOutput()
         menuAberto = false
     }
+    function trocarVisual(id: string) {
+        menuAberto = false
+        if (id !== ativo?.id) ativarVisual(id)
+    }
+    function reaplicar() {
+        menuAberto = false
+        aplicarVisualAtivo()
+    }
+    function editarVisuais() {
+        menuAberto = false
+        settingsTab.set("styles")
+        configSecao.set("visual")
+        trocarTela("settings", "botao-de-pagina")
+    }
 
-    function fora(e: MouseEvent) {
+    function fora_(e: MouseEvent) {
         if (pergunta && !raiz?.contains(e.target as Node)) maquina.cancelar()
         if (menuAberto && !raiz?.contains(e.target as Node)) menuAberto = false
     }
@@ -124,19 +169,22 @@
     }
     if (typeof window !== "undefined") window.addEventListener("keydown", tecla, true)
     onDestroy(() => typeof window !== "undefined" && window.removeEventListener("keydown", tecla, true))
-    void emMostrar
 </script>
 
-<svelte:window on:mousedown={fora} />
+<svelte:window on:mousedown={fora_} />
 
 <div class="raiz" bind:this={raiz}>
-    <button class="telao" class:ligado class:erro={estado === "semResposta"} class:desabilitada data-acao="telao" data-estado={estado} aria-disabled={desabilitada} tabindex="-1" data-title={dica} on:mousedown|preventDefault on:click={() => maquina.cliqueNoItem()}>
+    <button class="telao {curto.tom}" class:aberto={menuAberto} data-acao="telao-menu" data-estado={estado} data-tom={curto.tom} aria-haspopup="menu" aria-expanded={menuAberto} aria-label={`Telão: ${curto.texto}${ativo ? ` · Visual ${ativo.nome}` : ""}`} data-title={menuAberto ? "" : dica} tabindex="-1" on:mousedown|preventDefault on:click={abrirOuFechar}>
         <span class="ponto" />
-        <span>{rotulo}</span>
+        <span class="estado" data-acao="telao">{curto.texto}</span>
+        {#if visuais.length}
+            <span class="sep">·</span>
+            <span class="vis" data-acao="telao-visual">{ativo?.nome || "sem Visual"}</span>
+            {#if avisoVisual}<span class="avisoVis" data-acao="visual-problema" />{/if}
+        {/if}
+        {#if desenho}<span class="aviso" data-acao="desenho-ativo" data-title="Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" />{/if}
+        <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>
     </button>
-    <button class="seta" class:aberto={menuAberto} class:desenho data-title={desenho ? "Ferramentas de desenho ativas no telão (Preencher, zoom ou traços)" : ""} data-acao="telao-menu" aria-haspopup="menu" aria-expanded={menuAberto} aria-label="Mais opções do telão" tabindex="-1" on:mousedown|preventDefault on:click={() => (menuAberto = !menuAberto)}
-        ><svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" /></svg>{#if desenho}<span class="aviso" data-acao="desenho-ativo" />{/if}</button
-    >
     {#if $soRetorno}<span class="so-retorno" data-acao="pilula-so-retorno">{ROTULO_FAIXA}</span>{/if}
     {#if menuAberto || pergunta}
         <AliancaCortina
@@ -148,8 +196,30 @@
     {/if}
     {#if menuAberto}
         <div class="pop menu" role="menu" data-acao="telao-menu-pop">
-            <button role="menuitem" class="item" data-item="travar" class:ativo={$outLocked} tabindex="-1" on:mousedown|preventDefault on:click={travar}><span class="it">{$outLocked ? "Destravar saída" : "Travar saída"}</span><span class="sub">{$outLocked ? "libera o telão para mudar" : "nada muda no telão até destravar"}</span></button>
-            <button role="menuitem" class="item" data-item="restaurar" aria-disabled={!podeRestaurar} class:inerte={!podeRestaurar} title={motivoRestaurar} tabindex="-1" on:mousedown|preventDefault on:click={restaurar}><span class="it">Voltar o que foi limpo</span><span class="sub" class:motivo={!podeRestaurar}>{podeRestaurar ? "traz de volta o último conteúdo limpo" : motivoRestaurar}</span></button>
+            <div class="tit">TELÃO</div>
+            <button role="menuitem" class="item" data-item="travar" class:gelo={$outLocked} tabindex="-1" on:mousedown|preventDefault on:click={congelar}
+                ><span class="it">{$outLocked ? "Descongelar" : "Congelar"}</span><span class="sub">{$outLocked ? "o telão volta a seguir o que você manda" : "nada muda no telão até descongelar"}</span></button
+            >
+            <button role="menuitem" class="item" data-item={ligado ? "desligar" : "ligar"} aria-disabled={ligarDesabilitado} class:inerte={ligarDesabilitado} tabindex="-1" on:mousedown|preventDefault on:click={ligarOuDesligar}
+                ><span class="it">{rotuloLigar}</span><span class="sub" class:motivo={ligarDesabilitado}>{subLigar}</span></button
+            >
+            <button role="menuitem" class="item" data-item="restaurar" aria-disabled={!podeRestaurar} class:inerte={!podeRestaurar} title={motivoRestaurar} tabindex="-1" on:mousedown|preventDefault on:click={restaurar}
+                ><span class="it">Voltar o que foi limpo</span><span class="sub" class:motivo={!podeRestaurar}>{podeRestaurar ? "traz de volta o último conteúdo limpo" : motivoRestaurar}</span></button
+            >
+            {#if visuais.length}
+                <hr />
+                <div class="tit">VISUAL</div>
+                {#each visuais as v (v.id)}
+                    <button role="menuitemradio" aria-checked={v.id === ativo?.id} class="mi" class:h={v.id === ativo?.id} data-visual={v.id} tabindex="-1" on:mousedown|preventDefault on:click={() => trocarVisual(v.id)}>
+                        <span class="marca">{v.id === ativo?.id ? "✓" : ""}</span><span class="miNome">{v.nome}</span>
+                    </button>
+                {/each}
+                {#if nProblemas}
+                    <div class="prob" data-acao="visual-problemas-menu">{nProblemas === 1 ? "1 problema" : `${nProblemas} problemas`} no Visual (detalhes em Editar visuais)</div>
+                    {#if fora.length}<button role="menuitem" class="mi" tabindex="-1" on:mousedown|preventDefault on:click={reaplicar}><span class="marca" />Reaplicar o Visual</button>{/if}
+                {/if}
+                <button role="menuitem" class="mi" data-acao="visual-editar" tabindex="-1" on:mousedown|preventDefault on:click={editarVisuais}><span class="marca" />Editar visuais…</button>
+            {/if}
         </div>
     {/if}
     {#if pergunta}
@@ -165,123 +235,116 @@
         position: relative;
         display: flex;
         align-items: center;
-        gap: 4px;
-    }
-    .seta {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 40px;
-        padding: 0;
-        border: 1px solid var(--luz-borda);
-        border-radius: 14px;
-        background: var(--luz-campo);
-        color: rgba(248, 248, 240, 0.78);
-        cursor: pointer;
-    }
-    .seta .aviso {
-        position: absolute;
-        top: 8px;
-        right: 4px;
-        width: 8px;
-        height: 8px;
-        border-radius: 4px;
-        background: var(--luz-laranja);
-    }
-    .seta:hover,
-    .seta.aberto {
-        background: var(--luz-hover);
-        border-color: var(--luz-borda-forte);
-        color: var(--luz-texto);
-    }
-    .seta .chev {
-        transition: transform 140ms ease;
-    }
-    .seta.aberto .chev {
-        transform: rotate(180deg);
-    }
-    .pop.menu {
-        width: 260px;
-        padding: 6px;
-        gap: 2px;
-    }
-    .item {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1px;
-        padding: 8px 10px;
-        border: 0;
-        border-radius: 6px;
-        background: transparent;
-        color: var(--luz-texto);
-        font: inherit;
-        text-align: left;
-        cursor: pointer;
-    }
-    .item:hover {
-        background: var(--luz-hover);
-    }
-    .item.ativo .it {
-        color: var(--luz-laranja);
-    }
-    .item.inerte {
-        cursor: not-allowed;
-    }
-    .item.inerte .it {
-        opacity: 0.5;
-    }
-    .item .sub.motivo {
-        color: var(--luz-ambar);
-    }
-    .item .it {
-        font-size: 13px;
-        font-weight: 600;
-    }
-    .item .sub {
-        font-size: 11px;
-        color: var(--luz-mudo);
+        gap: 6px;
     }
     .telao {
+        position: relative;
         height: 40px;
+        max-width: 340px;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 0 16px;
+        gap: 7px;
+        padding: 0 12px 0 14px;
         border-radius: 20px;
+        border: 1px solid var(--luz-borda-forte);
+        background: var(--luz-campo);
+        color: var(--luz-texto);
         font: inherit;
         font-size: 14px;
         font-weight: 600;
+        white-space: nowrap;
         cursor: pointer;
-        background: var(--luz-campo);
-        color: var(--luz-texto);
-        border: 1px solid var(--luz-borda-forte);
-        font-variant-numeric: tabular-nums;
     }
-    .telao .ponto {
-        width: 8px;
-        height: 8px;
-        border-radius: 4px;
+    .ponto {
+        width: 9px;
+        height: 9px;
+        flex-shrink: 0;
+        border-radius: 5px;
         background: var(--luz-fraco);
     }
-    .telao.ligado {
-        background: var(--luz-vermelho);
-        color: #fff;
-        border-color: var(--luz-vermelho);
+    .estado {
+        flex-shrink: 0;
     }
-    .telao.ligado .ponto {
-        background: var(--luz-campo);
+    .sep {
+        opacity: 0.55;
+    }
+    .vis {
+        min-width: 0;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 500;
+        opacity: 0.85;
+    }
+    .avisoVis,
+    .aviso {
+        width: 8px;
+        height: 8px;
+        flex-shrink: 0;
+        border-radius: 4px;
+        background: var(--luz-laranja);
+    }
+    .chev {
+        flex-shrink: 0;
+        opacity: 0.8;
+        transition: transform 140ms ease;
+    }
+    .telao.aberto .chev {
+        transform: rotate(180deg);
+    }
+
+    /* NO AR: vermelho cheio */
+    .telao.noAr {
+        background: var(--luz-vermelho);
+        border-color: var(--luz-vermelho);
+        color: var(--luz-branco);
+    }
+    .telao.noAr .ponto {
+        background: var(--luz-branco);
+    }
+    /* CONGELADO: gelo cheio (cor propria, nunca confundir com o vermelho do no ar) */
+    .telao.congelado {
+        background: var(--luz-gelo);
+        border-color: var(--luz-gelo);
+        color: var(--luz-tinta);
+    }
+    .telao.congelado .ponto {
+        background: var(--luz-tinta);
+        border-radius: 2px;
+    }
+    /* DESLIGADO: apagado, tracejado */
+    .telao.desligado {
+        background: transparent;
+        border-style: dashed;
+        border-color: var(--luz-borda-forte);
+        color: var(--luz-mudo);
+    }
+    .telao.desligado .estado {
+        color: var(--luz-texto-80);
+    }
+    .telao.transicao {
+        color: var(--luz-texto-80);
     }
     .telao.erro {
         border-color: var(--luz-vermelho);
         color: var(--luz-vermelho-claro);
     }
-    .telao.desabilitada {
-        opacity: 0.5;
-        cursor: not-allowed;
+    .telao.erro .ponto {
+        background: var(--luz-vermelho);
     }
+    .telao.desligado:hover,
+    .telao.transicao:hover,
+    .telao.erro:hover,
+    .telao.desligado.aberto {
+        background: var(--luz-hover);
+    }
+    .telao.noAr:hover,
+    .telao.congelado:hover,
+    .telao.noAr.aberto,
+    .telao.congelado.aberto {
+        filter: brightness(1.08);
+    }
+
     .pop {
         position: absolute;
         z-index: 40;
@@ -294,13 +357,107 @@
         padding: 12px;
         background: var(--luz-pop);
         border: 1px solid var(--luz-borda);
-        border-radius: 12px;
+        border-radius: var(--luz-raio-menu);
         box-shadow:
             inset 0 0 0 1px var(--luz-borda),
             var(--luz-sombra-pop);
         backdrop-filter: var(--luz-vidro, none);
         transform-origin: top right;
         animation: luz-surgir 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .pop.menu {
+        width: 290px;
+        padding: 6px;
+        gap: 2px;
+    }
+    .tit {
+        padding: 6px 10px 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: var(--luz-mudo);
+    }
+    .item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: var(--luz-raio-botao);
+        background: transparent;
+        color: var(--luz-texto);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .item:hover {
+        background: var(--luz-hover);
+    }
+    .item.gelo {
+        background: var(--luz-gelo-lavagem);
+    }
+    .item.gelo .it {
+        color: var(--luz-gelo);
+    }
+    .item.inerte {
+        cursor: not-allowed;
+    }
+    .item.inerte .it {
+        opacity: 0.5;
+    }
+    .item .it {
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .item .sub {
+        font-size: 11px;
+        color: var(--luz-mudo);
+    }
+    .item .sub.motivo {
+        color: var(--luz-ambar);
+    }
+    .mi {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: var(--luz-raio-botao);
+        background: transparent;
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+    }
+    .mi:hover,
+    .mi.h {
+        background: var(--luz-hover);
+    }
+    .mi.h {
+        font-weight: 600;
+    }
+    .miNome {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .marca {
+        width: 14px;
+        flex-shrink: 0;
+    }
+    .prob {
+        padding: 4px 10px;
+        font-size: 12px;
+        color: var(--luz-laranja);
+    }
+    hr {
+        border: 0;
+        border-top: 1px solid var(--luz-linha);
+        margin: 4px 6px;
     }
     .titulo {
         font-size: 13px;
@@ -309,9 +466,9 @@
     .mesmo {
         height: 40px;
         border: 1px solid var(--luz-vermelho);
-        border-radius: 8px;
+        border-radius: var(--luz-raio-acao);
         background: var(--luz-vermelho);
-        color: #fff;
+        color: var(--luz-branco);
         font: inherit;
         font-size: 13px;
         font-weight: 600;

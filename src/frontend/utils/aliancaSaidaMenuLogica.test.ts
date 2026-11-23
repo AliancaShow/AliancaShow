@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { criarMaquinaDaSaida, derivarEstado, ESPERA_STORE_MS, INERTE_MS, itemDesabilitado, JANELA_MS, ROTULOS, temSaidaHabilitada, TRAVA_MS, type EntradaSaida, type EstadoSaida } from "./aliancaSaidaMenuLogica"
+import { criarMaquinaDaSaida, derivarEstado, ESPERA_STORE_MS, INERTE_MS, itemDesabilitado, JANELA_MS, ROTULOS, rotuloCurtoDoTelao, temSaidaHabilitada, TRAVA_MS, type EntradaSaida, type EstadoSaida } from "./aliancaSaidaMenuLogica"
 
 let mundo: EntradaSaida
 const chamadas = { ligar: 0, desligar: 0, config: 0, fechar: 0, erro: [] as any[], estados: [] as EstadoSaida[] }
@@ -191,5 +191,21 @@ describe("temSaidaHabilitada (a condicao de toggleOutputs)", () => {
     })
     it("derivarEstado so por semTelaFisica ignoraria a saida habilitada: o teste de contraste", () => {
         expect(derivarEstado({ outputDisplay: false, semTelaFisica: false, temSaida: false, noAr: false, desenho: false })).toBe("semTela")
+    })
+})
+
+describe("botao unico do telao (cabine 6, 23/nov): estado curto", () => {
+    it("ligado = No ar (vermelho); ligado + congelado = Congelado (gelo); a pergunta de desligar segue mostrando o que esta no ar", () => {
+        expect(rotuloCurtoDoTelao("ligado", false)).toEqual({ texto: "No ar", tom: "noAr" })
+        expect(rotuloCurtoDoTelao("ligado", true)).toEqual({ texto: "Congelado", tom: "congelado" })
+        expect(rotuloCurtoDoTelao("armado", true).tom).toBe("congelado")
+        expect(rotuloCurtoDoTelao("perguntando", false).tom).toBe("noAr")
+    })
+    it("todo desligado e Desligado (apagado), mesmo congelado; transicoes e erro tem texto proprio", () => {
+        for (const e of ["desligado", "desligadoNoAr", "desligadoDesenho", "trava"] as EstadoSaida[]) expect(rotuloCurtoDoTelao(e, true)).toEqual({ texto: "Desligado", tom: "desligado" })
+        expect(rotuloCurtoDoTelao("ligando", false).texto).toBe("Ligando…")
+        expect(rotuloCurtoDoTelao("desligando", false).texto).toBe("Desligando…")
+        expect(rotuloCurtoDoTelao("semResposta", false).tom).toBe("erro")
+        expect(rotuloCurtoDoTelao("semTela", false).texto).toBe("Sem tela")
     })
 })

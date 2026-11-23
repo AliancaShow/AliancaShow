@@ -176,7 +176,7 @@
             if (!podeMarcar()) {
                 if (type !== "video" && type !== "image") return
                 if (foraDoThumb) return
-                if ($outLocked) return newToast("a saída está travada: destrave para mandar ao ar")
+                if ($outLocked) return newToast("o telão está congelado: descongele para mandar ao ar")
                 autorizarAr(() => click({}))
                 return
             }

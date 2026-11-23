@@ -1,5 +1,5 @@
 <script lang="ts">
-    // Leiaute v2: o topo (56 px). Marca com menu do app, pilula Sirvo, segmentado Mostrar | Editar, relogio e pilula do telao.
+    // Leiaute v2: o topo (56 px). Marca com menu do app, pilula Sirvo, segmentado Mostrar | Editar, relogio e o botao unico do telao (estado + Visual).
     // O segmentado e o unico gesto (com o "Editar" do botao direito) que troca Mostrar <-> Editar. Sem atalho de teclado, de proposito.
     // Mostrar e Editar passam pela porta `trocarTela` (chegar em Mostrar arma o anteparo antes de escrever).
     // Fatia 4: sem titulo nativo nem barra de menus. O topo e a area de arrastar a janela (o que e botao nao arrasta) e, no Windows, deixa
@@ -14,7 +14,6 @@
     import AliancaMenuApp from "./AliancaMenuApp.svelte"
     import AliancaSirvoPilula from "./AliancaSirvoPilula.svelte"
     import AliancaTelaoPilula from "./AliancaTelaoPilula.svelte"
-    import AliancaVisualPilula from "./AliancaVisualPilula.svelte"
 
     export let semTelaFisica = false
 
@@ -45,8 +44,6 @@
         </div>
     </div>
 
-    <!-- cabine 6 (V1, P2): o Visual que esta valendo; troca num lugar so -->
-    <AliancaVisualPilula />
     <div class="relogio"><Clock style={false} seconds={false} /></div>
     <AliancaTelaoPilula {semTelaFisica} />
 </div>

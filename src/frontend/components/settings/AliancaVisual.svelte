@@ -1,12 +1,13 @@
 <script lang="ts">
     // Cabine 6, fatia V1 (board P2): Configuracoes > Visual. Um Visual diz, para cada saida, que modelo veste cada tipo de conteudo
-    // ("usa o slide" ou um modelo) e, para cada saida de retorno, o leiaute do retorno (campo separado, D16). Aqui e onde manda (D13).
+    // ("Sem modelo" ou um modelo) e, para cada saida de retorno, o leiaute do retorno (campo separado, D16). Aqui e onde manda (D13).
     // Tudo vale na hora (nao conta como "alteracao nao salva"; o Descartar nao desfaz): quem escreve e aliancaVisualAplicador.ts.
+    // O operador nunca pensa em "estilo" (Andre, 23/nov): a saida que divide estilo ganha um so dela sozinha (copia exata), sem pergunta.
     import { uid } from "uid"
     import { outputs, special, stageShows, styles, templates } from "../../stores"
     import { clone } from "../helpers/array"
-    import { aplicarVisualAtivo, ativarVisual, darEstiloProprio, gravarVisuais, mudarVisual, visualPendente } from "../../utils/aliancaVisualAplicador"
-    import { casaDe, COLUNAS, divergencias, duplicar, lerVisuais, novoVisual, planoDeEscrita, precisaDeEstiloProprio, saidasDeRetorno, saidasNormais, SLIDE, textoDoProblema, type Casa, type Coluna, type Problema, type Visual } from "../../utils/aliancaVisualLogica"
+    import { aplicarVisualAtivo, ativarVisual, gravarVisuais, mudarCasa, mudarVisual, visualPendente } from "../../utils/aliancaVisualAplicador"
+    import { casaDe, COLUNAS, divergencias, duplicar, lerVisuais, novoVisual, planoDeEscrita, saidasDeRetorno, saidasNormais, SEM_MODELO, SLIDE, textoDoProblema, type Coluna, type Problema, type Visual } from "../../utils/aliancaVisualLogica"
 
     $: lista = lerVisuais($special)
     $: ativoId = $special?.aliancaVisualAtivo || ""
@@ -24,47 +25,20 @@
         .map(([id, l]: any) => ({ id, nome: l?.name || "leiaute sem nome" }))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
     $: plano = sel ? planoDeEscrita(sel, $outputs, $styles, $templates, $stageShows) : { escritas: [], problemas: [] as Problema[] }
-    $: fora = ehAtivo && sel ? divergencias(sel, $outputs, $styles, $visualPendente.chaves).filter((e) => !plano.problemas.some((p) => p.tipo === "estiloDividido" && p.estilo === e.estilo)) : []
+    $: fora = ehAtivo && sel ? divergencias(sel, $outputs, $styles, $visualPendente.chaves) : []
 
     const nomeSaida = (id: string) => ($outputs as any)[id]?.name || id
-    const nomeEstilo = (id: string) => ($styles as any)[id]?.name || "estilo sem nome"
     function problemaDaCasa(p: Problema[], saida: string, coluna: Coluna): string {
-        const achado = p.find((x) => (x.tipo === "estiloDividido" ? x.saidas.includes(saida) && x.coluna === coluna : x.tipo !== "leiauteSumiu" && x.saida === saida && x.coluna === coluna))
+        const achado = p.find((x) => x.tipo === "modeloSumiu" && x.saida === saida && x.coluna === coluna)
         return achado ? textoDoProblema(achado, { saida: nomeSaida }) : ""
     }
     const temModelo = (v: Visual | null, id: string) => !!v && COLUNAS.some((c) => casaDe(v, id, c.id) !== SLIDE)
 
-    // ---- escolher uma casa (com a pergunta do estilo proprio quando a saida divide o estilo ou nao tem)
-    let confirmar: { saida: string; coluna: Coluna; casa: Casa; motivo: "semEstilo" | "dividido" } | null = null
-    function gravarCasa(saida: string, coluna: Coluna, casa: Casa) {
-        if (!sel) return
-        const v = clone(sel) as Visual
-        v.saidas[saida] = { ...(v.saidas[saida] || {}), [coluna]: casa }
-        mudarVisual(v)
-    }
+    // ---- escolher uma casa: se a saida divide o estilo, o aplicador da a ela um so dela antes (copia exata), sem perguntar
     function escolher(e: Event, saida: string, coluna: Coluna) {
         if (!sel) return
-        const alvo = e.currentTarget as HTMLSelectElement
-        const casa = alvo.value
-        const motivo = precisaDeEstiloProprio(sel, $outputs, $styles, saida, coluna, casa)
-        if (motivo) {
-            // a casa so muda depois do "sim": o seletor volta ao que estava enquanto a pergunta esta aberta
-            alvo.value = casaDe(sel, saida, coluna)
-            confirmar = { saida, coluna, casa, motivo }
-            return
-        }
-        confirmar = null
-        gravarCasa(saida, coluna, casa)
+        mudarCasa(sel.id, saida, coluna, (e.currentTarget as HTMLSelectElement).value)
     }
-    function confirmarEstilo() {
-        if (!confirmar) return
-        const c = confirmar
-        confirmar = null
-        if (!darEstiloProprio(c.saida)) return
-        gravarCasa(c.saida, c.coluna, c.casa)
-    }
-    $: compartilham = estiloDe(confirmar?.saida) ? normais.filter((s) => s.id !== confirmar?.saida && s.estilo === estiloDe(confirmar?.saida)).map((s) => s.nome) : []
-    const estiloDe = (id: string | undefined): string => (id ? ($outputs as any)[id]?.style || "" : "")
 
     function escolherRetorno(e: Event, saida: string) {
         if (!sel) return
@@ -115,11 +89,10 @@
         }
         mudarVisual(v)
     }
-    $: esperando = [...$visualPendente.saidas].map(nomeSaida)
 </script>
 
 <div class="visual" data-acao="visual-pagina">
-    <p class="cota">Um Visual diz, para cada saída, que modelo veste cada tipo de conteúdo. Só um vale por vez; troca-se aqui ou na pílula da barra de cima.</p>
+    <p class="cota">Um Visual diz, para cada saída, que modelo veste cada tipo de conteúdo. Só um vale por vez; troca-se aqui ou no botão do telão, na barra de cima.</p>
 
     <div class="corpo">
         <div class="lista" data-acao="visual-lista">
@@ -145,7 +118,7 @@
                 <div class="cab">
                     <input class="nome" value={sel.nome} aria-label="Nome do Visual" data-acao="visual-nome" on:change={renomear} on:keydown={(e) => e.key === "Enter" && e.currentTarget.blur()} />
                     {#if ehAtivo}<span class="tag valendo">VALENDO</span>{/if}
-                    <span class="cota dir">Mudou uma casa? Vale no próximo slide que for ao ar.</span>
+                    <span class="cota dir" data-acao="visual-proximo">Vale a partir do próximo slide.</span>
                     {#if !ehAtivo}
                         {#if apagando}
                             <button type="button" class="bt perigo" data-acao="visual-apagar-mesmo" tabindex="-1" on:click={apagar}>Apagar mesmo</button>
@@ -155,10 +128,6 @@
                         {/if}
                     {/if}
                 </div>
-
-                {#if ehAtivo && esperando.length}
-                    <p class="nota" data-acao="visual-esperando">Entra no próximo slide em: {esperando.join(", ")}</p>
-                {/if}
 
                 {#if fora.length}
                     <div class="faixa" data-acao="visual-divergencia">
@@ -174,19 +143,19 @@
                     {#each normais as s (s.id)}
                         <div class="sd" data-saida={s.id}>
                             <b>{s.nome}</b>
-                            <small>{s.estilo && $styles[s.estilo] ? `estilo: ${nomeEstilo(s.estilo)}` : "sem estilo próprio"}{($outputs[s.id]?.enabled ?? true) ? "" : " · desligada"}</small>
-                            <span class="tag">{temModelo(sel, s.id) ? "APLICA MODELO PRÓPRIO" : "SLIDE COMO FOI FEITO"}</span>
+                            {#if !($outputs[s.id]?.enabled ?? true)}<small>desligada</small>{/if}
+                            <span class="tag">{temModelo(sel, s.id) ? "COM MODELO" : "SEM MODELO"}</span>
                         </div>
                         {#each COLUNAS as c}
                             {@const casa = casaDe(sel, s.id, c.id)}
                             {@const prob = problemaDaCasa(plano.problemas, s.id, c.id)}
                             <label class="cel" class:slide={casa === SLIDE} class:prob={!!prob} title={prob} data-casa="{s.id}:{c.id}">
                                 <span class="tx">
-                                    <b>{casa === SLIDE ? "usa o slide" : $templates[casa]?.name || "modelo não existe mais"}</b>
-                                    <small>{prob || (casa === SLIDE ? "como foi feito, com ajustes à mão" : "por cima do estilo do slide")}</small>
+                                    <b>{casa === SLIDE ? SEM_MODELO : $templates[casa]?.name || "modelo não existe mais"}</b>
+                                    {#if prob}<small>{prob}</small>{/if}
                                 </span>
                                 <select value={casa} aria-label="{s.nome}: {c.rotulo}" on:change={(e) => escolher(e, s.id, c.id)}>
-                                    <option value={SLIDE}>usa o slide</option>
+                                    <option value={SLIDE}>{SEM_MODELO}</option>
                                     {#if casa !== SLIDE && !$templates[casa]}<option value={casa}>modelo não existe mais</option>{/if}
                                     {#each modelos as m (m.id)}<option value={m.id}>{m.nome}</option>{/each}
                                 </select>
@@ -196,35 +165,7 @@
                 </div>
                 {#if !normais.length}<p class="cota">Nenhuma saída cadastrada. Crie as saídas em Telas e saídas.</p>{/if}
 
-                {#if confirmar}
-                    <div class="faixa" data-acao="visual-estilo-proprio">
-                        <span>
-                            {#if confirmar.motivo === "dividido"}
-                                {nomeSaida(confirmar.saida)} divide o estilo “{nomeEstilo($outputs[confirmar.saida]?.style || "")}” com {compartilham.join(", ")}. Para valer outro modelo só nela, ela precisa de um estilo próprio (cópia deste).
-                            {:else}
-                                {nomeSaida(confirmar.saida)} não tem estilo próprio, e é nele que o modelo fica. Criar um estilo só para ela?
-                            {/if}
-                        </span>
-                        <button type="button" class="bt" data-acao="visual-estilo-proprio-sim" tabindex="-1" on:click={confirmarEstilo}>Criar estilo próprio e usar</button>
-                        <button type="button" class="bt" tabindex="-1" on:click={() => (confirmar = null)}>Cancelar</button>
-                    </div>
-                {/if}
-
-                {#if plano.problemas.length}
-                    <div class="problemas" data-acao="visual-problemas">
-                        {#each plano.problemas as p}
-                            <div class="faixa">
-                                <span>{textoDoProblema(p, { saida: nomeSaida })}</span>
-                                {#if p.tipo === "estiloDividido"}
-                                    {#each p.saidas as id}<button type="button" class="bt" tabindex="-1" on:click={() => darEstiloProprio(id)}>Dar estilo próprio a {nomeSaida(id)}</button>{/each}
-                                {:else if p.tipo === "semEstilo"}
-                                    <button type="button" class="bt" tabindex="-1" on:click={() => darEstiloProprio(p.saida)}>Criar estilo para {nomeSaida(p.saida)}</button>
-                                {/if}
-                            </div>
-                        {/each}
-                    </div>
-                {/if}
-
+                <!-- problema de verdade (modelo ou leiaute apagado) aparece na propria casa, em laranja -->
                 <div class="sec">LEIAUTE DO RETORNO <small>separado dos modelos: o retorno mostra o leiaute dele</small></div>
                 {#if retornos.length}
                     <div class="mtz" style="grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);" data-acao="visual-retorno">
@@ -415,11 +356,6 @@
         background: var(--luz-campo);
         outline: none;
     }
-    .nota {
-        margin: 0;
-        font-size: 12px;
-        color: var(--luz-texto);
-    }
     .faixa {
         display: flex;
         align-items: center;
@@ -435,11 +371,6 @@
     .faixa > span {
         flex: 1;
         min-width: 200px;
-    }
-    .problemas {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
     }
     .mtz {
         display: grid;

@@ -41,6 +41,7 @@ O que a cabine 5 já fez está nos commits da `feat/cabine-5` e nas anotações 
   - As 38 divergências em `principal.sinais` (`midia/sub` "pasta:raiz"→"all" etc.) são esperadas, da árvore C6.
   - Se der F01 `align`, é partida a frio: regrave.
   - Cabine 6, fatia V1 (Visual): na primeira carga a migração grava `special.aliancaVisuais` e `special.aliancaVisualAtivo`. O `special` inteiro vai para a janela de saída (`listeners.ts:366`), então aparece uma divergência **esperada** em `OUTPUT:SPECIAL` (só essas duas chaves; ninguém na saída as lê). Em `principal.sinais` entram a pílula do Visual, a linha de origem e o item "Visual" de Configurações. Os campos `styles`/`outputs` **não** mudam na migração: divergência em outro canal de saída é defeito.
+  - Cabine 6 (`feat/cabine-6-telao`): o app abre com o telão ligado. Uma vez por perfil, `aliancaTelaoPartida.ts` liga `autoOutput` e grava `special.aliancaTelaoNaPartida`. O perfil da Prova (`scripts/prova-culto/perfil`) já traz essa marca (o telão continua desligado na partida das fumaças); ela é a terceira chave esperada em `OUTPUT:SPECIAL`.
 - Desenho e plano passam por revisão cética ANTES do código. Mudança grande de UX: discuta com o André antes.
 - Commits:
   - autoria `git -c user.name="André Zagato" -c user.email="zagato@mediavaultmm.com" commit`, mensagem em pt;

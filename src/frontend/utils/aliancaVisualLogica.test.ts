@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { casaDe, COLUNAS, divergencias, duplicar, identidadeDoSlide, lerVisuais, linhaDeOrigem, migrar, novoVisual, Pendencias, planoDeEscrita, precisaDeEstiloProprio, visualAtivo, type Visual } from "./aliancaVisualLogica"
+import { casaDe, COLUNAS, divergencias, duplicar, identidadeDoSlide, lerVisuais, linhaDeOrigem, migrar, nomeDoEstiloProprio, novoVisual, Pendencias, planoDeEscrita, precisaDeEstiloProprio, saidasParaSeparar, SEM_MODELO, visualAtivo, type Visual } from "./aliancaVisualLogica"
 
 const saidas = () => ({
     tel: { name: "Telão", style: "s1", enabled: true },
@@ -14,6 +14,7 @@ const leiautes = { palco1: { name: "Só texto" }, palco2: { name: "Espelho" } }
 const visual = (saidasV: Visual["saidas"], retorno: Visual["retorno"] = {}): Visual => ({ id: "v", nome: "V", saidas: saidasV, retorno })
 
 describe("colunas", () => {
+    it("o rótulo da casa sem modelo é 'Sem modelo' (pedido do André, 23/nov)", () => expect(SEM_MODELO).toBe("Sem modelo"))
     it("V1 tem Música e avisos (template) e Bíblia (templateScripture)", () => {
         expect(COLUNAS.map((c) => [c.rotulo, c.campo])).toEqual([
             ["Música e avisos", "template"],
@@ -23,7 +24,7 @@ describe("colunas", () => {
 })
 
 describe("migrar", () => {
-    it("lê os estilos e o retorno de hoje; saída sem modelo fica em 'usa o slide'; retorno e chave não viram linha", () => {
+    it("lê os estilos e o retorno de hoje; saída sem modelo fica em 'Sem modelo'; retorno e chave não viram linha", () => {
         const m = migrar({}, saidas(), estilos(), "id1")!
         expect(m.aliancaVisualAtivo).toBe("id1")
         expect(m.aliancaVisuais).toHaveLength(1)
@@ -32,7 +33,7 @@ describe("migrar", () => {
         expect(v.saidas).toEqual({ tel: { musica: "slide", biblia: "slide" }, led: { musica: "letraLed", biblia: "versLed" } })
         expect(v.retorno).toEqual({ ret: "palco1" })
     })
-    it("perfil sem estilos: tudo em 'usa o slide'", () => {
+    it("perfil sem estilos: tudo em 'Sem modelo'", () => {
         const v = migrar({}, saidas(), {}, "x")!.aliancaVisuais[0]
         expect(v.saidas.led).toEqual({ musica: "slide", biblia: "slide" })
     })
@@ -58,10 +59,10 @@ describe("lerVisuais / visualAtivo / casaDe", () => {
         expect(visualAtivo(s)?.nome).toBe("A")
         expect(visualAtivo({ aliancaVisuais: [{ id: "a" }], aliancaVisualAtivo: "b" })).toBeNull()
     })
-    it("saída criada depois do Visual = 'usa o slide'", () => {
+    it("saída criada depois do Visual = 'Sem modelo'", () => {
         expect(casaDe(visual({}), "nova", "musica")).toBe("slide")
     })
-    it("duplicar copia fundo e dá nome livre; novo começa em 'usa o slide'", () => {
+    it("duplicar copia fundo e dá nome livre; novo começa em 'Sem modelo'", () => {
         const a = visual({ led: { musica: "letraLed" } }, { ret: "palco1" })
         const d = duplicar(a, [a], "d")
         expect(d.nome).toBe("V (cópia)")
@@ -84,19 +85,21 @@ describe("planoDeEscrita", () => {
             { tipo: "retorno", saida: "ret", valor: "palco2" }
         ])
     })
-    it("estilo dividido com pedidos diferentes: PROBLEMA e nada escrito naquele campo (o outro campo segue)", () => {
+    it("estilo dividido com pedidos diferentes: NÃO é problema e nada é escrito naquele campo (o aplicador separa antes; o outro campo segue)", () => {
         const o = { ...saidas(), tel: { name: "Telão", style: "s2" } }
         const v = visual({ tel: { musica: "slide", biblia: "versLed" }, led: { musica: "letraLed", biblia: "versLed" } })
         const p = planoDeEscrita(v, o, estilos(), modelos, leiautes)
-        expect(p.problemas).toEqual([{ tipo: "estiloDividido", estilo: "s2", coluna: "musica", saidas: ["tel", "led"] }])
+        expect(p.problemas).toEqual([])
         expect(p.escritas.filter((e) => e.tipo === "estilo")).toEqual([])
+        expect(saidasParaSeparar(v, o, estilos())).toEqual(["led"])
     })
-    it("saída sem estilo pedindo modelo = problema semEstilo; em 'usa o slide' não é problema", () => {
+    it("saída sem estilo pedindo modelo: não é problema, é saída a separar; em 'Sem modelo' nem isso", () => {
         const o = { ...saidas(), tel: { name: "Telão" } }
-        expect(planoDeEscrita(visual({ tel: { musica: "outro" } }), o, estilos(), modelos).problemas).toContainEqual({ tipo: "semEstilo", saida: "tel", coluna: "musica" })
-        expect(planoDeEscrita(visual({}), o, estilos(), modelos).problemas.filter((p) => p.tipo === "semEstilo")).toEqual([])
+        expect(planoDeEscrita(visual({ tel: { musica: "outro" } }), o, estilos(), modelos).problemas).toEqual([])
+        expect(saidasParaSeparar(visual({ tel: { musica: "outro" } }), o, estilos())).toEqual(["tel"])
+        expect(saidasParaSeparar(visual({}), o, estilos())).toEqual([])
         // estilo apontado que não existe conta como sem estilo
-        expect(planoDeEscrita(visual({ tel: { musica: "outro" } }), { ...saidas(), tel: { name: "T", style: "fantasma" } }, estilos(), modelos).problemas[0].tipo).toBe("semEstilo")
+        expect(saidasParaSeparar(visual({ tel: { musica: "outro" } }), { ...saidas(), tel: { name: "T", style: "fantasma" } }, estilos())).toEqual(["tel"])
     })
     it("modelo apagado: problema laranja (e escreve o id assim mesmo: a saída cai no slide como foi feito)", () => {
         const p = planoDeEscrita(visual({ tel: { musica: "sumiu" } }), saidas(), estilos(), modelos, leiautes)
@@ -111,6 +114,26 @@ describe("planoDeEscrita", () => {
     it("retorno null = o Visual não mexe; saída normal nunca recebe stageOutput", () => {
         const p = planoDeEscrita(visual({}, { ret: null, tel: "palco2" } as any), saidas(), estilos(), modelos, leiautes)
         expect(p.escritas.some((e) => e.tipo === "retorno")).toBe(false)
+    })
+})
+
+describe("saidasParaSeparar / nomeDoEstiloProprio (o operador nunca pensa em estilo)", () => {
+    it("estilo dividido pedindo o MESMO em tudo: ninguém separa", () => {
+        const o = { ...saidas(), tel: { name: "Telão", style: "s2" } }
+        expect(saidasParaSeparar(visual({ tel: { musica: "letraLed", biblia: "slide" }, led: { musica: "letraLed", biblia: "slide" } }), o, estilos())).toEqual([])
+    })
+    it("três dividindo, uma diferente: todas menos a primeira separam (a primeira fica com o estilo original)", () => {
+        const o = { a: { name: "A", style: "s1" }, b: { name: "B", style: "s1" }, c: { name: "C", style: "s1" } }
+        expect(saidasParaSeparar(visual({ c: { musica: "outro" } }), o, estilos())).toEqual(["b", "c"])
+    })
+    it("retorno e chave nunca separam", () => {
+        const o = { ...saidas(), ret: { name: "R", stageOutput: "palco1", style: "s1" } }
+        expect(saidasParaSeparar(visual({ ret: { musica: "outro" } } as any), o, estilos())).toEqual([])
+    })
+    it("o estilo novo tem o nome da saída; se já existe, ganha número", () => {
+        expect(nomeDoEstiloProprio("Telão LED", estilos())).toBe("Telão LED")
+        expect(nomeDoEstiloProprio("Telão", estilos())).toBe("Telão 2")
+        expect(nomeDoEstiloProprio("", {})).toBe("Saída")
     })
 })
 
@@ -206,7 +229,7 @@ describe("linhaDeOrigem (D14)", () => {
     it("neutra quando bate: modelo da saída, slide como foi feito e o leiaute do retorno", () => {
         const l = linhaDeOrigem(v, "musica", base)
         expect(l.map((e) => [e.nome, e.texto, e.problema])).toEqual([
-            ["Telão", "como o slide foi feito", ""],
+            ["Telão", SEM_MODELO, ""],
             ["Telão LED", "Letra LED", ""],
             ["Retorno", "Só texto", ""]
         ])

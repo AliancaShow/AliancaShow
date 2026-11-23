@@ -114,6 +114,6 @@ describe("saida travada diz que esta travada (menor 10)", () => {
         expect(mandarSlideAoAr("show", 2)).toBe(false)
         await espera()
         expect(espia.setOutput).toBe(0)
-        expect(espia.avisos).toEqual(["Saída travada: destrave para mandar pro ar."])
+        expect(espia.avisos).toEqual(["Telão congelado: descongele para mandar pro ar."])
     })
 })
