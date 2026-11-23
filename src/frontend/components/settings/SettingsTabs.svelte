@@ -43,6 +43,7 @@
         }
 
         if (nextTab < 0) return
+        configSecao.set("")
         settingsTab.set(activeTabs[nextTab] || "profiles")
     }
 </script>
@@ -63,6 +64,13 @@
             <Icon id={tab} white />
             <span>{ROTULOS_CONFIG[tab] || tab}</span>
         </button>
+        {#if tab === "display_settings" && activeTabs.includes("styles")}
+            <!-- cabine 6 (V1, P2): o Visual (qual modelo cada saida usa em cada tipo de conteudo); mora na aba `styles` -->
+            <button type="button" class="it" class:a={$settingsTab === "styles" && $configSecao === "visual"} data-aba="visual" tabindex="-1" on:click={() => abrir("styles", "visual")}>
+                <Icon id="templates" white />
+                <span>{ROTULOS_CONFIG.visual}</span>
+            </button>
+        {/if}
     {/each}
     <hr />
     <button type="button" class="it" class:a={$settingsTab === "connection" && $configSecao === "sirvo"} data-aba="sirvo" tabindex="-1" on:click={() => abrir("connection", "sirvo")}>

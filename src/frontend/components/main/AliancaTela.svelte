@@ -16,6 +16,7 @@
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { vigiarAjustesDeMidia } from "../../utils/aliancaMidiaSalva"
     import { vigiarConfiguracaoDasSaidas } from "../../utils/aliancaSaidasSalvas"
+    import { iniciarVisual } from "../../utils/aliancaVisualAplicador"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
@@ -43,6 +44,8 @@
     onDestroy(vigiarAjustesDeMidia())
     // cabine 6 (1a): mudar tela/posicao/cadeado/recorte/estilo de uma saida marca "nao salvo"; antes fechar o app perdia a configuracao do LED
     onDestroy(vigiarConfiguracaoDasSaidas())
+    // cabine 6 (V1): o Visual (migracao do "Culto padrao" na primeira carga e o vigia do "vale no proximo slide", D15)
+    onDestroy(iniciarVisual())
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"

@@ -40,6 +40,7 @@ O que a cabine 5 já fez está nos commits da `feat/cabine-5` e nas anotações 
 - **Prova do Culto** (`scripts/prova-culto/`): grave o HEAD e compare com `referencia/gravacoes/gravacao-base-2d62837.json` usando `--esperado esperado.json --ruido`. O critério é **0 divergência em outputs**.
   - As 38 divergências em `principal.sinais` (`midia/sub` "pasta:raiz"→"all" etc.) são esperadas, da árvore C6.
   - Se der F01 `align`, é partida a frio: regrave.
+  - Cabine 6, fatia V1 (Visual): na primeira carga a migração grava `special.aliancaVisuais` e `special.aliancaVisualAtivo`. O `special` inteiro vai para a janela de saída (`listeners.ts:366`), então aparece uma divergência **esperada** em `OUTPUT:SPECIAL` (só essas duas chaves; ninguém na saída as lê). Em `principal.sinais` entram a pílula do Visual, a linha de origem e o item "Visual" de Configurações. Os campos `styles`/`outputs` **não** mudam na migração: divergência em outro canal de saída é defeito.
 - Desenho e plano passam por revisão cética ANTES do código. Mudança grande de UX: discuta com o André antes.
 - Commits:
   - autoria `git -c user.name="André Zagato" -c user.email="zagato@mediavaultmm.com" commit`, mensagem em pt;

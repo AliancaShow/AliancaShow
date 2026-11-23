@@ -22,11 +22,14 @@
     import Styles from "./tabs/Styles.svelte"
     import StylesButtons from "./tabs/StylesButtons.svelte"
     import StylesTabs from "./tabs/StylesTabs.svelte"
+    import AliancaVisual from "./AliancaVisual.svelte"
     import Theme from "./tabs/Theme.svelte"
     import ThemeButtons from "./tabs/ThemeButtons.svelte"
     import ThemeTabs from "./tabs/ThemeTabs.svelte"
 
     $: tabId = $settingsTab
+    // cabine 6 (V1): a pagina Visual mora na aba `styles` com a secao "visual"
+    $: ehVisual = tabId === "styles" && $configSecao === "visual"
 
     let scrolled = false
     $: if (tabId === null) scrolled = false
@@ -46,14 +49,14 @@
 
 <main>
     <div class="title" style={scrolled ? "box-shadow: none;" : ""}>
-        <h2>{(tabId === "connection" && $configSecao ? ROTULOS_CONFIG[$configSecao] : ROTULOS_CONFIG[tabId]) || translateText(`settings.${tabId}`, $dictionary)}</h2>
+        <h2>{((tabId === "connection" && $configSecao) || ehVisual ? ROTULOS_CONFIG[$configSecao] : ROTULOS_CONFIG[tabId]) || translateText(`settings.${tabId}`, $dictionary)}</h2>
 
         <div style="display: flex;align-items: center;gap: 8px;">
-            {#if hints[tabId]}
+            {#if hints[tabId] && !ehVisual}
                 <Tip type="info" value={translateText(hints[tabId])} style="opacity: 0.7;" hiddenText white />
             {/if}
 
-            {#if tabId === "styles"}
+            {#if tabId === "styles" && !ehVisual}
                 <StylesButtons />
             {:else if tabId === "audio"}
                 <MaterialButton title="actions.reset" icon="reset" on:click={resetAudioRouting} />
@@ -78,6 +81,8 @@
             {:else}
                 <Outputs />
             {/if}
+        {:else if ehVisual}
+            <AliancaVisual />
         {:else if tabId === "styles"}
             <Styles />
         {:else if tabId === "audio"}
@@ -99,7 +104,7 @@
         <div class="tabs">
             {#if tabId === "display_settings"}
                 <OutputsTabs />
-            {:else if tabId === "styles"}
+            {:else if tabId === "styles" && !ehVisual}
                 <StylesTabs />
             {:else if tabId === "files"}
                 <FilesButtons />

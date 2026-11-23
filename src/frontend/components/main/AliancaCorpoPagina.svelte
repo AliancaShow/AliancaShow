@@ -17,6 +17,7 @@
     import { alteracoesNaoSalvas, descartarAlteracoes, fotoParaSalvar, iniciarRascunho, pararRascunho, tirarFoto } from "../../utils/aliancaConfigRascunho"
     import { textoDeAlteracoes } from "../../utils/aliancaConfigRascunhoLogica"
     import { trocarTela } from "../../utils/aliancaTela"
+    import { cancelarPendenciasDoVisual } from "../../utils/aliancaVisualAplicador"
     import { save } from "../../utils/save"
 
     export let pagina: "settings" | "stage" | "draw"
@@ -84,6 +85,8 @@
         if (pagina === "settings") iniciarRascunho()
     })
     function descartar(_e?: unknown, depoisFechar = false) {
+        // cabine 6 (adendo da revisao, item 1): o que o Visual deixou esperando o proximo slide nao entra mais
+        cancelarPendenciasDoVisual()
         const { desfeitas, restantes } = descartarAlteracoes()
         if (restantes) {
             dizer(`${restantes} alteraç${restantes === 1 ? "ão não pôde" : "ões não puderam"} ser desfeita${restantes === 1 ? "" : "s"}`, 6000)

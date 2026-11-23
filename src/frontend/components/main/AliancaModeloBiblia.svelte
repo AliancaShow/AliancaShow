@@ -26,7 +26,8 @@
 <button class="chip" tabindex="-1" data-acao="biblia-modelo" title="Modelo dos versículos (fonte, posição da referência, fundo)" on:mousedown|preventDefault on:click={escolher}>Modelo: <b>{nome}</b> ▾</button>
 <button class="chip" tabindex="-1" data-acao="biblia-modelo-editar" title="Abrir o modelo no Editar" on:mousedown|preventDefault on:click={editar}>Editar modelo</button>
 {#if substituidas.length}
-    <span class="aviso" data-acao="biblia-modelo-aviso" title={substituidas.join("\n")}>⚠ {substituidas.length === 1 ? "1 saída usa" : substituidas.length + " saídas usam"} outro modelo (estilo)</span>
+    <!-- cabine 6 (D14): saida com modelo proprio e escolha do Visual, nao problema: etiqueta neutra -->
+    <span class="aviso" data-acao="biblia-modelo-aviso" title={substituidas.join("\n")}>{substituidas.length === 1 ? "1 saída usa" : substituidas.length + " saídas usam"} o modelo do Visual</span>
 {/if}
 
 <style>
@@ -47,7 +48,7 @@
     }
     .aviso {
         font-size: 12px;
-        color: var(--luz-laranja);
+        color: var(--luz-mudo);
         white-space: nowrap;
     }
 </style>

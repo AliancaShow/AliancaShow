@@ -14,6 +14,7 @@
     import AliancaMenuApp from "./AliancaMenuApp.svelte"
     import AliancaSirvoPilula from "./AliancaSirvoPilula.svelte"
     import AliancaTelaoPilula from "./AliancaTelaoPilula.svelte"
+    import AliancaVisualPilula from "./AliancaVisualPilula.svelte"
 
     export let semTelaFisica = false
 
@@ -44,6 +45,8 @@
         </div>
     </div>
 
+    <!-- cabine 6 (V1, P2): o Visual que esta valendo; troca num lugar so -->
+    <AliancaVisualPilula />
     <div class="relogio"><Clock style={false} seconds={false} /></div>
     <AliancaTelaoPilula {semTelaFisica} />
 </div>

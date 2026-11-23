@@ -2,14 +2,16 @@
 // moram na aba `connection` do FreeShow; `settingsTab` nao muda de tipo, quem escolhe qual dos tres pedacos aparece e esta loja).
 import { writable, type Writable } from "svelte/store"
 
-export type SecaoDeConexao = "" | "sirvo" | "remote"
+// cabine 6 (V1): "visual" e a pagina Visual, que mora na aba `styles` (o tipo `SettingsTabs` e do fecho da saida e nao muda)
+export type SecaoDeConexao = "" | "sirvo" | "remote" | "visual"
 export const configSecao: Writable<SecaoDeConexao> = writable("")
 
 /** nomes da lista lateral e dos titulos de pagina (o desenho C4 renomeia Saidas e Outro) */
 export const ROTULOS_CONFIG: { [aba: string]: string } = {
     general: "Geral",
     display_settings: "Telas e saídas",
-    styles: "Estilos",
+    styles: "Estilo da saída",
+    visual: "Visual",
     audio: "Áudio",
     connection: "Conexão",
     files: "Arquivos",

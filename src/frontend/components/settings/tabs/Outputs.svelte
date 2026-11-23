@@ -7,8 +7,10 @@
     import type { Output, RtmpDestination } from "../../../../types/Output"
     import { AudioAnalyser } from "../../../audio/audioAnalyser"
     import { requestMain, sendMain } from "../../../IPC/main"
-    import { activePopup, activeStage, activeStyle, alertMessage, currentOutputSettings, ndiData, outputDisplay, outputs, rtmpStatus, saved, settingsTab, special, stageShows, styles, toggleOutputEnabled } from "../../../stores"
+    import { activePopup, activeStage, activeStyle, alertMessage, currentOutputSettings, ndiData, outputDisplay, outputs, rtmpStatus, saved, settingsTab, special, stageShows, styles, templates, toggleOutputEnabled } from "../../../stores"
     import { trocarTela } from "../../../utils/aliancaTela"
+    import { configSecao } from "../../../utils/aliancaConfigSecao"
+    import { casaDe, COLUNAS, SLIDE, visualAtivo } from "../../../utils/aliancaVisualLogica"
     import { newToast } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { destroy, receive, send } from "../../../utils/request"
@@ -99,7 +101,14 @@
     $: styleId = currentOutput?.style || ""
     function editStyle() {
         activeStyle.set(styleId)
+        configSecao.set("")
         settingsTab.set("styles")
+    }
+    // cabine 6 (V1): resumo do Visual valendo para esta saida
+    $: visualDaSaida = visualAtivo($special)
+    function abrirVisual() {
+        settingsTab.set("styles")
+        configSecao.set("visual")
     }
 
     $: stageId = currentOutput?.stageOutput || ""
@@ -386,6 +395,17 @@
             <MaterialButton title="titlebar.edit" icon="edit" on:click={editStyle} />
         {/if}
     </InputRow>
+    {#if visualDaSaida && currentOutput?.id}
+        <!-- cabine 6 (V1, D13): a tela de saidas so mostra o resumo; quem manda e o Visual -->
+        <div class="resumoVisual" data-acao="saida-resumo-visual">
+            <span>No Visual <b>{visualDaSaida.nome}</b>, esta saída usa:</span>
+            {#each COLUNAS as c}
+                {@const casa = casaDe(visualDaSaida, currentOutput?.id || "", c.id)}
+                <span>{c.rotulo}: <b>{casa === SLIDE ? "o slide como foi feito" : $templates[casa]?.name || "modelo não existe mais"}</b></span>
+            {/each}
+            <button type="button" class="abrirVisual" on:click={abrirVisual}>Abrir Visual</button>
+        </div>
+    {/if}
 {/if}
 
 </SecaoLuz>
@@ -576,6 +596,37 @@
         width: 560px;
         flex-shrink: 0;
         min-width: 0;
+    }
+    /* cabine 6 (V1, D13): resumo do Visual (neutro) */
+    .resumoVisual {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 12px;
+        margin: 4px 0 8px;
+        padding: 8px 10px;
+        border-radius: var(--luz-raio-cartao);
+        background: var(--luz-campo);
+        box-shadow: inset 0 0 0 1px var(--luz-linha);
+        font-size: 12px;
+        color: var(--luz-mudo);
+    }
+    .resumoVisual b {
+        color: var(--luz-texto);
+        font-weight: 600;
+    }
+    .abrirVisual {
+        height: 26px;
+        margin-left: auto;
+        padding: 0 8px;
+        border: 1px solid var(--luz-borda);
+        border-radius: var(--luz-raio-botao);
+        background: var(--luz-campo);
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
     }
     .desliga {
         display: flex;

@@ -94,3 +94,33 @@ export function restaurarSaidas(atual: { [id: string]: any }, fotoSaidas: { [id:
     }
     return efeitos
 }
+
+/**
+ * cabine 6 (Visual, V1): copia para a FOTO o valor de agora num caminho ([loja, chave, ...]). Serve para o que vale na hora mesmo com
+ * Configuracoes aberta (trocar o Visual escreve em `special`, `styles` e `outputs[id].stageOutput/style`): so aquele caminho deixa de contar
+ * como "nao salvo" e o Descartar nao o desfaz; o resto da loja (o que o operador mexeu a mao) continua no rascunho.
+ * Em `outputs` a foto e a vista reduzida: saida que nao esta na foto (criada depois) fica de fora, como ja e a regra.
+ */
+export function aceitarCaminho(foto: Foto, agora: Foto, caminho: string[]): void {
+    const [loja, ...resto] = caminho
+    if (!loja || !(loja in foto)) return
+    if (!resto.length) {
+        foto[loja] = agora[loja] === undefined ? undefined : JSON.parse(JSON.stringify(agora[loja]))
+        return
+    }
+    let f: any = foto[loja]
+    let a: any = agora[loja]
+    if (!ehObjeto(f)) return
+    for (const k of resto.slice(0, -1)) {
+        a = ehObjeto(a) ? a[k] : undefined
+        if (!ehObjeto(f[k])) {
+            if (loja === "outputs") return
+            f[k] = {}
+        }
+        f = f[k]
+    }
+    const ult = resto[resto.length - 1]
+    const v = ehObjeto(a) ? a[ult] : undefined
+    if (v === undefined) delete f[ult]
+    else f[ult] = JSON.parse(JSON.stringify(v))
+}
