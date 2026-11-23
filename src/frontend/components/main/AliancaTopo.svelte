@@ -61,7 +61,8 @@
     }
     .topo.comControles {
         /* a medida real dos botoes nativos (varia com a versao do Windows e a escala): o que sobra do titlebar-area a direita. Sem env(): 140 px */
-        padding-right: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 140px)));
+        /* teto de 200 px: os botoes nativos nunca passam disso; sem o teto, uma janela real mais estreita que a area desenhada empurrava o botao do telao para o meio */
+        padding-right: min(200px, calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 140px))));
     }
     .topo {
         -webkit-app-region: drag;
