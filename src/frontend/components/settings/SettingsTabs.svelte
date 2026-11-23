@@ -22,7 +22,8 @@
     }
 
     function keydown(e: KeyboardEvent) {
-        if (e.target?.closest?.(".edit") || e.ctrlKey || e.metaKey) return
+        // Setas dentro de campo (select/input/textarea) são do campo: não trocam a página de Configurações.
+        if (e.target?.closest?.(".edit, select, input, textarea, [contenteditable=\"true\"]") || e.ctrlKey || e.metaKey) return
 
         let nextTab = -1
         let currentTabIndex = activeTabs.findIndex((tab) => tab === $settingsTab)

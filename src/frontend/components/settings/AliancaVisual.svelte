@@ -351,6 +351,9 @@
         color: var(--luz-tinta);
         box-shadow: none;
     }
+    .cab .tag.valendo {
+        margin-left: 0;
+    }
     .bt {
         height: 30px;
         padding: 0 10px;
