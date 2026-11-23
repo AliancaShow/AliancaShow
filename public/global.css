@@ -307,6 +307,9 @@ body[data-tema="luz"] {
     --luz-vermelho-claro: #ff9aa0;
     --luz-verde-lavagem: rgba(94, 196, 141, 0.14);
     --luz-laranja-lavagem: rgba(235, 166, 64, 0.14);
+    /* cabine 6 (23/nov): telao CONGELADO (saida travada). Cor propria, longe do vermelho do "no ar" e do laranja de problema */
+    --luz-gelo: #7cc8ff;
+    --luz-gelo-lavagem: rgba(124, 200, 255, 0.16);
     --luz-sombra-pop: 0 18px 40px rgba(0, 0, 0, 0.5);
     /* rodada da cabine (18/nov): selos sobre imagem (duracao, dica, etiqueta de saida) e o branco do que fica sobre o vermelho */
     --luz-branco: #fff;

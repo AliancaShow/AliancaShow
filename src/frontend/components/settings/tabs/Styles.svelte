@@ -4,7 +4,7 @@
     import { activeDrawerTab, activeEdit, activeStyle, outputs, settingsTab, special, styles, templates } from "../../../stores"
     import { configSecao } from "../../../utils/aliancaConfigSecao"
     import { trocarTela } from "../../../utils/aliancaTela"
-    import { saidasNormais, visualAtivo } from "../../../utils/aliancaVisualLogica"
+    import { saidasNormais, SEM_MODELO, visualAtivo } from "../../../utils/aliancaVisualLogica"
     import { translateText } from "../../../utils/language"
     import { transitionTypes } from "../../../utils/transitions"
     import { mediaExtensions } from "../../../values/extensions"
@@ -199,9 +199,9 @@
 {#if visualDaqui}
     <!-- cabine 6 (V1, D13): quem manda nos modelos de uma saida e o Visual; aqui so se le -->
     <div class="definidoNoVisual" data-acao="estilo-definido-no-visual">
-        <div class="linha"><span class="rot">{translateText("settings.override_with_template")}</span><b>{templateOverride ? $templates[templateOverride]?.name || "modelo não existe mais" : "usa o slide"}</b></div>
-        <div class="linha"><span class="rot">{translateText("settings.override_scripture_with_template")}</span><b>{templateOverrideScripture ? $templates[templateOverrideScripture]?.name || "modelo não existe mais" : "usa o slide"}</b></div>
-        <div class="linha"><span class="cota">Definido no Visual “{visualDaqui.nome}” (esta saída: {saidasDoEstilo.join(", ")})</span><button type="button" class="abrir" data-acao="estilo-abrir-visual" on:click={abrirVisual}>Abrir Visual</button></div>
+        <div class="linha"><span class="rot">{translateText("settings.override_with_template")}</span><b>{templateOverride ? $templates[templateOverride]?.name || "modelo não existe mais" : SEM_MODELO}</b></div>
+        <div class="linha"><span class="rot">{translateText("settings.override_scripture_with_template")}</span><b>{templateOverrideScripture ? $templates[templateOverrideScripture]?.name || "modelo não existe mais" : SEM_MODELO}</b></div>
+        <div class="linha"><span class="cota" data-acao="estilo-de-quem">Definido no Visual “{visualDaqui.nome}” · {saidasDoEstilo.length === 1 ? `estilo só de ${saidasDoEstilo[0]}` : `usado por ${saidasDoEstilo.join(", ")}`}</span><button type="button" class="abrir" data-acao="estilo-abrir-visual" on:click={abrirVisual}>Abrir Visual</button></div>
     </div>
 {:else}
     <InputRow>

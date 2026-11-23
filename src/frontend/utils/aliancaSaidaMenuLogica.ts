@@ -177,3 +177,31 @@ export function criarMaquinaDaSaida(ef: EfeitosSaida) {
         }
     }
 }
+
+// ---------------------------------------------------------------- botao unico do telao (cabine 6, pedido do Andre 23/nov)
+
+/** o tom do botao do telao: no ar (vermelho), congelado (gelo, bem diferente), desligado (apagado), em curso, erro */
+export type TomDoTelao = "noAr" | "congelado" | "desligado" | "transicao" | "erro"
+
+/**
+ * o estado curto do botao unico do topo ("No ar" / "Congelado" / "Desligado"). `congelado` = a saida travada (outLocked: nada muda no
+ * telao ate descongelar). Desligado com a trava ligada continua "Desligado": o que importa primeiro e que nada sai.
+ */
+export function rotuloCurtoDoTelao(estado: EstadoSaida, congelado: boolean): { texto: string; tom: TomDoTelao } {
+    switch (estado) {
+        case "ligado":
+        case "perguntando":
+        case "armado":
+            return congelado ? { texto: "Congelado", tom: "congelado" } : { texto: "No ar", tom: "noAr" }
+        case "ligando":
+            return { texto: "Ligando…", tom: "transicao" }
+        case "desligando":
+            return { texto: "Desligando…", tom: "transicao" }
+        case "semResposta":
+            return { texto: "Não respondeu", tom: "erro" }
+        case "semTela":
+            return { texto: "Sem tela", tom: "desligado" }
+        default:
+            return { texto: "Desligado", tom: "desligado" }
+    }
+}

@@ -70,9 +70,10 @@
             ]
         },
         "components/main/AliancaTelaoPilula.svelte": {
-            "classe": "gesto: pilula do telao",
+            "classe": "gesto: pilula do telao (abrir Configuracoes; e o item Editar visuais do Visual, cabine 6)",
             "chamadas": [
-                "\"settings\", \"pilula-telao\""
+                "\"settings\", \"pilula-telao\"",
+                "\"settings\", \"botao-de-pagina\""
             ]
         },
         "components/main/AliancaTopo.svelte": {
@@ -80,12 +81,6 @@
             "chamadas": [
                 "\"show\", \"segmentado\"",
                 "\"edit\", \"segmentado\""
-            ]
-        },
-        "components/main/AliancaVisualPilula.svelte": {
-            "classe": "gesto: pilula do Visual, item Editar visuais (cabine 6, V1)",
-            "chamadas": [
-                "\"settings\", \"botao-de-pagina\""
             ]
         },
         "components/main/StatusIndicator.svelte": {

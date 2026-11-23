@@ -12,7 +12,7 @@ import { outLocked, projects, activeProject, showsCache } from "../stores"
 import { porShowNoFim } from "./aliancaBiblioteca"
 import { newToast } from "./common"
 
-export const MOTIVO_TRAVADA = "a saída está travada: destrave para mandar ao ar"
+export const MOTIVO_TRAVADA = "o telão está congelado: descongele para mandar ao ar"
 
 /**
  * Retorna o motivo de nao ter ido ao ar ("" = foi). A falha em por no roteiro (sem culto aberto) vai em aviso e NAO impede o envio.

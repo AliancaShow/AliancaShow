@@ -15,7 +15,7 @@ vi.mock("./save", async () => {
 
 import { loaded, loadedState, outputs, special, stageShows, styles, templates } from "../stores"
 import { alteracoesNaoSalvas, descartarAlteracoes, iniciarRascunho, pararRascunho, tirarFoto } from "./aliancaConfigRascunho"
-import { ativarVisual, cancelarPendenciasDoVisual, darEstiloProprio, iniciarVisual, mudarVisual, problemasDoVisual, visualPendente } from "./aliancaVisualAplicador"
+import { ativarVisual, cancelarPendenciasDoVisual, darEstiloProprio, iniciarVisual, mudarCasa, mudarVisual, problemasDoVisual, visualPendente } from "./aliancaVisualAplicador"
 import { lerVisuais, type Visual } from "./aliancaVisualLogica"
 
 const padrao: Visual = { id: "pad", nome: "Culto padrão", saidas: { tel: { musica: "slide", biblia: "slide" }, led: { musica: "letraLed", biblia: "slide" } }, retorno: { ret: "palco1" } }
@@ -94,18 +94,46 @@ describe("D15: vale no próximo slide", () => {
     })
 })
 
-describe("estilo dividido", () => {
-    it("pedidos diferentes no mesmo estilo: nada é escrito no campo e o problema aparece; dar estilo próprio resolve", () => {
+describe("estilo dividido: separa sozinho, sem pergunta (o operador nunca pensa em estilo)", () => {
+    it("ativar um Visual com pedidos diferentes no mesmo estilo: a segunda saída ganha uma cópia exata com o nome dela e o modelo vale", () => {
         outputs.update((a: any) => ({ ...a, tel: { ...a.tel, style: "s2" } }))
+        const s2Antes = JSON.parse(JSON.stringify((get(styles) as any).s2))
         ativarVisual("imp")
-        expect((get(styles) as any).s2.template).toBe("letraLed")
-        expect(get(problemasDoVisual).map((p) => p.tipo)).toContain("estiloDividido")
-        const novo = darEstiloProprio("tel")!
-        expect((get(outputs) as any).tel.style).toBe(novo)
-        expect((get(styles) as any)[novo].name).toBe("Telão")
-        expect((get(styles) as any)[novo].template).toBeUndefined()
-        expect((get(styles) as any).s2.template).toBe("letraImp")
+        const o: any = get(outputs)
+        expect(o.tel.style).toBe("s2") // a primeira fica com o original
+        const novo = o.led.style
+        expect(novo).not.toBe("s2")
+        // cópia exata (desenha igual) + nome da saída + o modelo do Visual
+        expect((get(styles) as any)[novo]).toEqual({ ...s2Antes, name: "Telão LED", template: "letraImp", templateScripture: "versImp" })
+        expect((get(styles) as any).s2.template).toBeUndefined()
         expect(get(problemasDoVisual)).toEqual([])
+    })
+    it("mudar a casa da saída que divide: ELA ganha o estilo próprio (cópia) e a outra fica intacta", () => {
+        outputs.update((a: any) => ({ ...a, tel: { ...a.tel, style: "s2" } }))
+        special.set({ outra: 1, aliancaVisuais: [{ ...padrao, saidas: { tel: { musica: "letraLed", biblia: "slide" }, led: { musica: "letraLed", biblia: "slide" } } }, impulso], aliancaVisualAtivo: "pad" })
+        mudarCasa("pad", "tel", "musica", "letraImp")
+        const o: any = get(outputs)
+        expect(o.led.style).toBe("s2")
+        expect(o.tel.style).not.toBe("s2")
+        expect((get(styles) as any)[o.tel.style]).toMatchObject({ name: "Telão 2", template: "letraImp" })
+        expect((get(styles) as any).s2.template).toBe("letraLed")
+        expect(lerVisuais(get(special)).find((v) => v.id === "pad")!.saidas.tel.musica).toBe("letraImp")
+    })
+    it("saída sem estilo que recebe modelo: ganha um estilo com o nome dela", () => {
+        outputs.update((a: any) => ({ ...a, tel: { name: "Telão", enabled: true } }))
+        mudarCasa("pad", "tel", "musica", "letraImp")
+        const id = (get(outputs) as any).tel.style
+        expect((get(styles) as any)[id]).toEqual({ name: "Telão 2", template: "letraImp" })
+    })
+    it("Visual que não é o ativo: a casa muda, mas nenhum estilo é criado", () => {
+        outputs.update((a: any) => ({ ...a, tel: { ...a.tel, style: "s2" } }))
+        const antes = Object.keys(get(styles))
+        mudarCasa("imp", "tel", "musica", "letraLed")
+        expect(Object.keys(get(styles))).toEqual(antes)
+        expect((get(outputs) as any).tel.style).toBe("s2")
+    })
+    it("darEstiloProprio de saída que não existe quebra alto e devolve null", () => {
+        expect(darEstiloProprio("nada")).toBeNull()
     })
 })
 

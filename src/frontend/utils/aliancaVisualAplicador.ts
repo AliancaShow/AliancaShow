@@ -6,20 +6,21 @@
 //  - vale na hora com Configuracoes aberta: cada caminho escrito entra na foto do rascunho (nao conta como "nao salvo"; Descartar nao desfaz);
 //  - D15 plano A: saida com slide no ar so recebe a escrita quando o slide dela muda (assinante de `outputs`, sincrono). STYLES vai na hora
 //    para a janela de saida e OUTPUTS espera >= 1 ms (listeners.ts), entao o estilo chega antes do slide novo. Descartar cancela a pendencia;
-//  - estilo dividido com pedidos diferentes nunca e escrito calado: vira problema na tela (laranja) ate o operador dar estilo proprio a saida.
+//  - o operador nunca pensa em "estilo" (pedido do Andre, 23/nov): saida sem estilo, ou que divide o estilo com outra que pede outra coisa,
+//    ganha SOZINHA um estilo so dela = copia exata do atual (desenha igual), com o nome da saida, e so depois o modelo e escrito. Laranja so
+//    para problema de verdade (modelo ou leiaute apagado). Nunca na carga: so quando um Visual e aplicado (casa mudada ou Visual trocado).
 // Liga so na janela principal (AliancaTela); nada do fecho da saida importa este arquivo.
 import { get, writable, type Writable } from "svelte/store"
 import { uid } from "uid"
 import { loaded, loadedState, outputs, special, stageShows, styles, templates } from "../stores"
 import { clone } from "../components/helpers/array"
-import { refreshOut } from "../components/helpers/output"
 import { aceitarCaminhosNaFoto } from "./aliancaConfigRascunho"
 import { falhaAlta } from "./aliancaFalha"
-import { lerVisuais, migrar, Pendencias, planoDeEscrita, visualAtivo, type Escrita, type Problema, type Visual } from "./aliancaVisualLogica"
+import { lerVisuais, migrar, nomeDoEstiloProprio, Pendencias, planoDeEscrita, precisaDeEstiloProprio, saidasParaSeparar, visualAtivo, type Casa, type Coluna, type Escrita, type Problema, type Visual } from "./aliancaVisualLogica"
 
-/** o que espera o proximo slide (para a pilula dizer "vale no proximo slide" e a linha de origem nao acusar divergencia) */
+/** o que espera o proximo slide (para a linha de origem nao acusar divergencia e Configuracoes > Visual dizer onde espera) */
 export const visualPendente: Writable<{ chaves: Set<string>; saidas: Set<string> }> = writable({ chaves: new Set(), saidas: new Set() })
-/** problemas do ultimo plano aplicado (estilo dividido, sem estilo, modelo/leiaute apagado) */
+/** problemas do ultimo plano aplicado (modelo/leiaute apagado) */
 export const problemasDoVisual: Writable<Problema[]> = writable([])
 
 const pendencias = new Pendencias()
@@ -63,6 +64,8 @@ export function aplicarVisualAtivo(): void {
         problemasDoVisual.set([])
         return
     }
+    // antes de escrever: quem divide estilo (ou nao tem) ganha um so dele, copia exata (nada muda na tela)
+    for (const id of saidasParaSeparar(v, get(outputs), get(styles))) darEstiloProprio(id)
     const plano = planoDeEscrita(v, get(outputs), get(styles), get(templates), get(stageShows))
     problemasDoVisual.set(plano.problemas)
     const ja = pendencias.registrar(plano.escritas, get(outputs))
@@ -94,6 +97,19 @@ export function mudarVisual(v: Visual): void {
     if (get(special).aliancaVisualAtivo === v.id) aplicarVisualAtivo()
 }
 
+/**
+ * muda uma casa (saida x coluna) de um Visual. Se for o Visual que esta valendo e a saida divide o estilo com outra que pede outra coisa
+ * (ou nao tem estilo), ESTA saida ganha antes um estilo so dela (copia exata, com o nome dela). Sem pergunta: nada muda na tela por isso.
+ */
+export function mudarCasa(visualId: string, saida: string, coluna: Coluna, casa: Casa): void {
+    const v = lerVisuais(get(special)).find((x) => x.id === visualId)
+    if (!v) return falhaAlta("visual", `mudarCasa: Visual "${visualId}" não existe`)
+    const novo = clone(v) as Visual
+    novo.saidas[saida] = { ...(novo.saidas[saida] || {}), [coluna]: casa }
+    if (get(special).aliancaVisualAtivo === visualId && precisaDeEstiloProprio(v, get(outputs), get(styles), saida, coluna, casa)) darEstiloProprio(saida)
+    mudarVisual(novo)
+}
+
 /** Descartar em Configuracoes: o que esperava o proximo slide nao entra mais */
 export function cancelarPendenciasDoVisual(): number {
     const n = pendencias.cancelar()
@@ -107,8 +123,9 @@ function aplicarProblemas() {
 }
 
 /**
- * da a uma saida um estilo SO dela (decisao explicita do operador, num botao com confirmacao): copia o estilo que ela dividia (ou um vazio,
- * se nao tinha) com o nome da saida e aponta a saida para ele. Depois reaplica o Visual ativo.
+ * da a uma saida um estilo SO dela: copia exata do estilo que ela usa (ou um vazio, se nao tinha), com o nome da saida, e aponta a saida
+ * para ele. A copia desenha igual, entao nada muda no telao. Nao reaplica: quem chama (aplicarVisualAtivo ou a casa do Visual) escreve depois.
+ * O estilo e gravado ANTES da saida: STYLES vai na hora para a janela de saida e OUTPUTS espera >= 1 ms, entao ela nunca aponta para o nada.
  */
 export function darEstiloProprio(outputId: string): string | null {
     const o: any = get(outputs)[outputId]
@@ -119,7 +136,7 @@ export function darEstiloProprio(outputId: string): string | null {
     const antigo: any = o.style ? get(styles)[o.style] : null
     const id = uid()
     styles.update((a) => {
-        a[id] = { ...(antigo ? clone(antigo) : {}), name: o.name || "Saída" } as any
+        a[id] = { ...(antigo ? clone(antigo) : {}), name: nomeDoEstiloProprio(o.name, a) } as any
         return a
     })
     outputs.update((a) => {
@@ -130,8 +147,6 @@ export function darEstiloProprio(outputId: string): string | null {
         ["styles", id],
         ["outputs", outputId, "style"]
     ])
-    setTimeout(refreshOut)
-    aplicarVisualAtivo()
     return id
 }
 

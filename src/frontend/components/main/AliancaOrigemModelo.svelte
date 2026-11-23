@@ -1,7 +1,8 @@
 <script lang="ts">
     // Cabine 6, fatia V1 (board P2/P4, D14): a linha de origem de Mostrar, embaixo do cabecalho do centro. Responde "de onde vem a cara que
-    // esta indo para cada tela": por saida, o modelo que vale (do Visual) ou "como o slide foi feito"; por retorno, o leiaute.
-    // Le o que a saida usa DE FATO (campos do estilo). Etiqueta neutra; laranja so para problema (modelo apagado, divergencia, estilo dividido).
+    // esta indo para cada tela": por saida, o modelo que vale (do Visual) ou "Sem modelo"; por retorno, o leiaute.
+    // Le o que a saida usa DE FATO (campos do estilo). Etiqueta neutra; laranja so para problema (modelo apagado, divergencia).
+    // Sem aviso de "proximo slide" aqui (pedido do Andre, 23/nov): a regra do D15 continua, so nao se anuncia na tela principal.
     // Muda sozinha conforme o item: num versiculo mostra a coluna Biblia; no resto, Musica e avisos. Clicar num modelo abre-o no Editar.
     import { activeEdit, activeShow, outputs, shows, special, stageShows, styles, templates } from "../../stores"
     import { trocarTela } from "../../utils/aliancaTela"
@@ -36,12 +37,11 @@
                 {e.nome}: <b>{e.texto}</b>
                 {#if modelo && !e.problema}<em>MODELO DA SAÍDA</em>{/if}
                 {#if e.problema}<em>{e.problema}</em>{/if}
-                {#if e.pendente}<em>muda no próximo slide</em>{/if}
             </button>
         {/each}
     </div>
 {:else if !ativo && $activeShow?.id && Array.isArray($special?.aliancaVisuais)}
-    <div class="origem" data-acao="origem-modelo"><span class="og prob">Nenhum Visual valendo: escolha um na pílula “Visual”</span></div>
+    <div class="origem" data-acao="origem-modelo"><span class="og prob">Nenhum Visual valendo: escolha um no botão do telão</span></div>
 {/if}
 
 <style>

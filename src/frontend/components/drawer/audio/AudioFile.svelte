@@ -44,7 +44,7 @@
         return true
     }
     function tocarAgora() {
-        if ($outLocked) return newToast("a saída está travada: destrave para tocar")
+        if ($outLocked) return newToast("o telão está congelado: descongele para tocar")
         noRoteiro()
         AudioPlayer.start(path, { name }, { playMultiple: false })
     }

@@ -10,7 +10,7 @@
     import { activePopup, activeStage, activeStyle, alertMessage, currentOutputSettings, ndiData, outputDisplay, outputs, rtmpStatus, saved, settingsTab, special, stageShows, styles, templates, toggleOutputEnabled } from "../../../stores"
     import { trocarTela } from "../../../utils/aliancaTela"
     import { configSecao } from "../../../utils/aliancaConfigSecao"
-    import { casaDe, COLUNAS, SLIDE, visualAtivo } from "../../../utils/aliancaVisualLogica"
+    import { casaDe, COLUNAS, SEM_MODELO, SLIDE, visualAtivo } from "../../../utils/aliancaVisualLogica"
     import { newToast } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
     import { destroy, receive, send } from "../../../utils/request"
@@ -401,7 +401,7 @@
             <span>No Visual <b>{visualDaSaida.nome}</b>, esta saída usa:</span>
             {#each COLUNAS as c}
                 {@const casa = casaDe(visualDaSaida, currentOutput?.id || "", c.id)}
-                <span>{c.rotulo}: <b>{casa === SLIDE ? "o slide como foi feito" : $templates[casa]?.name || "modelo não existe mais"}</b></span>
+                <span>{c.rotulo}: <b>{casa === SLIDE ? SEM_MODELO : $templates[casa]?.name || "modelo não existe mais"}</b></span>
             {/each}
             <button type="button" class="abrirVisual" on:click={abrirVisual}>Abrir Visual</button>
         </div>

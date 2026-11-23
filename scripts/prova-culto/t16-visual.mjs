@@ -1,13 +1,14 @@
 // Cabine-6, fatia V1 (Visual). Fumaca contra o Show de dev (CDP), perfil de teste. Sem cliques forcados.
 //   node scripts/prova-culto/t16-visual.mjs            (passo 1: A..E; deixa o app aberto)
 //   node scripts/prova-culto/t16-visual.mjs reaberto   (passo 2, depois de fechar pelo X e reabrir: F)
-//   FS_PRINTS=<pasta> grava os prints (pagina Visual, pilula, linha de origem)
-//   A  migracao: "Culto padrao" existe e esta valendo
-//   B  Configuracoes > Visual: tabela saidas x [Musica e avisos, Biblia] + campo do retorno
-//   C  escolher modelo na Musica de uma saida: style.template muda; linha de origem em Mostrar mostra; pilula troca na hora sem slide no ar;
-//      com slide no ar so entra no proximo slide
-//   D  estilo dividido: faixa laranja + "Criar estilo proprio e usar"
+//   FS_PRINTS=<pasta> grava os prints (pagina Visual, botao do telao em cada estado, menu aberto, linha de origem)
+//   A  migracao: "Culto padrao" existe e esta valendo; o botao do telao mostra o Visual abreviado
+//   B  Configuracoes > Visual: tabela saidas x [Musica e avisos, Biblia] + campo do retorno; "Sem modelo"
+//   C  escolher modelo na Musica de uma saida: style.template muda; linha de origem em Mostrar mostra; o menu do telao troca na hora sem
+//      slide no ar; com slide no ar so entra no proximo slide (D15), SEM anuncio na tela principal
+//   D  estilo dividido / saida sem estilo: o Visual da sozinho um estilo proprio (copia exata, nome da saida), sem faixa e sem pergunta
 //   E  Descartar nao desfaz o Visual; trocar Visual nao conta como "nao salvo"
+//   G  botao unico do telao: No ar / Congelado / Desligado (cores bem diferentes); menu com Congelar, Ligar/Desligar e a lista de Visuais
 //   F  fechar e reabrir: Visuais e o ativo persistem (passo 2)
 import { writeFileSync, readFileSync, existsSync } from "node:fs"
 import { join } from "node:path"
@@ -39,16 +40,26 @@ async function escolherNoSelect(seletor, rotulo) {
 }
 const estado = `const sp=get(S.special); const o=get(S.outputs); const st=get(S.styles)
   return {vis:(sp.aliancaVisuais||[]).map(v=>({id:v.id,nome:v.nome,saidas:v.saidas})), ativo:sp.aliancaVisualAtivo,
-    saidas:Object.fromEntries(Object.entries(o).map(([k,x])=>[k,{nome:x.name,estilo:x.style||"",tpl:st[x.style]?.template||null,tplB:st[x.style]?.templateScripture||null}])),
+    saidas:Object.fromEntries(Object.entries(o).map(([k,x])=>[k,{nome:x.name,estilo:x.style||"",estiloNome:st[x.style]?.name||null,tpl:st[x.style]?.template||null,tplB:st[x.style]?.templateScripture||null}])),
     naoSalvas:null, dataPath:get(S.dataPath)}`
 const ler = () => j.ev(estado)
-const pilula = () => j.ev(`const p=document.querySelector('[data-acao="visual-pilula"]'); return p?{texto:p.innerText.replace(/\\s+/g," ").trim(), proximo:!!p.querySelector('[data-acao="visual-pilula-proximo"]'), problema:!!p.querySelector('[data-acao="visual-pilula-problema"]')}:null`)
+// o botao unico do telao (antes havia a pilula "Visual: X" separada)
+const pilula = () => j.ev(`const p=document.querySelector('[data-acao="telao-menu"]'); if(!p) return null; const cs=getComputedStyle(p)
+  return {texto:p.innerText.replace(/\\s+/g," ").trim(), estado:p.querySelector('[data-acao="telao"]')?.textContent.trim(), visual:p.querySelector('[data-acao="telao-visual"]')?.textContent.trim()||null,
+    tom:p.dataset.tom, proximo:/pr[oó]ximo/i.test(p.innerText), problema:!!p.querySelector('[data-acao="visual-problema"]'), bg:cs.backgroundColor, cor:cs.color, borda:cs.borderStyle,
+    separada:!!document.querySelector('[data-acao="visual-pilula"]')}`)
+const fotoTopo = async (nome) => {
+    if (!PRINTS) return
+    const d = await j.enviar("Page.captureScreenshot", { format: "png", clip: { x: 0, y: 0, width: 1920, height: 420, scale: 1 } })
+    writeFileSync(join(PRINTS, nome), Buffer.from(d.result.data, "base64"))
+    console.log("     print: " + join(PRINTS, nome))
+}
 const origem = () => j.ev(`const o=document.querySelector('[data-acao="origem-modelo"]'); return o?{coluna:o.dataset.coluna, texto:o.innerText.replace(/\\s+/g," ").trim(), prob:[...o.querySelectorAll(".og.prob")].map(e=>e.innerText.replace(/\\s+/g," ").trim())}:null`)
 const pendentes = () => j.ev(`const p=document.querySelector('[data-acao="pagina-pendentes"]'); const d=document.querySelector('[data-acao="pagina-descartar"]'); return {texto:p?.innerText||"", descartarLigado:d?!d.disabled:null}`)
 async function abrirVisual() {
-    await clicar("pilula", `document.querySelector('[data-acao="visual-pilula"]')`)
-    await foto("pilula-menu.png")
-    await clicar("Editar visuais", `document.querySelector('[data-acao="visual-editar"]')`)
+    await clicar("botao do telao", `document.querySelector('[data-acao="telao-menu"]')`)
+    await foto("telao-menu.png")
+    await clicar("Editar visuais", `document.querySelector('[data-acao="telao-menu-pop"] [data-acao="visual-editar"]')`)
     await esperar(900)
 }
 const fecharPagina = () => clicar("Fechar Configuracoes", `document.querySelector('[data-acao="pagina-fechar"]')`)
@@ -66,7 +77,7 @@ if (process.argv[2] === "reaberto") {
     ok("F3 os modelos das saidas voltaram", !!antes && JSON.stringify(agora.saidas) === JSON.stringify(antes.saidas), JSON.stringify(agora.saidas))
     ok("F4 nao migrou de novo (um so Culto padrao)", agora.vis.filter((v) => v.nome === "Culto padrão").length === 1)
     const p = await pilula()
-    ok("F5 pilula mostra o ativo", !!p && p.texto.includes(agora.vis.find((v) => v.id === agora.ativo)?.nome || "?"), JSON.stringify(p))
+    ok("F5 botao do telao mostra o ativo", !!p && p.visual === (agora.vis.find((v) => v.id === agora.ativo)?.nome || "?"), JSON.stringify(p))
     console.log(falhas.length ? `\nt16 (reaberto): ${falhas.length} FALHA(S): ${falhas.join(", ")}` : "\nt16 (reaberto): tudo ok")
     process.exit(falhas.length ? 1 : 0)
 }
@@ -75,7 +86,9 @@ if (process.argv[2] === "reaberto") {
 const e0 = await ler()
 ok("A1 migracao: existe 'Culto padrão'", e0.vis.some((v) => v.nome === "Culto padrão"), JSON.stringify(e0.vis))
 ok("A2 'Culto padrão' esta valendo", e0.vis.find((v) => v.nome === "Culto padrão")?.id === e0.ativo)
-ok("A3 pilula diz Culto padrao", (await pilula())?.texto.includes("Culto padrão"), JSON.stringify(await pilula()))
+const p0 = await pilula()
+ok("A3 botao do telao diz o Visual (Culto padrao)", p0?.visual === "Culto padrão", JSON.stringify(p0))
+ok("A4 nao existe mais a pilula do Visual separada", p0 && !p0.separada)
 
 // cenario: uma 2a saida normal (desligada, sem estilo) e um retorno (desligado) com um leiaute de palco. Fora de Configuracoes (nao conta no rascunho).
 await j.ev(`
@@ -90,24 +103,28 @@ const pag = await j.ev(`const p=document.querySelector('[data-acao="visual-pagin
   const t=p.querySelector('[data-acao="visual-tabela"]')
   return {h:[...t.querySelectorAll(".h")].map(e=>e.textContent.trim()), saidas:[...t.querySelectorAll(".sd b")].map(e=>e.textContent.trim()),
     casas:[...t.querySelectorAll("[data-casa]")].map(e=>e.dataset.casa), retorno:!!p.querySelector('[data-acao="visual-retorno"] select'),
-    secRetorno:/LEIAUTE DO RETORNO/.test(p.innerText), titulo:document.querySelector(".tela h2, h2")?.textContent?.trim()}`)
+    secRetorno:/LEIAUTE DO RETORNO/.test(p.innerText), titulo:document.querySelector(".tela h2, h2")?.textContent?.trim(),
+    semModelo:[...t.querySelectorAll("[data-casa] .tx b")].map(e=>e.textContent.trim()), velho:/usa o slide|como foi feito|com ajustes à mão/i.test(p.innerText),
+    proximo:[...p.querySelectorAll("*")].filter(e=>!e.children.length && /pr[oó]ximo slide/i.test(e.textContent)).length}`)
 ok("B1 pagina Visual aberta", !!pag, JSON.stringify(pag))
 ok("B2 colunas Musica e avisos + Biblia", JSON.stringify(pag?.h) === JSON.stringify(["MÚSICA E AVISOS", "BÍBLIA"]), JSON.stringify(pag?.h))
 ok("B3 uma linha por saida normal (Primary, Telao 2)", pag?.saidas.includes("Primary") && pag?.saidas.includes("Telão 2") && pag.casas.length === 4, JSON.stringify(pag?.saidas))
 ok("B4 campo do leiaute do retorno", pag?.secRetorno && pag?.retorno)
+ok("B5 casas sem modelo dizem 'Sem modelo' (sem 'usa o slide' nem 'como foi feito')", pag?.semModelo.includes("Sem modelo") && !pag.velho, JSON.stringify(pag?.semModelo))
+ok("B6 no maximo UMA linha sobre o proximo slide na pagina", (pag?.proximo ?? 9) <= 1, String(pag?.proximo))
 await foto("visual-pagina.png")
 
 // ---------------------------------------------------------------- C (escolher modelo) + E (nao salvo)
 const pend0 = await pendentes()
 const escolheu = await escolherNoSelect('[data-casa="default:musica"] select', "Brackets")
 ok("C1 seletor da Musica do Primary achou a opcao", escolheu)
-// Primary aponta para um estilo que nao existe no perfil: a tela pergunta antes de criar estilo proprio
-const pergunta = await j.ev(`const f=document.querySelector('[data-acao="visual-estilo-proprio"]'); return f?f.innerText.replace(/\\s+/g," "):null`)
-console.log("     pergunta: " + pergunta)
-if (pergunta) await clicar("Criar estilo proprio e usar (Primary)", `document.querySelector('[data-acao="visual-estilo-proprio-sim"]')`)
+// Primary aponta para um estilo que nao existe no perfil: o Visual cria um so dele, sem perguntar (o operador nunca pensa em estilo)
 await esperar(600)
+const semFaixa = await j.ev(`return {faixa:!!document.querySelector('[data-acao="visual-estilo-proprio"]'), laranjas:[...document.querySelectorAll('[data-acao="visual-pagina"] .faixa, [data-acao="visual-tabela"] .cel.prob')].length}`)
+ok("C1b nenhuma faixa nem casa laranja por causa de estilo", !semFaixa.faixa && semFaixa.laranjas === 0, JSON.stringify(semFaixa))
 const e1 = await ler()
 ok("C2 style.template do Primary = brackets", e1.saidas.default.tpl === "brackets", JSON.stringify(e1.saidas.default))
+ok("C2b o estilo criado sozinho tem o nome da saida (Primary)", /^Primary( \d+)?$/.test(e1.saidas.default.estiloNome || ""), JSON.stringify(e1.saidas.default))
 ok("C3 o Visual guarda a casa", e1.vis.find((v) => v.id === e1.ativo)?.saidas.default?.musica === "brackets")
 const pend1 = await pendentes()
 console.log("     nao salvo antes/depois: " + JSON.stringify(pend0) + " / " + JSON.stringify(pend1))
@@ -144,19 +161,19 @@ await fecharPagina()
 
 // ---------------------------------------------------------------- C (pilula sem slide no ar; linha de origem)
 const pegaVisual = async (nome) => {
-    await clicar("pilula", `document.querySelector('[data-acao="visual-pilula"]')`)
-    await clicar("pilula: " + nome, `[...document.querySelectorAll('[data-acao="visual-pilula-menu"] [role=menuitemradio]')].find(b=>b.innerText.includes(${JSON.stringify(nome)}))`)
+    await clicar("botao do telao", `document.querySelector('[data-acao="telao-menu"]')`)
+    await clicar("menu do telao: " + nome, `[...document.querySelectorAll('[data-acao="telao-menu-pop"] [role=menuitemradio]')].find(b=>b.innerText.includes(${JSON.stringify(nome)}))`)
     await esperar(400)
 }
 await j.ev(`const s=Object.values(get(S.shows)).length; const id=Object.keys(get(S.shows)).find(k=>get(S.shows)[k].name==="Aos Teus Pés"); S.activeShow.set({id,type:"show"}); await esp(1200); return id`)
 await pegaVisual("Culto padrão")
 const eC = await ler()
-ok("C4 pilula sem slide no ar: Culto padrao entra na hora", eC.saidas.default.tpl === "brackets" && !(await pilula()).proximo, JSON.stringify(eC.saidas.default))
+ok("C4 menu do telao sem slide no ar: Culto padrao entra na hora", eC.saidas.default.tpl === "brackets" && (await pilula())?.visual === "Culto padrão", JSON.stringify(eC.saidas.default))
 const og = await origem()
 ok("C5 linha de origem mostra Primary: Brackets", !!og && /Primary: Brackets/.test(og.texto) && og.coluna === "musica", JSON.stringify(og))
 await foto("origem-brackets.png")
-await clicar("pilula", `document.querySelector('[data-acao="visual-pilula"]')`)
-await foto("pilula-aberta.png")
+await clicar("botao do telao", `document.querySelector('[data-acao="telao-menu"]')`)
+await fotoTopo("topo-menu-aberto.png")
 await tecla(j, "Escape")
 
 // ---------------------------------------------------------------- C (com slide no ar: entra no proximo slide)
@@ -168,17 +185,15 @@ await pegaVisual("Visual novo")
 const eP = await ler()
 const pp = await pilula()
 ok("C7 com slide no ar: modelo NAO muda ainda", eP.saidas.default.tpl === "brackets", JSON.stringify(eP.saidas.default))
-ok("C8 pilula avisa 'vale no proximo slide'", pp?.proximo, JSON.stringify(pp))
+ok("C8 o botao do telao NAO anuncia 'proximo slide' (mas ja mostra o Visual novo)", pp && !pp.proximo && pp.visual === "Visual novo", JSON.stringify(pp))
 const ogP = await origem()
-console.log("     origem pendente: " + JSON.stringify(ogP))
-await foto("pilula-proximo-slide.png")
+ok("C8b a linha de origem NAO anuncia 'proximo slide'", !!ogP && !/pr[oó]ximo/i.test(ogP.texto), JSON.stringify(ogP))
 await clicar("2o slide", `document.querySelectorAll("#showArea .slide.context")[1]`)
 await esperar(800)
 const eP2 = await ler()
 ok("C9 proximo slide: o Visual novo entrou (sem modelo)", !eP2.saidas.default.tpl, JSON.stringify(eP2.saidas.default))
-ok("C10 pilula sem aviso depois do slide", !(await pilula())?.proximo)
 const ogV = await origem()
-ok("C11 origem: Primary como o slide foi feito", /Primary: como o slide foi feito/.test(ogV?.texto || ""), JSON.stringify(ogV))
+ok("C11 origem: Primary: Sem modelo", /Primary: Sem modelo/.test(ogV?.texto || ""), JSON.stringify(ogV))
 await pegaVisual("Culto padrão")
 ok("C12a voltando ao Culto padrao com slide no ar: ainda sem modelo", !(await ler()).saidas.default.tpl)
 // proximo slide pela tecla real (← → avancam)
@@ -187,28 +202,54 @@ await esperar(800)
 ok("C12 de volta ao Culto padrao apos o proximo slide", (await ler()).saidas.default.tpl === "brackets")
 await j.ev(`const o=Object.keys(get(S.outputs)); S.outputs.update(a=>{for(const k of o) if(a[k].out) a[k].out={...a[k].out, slide:null}; return a}); await esp(400); return 1`)
 
-// ---------------------------------------------------------------- D (estilo dividido)
+// ---------------------------------------------------------------- D (estilo dividido: separa sozinho)
 // Telao 2 passa a dividir o estilo do Primary (fora de Configuracoes, como faria "Estilo da saida")
 await j.ev(`const st=get(S.outputs).default.style; S.outputs.update(a=>{a.t16b.style=st; return a}); await esp(500); return st`)
+const antesD = await ler()
+const estiloAntes = await j.ev(`const st=get(S.styles)[get(S.outputs).default.style]; const {name, template, templateScripture, ...resto}=st; return JSON.stringify(resto)`)
 await abrirVisual()
 const dv = await escolherNoSelect('[data-casa="t16b:musica"] select', "Parentheses")
 ok("D1 seletor da Musica do Telao 2 respondeu", dv)
-const fx = await j.ev(`const f=document.querySelector('[data-acao="visual-estilo-proprio"]'); if(!f) return null
-  const cs=getComputedStyle(f); const b=f.querySelector('[data-acao="visual-estilo-proprio-sim"]')
-  return {texto:f.innerText.replace(/\\s+/g," "), bg:cs.backgroundColor, sombra:cs.boxShadow, botao:b?.textContent.trim(), laranja:getComputedStyle(document.documentElement).getPropertyValue("--luz-laranja").trim()}`)
-ok("D2 faixa do estilo dividido aparece", !!fx && /divide o estilo/.test(fx.texto), JSON.stringify(fx))
-ok("D3 botao 'Criar estilo próprio e usar'", fx?.botao === "Criar estilo próprio e usar")
-const problemasCel = await j.ev(`return [...document.querySelectorAll('[data-acao="visual-tabela"] .cel.prob')].map(e=>({casa:e.dataset.casa, contorno:getComputedStyle(e).boxShadow}))`)
-console.log("     celulas em laranja: " + JSON.stringify(problemasCel))
-await foto("visual-estilo-dividido.png")
-const antesD = await ler()
-ok("D4 antes do sim nada foi escrito no estilo dividido", antesD.saidas.default.tpl === "brackets" && antesD.vis.find((v) => v.id === antesD.ativo).saidas.t16b?.musica !== "parentheses", JSON.stringify(antesD.saidas))
-await clicar("Criar estilo proprio e usar (Telao 2)", `document.querySelector('[data-acao="visual-estilo-proprio-sim"]')`)
 await esperar(700)
+const fx = await j.ev(`return {faixa:!!document.querySelector('[data-acao="visual-estilo-proprio"]'), banners:[...document.querySelectorAll('[data-acao="visual-pagina"] .faixa')].map(f=>f.innerText.replace(/\\s+/g," ")),
+  laranja:[...document.querySelectorAll('[data-acao="visual-tabela"] .cel.prob')].map(e=>e.dataset.casa), divide:/divide|dividem|estilo próprio/i.test(document.querySelector('[data-acao="visual-pagina"]')?.innerText||"")}`)
+ok("D2 nenhuma faixa laranja, nenhuma pergunta, nenhum texto de 'estilo'", !fx.faixa && !fx.banners.length && !fx.laranja.length && !fx.divide, JSON.stringify(fx))
 const eD2 = await ler()
-ok("D5 Telao 2 com estilo proprio e Parentheses; Primary continua Brackets", eD2.saidas.t16b.estilo !== eD2.saidas.default.estilo && eD2.saidas.t16b.tpl === "parentheses" && eD2.saidas.default.tpl === "brackets", JSON.stringify(eD2.saidas))
+ok("D3 Telao 2 ganhou estilo proprio com o nome dele e Parentheses; Primary continua Brackets no estilo dele", eD2.saidas.t16b.estilo !== eD2.saidas.default.estilo && /^Telão 2( \d+)?$/.test(eD2.saidas.t16b.estiloNome || "") && eD2.saidas.t16b.tpl === "parentheses" && eD2.saidas.default.tpl === "brackets" && eD2.saidas.default.estilo === antesD.saidas.default.estilo, JSON.stringify(eD2.saidas))
+const estiloCopia = await j.ev(`const st=get(S.styles)[get(S.outputs).t16b.style]; const {name, template, templateScripture, ...resto}=st; return JSON.stringify(resto)`)
+ok("D4 a copia e exata (fora nome e modelos): desenha igual", estiloCopia === estiloAntes, `${estiloCopia} vs ${estiloAntes}`)
 await foto("visual-pagina-final.png")
 await fecharPagina()
+
+// ---------------------------------------------------------------- G (botao unico do telao: estados)
+// so o store (como fidelidade.mjs): abrir a janela de saida de verdade a poe por cima da principal
+const outDisp0 = await j.ev(`return !!get(S.outputDisplay)`)
+await j.ev(`S.outLocked.set(false); S.outputDisplay.set(true); await esp(900); return 1`)
+const gNoAr = await pilula()
+ok("G1 ligado = 'No ar' (vermelho) · Visual", gNoAr?.estado === "No ar" && gNoAr.tom === "noAr" && !!gNoAr.visual, JSON.stringify(gNoAr))
+await fotoTopo("topo-no-ar.png")
+await j.ev(`S.outLocked.set(true); await esp(600); return 1`)
+const gCong = await pilula()
+ok("G2 congelado = 'Congelado', cor diferente do no ar", gCong?.estado === "Congelado" && gCong.tom === "congelado" && gCong.bg !== gNoAr?.bg, JSON.stringify(gCong))
+await fotoTopo("topo-congelado.png")
+// o menu: Descongelar, Desligar, Visuais
+await clicar("botao do telao (congelado)", `document.querySelector('[data-acao="telao-menu"]')`)
+const menu = await j.ev(`const m=document.querySelector('[data-acao="telao-menu-pop"]'); return m?{itens:[...m.querySelectorAll('[data-item] .it')].map(e=>e.textContent.trim()), visuais:[...m.querySelectorAll('[role=menuitemradio]')].map(e=>({n:e.innerText.trim(), on:e.getAttribute("aria-checked")})), editar:!!m.querySelector('[data-acao="visual-editar"]')}:null`)
+ok("G3 menu: Descongelar, Desligar telao, Voltar o que foi limpo + Visuais (check no ativo) + Editar visuais", !!menu && menu.itens[0] === "Descongelar" && menu.itens[1] === "Desligar telão" && menu.visuais.some((v) => v.on === "true") && menu.editar, JSON.stringify(menu))
+await fotoTopo("topo-menu-congelado.png")
+await clicar("Descongelar", `document.querySelector('[data-acao="telao-menu-pop"] [data-item="travar"]')`)
+ok("G4 Descongelar pelo menu", (await j.ev(`return get(S.outLocked)`)) === false)
+await j.ev(`S.outputDisplay.set(false); await esp(1200); return 1`)
+const gOff = await pilula()
+ok("G5 desligado = 'Desligado' apagado (tracejado, sem fundo)", gOff?.estado === "Desligado" && gOff.tom === "desligado" && gOff.borda === "dashed" && gOff.bg !== gNoAr?.bg, JSON.stringify(gOff))
+await fotoTopo("topo-desligado.png")
+await clicar("botao do telao (desligado)", `document.querySelector('[data-acao="telao-menu"]')`)
+const menuOff = await j.ev(`return [...document.querySelectorAll('[data-acao="telao-menu-pop"] [data-item] .it')].map(e=>e.textContent.trim())`)
+ok("G6 desligado: o menu oferece 'Ligar telão'", menuOff.includes("Ligar telão"), JSON.stringify(menuOff))
+await fotoTopo("topo-menu-desligado.png")
+await tecla(j, "Escape")
+await j.ev(`S.outputDisplay.set(${outDisp0}); await esp(600); return 1`)
+
 // o cenario continua, para o passo 2 conferir a persistencia
 const fim = await ler()
 if (PRINTS) writeFileSync(ESTADO, JSON.stringify(fim, null, 1))

@@ -17,6 +17,7 @@
     import { vigiarAjustesDeMidia } from "../../utils/aliancaMidiaSalva"
     import { vigiarConfiguracaoDasSaidas } from "../../utils/aliancaSaidasSalvas"
     import { iniciarVisual } from "../../utils/aliancaVisualAplicador"
+    import { aplicarPadraoDaPartida } from "../../utils/aliancaTelaoPartida"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
@@ -46,6 +47,9 @@
     onDestroy(vigiarConfiguracaoDasSaidas())
     // cabine 6 (V1): o Visual (migracao do "Culto padrao" na primeira carga e o vigia do "vale no proximo slide", D15)
     onDestroy(iniciarVisual())
+    // cabine 6 (Andre, 23/nov): o app abre com o telao ligado. Uma vez por perfil liga "Mostrar tela de saida ao iniciar" (autoOutput do
+    // FreeShow, que so age na partida). Agora, na criacao: AliancaTela so existe depois de `loaded` e a partida liga 2,5 s depois disso.
+    aplicarPadraoDaPartida()
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"

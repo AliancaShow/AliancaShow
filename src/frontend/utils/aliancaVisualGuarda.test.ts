@@ -17,7 +17,7 @@ const lerArq = (rel: string): string | null => {
     }
 }
 
-const NOVOS = ["src/frontend/utils/aliancaVisualLogica.ts", "src/frontend/utils/aliancaVisualAplicador.ts", "src/frontend/components/settings/AliancaVisual.svelte", "src/frontend/components/main/AliancaVisualPilula.svelte", "src/frontend/components/main/AliancaOrigemModelo.svelte"]
+const NOVOS = ["src/frontend/utils/aliancaVisualLogica.ts", "src/frontend/utils/aliancaVisualAplicador.ts", "src/frontend/components/settings/AliancaVisual.svelte", "src/frontend/components/main/AliancaTelaoPilula.svelte", "src/frontend/components/main/AliancaOrigemModelo.svelte", "src/frontend/utils/aliancaTelaoPartida.ts"]
 
 describe("Visual fora do fecho da janela de saida", () => {
     const doFecho: Set<string> = fecho("src/frontend/MainOutput.svelte", lerArq)
