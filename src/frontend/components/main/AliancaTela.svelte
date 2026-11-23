@@ -22,6 +22,7 @@
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { ligarQuedasNosAvisos } from "../../utils/aliancaQuedaAvisos"
+    import { ligarMonitoresDasSaidas } from "../../utils/aliancaMonitorVigia"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
     import { arrastar, prender } from "../../utils/aliancaTelaLogica"
     import AliancaEditarCentro from "./AliancaEditarCentro.svelte"
@@ -54,6 +55,8 @@
     aplicarPadraoDaPartida()
     // cabine 6 (F1): a janela de uma saida caiu/travou/fora do ar -> ERRO na linha de avisos do pe (antes, uma faixa fixa por cima do conteudo)
     onDestroy(ligarQuedasNosAvisos())
+    // cabine 6 ("aprovo monitor-desconectado", 23/nov): a saida presa ao MONITOR; monitor desconectado -> erro fixo na linha de avisos, volta sozinha
+    onDestroy(ligarMonitoresDasSaidas())
     // cabine 6 (Andre, 23/nov: "tem 2 barras de alerta"): cada falha alta vira ERRO na mesma linha de avisos. Agora, na criacao; as falhas de antes
     // (a partida) estao guardadas em `falhas` e chegam todas na assinatura
     onDestroy(ligarFalhasNosAvisos())

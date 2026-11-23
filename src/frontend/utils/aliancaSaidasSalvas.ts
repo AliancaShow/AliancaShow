@@ -12,6 +12,8 @@ export const CAMPOS_DE_CONFIGURACAO = [
     "color",
     "enabled",
     "screen",
+    // cabine 6 ("aprovo monitor-desconectado"): o monitor e a posicao dentro dele; sem isto, fechar o app perderia a escolha do monitor
+    "aliancaMonitor",
     "bounds",
     "boundsLocked",
     "cropping",

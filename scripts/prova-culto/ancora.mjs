@@ -139,6 +139,10 @@ export const EXCECOES = {
     "src/frontend/components/slide/views/MediaItem.svelte": {
         "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): mesma regra para video dentro do slide: miniatura parada so na previa desenhada da janela principal; na saida o ramo original fica igual",
         "sha": "af0ba9c1200de72bba4738b4008dd0503b3a312346f2e5d580182148e40dca0b"
+    },
+    "src/electron/output/helpers/OutputVisibility.ts": {
+        "motivo": "cabine-6 (aprovado pelo André 23/nov no PC da igreja, \"aprovo monitor-desconectado\"): a saida presa ao MONITOR. `resolveOutputBounds` consulta o registro da saida (aliancaMonitorSaida): screen = monitor inteiro, aliancaMonitor = tamanho proprio dentro do monitor; monitor ausente nao move (antes caia calado nas coordenadas soltas e a janela ia para o monitor que o Windows pos no lugar). `toggleOutput` com o monitor ausente esconde a janela, mantem a saida ligada e avisa (vale com force). Config antiga (sem screen e sem aliancaMonitor) segue o caminho de sempre. Nada do que a saida desenha muda",
+        "sha": "96205aa9f9e300eaaf976148d4025163a126745c5e611bb1fd0d14ba56dce600"
     }
 }
 
@@ -194,11 +198,23 @@ export const NOVOS_NO_FECHO = {
     "src/frontend/components/media/AliancaMiniaturaVideo.svelte": {
         "motivo": "cabine-6 fatia A (aprovado pelo André 22/nov, \"aprovo previas\"): miniatura parada do video (mesmo encaixe), usada so com previaSemVideo ligado",
         "sha": "04922194a3ab7c1baca3ccf0e3934775d3f9b3d3640e0c560945ef655c4da25a"
+    },
+    "src/electron/output/aliancaMonitorSaida.ts": {
+        "motivo": "cabine-6 (aprovado pelo André 23/nov no PC da igreja, \"aprovo monitor-desconectado\"): arquivo novo (processo principal): registro por saida, estado DESCONECTADO, escutadores de monitor e o canal com a janela principal",
+        "sha": "9d5834bc58a84d6807ca8d5e5daa1587603bd652355389c9f46d1df94538efc0"
+    },
+    "src/electron/output/aliancaMonitorLogica.ts": {
+        "motivo": "cabine-6 (aprovado pelo André 23/nov no PC da igreja, \"aprovo monitor-desconectado\"): arquivo novo: logica pura (destinoDaSaida, monitorDaJanela), com testes",
+        "sha": "d39857da5afd882fd52bafe273752d011d08385f0ea25c277a1d3d1b95c8512f"
+    },
+    "src/types/aliancaMonitorCanais.ts": {
+        "motivo": "cabine-6 (aprovado pelo André 23/nov no PC da igreja, \"aprovo monitor-desconectado\"): arquivo novo: so tipos e nomes dos canais ALIANCA_MONITOR_REGISTRO / ALIANCA_MONITOR_AVISO",
+        "sha": "f778032e020fefc1f9f92c794d1ea7bfb69502f8b29a8279f61d64a83715c170"
     }
 }
 
-export const SHA_EXCECOES = "ef539245ecb2ed13a436b7db8520648ab26b3f832b44772deea3ab6c69048b44"
-export const SHA_NOVOS = "bfc6c9807f7402ae838a2dff3b9fae4d9d4bddc4fcaf4482bd43c508c43c16da"
+export const SHA_EXCECOES = "a43d74f390a12761fb6c963f3ab6f62e0e76f6ef22c7361ecd9e58a68905e3c9"
+export const SHA_NOVOS = "1546337f89ee9d2e52bddfbc2c610defc6db4c7a339ea74f90b566867a93fd1e"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
