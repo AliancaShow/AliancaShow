@@ -143,10 +143,10 @@
     .sirvo.apagado {
         background: transparent;
         box-shadow: inset 0 0 0 1px var(--luz-linha);
-        color: var(--luz-fraco);
+        color: var(--luz-mudo);
     }
     .sirvo.apagado:hover {
-        color: var(--luz-mudo);
+        color: var(--luz-texto-80);
     }
     .ponto.vazio {
         background: transparent;

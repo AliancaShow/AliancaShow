@@ -21,6 +21,8 @@
     //  - Admin desligou "conversa" no meio do culto: congela acinzentado, com aviso.
     // Texto do Sirvo só por interpolação {…}, nunca {@html}.
     import { afterUpdate } from "svelte"
+    import { teclaNoCampo } from "../../utils/aliancaCampoTeclasLogica"
+    import { dicaDoEsc } from "../../utils/aliancaToque"
     import { sirvo } from "../../utils/aliancaSirvo"
     import { descartarChat, enviarChat, marcarChatLido, sirvoChat, sirvoChatOperador, sirvoChatSaida, sirvoChatSom, tentarChatDeNovo } from "../../utils/aliancaSirvoChat"
     import { nomeDoAutor, resumoDaUltima, textoDaMensagem, textoDoMotivo, trechoDaCitacao, type MensagemChat } from "../../utils/aliancaSirvoChatLogica"
@@ -60,10 +62,15 @@
         }
     }
     function aoTeclar(ev: KeyboardEvent) {
-        // nada do que se digita aqui chega aos atalhos do FreeShow (janela/Preview)
+        // nada do que se digita aqui chega aos atalhos do FreeShow (janela/Preview), MENOS o panico: F1-F5 e Ctrl+L passam (cabine 6, 23/nov)
+        const destino = teclaNoCampo(ev)
+        if (destino === "passar") return
         ev.stopPropagation()
-        if (ev.key === "Escape") {
+        if (destino === "soltar") {
+            // o 1o Esc solta o cursor; o 2o (ja fora do campo) limpa o telao
             ev.preventDefault()
+            soltarFoco()
+            dicaDoEsc()
             return
         }
         if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) {
