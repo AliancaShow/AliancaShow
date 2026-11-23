@@ -96,17 +96,19 @@ export function principal(lista: Aviso[]): { aviso: Aviso | null; outros: number
 }
 
 /** historico: o mais novo em cima, no maximo HISTORICO_MAX; a mesma mensagem (chave e texto) seguida nao repete a linha. A mesma chave com
- *  texto novo (a saida caiu -> voltou) entra como linha nova: o historico guarda cada passo */
-export function noHistorico(hist: Aviso[], a: Aviso): Aviso[] {
-    const sem = hist[0]?.chave === a.chave && hist[0]?.texto === a.texto ? hist.slice(1) : hist
+ *  texto novo (a saida caiu -> voltou) entra como linha nova: o historico guarda cada passo (salvo `unico`) */
+export function noHistorico(hist: Aviso[], a: Aviso, unico = false): Aviso[] {
+    // `unico`: o assunto tem UMA linha so (a falha interna que soma vezes: a linha nova substitui a antiga, onde quer que esteja)
+    const sem = unico ? hist.filter((h) => h.chave !== a.chave) : hist[0]?.chave === a.chave && hist[0]?.texto === a.texto ? hist.slice(1) : hist
     return [a, ...sem].slice(0, HISTORICO_MAX)
 }
 
 // ----- "Ultimos avisos": a altura da lista (divisoria arrastavel, gravada) -----
-/** px da lista aberta: minimo = umas 3 linhas; maximo absoluto, e nunca mais que LISTA_FRACAO da tela (o corpo segue usavel) */
-export const LISTA_LIMITES = [72, 480] as const
+/** px da lista aberta: minimo = umas 3 linhas; maximo absoluto, e nunca mais que LISTA_FRACAO da tela (o corpo segue usavel).
+ *  Andre, 23/nov: no maximo 300 px e 35% da janela */
+export const LISTA_LIMITES = [72, 300] as const
 export const LISTA_PADRAO = 132
-export const LISTA_FRACAO = 0.45
+export const LISTA_FRACAO = 0.35
 export const CHAVE_ALTURA_LISTA = "aliancashow.avisos.altura-lista"
 
 const limLista = (v: number, telaH: number) => {
@@ -125,3 +127,17 @@ export const alturaDaLista = (salva: number, telaH: number) => limLista(salva, t
 
 /** arrasto da divisoria que fica EM CIMA da lista: o mouse subindo (delta negativo) aumenta a lista */
 export const arrastarLista = (inicio: number, delta: number, telaH: number) => limLista(inicio - delta, telaH)
+
+// ----- falha interna (falhaAlta) na linha de avisos -----
+// Andre, 23/nov ("tem 2 barras de alerta"): a faixa vermelha fixa do pe (FaixaDeFalha) saiu; cada falha alta vira um ERRO aqui, com o mesmo texto.
+// E informacao de defeito (nada a resolver na hora): tem x. A mesma origem nao empilha: o texto diz as vezes e volta depois do x se acontecer de novo.
+
+/** a recusa do so retorno e escrita na tarja do No ar (AliancaNoAr), nao aqui: continua registrada em `falhas` */
+export const FALHA_FORA_DA_LINHA = new Set(["so-retorno-recusa"])
+export const chaveDaFalha = (origem: string) => "falha:" + origem
+export const textoDaFalha = (origem: string, vezes: number) => `Falha interna do AliançaShow: ${origem} (${vezes}×). Avise quem cuida do programa.`
+
+/** as falhas que ainda nao foram para a linha nesta contagem (`vistas`: origem -> vezes ja mostradas). Nao muda `vistas` */
+export function falhasNovas(lista: { origem: string; vezes: number }[], vistas: ReadonlyMap<string, number>): { origem: string; vezes: number }[] {
+    return (lista || []).filter((f) => f && !FALHA_FORA_DA_LINHA.has(f.origem) && f.vezes > (vistas.get(f.origem) ?? 0)).map((f) => ({ origem: f.origem, vezes: f.vezes }))
+}

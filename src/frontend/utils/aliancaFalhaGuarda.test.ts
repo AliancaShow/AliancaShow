@@ -1,10 +1,10 @@
-// Q7 (fatia R2): quebrar ALTO. Todo `catch` e todo `.catch(` dos arquivos da pilha chama `falhaAlta(` ou relanca; a faixa de falha nao
-// intercepta clique e nao empurra nada; `aliancaFalha.ts` so importa `svelte/store`.
+// Q7 (fatia R2): quebrar ALTO. Todo `catch` e todo `.catch(` dos arquivos da pilha chama `falhaAlta(` ou relanca; a falha alta nao
+// tem faixa propria (vai para a linha de avisos); `aliancaFalha.ts` so importa `svelte/store`.
 //
 // O QUE ESTA GUARDA NAO COBRE: chaves e parenteses dentro de TEXTO ou modelo de texto podem confundir a contagem do corpo do catch;
 // `throw` dentro de texto conta como relancar; so os arquivos de ARQUIVOS_DA_PILHA sao varridos (a 1a e a 1b acrescentam os seus no
 // mesmo commit que os cria).
-import { readFileSync } from "fs"
+import { existsSync, readFileSync } from "fs"
 import { join } from "path"
 import { describe, expect, it } from "vitest"
 
@@ -96,15 +96,12 @@ describe("falha alta (Q7): nenhum catch da pilha engole o erro", () => {
         for (const l of imports) expect(l, l).toMatch(/from\s+["']svelte\/store["']/)
         expect(src.split("\n").filter((l) => /^\S.*\.subscribe\(/.test(l) && !l.startsWith("//"))).toEqual([])
     })
-    it("a faixa: fixa, sem clique, sem filho interativo", () => {
-        const src = ler("src/frontend/components/main/FaixaDeFalha.svelte")
-        const estilo = src.slice(src.indexOf("<style>"))
-        const regra = estilo.slice(estilo.indexOf(".faixaFalha"))
-        const bloco = regra.slice(0, regra.indexOf("}"))
-        expect(bloco).toMatch(/position:\s*fixed/)
-        expect(bloco).toMatch(/pointer-events:\s*none/)
-        const marcacao = src.slice(src.indexOf("</script>"), src.indexOf("<style>"))
-        for (const proibido of [/<button/, /\bon:/, /tabindex/, /\{@html/]) expect(marcacao).not.toMatch(proibido)
+    it("uma barra so: a faixa fixa saiu; a falha alta vai para a linha de avisos (AliancaTela liga ligarFalhasNosAvisos)", () => {
+        expect(existsSync(join(RAIZ, "src/frontend/components/main/FaixaDeFalha.svelte"))).toBe(false)
+        const tela = ler("src/frontend/components/main/AliancaTela.svelte")
+        expect(tela).not.toMatch(/<FaixaDeFalha\b|import FaixaDeFalha/)
+        expect(tela).toMatch(/onDestroy\(ligarFalhasNosAvisos\(\)\)/)
+        expect(ler("src/frontend/utils/aliancaAvisos.ts")).toMatch(/falhas\.subscribe\(/)
     })
     it("a guarda morde: catch vazio, .catch(() => {}) e catch que so loga reprovam", () => {
         expect(catchesSemFalha("x.ts", "try { a() } catch {}", false).sem).toHaveLength(1)

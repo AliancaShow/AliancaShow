@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { chaveDaFalha, falhasNovas, textoDaFalha } from "./aliancaAvisosLogica"
 import { acrescentar, alturaDaLista, alturaSalvaDaLista, arrastarLista, chaveSemTexto, HISTORICO_MAX, INFO_MS, LISTA_LIMITES, LISTA_PADRAO, nivelDaMensagem, noHistorico, principal, textoDaMensagem, tirarChave, tirarId, vencer, type Aviso } from "./aliancaAvisosLogica"
 
 const dic: Record<string, Record<string, string>> = { toast: { saved: "Salvo", saving: "Salvando", midi_no_slide: "Sem slide" }, error: { import: "Erro ao importar" }, output: { state_locked: "Saída travada" } }
@@ -102,6 +103,13 @@ describe("fila", () => {
         expect(h.length).toBe(HISTORICO_MAX)
         expect(h[0].chave).toBe("k49")
     })
+    it("historico `unico`: a mesma chave fica numa linha so, a mais nova em cima", () => {
+        const a = (chave: string, texto: string, id: number): Aviso => ({ id, chave, texto, nivel: "erro", em: id, vezes: 1 })
+        let h = noHistorico([], a("falha:x", "x (1×)", 1), true)
+        h = noHistorico(h, a("outro", "o", 2))
+        h = noHistorico(h, a("falha:x", "x (2×)", 3), true)
+        expect(h.map((v) => v.texto)).toEqual(["x (2×)", "o"])
+    })
     it("historico: a mesma chave com texto novo (caiu -> voltou) entra como linha nova", () => {
         const a = (texto: string, id: number): Aviso => ({ id, chave: "queda-saida:t", texto, nivel: "erro", em: id, vezes: 1 })
         expect(noHistorico(noHistorico([], a("caiu", 1)), a("voltou", 2)).map((v) => v.texto)).toEqual(["voltou", "caiu"])
@@ -122,9 +130,32 @@ describe("altura da lista dos ultimos avisos (divisoria gravada)", () => {
         expect(arrastarLista(132, 100, 1080)).toBe(LISTA_LIMITES[0])
         expect(arrastarLista(132, -2000, 1080)).toBe(LISTA_LIMITES[1])
     })
-    it("tela baixa: a lista nunca passa de 45% da altura, e nunca abaixo do minimo", () => {
-        expect(arrastarLista(132, -2000, 600)).toBe(270)
-        expect(alturaDaLista(480, 600)).toBe(270)
-        expect(alturaDaLista(480, 100)).toBe(LISTA_LIMITES[0])
+    it("o teto: 300 px (Andre, 23/nov), o minimo 72", () => {
+        expect(LISTA_LIMITES).toEqual([72, 300])
+        expect(alturaDaLista(9999, 1080)).toBe(300)
+        expect(alturaSalvaDaLista("480")).toBe(300)
+    })
+    it("tela baixa: a lista nunca passa de 35% da altura, e nunca abaixo do minimo", () => {
+        expect(arrastarLista(132, -2000, 600)).toBe(210)
+        expect(alturaDaLista(300, 600)).toBe(210)
+        expect(alturaDaLista(300, 100)).toBe(LISTA_LIMITES[0])
+    })
+})
+
+describe("falha interna na linha de avisos", () => {
+    it("o texto e o da antiga faixa vermelha, com as vezes depois da origem", () => {
+        expect(textoDaFalha("menu-app", 3)).toBe("Falha interna do AliançaShow: menu-app (3×). Avise quem cuida do programa.")
+        expect(chaveDaFalha("menu-app")).toBe("falha:menu-app")
+    })
+    it("so entra o que cresceu desde a ultima vez; a recusa do so retorno nunca entra", () => {
+        const vistas = new Map([["a", 2]])
+        const lista = [
+            { origem: "a", vezes: 2 },
+            { origem: "b", vezes: 1 },
+            { origem: "so-retorno-recusa", vezes: 4 }
+        ]
+        expect(falhasNovas(lista, vistas)).toEqual([{ origem: "b", vezes: 1 }])
+        expect(falhasNovas([{ origem: "a", vezes: 3 }], vistas)).toEqual([{ origem: "a", vezes: 3 }])
+        expect(falhasNovas(null as any, vistas)).toEqual([])
     })
 })

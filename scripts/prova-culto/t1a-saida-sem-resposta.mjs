@@ -41,7 +41,7 @@ const depois = (await lerContagem(j)).canais.filter((k) => k.includes("TOGGLE_OU
 r.ok("1.5 em 5 s nao ha OUTPUT:TOGGLE_OUTPUTS a mais (sem nova tentativa)", depois === antes && antes === 1, `${antes} -> ${depois}`)
 it = await lerItem()
 r.ok("1.6 o texto e persistente (segue la depois dos 5 s)", it?.estado === "semResposta", JSON.stringify(it))
-r.ok("1.7 a faixa de falha NAO acendeu (4.4: a falta de resposta pode ser do ambiente)", (await j.ev(`return !document.querySelector(".faixaFalha")`)) === true, "faixa acesa")
+r.ok("1.7 nenhuma falha interna na linha de avisos (4.4: a falta de resposta pode ser do ambiente)", (await j.ev(`return !(document.querySelector('[data-acao=aviso-linha]')?.textContent||'').includes('Falha interna')`)) === true, "falha interna na linha")
 
 // o mundo responde: restaura e chama o set original com true
 await j.ev(`S.outputDisplay.set=window.__setOrig; S.outputDisplay.update=window.__updOrig; S.outputDisplay.set(true); await esp(500); return 1`)
