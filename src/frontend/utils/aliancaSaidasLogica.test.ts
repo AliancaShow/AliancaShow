@@ -1,6 +1,6 @@
 // Configuracoes > Telas e saidas (C4): mapa das telas e lista "Todas as saidas". Parte pura.
 import { describe, expect, it } from "vitest"
-import { estadoDaSaida, numeroDaTela, ocupaATela, ordenarTelas, podeMover, resumoDaSaida, resumoDeRede, rotuloDaTela, telaDaCabine } from "./aliancaSaidasLogica"
+import { estadoDaSaida, monitorDesconectado, numeroDaTela, ocupaATela, ordenarTelas, podeMover, resumoDaSaida, resumoDeRede, rotuloDaTela, tamanhoProprio, telaDaCabine } from "./aliancaSaidasLogica"
 
 const T = (id: number, x: number, internal = false) => ({ id, internal, bounds: { x, y: 0, width: 1920, height: 1080 } })
 const telas = [T(30, 3840), T(10, 0, true), T(20, 1920)]
@@ -118,5 +118,39 @@ describe("estado da saida (vermelho so com conteudo no ar)", () => {
         expect(estadoDaSaida({ enabled: true, out: { slide: { id: "x" } } }, false)).toBe("ligada")
         expect(estadoDaSaida({ enabled: true, out: { slide: { id: "x" } } }, true)).toBe("ar")
         expect(estadoDaSaida({ enabled: true, out: { overlays: ["o"] } }, true)).toBe("ar")
+    })
+})
+
+// cabine 6 ("aprovo monitor-desconectado", 23/nov): o monitor carimbado e o monitor que sumiu
+describe("monitor carimbado (aprovo monitor-desconectado)", () => {
+    const L = { id: 2307139946, label: "NOVA HD CARD", bounds: { x: 3840, y: 0, width: 1024, height: 768 } }
+    const R = { id: 662987242, label: "T27C310", bounds: { x: 1920, y: 0, width: 1920, height: 1080 } }
+    const C = { id: 3717067799, label: "E2241", bounds: { x: 0, y: 0, width: 1920, height: 1080 } }
+    const led = { name: "Painel LED", screen: null, bounds: { x: 3840, y: 0, width: 896, height: 320 }, aliancaMonitor: { id: "2307139946", nome: "NOVA HD CARD", dx: 0, dy: 0 } }
+    it("o LED 896x320 ocupa o monitor dele (antes: '2 Livre')", () => {
+        expect(ocupaATela(led, L)).toBe(true)
+        expect(ocupaATela(led, R)).toBe(false)
+        expect(rotuloDaTela(L, { led }, "led")).toEqual({ nome: "Painel LED", ocupadaPelaEscolhida: true })
+    })
+    it("resumo diz o monitor e o tamanho proprio", () => {
+        expect(resumoDaSaida(led, [C, R, L])).toBe("Monitor 3 (896×320)")
+    })
+    it("monitor desconectado: pelo carimbo diz o nome; screen velho diz 'salvo'; lista vazia nao acusa", () => {
+        expect(monitorDesconectado(led, [C, R])).toBe("NOVA HD CARD")
+        expect(resumoDaSaida(led, [C, R])).toBe("monitor NOVA HD CARD desconectado")
+        expect(monitorDesconectado({ screen: "3010161637" }, [C, R, L])).toBe("salvo")
+        expect(resumoDaSaida({ screen: "3010161637" }, [C, R, L])).toBe("monitor salvo desconectado")
+        expect(monitorDesconectado(led, [])).toBeNull()
+        expect(monitorDesconectado({ screen: null, bounds: { x: 0, y: 0, width: 1, height: 1 } }, [C])).toBeNull()
+    })
+    it("o LED ocupa o monitor: o Retorno nao pode ir para la", () => {
+        const saidas = { led, ret: { name: "Retorno", screen: "662987242" } }
+        expect(podeMover("ret", saidas, L, [C, R, L], String(C.id))).toEqual({ ok: false, motivo: "O Monitor 3 já é de “Painel LED”. Mova aquela saída primeiro." })
+    })
+    it("tamanho proprio: so sem screen e menor que a tela", () => {
+        expect(tamanhoProprio(led, L)).toBe(true)
+        expect(tamanhoProprio({ ...led, bounds: { x: 0, y: 0, width: 1920, height: 1080 } }, R)).toBe(false)
+        expect(tamanhoProprio({ screen: "1", bounds: { x: 0, y: 0, width: 896, height: 320 } }, L)).toBe(false)
+        expect(tamanhoProprio({ ...led, bounds: { x: 0, y: 0, width: 1920, height: 320 } }, L)).toBe(false)
     })
 })

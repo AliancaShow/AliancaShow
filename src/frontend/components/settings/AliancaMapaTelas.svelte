@@ -7,7 +7,7 @@
     import { Main } from "../../../types/IPC/Main"
     import { requestMain } from "../../IPC/main"
     import { currentOutputSettings, outputDisplay, outputs, stageShows } from "../../stores"
-    import { estadoDaSaida, ordenarTelas, podeMover, resumoDaSaida, rotuloDaTela, telaDaCabine, type TelaDoSistema } from "../../utils/aliancaSaidasLogica"
+    import { estadoDaSaida, ordenarTelas, podeMover, resumoDaSaida, rotuloDaTela, tamanhoProprio, telaDaCabine, type TelaDoSistema } from "../../utils/aliancaSaidasLogica"
     import { send } from "../../utils/request"
     import { clone, keysToID, sortByName, sortObject } from "../helpers/array"
 
@@ -30,11 +30,12 @@
 
     const cabine = (ts: TelaDoSistema[]) => telaDaCabine(ts, typeof window !== "undefined" ? { x: window.screenX + window.outerWidth / 2, y: window.screenY + window.outerHeight / 2 } : null)
 
-    type Pedido = { tela: TelaDoSistema; numero: number; saidaId: string; nome: string }
+    // cabine 6 ("aprovo monitor-desconectado"): saida de tamanho proprio (o LED 896x320) vai para o CANTO da tela, mantendo o tamanho
+    type Pedido = { tela: TelaDoSistema; numero: number; saidaId: string; nome: string; tamanho: string }
     let pedido: Pedido | null = null
     let pronto = false
     let recusa = ""
-    let desfazer: { saidaId: string; nome: string; bounds: any; screen: any; tinhaScreen: boolean } | null = null
+    let desfazer: { saidaId: string; nome: string; bounds: any; screen: any; tinhaScreen: boolean; aliancaMonitor: any } | null = null
     let tPronto: ReturnType<typeof setTimeout> | null = null
     let tRecusa: ReturnType<typeof setTimeout> | null = null
     let tDesfazer: ReturnType<typeof setTimeout> | null = null
@@ -56,7 +57,8 @@
         const v = podeMover(escolhida, $outputs as any, tela, ts, cabine(ts))
         if (!v.ok) return recusar(v.motivo)
         const numero = ts.findIndex((x) => String(x.id) === String(tela.id)) + 1
-        pedido = { tela, numero, saidaId: escolhida, nome: $outputs[escolhida]?.name || "Saída" }
+        const s: any = $outputs[escolhida]
+        pedido = { tela, numero, saidaId: escolhida, nome: s?.name || "Saída", tamanho: tamanhoProprio(s || {}, tela) ? `${s.bounds.width}×${s.bounds.height}` : "" }
         pronto = false
         limpar(tPronto)
         tPronto = setTimeout(() => (pronto = true), 1000)
@@ -77,17 +79,20 @@
         const v = tela ? podeMover(saidaId, $outputs as any, tela, ts, cabine(ts)) : ({ ok: false, motivo: "Essa tela não está mais ligada." } as const)
         if (!tela || !v.ok) return recusar(v.ok ? "" : v.motivo)
         const antes = $outputs[saidaId]
-        desfazer = { saidaId, nome: antes?.name || "Saída", bounds: clone(antes?.bounds), screen: antes?.screen, tinhaScreen: antes?.screen !== undefined }
-        aplicar(saidaId, { x: tela.bounds.x, y: tela.bounds.y, width: tela.bounds.width, height: tela.bounds.height }, tela.id.toString())
+        desfazer = { saidaId, nome: antes?.name || "Saída", bounds: clone(antes?.bounds), screen: antes?.screen, tinhaScreen: antes?.screen !== undefined, aliancaMonitor: clone((antes as any)?.aliancaMonitor ?? null) }
+        // tamanho proprio: no canto da tela, mesmo tamanho, sem screen (o vigia carimba o monitor); senao, a tela inteira (screen)
+        if (tamanhoProprio((antes as any) || {}, tela)) aplicar(saidaId, { x: tela.bounds.x, y: tela.bounds.y, width: antes!.bounds!.width, height: antes!.bounds!.height }, null)
+        else aplicar(saidaId, { x: tela.bounds.x, y: tela.bounds.y, width: tela.bounds.width, height: tela.bounds.height }, tela.id.toString())
         cancelar()
         limpar(tDesfazer)
         tDesfazer = setTimeout(() => (desfazer = null), 10000)
     }
 
     /** a mesma troca do popup "Tela de saida" (bounds + screen + UPDATE_BOUNDS); nao liga janela que estava desligada */
-    function aplicar(id: string, bounds: any, screen: any) {
+    function aplicar(id: string, bounds: any, screen: any, aliancaMonitor?: any) {
         outputs.update((a: any) => {
             if (!a[id]) return a
+            if (aliancaMonitor !== undefined) a[id].aliancaMonitor = aliancaMonitor
             if (bounds === undefined) delete a[id].bounds
             else a[id].bounds = bounds
             if (screen === undefined) delete a[id].screen
@@ -99,8 +104,8 @@
 
     function desfazerMover() {
         if (!desfazer) return
-        const { saidaId, bounds, screen } = desfazer
-        aplicar(saidaId, bounds, screen)
+        const { saidaId, bounds, screen, aliancaMonitor } = desfazer
+        aplicar(saidaId, bounds, screen, aliancaMonitor)
         desfazer = null
         limpar(tDesfazer)
     }
@@ -120,13 +125,17 @@
             <button type="button" class="tela" class:minha={r.ocupadaPelaEscolhida} class:alvo={pedido && String(pedido.tela.id) === String(t.id)} style="width: {m.w}px; height: {m.h}px;" data-tela={t.id} data-numero={i + 1} tabindex="-1" disabled={!escolhida} on:click={() => pedir(t)}>
                 <b>{i + 1}</b>
                 {r.nome}
+                {#if t.label}<small class="aparelho" data-acao="saidas-mapa-aparelho">{t.label}</small>{/if}
             </button>
         {/each}
         {#if !telas.length}<span class="cota">Procurando as telas…</span>{/if}
     </div>
     {#if pedido}
         <div class="confirma" data-acao="saidas-mapa-confirma" role="alertdialog" aria-label="Confirmar mover a saída">
-            <span class="q">Mover <b>{pedido.nome}</b> para Monitor {pedido.numero}?</span>
+            <span class="q"
+                >Mover <b>{pedido.nome}</b> para {#if pedido.tamanho}o canto do
+                {/if}Monitor {pedido.numero}{pedido.tela.label ? ` (${pedido.tela.label})` : ""}{#if pedido.tamanho}, mantendo {pedido.tamanho}{/if}?</span
+            >
             <button type="button" class="mover" data-acao="saidas-mapa-mover" tabindex="-1" disabled={!pronto} on:click={confirmar}>Mover</button>
             <button type="button" class="cancela" data-acao="saidas-mapa-cancelar" tabindex="-1" on:click={cancelar}>Cancelar</button>
         </div>
@@ -140,7 +149,7 @@
             <button type="button" class="cancela" data-acao="saidas-mapa-desfazer" tabindex="-1" on:click={desfazerMover}>Desfazer</button>
         </div>
     {/if}
-    <p class="cota">A tela em vermelho é a que esta saída ocupa agora. Clique em outra para pedir a troca: nada se move sem a sua confirmação.</p>
+    <p class="cota">A tela em vermelho é a que esta saída ocupa agora. Clique em outra para pedir a troca: nada se move sem a sua confirmação. Abaixo do número, o nome do monitor (o Windows numera diferente).</p>
 
     <div class="rot todas">TODAS AS SAÍDAS</div>
     <div class="lista" data-acao="saidas-todas">
@@ -205,6 +214,18 @@
     .tela b {
         font-size: 17px;
         color: var(--luz-texto);
+    }
+    .tela .aparelho {
+        max-width: 100%;
+        padding: 0 4px;
+        font-size: 9px;
+        color: var(--luz-mudo);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .tela.minha .aparelho {
+        color: var(--luz-branco);
     }
     .tela.minha {
         background: var(--luz-vermelho);

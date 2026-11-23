@@ -12,8 +12,27 @@ export type SaidaDoMapa = {
     rtmp?: boolean
     ndiData?: { framerate?: string | number }
     bounds?: { x?: number; y?: number; width?: number; height?: number }
+    /** cabine 6 ("aprovo monitor-desconectado"): o monitor de uma saida de tamanho proprio (o LED 896x320) */
+    aliancaMonitor?: { id: string; nome?: string; dx?: number; dy?: number } | null
 }
-export type TelaDoSistema = { id: number | string; internal?: boolean; bounds: { x: number; y: number; width: number; height: number } }
+export type TelaDoSistema = { id: number | string; internal?: boolean; label?: string; bounds: { x: number; y: number; width: number; height: number } }
+
+const temScreen = (s: SaidaDoMapa) => s.screen !== null && s.screen !== undefined && s.screen !== ""
+
+/** o monitor que a saida diz ocupar (screen ou carimbo) nao esta ligado? (lista vazia = ainda lendo: nao acusa) */
+export function monitorDesconectado(s: SaidaDoMapa, telas: TelaDoSistema[]): string | null {
+    if (s.invisible || !telas.length) return null
+    const id = temScreen(s) ? String(s.screen) : s.aliancaMonitor?.id ? String(s.aliancaMonitor.id) : null
+    if (id === null || telas.some((t) => String(t.id) === id)) return null
+    return s.aliancaMonitor && String(s.aliancaMonitor.id) === id && s.aliancaMonitor.nome ? s.aliancaMonitor.nome : "salvo"
+}
+
+/** a saida tem tamanho proprio, menor que a tela (o LED 896x320 num monitor 1024x768)? Mover pelo mapa mantem o tamanho, no canto da tela */
+export function tamanhoProprio(s: SaidaDoMapa, tela: TelaDoSistema): boolean {
+    const w = Number(s.bounds?.width) || 0
+    const h = Number(s.bounds?.height) || 0
+    return !temScreen(s) && w > 0 && h > 0 && w <= tela.bounds.width && h <= tela.bounds.height && (w < tela.bounds.width || h < tela.bounds.height)
+}
 
 /** ordem das telas como o sistema as mostra: a interna primeiro, depois da esquerda para a direita */
 export function ordenarTelas<T extends TelaDoSistema>(telas: T[]): T[] {
@@ -25,9 +44,13 @@ export function numeroDaTela(telas: TelaDoSistema[], s: SaidaDoMapa): number {
     return ordenarTelas(telas).findIndex((t) => ocupaATela(s, t)) + 1
 }
 
-/** a saida e dona da tela? pelo id da tela; sem id salvo (saida antiga), pelos limites iguais (o mesmo casamento que o popup "Tela de saida" faz) */
+/**
+ * a saida e dona da tela? pelo id da tela; sem id, pelo monitor carimbado (o LED 896x320 ocupa o monitor dele sem cobri-lo inteiro: antes
+ * aparecia "2 Livre"); sem os dois (saida antiga), pelos limites iguais (o mesmo casamento que o popup "Tela de saida" faz)
+ */
 export function ocupaATela(s: SaidaDoMapa & { bounds?: { x?: number; y?: number; width?: number; height?: number } }, tela: TelaDoSistema): boolean {
-    if (s.screen !== null && s.screen !== undefined && s.screen !== "") return String(s.screen) === String(tela.id)
+    if (temScreen(s)) return String(s.screen) === String(tela.id)
+    if (s.aliancaMonitor?.id) return String(s.aliancaMonitor.id) === String(tela.id)
     const b = s.bounds
     return !!b && b.x === tela.bounds.x && b.y === tela.bounds.y && b.width === tela.bounds.width && b.height === tela.bounds.height
 }
@@ -45,7 +68,9 @@ export function rotuloDaTela(tela: TelaDoSistema, saidas: { [id: string]: SaidaD
 export function resumoDaSaida(s: SaidaDoMapa, telas: TelaDoSistema[], nomeDoPalco = ""): string {
     const redes = [s.ndi && "NDI", s.blackmagic && "Blackmagic", s.webrtc && "WebRTC", s.rtmp && "RTMP"].filter(Boolean) as string[]
     const n = numeroDaTela(telas, s)
-    const janela = !s.invisible ? (n ? `Monitor ${n}` : "janela") : ""
+    const sumido = monitorDesconectado(s, telas)
+    const tam = s.bounds?.width && s.bounds?.height && !temScreen(s) && s.aliancaMonitor ? ` (${s.bounds.width}×${s.bounds.height})` : ""
+    const janela = !s.invisible ? (sumido ? (sumido === "salvo" ? "monitor salvo desconectado" : `monitor ${sumido} desconectado`) : n ? `Monitor ${n}${tam}` : "janela") : ""
     const partes = [janela, ...redes].filter(Boolean)
     let base = partes.join(" + ")
     if (s.invisible && redes.length) {

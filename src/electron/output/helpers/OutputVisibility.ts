@@ -3,6 +3,7 @@ import { screen } from "electron"
 import { mainWindow, toApp } from "../.."
 import { MAIN, OUTPUT } from "../../../types/Channels"
 import type { Output } from "../../../types/Output"
+import { aoAlternar, destinoRegistrado, ligarMonitores } from "../aliancaMonitorSaida"
 import { OutputHelper } from "../OutputHelper"
 import { setOutputAlwaysOnTop } from "./OutputAlwaysOnTop"
 import { OutputBounds } from "./OutputBounds"
@@ -39,6 +40,19 @@ export class OutputVisibility {
             return "invisible"
         }
 
+        // AliancaShow cabine 6 ("aprovo monitor-desconectado", 23/nov): o monitor da saida nao esta ligado -> a janela fica escondida, a saida
+        // continua LIGADA (o botao do telao nao muda), nada da configuracao muda e o aviso vermelho fica; volta sozinha com o monitor. Vale com force.
+        ligarMonitores({
+            janelaDe: (id) => OutputHelper.getOutput(id)?.window,
+            mostrar: (janela, acimaDasOutras) => this.showWindow(janela, acimaDasOutras),
+            esconder: (janela) => this.hideWindow(janela),
+            posicionar: (id, b) => OutputBounds.updateBounds({ id, bounds: b })
+        })
+        if (aoAlternar(output as any, state === true).tipo === "desconectado" && state === true) {
+            if (window.isVisible()) this.hideWindow(window)
+            return true
+        }
+
         let bounds: Rectangle = this.resolveOutputBounds(output, autoPosition && !force)
         const windowNotCoveringMain = this.amountCovered(bounds, mainWindow!.getBounds()) < 0.5
 
@@ -62,6 +76,14 @@ export class OutputVisibility {
         const primaryBounds = displays.length ? displays[0].bounds : { x: 0, y: 0, width: 1920, height: 1080 }
         const hasValidBounds = !!(output.bounds?.width && output.bounds?.height)
         const outputBounds = hasValidBounds ? output.bounds : primaryBounds
+
+        // AliancaShow cabine 6 ("aprovo monitor-desconectado"): o MONITOR manda (screen = monitor inteiro; aliancaMonitor = tamanho proprio dentro
+        // dele), pelo registro mais novo da saida. Monitor ausente: NAO move (a janela fica escondida por aliancaMonitorSaida); antes caia calado
+        // nas coordenadas soltas e ia parar no monitor que o Windows pos no lugar. So config antiga (sem os dois) segue para o caminho de sempre.
+        const outputId = (output as any).id ? String((output as any).id) : ""
+        const destino = outputId && !output.invisible ? destinoRegistrado(outputId, output as any) : null
+        if (destino && (destino.tipo === "monitor-inteiro" || destino.tipo === "dentro-do-monitor")) return { ...destino.bounds }
+        if (destino && destino.tipo === "desconectado") return { ...outputBounds }
 
         // position at any existing target display
         if (displays.length > 0 && output.screen) {
