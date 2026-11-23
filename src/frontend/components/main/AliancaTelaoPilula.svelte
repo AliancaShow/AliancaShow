@@ -27,10 +27,12 @@
     import { iniciarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { ROTULO_FAIXA } from "../../utils/aliancaSoRetornoLogica"
     import AliancaCortina from "./AliancaCortina.svelte"
+    import { avisar, resolverAviso } from "../../utils/aliancaAvisos"
 
     export let semTelaFisica = false
 
     let estado: EstadoSaida = "desligado"
+    const CHAVE_SEM_RESPOSTA = "telao-sem-resposta"
     let raiz: HTMLElement
 
     const maquina = criarMaquinaDaSaida({
@@ -82,6 +84,10 @@
     $: curto = rotuloCurtoDoTelao(estado, $outLocked)
     $: dicaDoEstado = estado === "desligadoNoAr" || estado === "desligadoDesenho" ? ROTULOS[estado].replace("pelo Culto", "em Mostrar") : estado === "semResposta" ? ROTULOS[estado].replace("o botão do Culto", "o botão de Mostrar").replace("Use o botão do Culto.", "Tente de novo em Mostrar.") : ROTULOS[estado]
     $: ligarDesabilitado = itemDesabilitado(estado) && estado !== "semResposta"
+    // cabine 6 (Andre, 23/nov): o telao que nao liga nao abre janela por cima do culto; a pilula diz "Nao respondeu" e a linha de avisos (no pe
+    // do leiaute) guarda o motivo ate o estado sair de semResposta
+    $: if (estado === "semResposta") avisar("O telão não respondeu ao ligar. Confira a tela de saída e tente de novo no botão do telão (topo, à direita).", "erro", CHAVE_SEM_RESPOSTA)
+    else resolverAviso(CHAVE_SEM_RESPOSTA)
     $: rotuloLigar = ligado ? "Desligar telão" : estado === "semTela" ? "Configurar a tela de saída" : estado === "ligando" ? "Ligando…" : "Ligar telão"
     $: subLigar = ligarDesabilitado ? dicaDoEstado : ligado ? "a tela fica preta até ligar de novo" : estado === "semTela" ? "nenhuma saída habilitada" : "o telão volta a mostrar o que está no ar"
 
