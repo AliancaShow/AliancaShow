@@ -1,5 +1,7 @@
 # AliançaShow: passagem entre computadores (atualizado em 22/nov)
 
+> **Atualização 23/nov (tarde): leia primeiro `referencia/passagem-23nov.md`** — tudo o que foi feito em 22–23/nov, o que testar na igreja com as telas reais e as perguntas abertas (aprovo selecionar-tela, V2 do Modelo). Versão 1.8.0.
+
 > **Atualização 22/nov (noite): o trabalho agora segue na `feat/cabine-6`** (parte da `feat/cabine-5`). Leia `referencia/plano-cabine-6.md` (decisões D1–D29 do André), `referencia/desenho-motor-de-saida.md` (vídeo decodificado uma vez) e, para o teste de 23/nov no PC da cabine, `referencia/roteiro-igreja-23nov.md`. Regra nova para tudo: **entrada derrubada nunca volta sozinha** (D4). npm global 11 falha com dependências git: use `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" install`.
 
 Este arquivo é para o Claude Code que vai continuar o trabalho, seja no PC da projeção da igreja ou em outro computador. Leia o arquivo inteiro antes de mexer em qualquer coisa.
