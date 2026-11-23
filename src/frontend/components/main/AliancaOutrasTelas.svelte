@@ -6,6 +6,7 @@
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
     import { styles } from "../../stores"
     import AliancaCaptura from "../output/AliancaCaptura.svelte"
+    import AliancaPreviaDesenhada from "./AliancaPreviaDesenhada.svelte"
 
     export let ids: string[] = []
 
@@ -30,7 +31,7 @@
         {#if aberta && escolhida}
             <div class="tela">
                 <div class="prev">
-                    {#key escolhida}<AliancaCaptura outputId={escolhida} proporcao="{res.width}/{res.height}" />{/key}
+                    {#key escolhida}<AliancaCaptura outputId={escolhida} proporcao="{res.width}/{res.height}"><AliancaPreviaDesenhada outputId={escolhida} /></AliancaCaptura>{/key}
                     <span class="estado">{nome(escolhida)} · {prop}{$outputDisplay ? "" : " · desligado"}</span>
                 </div>
                 <div class="espaco" aria-hidden="true"></div>

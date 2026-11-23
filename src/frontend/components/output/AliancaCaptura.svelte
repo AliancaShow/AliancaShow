@@ -3,12 +3,13 @@
     // (getMediaSourceId pedido pelo ID da saida). Substitui o espelho que montava outro <Video> e decodificava o arquivo de novo:
     //   - uso "previa": "No ar" e "Outras telas" na janela principal;
     //   - uso "espelho": item "saida atual" do leiaute de retorno (Stagebox).
-    // Janela escondida, minimizada, caida ou sem resposta: quadro parado (o ultimo capturado, apagado) + selo dizendo por que. Nunca volta a
-    // decodificar por conta propria (regra do dono: sem caminho de reserva calado).
+    // Saida desligada / sem janela visivel (opcao b do Andre): com o slot `default` (so a janela principal passa, AliancaPreviaDesenhada), a previa
+    // DESENHA o slide com o video em miniatura parada; sem slot (espelho do retorno), quadro parado + selo. Minimizada, caida ou sem resposta:
+    // ultimo quadro + selo laranja/vermelho. Nunca decodifica o arquivo (regra do dono: sem caminho de reserva calado).
     import { onDestroy, onMount } from "svelte"
     import { allOutputs, livePrepare, outputDisplay, outputs, outputState } from "../../stores"
     import { abrirCaptura, fecharCaptura, pedirFonte } from "../../utils/aliancaCaptura"
-    import { CONFERIR_MS, capturaContinua, estadoDaFonte, textoParado, type MotivoParada } from "../../utils/aliancaCapturaLogica"
+    import { CONFERIR_MS, capturaContinua, estadoDaFonte, mostraSelo, proximoDesenho, textoParado, type MotivoParada } from "../../utils/aliancaCapturaLogica"
     import { falhaAlta } from "../../utils/aliancaFalha"
 
     export let outputId: string
@@ -30,6 +31,14 @@
     let errosSeguidos = 0
 
     $: parado = motivo ? textoParado(motivo, nome, !!saida?.invisible) : null
+
+    // camada desenhada (slot): liga na hora em que a saida desliga; desliga so no 1o quadro da captura (sem piscar)
+    const podeDesenhar = !!$$slots.default
+    let desenhando = podeDesenhar
+    $: desenhando = proximoDesenho(desenhando, motivo, podeDesenhar, false)
+    function primeiroQuadro() {
+        desenhando = proximoDesenho(desenhando, motivo, podeDesenhar, true)
+    }
 
     function congelar() {
         try {
@@ -81,6 +90,9 @@
                 if (e?.name !== "AbortError") falhaAlta("captura-play", e)
             })
             motivo = null
+            const v = video as any
+            if (typeof v.requestVideoFrameCallback === "function") v.requestVideoFrameCallback(() => fluxo === novo && primeiroQuadro())
+            else primeiroQuadro()
             errosSeguidos = 0
         } catch (e) {
             parar(true)
@@ -124,11 +136,15 @@
     <!-- svelte-ignore a11y-media-has-caption -->
     <video class="vivo" class:visivel={!motivo} bind:this={video} muted autoplay playsinline />
 
-    {#if parado}
+    {#if desenhando}
+        <div class="desenho"><slot /></div>
+    {/if}
+
+    {#if parado && mostraSelo(parado.tom, desenhando)}
         <div class="selo {parado.tom}" role={parado.tom === "neutro" ? "status" : "alert"}>{parado.texto}</div>
     {/if}
 
-    {#if uso === "previa" && $livePrepare[outputId]}
+    {#if uso === "previa" && !desenhando && $livePrepare[outputId]}
         <div class="preparo" aria-hidden="true" />
     {/if}
 </div>
@@ -143,6 +159,18 @@
         background: #000;
         overflow: hidden;
         pointer-events: none;
+    }
+    .desenho {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .selo,
+    .preparo {
+        z-index: 2;
     }
     .vivo,
     .quadro {

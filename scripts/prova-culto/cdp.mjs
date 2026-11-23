@@ -29,7 +29,7 @@ async function achar(qual) {
     throw new Error("janela " + qual + " nao achada")
 }
 
-async function conectar(url) {
+export async function conectar(url) {
     const ws = new WebSocket(url)
     await new Promise((r) => ws.addEventListener("open", r))
     let n = 0

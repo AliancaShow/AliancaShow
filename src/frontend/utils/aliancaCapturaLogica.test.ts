@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { FonteSaida } from "../../types/aliancaSaidaCanais"
-import { capturaContinua, espelhoDeSiMesmo, estadoDaFonte, limitesDaCaptura, textoParado } from "./aliancaCapturaLogica"
+import { capturaContinua, espelhoDeSiMesmo, estadoDaFonte, limitesDaCaptura, mostraSelo, motivoDesenhavel, proximoDesenho, textoParado } from "./aliancaCapturaLogica"
 
 const f = (o: Partial<FonteSaida> = {}): FonteSaida => ({ outputId: "a", fonteId: "window:123:0", existe: true, visivel: true, minimizada: false, caida: false, ...o })
 
@@ -42,5 +42,32 @@ describe("previa por captura (fatia A)", () => {
         expect(espelhoDeSiMesmo("telao", "ret")).toBe(false)
         expect(espelhoDeSiMesmo("telao", null)).toBe(false)
         expect(espelhoDeSiMesmo("", "")).toBe(false)
+    })
+    it("(b) desligada / sem janela / carregando: a previa desenha; problema nao", () => {
+        expect(motivoDesenhavel("desligada")).toBe(true)
+        expect(motivoDesenhavel("sem-janela")).toBe(true)
+        expect(motivoDesenhavel("carregando")).toBe(true)
+        expect(motivoDesenhavel("minimizada")).toBe(false)
+        expect(motivoDesenhavel("caida")).toBe(false)
+        expect(motivoDesenhavel("erro")).toBe(false)
+        expect(motivoDesenhavel(null)).toBe(false)
+    })
+    it("(b) troca sem piscar: liga o desenho na hora; so desliga no 1o quadro capturado", () => {
+        expect(proximoDesenho(false, "desligada", true, false)).toBe(true)
+        expect(proximoDesenho(true, null, true, false)).toBe(true)
+        expect(proximoDesenho(true, null, true, true)).toBe(false)
+        expect(proximoDesenho(false, null, true, false)).toBe(false)
+    })
+    it("(b) problema nao troca a camada de baixo; sem slot (espelho do retorno) nunca desenha", () => {
+        expect(proximoDesenho(true, "erro", true, false)).toBe(true)
+        expect(proximoDesenho(false, "caida", true, false)).toBe(false)
+        expect(proximoDesenho(false, "minimizada", true, false)).toBe(false)
+        expect(proximoDesenho(true, "desligada", false, false)).toBe(false)
+    })
+    it("(b) selo: desenhada + neutro some (como antes); problema sempre aparece", () => {
+        expect(mostraSelo("neutro", true)).toBe(false)
+        expect(mostraSelo("neutro", false)).toBe(true)
+        expect(mostraSelo("alerta", true)).toBe(true)
+        expect(mostraSelo("queda", true)).toBe(true)
     })
 })

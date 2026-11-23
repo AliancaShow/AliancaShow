@@ -2,7 +2,9 @@
 // "saida atual" do retorno mostram a CAPTURA AO VIVO da janela da saida, em vez de montar outro <Video> que decodifica o arquivo de novo.
 // Aqui so a decisao pura (testavel): com o estado da janela vindo do processo principal, capturar ou mostrar o quadro parado, e o que dizer.
 //
-// Regra do dono: sem caminho de reserva. Janela escondida/minimizada/caida NAO volta a decodificar: mostra o ultimo quadro + selo.
+// Regra do dono: sem caminho de reserva calado. Opcao (b) do Andre (22/nov): saida DESLIGADA (sem janela visivel de proposito) = previa
+// DESENHADA como antes, com o video como miniatura parada (nunca decodifica). Problema (minimizada sem querer, caida, sem resposta) = ultimo
+// quadro + selo laranja/vermelho.
 import type { FonteSaida } from "../../types/aliancaSaidaCanais"
 
 export type MotivoParada = "carregando" | "sem-janela" | "desligada" | "minimizada" | "caida" | "erro"
@@ -53,6 +55,27 @@ export function limitesDaCaptura(uso: "previa" | "espelho"): { maxWidth: number;
 /** o espelho "saida atual" mirando a PROPRIA janela (modo so retorno sem fonte explicita) nao pode capturar a si mesmo: desenha o conteudo */
 export function espelhoDeSiMesmo(alvo: string, propria: string | null | undefined): boolean {
     return !!alvo && !!propria && alvo === propria
+}
+
+/** saida desligada ou sem janela visivel de proposito (inclui as so de captura): a previa desenha o slide */
+export function motivoDesenhavel(motivo: MotivoParada | null): boolean {
+    return motivo === "desligada" || motivo === "sem-janela" || motivo === "carregando"
+}
+
+/**
+ * O que a previa mostra agora. `desenhando` e o estado anterior: a troca para a captura so acontece no 1o quadro capturado (sem piscar),
+ * e problema (erro/minimizada/caida) nao troca a camada de baixo, so poe o selo.
+ */
+export function proximoDesenho(desenhando: boolean, motivo: MotivoParada | null, podeDesenhar: boolean, primeiroQuadro: boolean): boolean {
+    if (!podeDesenhar) return false
+    if (motivo === null) return primeiroQuadro ? false : desenhando
+    if (motivoDesenhavel(motivo)) return true
+    return desenhando
+}
+
+/** selo por cima: na previa desenhada o estado normal (desligada) nao leva selo, como antes; problema sempre leva */
+export function mostraSelo(tom: TomParada, desenhando: boolean): boolean {
+    return !(desenhando && tom === "neutro")
 }
 
 export const CONFERIR_MS = 1500

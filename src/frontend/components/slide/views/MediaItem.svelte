@@ -8,6 +8,8 @@
     import { encodeFilePath, getExtension, getMedia, getMediaType, getThumbnailPath, mediaSize } from "../../helpers/media"
     import { defaultLayers } from "../../helpers/output"
     import { _show } from "../../helpers/shows"
+    import { previaSemVideo } from "../../../utils/aliancaPreviaSemVideo"
+    import AliancaMiniaturaVideo from "../../media/AliancaMiniaturaVideo.svelte"
     import { SoftLoopSync } from "../../media/video/softLoop"
     import { syncVideoToAudio, videoSync } from "../../media/video/videoSync"
 
@@ -18,6 +20,9 @@
     export let preview = false
     export let edit = false
     export let cropPreviewMode = false
+
+    // AliancaShow cabine 6 (fatia A, b): so a previa desenhada da janela principal liga; na janela de saida e sempre false
+    const semVideo = previaSemVideo()
 
     // replace any media items (with unset path) to the set slide background -- if the background layer is turned off
     function getCustomPath() {
@@ -185,7 +190,9 @@
     {/if}
 
     <div class="mediaContainer" style={mediaContainerStyle}>
-        {#if ($currentWindow || preview) && getMediaType(getExtension(mediaPath)) === "video"}
+        {#if semVideo && getMediaType(getExtension(mediaPath)) === "video"}
+            <AliancaMiniaturaVideo path={mediaPath} blur={item.fit === "blur"} extra={mediaStyleString + mediaStyleCombinedString} />
+        {:else if ($currentWindow || preview) && getMediaType(getExtension(mediaPath)) === "video"}
             {#if item.fit === "blur"}
                 <video bind:this={videoBlurElem} src={encodeFilePath(mediaPath)} style="{mediaStyleBlurString}{mediaStyleCombinedString}" muted autoplay loop={shouldLoop} />
             {/if}

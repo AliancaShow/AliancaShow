@@ -14,6 +14,7 @@
     import { saidasDasAbas } from "../../utils/aliancaTransporteLogica"
     import { getResolution } from "../helpers/output"
     import AliancaCaptura from "../output/AliancaCaptura.svelte"
+    import AliancaPreviaDesenhada from "./AliancaPreviaDesenhada.svelte"
     import AliancaCamadas from "./AliancaCamadas.svelte"
     import AliancaChat from "./AliancaChat.svelte"
     import AliancaMensagemPalco from "./AliancaMensagemPalco.svelte"
@@ -81,8 +82,8 @@
 <div class="par">
     <div class="programa" class:ligado={$outputDisplay} data-acao="tela-principal">
         {#if principal}
-            <!-- cabine 6 (fatia A, D3): captura ao vivo da janela do telao, sem decodificar o video de novo -->
-            {#key principal}<AliancaCaptura outputId={principal} proporcao="{resolucao.width}/{resolucao.height}" />{/key}
+            <!-- cabine 6 (fatia A, D3): captura ao vivo da janela do telao, sem decodificar o video de novo; desligado = desenho com o video em miniatura (b) -->
+            {#key principal}<AliancaCaptura outputId={principal} proporcao="{resolucao.width}/{resolucao.height}"><AliancaPreviaDesenhada outputId={principal} /></AliancaCaptura>{/key}
         {:else}
             <span class="vazio">Sem saída habilitada</span>
         {/if}
