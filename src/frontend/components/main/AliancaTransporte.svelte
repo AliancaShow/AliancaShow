@@ -248,7 +248,7 @@
         border-radius: 8px;
         background: var(--luz-trilho);
         font-size: 11px;
-        color: var(--luz-fraco);
+        color: var(--luz-mudo);
     }
     .vu {
         position: absolute;

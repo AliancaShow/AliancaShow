@@ -4,8 +4,8 @@
     // Ao lado, o botao de MODO "so retorno" (decisao 5, aliancaSoRetorno.ts): liga/desliga o modo; sem retorno configurado fica inerte com o motivo.
     // A validade (1, 3, 5, 10 min; padrao 3) e a contagem regressiva da mensagem viva ficam na caixa; a linha de estado tem altura fixa
     // (nada se desloca quando a mensagem entra, sai ou da erro).
-    // Teclado: o campo e `.edit` (o espaco nao passa slide), nada do que se digita chega aos atalhos, Esc nao faz nada aqui (o 2o Esc da
-    // pagina limparia o telao) e Enter envia e devolve o foco a pagina.
+    // Teclado: o campo e `.edit` (o espaco nao passa slide) e o que se digita nao chega aos atalhos, MENOS F1-F5 e Ctrl+L (panico, passam).
+    // O 1o Esc solta o cursor; o 2o (ja fora do campo) limpa o telao. Enter envia e sempre devolve o foco a pagina (cabine 6, 23/nov).
     import { onDestroy, onMount } from "svelte"
     import { sirvo, sirvoAgora } from "../../utils/aliancaSirvo"
     import { enviarMensagemPalco, limparMensagemPalco } from "../../utils/aliancaMensagemPalco"
@@ -13,6 +13,8 @@
     import { DURACOES_MINUTOS, LIMITE_MENSAGEM, MINUTOS_PADRAO, PRAZO_APARECER_MS, PRAZO_ERRO_MS, acompanharEnvio, avisoDaCaixa, caminhoDoEnvio, campoAposEnvio, campoEstaNoPalco, conferirDuvida, duvidaDoEnvio, envioAceito, mensagemViva, prepararMensagem, rotuloNoPalco, type Duvida, type Envio } from "../../utils/aliancaMensagemPalcoLogica"
     import { desligarSoRetorno, ligarSoRetorno, porQueNaoLigarSoRetorno, soRetorno } from "../../utils/aliancaSoRetorno"
     import { outputs } from "../../stores"
+    import { teclaNoCampo } from "../../utils/aliancaCampoTeclasLogica"
+    import { dicaDoEsc } from "../../utils/aliancaToque"
 
     let texto = ""
     let enviando = false
@@ -136,14 +138,21 @@
         }
     }
     function aoTeclar(ev: KeyboardEvent) {
+        // cabine 6 (Andre, 23/nov): F1-F5 e Ctrl+L passam mesmo digitando; o 1o Esc solta o cursor (o 2o, ja fora do campo, limpa o telao)
+        const destino = teclaNoCampo(ev)
+        if (destino === "passar") return
         ev.stopPropagation()
-        if (ev.key === "Escape") {
+        if (destino === "soltar") {
             ev.preventDefault()
+            soltarFoco()
+            dicaDoEsc()
             return
         }
         if (ev.key === "Enter" && !ev.isComposing) {
             ev.preventDefault()
-            if (enviar()) soltarFoco()
+            // o Enter SEMPRE devolve o foco, ate quando o envio e recusado (a caixa diz o motivo): o espaco seguinte passa slide
+            enviar()
+            soltarFoco()
         }
     }
 </script>
@@ -204,7 +213,7 @@
         border: 1px solid var(--luz-linha);
         border-radius: 11px;
         background: transparent;
-        color: var(--luz-fraco);
+        color: var(--luz-mudo);
         font: inherit;
         font-size: 11px;
         font-weight: 600;

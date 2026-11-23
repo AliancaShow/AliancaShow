@@ -6,7 +6,9 @@ import { dividirAberto } from "./aliancaDividir"
 import { falhaAlta } from "./aliancaFalha"
 import { listaAberta } from "./aliancaGavetaEstado"
 import { arAutorizado } from "./aliancaGavetaToque"
-import { emEditar, tela } from "./aliancaTela"
+import { emEditar, tela, telaAtual } from "./aliancaTela"
+import { avisar } from "./aliancaAvisos"
+import { CHAVE_DICA_ESC, DICA_ESC, DICA_ESC_JANELA_MS } from "./aliancaCampoTeclasLogica"
 import { chaveDoClique, criarEscSeguro, travaDoClique, criarRepeticao, escEngolidoPorRepeticao } from "./aliancaToqueLogica"
 
 const esc = criarEscSeguro()
@@ -15,6 +17,19 @@ const repeticao = criarRepeticao<Element>()
 /** Os popovers do leiaute chamam isto quando um Esc os FECHA (menu do app, pilulas, bloco, seletor). */
 export function escFechou(): void {
     esc.fechou(performance.now())
+    dicaDoEsc()
+}
+
+let ultimaDica = -Infinity
+/**
+ * Cabine 6 (Andre, 23/nov): o 1o Esc so soltou o cursor ou fechou uma camada; a linha de avisos (no pe do leiaute, nada flutua) diz que o
+ * proximo Esc limpa o telao. Info: some sozinha. So em Mostrar (em Editar/Preparar o Esc nao limpa o telao da mesma forma).
+ */
+export function dicaDoEsc(): void {
+    const agora = performance.now()
+    if (agora - ultimaDica < DICA_ESC_JANELA_MS || telaAtual() !== "mostrar") return
+    ultimaDica = agora
+    avisar(DICA_ESC, "info", CHAVE_DICA_ESC)
 }
 
 /** o campo de texto com foco (um Esc o tira do foco) */
@@ -69,7 +84,10 @@ function aoEsc(e: KeyboardEvent) {
             e.stopPropagation()
             return
         }
+        // a dica so quando este Esc NAO limpa o telao: campo com foco ou camada aberta (a selecao de slide sai junto com o telao: sem dica)
+        const soSolta = campoComFoco() || !!(get(activePopup) || get(quickSearchActive) || get(contextActive) || get(topContextActive))
         if (algoParaFechar()) esc.fechou(agora)
+        if (soSolta) dicaDoEsc()
     } catch (erro) {
         falhaAlta("esc-seguro", erro)
     }

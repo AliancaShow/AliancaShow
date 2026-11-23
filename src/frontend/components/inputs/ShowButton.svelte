@@ -27,6 +27,7 @@
     import { getTextSnippet, highlightText } from "../quicksearch/searchHighlight"
     import HiddenInput from "./HiddenInput.svelte"
     import MaterialButton from "./MaterialButton.svelte"
+    import { decidirAntesDoAr } from "../../utils/aliancaMidiaSumida"
 
     export let id: string
     export let show: any // ShowList | ShowRef
@@ -203,8 +204,11 @@
             const shouldLoop = videoType === "background" ? show.loop || true : false
             const shouldBeMuted = videoType === "background" ? show.muted || true : false
 
+            // cabine 6 (Andre, 23/nov): o arquivo que sumiu depois de entrar no roteiro nao vai ao ar (o caminho localizado fica em cache);
+            // pergunta ao disco agora pelo caminho localizado e, offline, acende o aviso persistente da linha de avisos
             const located = await getMedia(id)
             if (!located) return
+            if ((await decidirAntesDoAr(located.path, show.name || removeExtension(getFileName(id)))) === "offline") return
 
             let out = { path: located.path, muted: shouldBeMuted, loop: shouldLoop, startAt: 0, type, ...(typeof show.loop === "boolean" ? { loopDoItem: show.loop } : {}), ...mediaStyle }
 

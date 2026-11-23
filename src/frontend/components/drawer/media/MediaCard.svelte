@@ -14,7 +14,7 @@
     import { BIB } from "../../../utils/aliancaBibliotecaMidiaLogica"
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
-    import { doesMediaExist, getMediaLayerType, getMediaStyle, getMediaType, isLocalFile, loadThumbnail } from "../../helpers/media"
+    import { getMediaLayerType, getMediaStyle, getMediaType, loadThumbnail } from "../../helpers/media"
     import { VideoPlayer } from "../../media/video/videoPlayer"
     import { acaoDoClique, estadoDoCartao, formatarDuracao, TRAVA_CARTAO_MS } from "../../../utils/aliancaMidiaCartaoLogica"
     import { registrarTentativa } from "../../../utils/aliancaTentativa"
@@ -26,6 +26,7 @@
     import Card from "../Card.svelte"
     import { motivoSemCulto } from "../../../utils/aliancaGaveta"
     import { newToast } from "../../../utils/common"
+    import { avisarOffline, conferirNaBiblioteca, decidirAntesDoAr, midiasOffline } from "../../../utils/aliancaMidiaSumida"
     import MediaLoader from "./MediaLoader.svelte"
 
     export let name: string
@@ -48,10 +49,11 @@
         if (!thumbnailPath) failed = true
     }
 
-    // C1 (cabine 18/nov): arquivo local que sumiu quebra ALTO (cartao laranja, sem clique). So pergunta ao disco quando a miniatura falhou.
-    let falta = false
-    $: if (failed && isLocalFile(path) && !contentProvider) doesMediaExist(path, true).then((existe) => (falta = !existe))
-    $: if (!failed) falta = false
+    // C1 (cabine 18/nov): arquivo local que sumiu quebra ALTO (cartao laranja com X, sem ir ao ar).
+    // Cabine 6 (Andre, 23/nov): a miniatura em cache escondia o arquivo sumido. Agora a biblioteca pergunta ao disco uma vez por arquivo em cada
+    // pasta aberta (trocar de pasta pergunta de novo) e o clique pergunta outra vez, na hora (aliancaMidiaSumida.ts).
+    $: if (path && !contentProvider) conferirNaBiblioteca(path, active)
+    $: falta = !contentProvider && $midiasOffline.has(path)
 
     // C1: duracao no canto do thumb, lida uma vez por arquivo (cache da sessao); imagem nao tem selo
     let duracaoLida = 0
@@ -163,8 +165,8 @@
     function click(e: any) {
         // C1: arquivo que sumiu nunca vai ao ar nem marca (o cartao laranja ja diz por que)
         if (falta) {
-            // cabine-5: offline fala alto (o arquivo foi apagado ou movido); "Tirar da biblioteca" no botao direito
-            newToast(`Arquivo não encontrado (offline): ${path}`)
+            // cabine-5/6: offline fala alto e FICA na linha de avisos ate o arquivo voltar ou o x; "Tirar da biblioteca" no botao direito
+            avisarOffline(path, displayName || name)
             return
         }
         // modo LISTA (revisao do PR #40, achado 10): a mesma zona segura do cartao em grade - so o thumb (.card) manda ao ar; o nome da linha so seleciona e arrasta
@@ -193,8 +195,6 @@
         }, TRAVA_CARTAO_MS)
 
         const activeOutputs = getAllActiveOutputs()
-        // C3 + achado 1 (PR #40): a tarja do so retorno diz o NOME do que nao foi ao ar (grava antes do setOutput; a recusa e sincrona)
-        registrarTentativa(displayName || name)
 
         const isActive = !soRetornoLigado() && activeOutputs.some((a) => (a.out?.background?.path || a.out?.background?.id) === path)
         // C1 (decisao do dono, 18/nov): clicar no que JA esta no ar REINICIA o video (nunca limpa: limpar com um clique e o acidente de 09/ago do Sirvo)
@@ -209,7 +209,19 @@
             })
             return
         }
+        // cabine 6: o disco e perguntado AGORA (a biblioteca pode ter olhado antes do arquivo sumir). Offline: nada sai, o cartao ganha o X
+        if (!contentProvider) aoArSeExistir(activeOutputs)
+        else mandarAoAr(activeOutputs)
+    }
 
+    async function aoArSeExistir(activeOutputs: ReturnType<typeof getAllActiveOutputs>) {
+        if ((await decidirAntesDoAr(path, displayName || name)) === "offline") return
+        mandarAoAr(activeOutputs)
+    }
+
+    function mandarAoAr(activeOutputs: ReturnType<typeof getAllActiveOutputs>) {
+        // C3 + achado 1 (PR #40): a tarja do so retorno diz o NOME do que nao foi ao ar (grava logo antes do setOutput; a recusa e sincrona)
+        registrarTentativa(displayName || name)
         let videoType = getMediaLayerType(path, mediaStyle)
         let loop = contentProvider || videoType === "foreground" ? false : true
         let muted = videoType === "background" ? true : false
@@ -405,7 +417,7 @@
         {/if}
         {#if estado === "falta" && gridCartao}
             <div class="sumiu" data-acao="midia-sumiu">
-                <Icon size={1.4} id="close" white />
+                <Icon size={2.2} id="close" white />
                 <span>OFFLINE · arquivo não encontrado</span>
             </div>
         {:else if failed}
@@ -667,6 +679,12 @@
         font-size: var(--luz-fs-micro);
         font-weight: 700;
         letter-spacing: var(--luz-tracking-micro);
+        /* cabine 6: o texto quebrava para fora do thumb ("FFLINE") */
+        padding: 0 6px;
+        text-align: center;
+    }
+    .sumiu span {
+        max-width: 100%;
     }
     .mc.falta .mais,
     .mc.falta .dica {

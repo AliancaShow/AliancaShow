@@ -35,6 +35,8 @@
     import AnteparoDeModo from "./AnteparoDeModo.svelte"
     import FaixaDeFalha from "./FaixaDeFalha.svelte"
     import AliancaQuedaSaida from "./AliancaQuedaSaida.svelte"
+    import AliancaAvisos from "./AliancaAvisos.svelte"
+    import { falhas } from "../../utils/aliancaFalha"
     import ProfileChangerMenu from "./ProfileChangerMenu.svelte"
 
     // as duas travas de gesto da fatia 2 (Esc que fechou algo segura o seguinte 700 ms; clique repetido no mesmo item < 700 ms e engolido). Ligadas
@@ -86,6 +88,10 @@
         saved.set(false)
     }
 
+    // cabine 6: a faixa de falha (fixa, 24 px no pe) ganha o proprio lugar: a tela reserva a altura dela e ela nao cobre a linha de avisos
+    // (o mesmo filtro de FaixaDeFalha: a recusa do so retorno mora na tarja do No ar)
+    $: comFaixa = $falhas.some((f) => f.origem !== "so-retorno-recusa")
+
     // ----- luz ambiente: acende quando ha fundo no ar -----
     $: luz = !isOutCleared("background", $outputs)
 
@@ -112,7 +118,7 @@
 
 <svelte:window on:mousemove={mover} on:mouseup={soltar} />
 
-<div class="tela" class:arrastando={!!arrasto} class:otimizado={$special.optimizedMode} bind:clientWidth={w} bind:clientHeight={h} data-tela="luz">
+<div class="tela" class:arrastando={!!arrasto} class:comFaixa class:otimizado={$special.optimizedMode} bind:clientWidth={w} bind:clientHeight={h} data-tela="luz">
     <div class="ambiente" class:acesa={luz} aria-hidden="true" />
     <div class="vinheta" aria-hidden="true" />
 
@@ -151,6 +157,8 @@
             </aside>
         </div>
     {/if}
+    <!-- cabine 6: os avisos (o antigo toast) moram aqui, no pe, com lugar proprio -->
+    <AliancaAvisos />
 </div>
 
 <!-- motor: sem markup visivel, sempre montado -->
@@ -170,12 +178,16 @@
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        padding: 0 10px 10px;
+        padding: 0 10px 6px;
         overflow: hidden;
         background: var(--luz-fundo);
         color: var(--luz-texto);
         font-family: var(--luz-fonte);
         font-size: 13px;
+    }
+    .tela.comFaixa {
+        /* 24 px da FaixaDeFalha (fixa no pe) + o respiro */
+        padding-bottom: 30px;
     }
     .tela.arrastando {
         user-select: none;

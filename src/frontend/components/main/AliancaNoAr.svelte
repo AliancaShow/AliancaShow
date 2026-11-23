@@ -227,6 +227,6 @@
     }
     .vazio {
         font-size: 11px;
-        color: var(--luz-fraco);
+        color: var(--luz-mudo);
     }
 </style>
