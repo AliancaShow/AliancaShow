@@ -1,0 +1,12 @@
+{
+    "tag":  "b2_1080",
+    "samples":  28,
+    "cpuPctOneCore":  17.9,
+    "cpuPctMachine":  1.1,
+    "decodeMean":  15.3,
+    "decodeMax":  33.2,
+    "d3Mean":  4.6,
+    "d3Max":  5.7,
+    "decodeAllProcsMean":  15.3,
+    "d3AllProcsMean":  10.2
+}

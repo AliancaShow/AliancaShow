@@ -1,0 +1,12 @@
+{
+    "tag":  "b2_4k",
+    "samples":  28,
+    "cpuPctOneCore":  19.1,
+    "cpuPctMachine":  1.2,
+    "decodeMean":  36.5,
+    "decodeMax":  48.7,
+    "d3Mean":  6.2,
+    "d3Max":  7.2,
+    "decodeAllProcsMean":  36.5,
+    "d3AllProcsMean":  11.6
+}

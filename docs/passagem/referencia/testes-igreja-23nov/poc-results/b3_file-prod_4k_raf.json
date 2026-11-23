@@ -1,0 +1,857 @@
+{
+ "tag": "b3_file-prod_4k_raf",
+ "args": {
+  "variant": "b3",
+  "dur": "30",
+  "warm": "8",
+  "url": "file"
+ },
+ "electron": "37.10.3",
+ "chrome": "138.0.7204.251",
+ "webPreferences": {
+  "preload": "C:\\AliancaShow-dev\\scripts\\poc-video-unico\\b3\\preload.js",
+  "webSecurity": true,
+  "nodeIntegration": false,
+  "contextIsolation": true,
+  "allowRunningInsecureContent": false,
+  "webviewTag": true,
+  "backgroundThrottling": false,
+  "autoplayPolicy": "no-user-gesture-required",
+  "show": true
+ },
+ "outputOptions": {
+  "backgroundColor": "#000000",
+  "transparent": true,
+  "show": false,
+  "alwaysOnTop": true,
+  "resizable": false,
+  "frame": false,
+  "skipTaskbar": true,
+  "hasShadow": false,
+  "enableLargerThanScreen": true,
+  "titleBarStyle": "default"
+ },
+ "events": [
+  {
+   "t": 1795466544470,
+   "k": "engine-ready",
+   "pid": 12612,
+   "dur": 60
+  },
+  {
+   "t": 1795466544473,
+   "k": "open-handler",
+   "url": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT1&fit=contain&driver=raf&load=0&mode=opener&check=1",
+   "frameName": "OUT1"
+  },
+  {
+   "t": 1795466544486,
+   "k": "did-create-window",
+   "id": "OUT1"
+  },
+  {
+   "t": 1795466544493,
+   "k": "open-handler",
+   "url": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=LED&fit=cover&driver=raf&load=0&mode=opener&check=0",
+   "frameName": "LED"
+  },
+  {
+   "t": 1795466544523,
+   "k": "did-create-window",
+   "id": "LED"
+  },
+  {
+   "t": 1795466544529,
+   "k": "open-handler",
+   "url": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT3&fit=contain&driver=raf&load=0&mode=opener&check=0",
+   "frameName": "OUT3"
+  },
+  {
+   "t": 1795466544567,
+   "k": "did-create-window",
+   "id": "OUT3"
+  },
+  {
+   "t": 1795466544597,
+   "k": "first-draw",
+   "id": "LED"
+  },
+  {
+   "t": 1795466544603,
+   "k": "first-draw",
+   "id": "OUT1"
+  },
+  {
+   "t": 1795466544604,
+   "k": "first-draw",
+   "id": "OUT3"
+  },
+  {
+   "t": 1795466544604,
+   "k": "all-first-draw"
+  }
+ ],
+ "kids": {
+  "OUT1": {
+   "url": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT1&fit=contain&driver=raf&load=0&mode=opener&check=1",
+   "isBrowserWindow": true,
+   "boundsAsked": {
+    "x": 0,
+    "y": 0,
+    "width": 1920,
+    "height": 1080
+   },
+   "boundsGot": {
+    "x": 0,
+    "y": 0,
+    "width": 1920,
+    "height": 1080
+   },
+   "contentBounds": {
+    "x": 0,
+    "y": 0,
+    "width": 1920,
+    "height": 1080
+   },
+   "alwaysOnTop": true,
+   "visible": true,
+   "hello": {
+    "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT1&fit=contain&driver=raf&load=0&mode=opener&check=1",
+    "origin": "file://",
+    "preload": {
+     "ran": true,
+     "sandboxed": true,
+     "contextIsolated": true,
+     "hasRequireInMainWorld": "checked-in-page",
+     "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT1&fit=contain&driver=raf&load=0&mode=opener&check=1",
+     "openerFromPreload": "opener.document OK (isolated world)",
+     "t": 1795466544586
+    },
+    "apiKeys": [
+     "send",
+     "receive",
+     "removeListener",
+     "getListeners",
+     "showFilePath"
+    ],
+    "requireInMainWorld": "undefined",
+    "dpr": 1,
+    "inner": [
+     1920,
+     1080
+    ],
+    "openerAccess": "OK: opener.document.querySelector(video)",
+    "openerOrigin": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+    "drawMode": "opener"
+   },
+   "firstDraw": {
+    "wall": 1795466544604,
+    "ct": 0,
+    "clock": -1.368,
+    "offsetMs": 1368
+   },
+   "boundsNow": {
+    "x": 0,
+    "y": 0,
+    "width": 1920,
+    "height": 1080
+   },
+   "alwaysOnTopNow": true,
+   "pid": 12612,
+   "ipc": {
+    "startupReceived": null,
+    "ackRtMs": 10.3
+   },
+   "final": {
+    "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT1&fit=contain&driver=raf&load=0&mode=opener&check=1",
+    "origin": "file://",
+    "preload": {
+     "ran": true,
+     "sandboxed": true,
+     "contextIsolated": true,
+     "hasRequireInMainWorld": "checked-in-page",
+     "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT1&fit=contain&driver=raf&load=0&mode=opener&check=1",
+     "openerFromPreload": "opener.document OK (isolated world)",
+     "t": 1795466544586
+    },
+    "apiKeys": [
+     "send",
+     "receive",
+     "removeListener",
+     "getListeners",
+     "showFilePath"
+    ],
+    "requireInMainWorld": "undefined",
+    "dpr": 1,
+    "inner": [
+     1920,
+     1080
+    ],
+    "openerAccess": "OK: opener.document.querySelector(video)",
+    "openerOrigin": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+    "drawMode": "opener",
+    "ipc": {
+     "startupReceived": {
+      "channel": "TYPE",
+      "data": "output"
+     },
+     "ackRtMs": 10.3
+    }
+   }
+  },
+  "LED": {
+   "url": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=LED&fit=cover&driver=raf&load=0&mode=opener&check=0",
+   "isBrowserWindow": true,
+   "boundsAsked": {
+    "x": 1000,
+    "y": 60,
+    "width": 896,
+    "height": 320
+   },
+   "boundsGot": {
+    "x": 1000,
+    "y": 60,
+    "width": 896,
+    "height": 320
+   },
+   "contentBounds": {
+    "x": 1000,
+    "y": 60,
+    "width": 896,
+    "height": 320
+   },
+   "alwaysOnTop": true,
+   "visible": true,
+   "hello": {
+    "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=LED&fit=cover&driver=raf&load=0&mode=opener&check=0",
+    "origin": "file://",
+    "preload": {
+     "ran": true,
+     "sandboxed": true,
+     "contextIsolated": true,
+     "hasRequireInMainWorld": "checked-in-page",
+     "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=LED&fit=cover&driver=raf&load=0&mode=opener&check=0",
+     "openerFromPreload": "opener.document OK (isolated world)",
+     "t": 1795466544590
+    },
+    "apiKeys": [
+     "send",
+     "receive",
+     "removeListener",
+     "getListeners",
+     "showFilePath"
+    ],
+    "requireInMainWorld": "undefined",
+    "dpr": 1,
+    "inner": [
+     896,
+     320
+    ],
+    "openerAccess": "OK: opener.document.querySelector(video)",
+    "openerOrigin": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+    "drawMode": "opener"
+   },
+   "firstDraw": {
+    "wall": 1795466544598,
+    "ct": 0,
+    "clock": -1.374,
+    "offsetMs": 1374
+   },
+   "boundsNow": {
+    "x": 1000,
+    "y": 60,
+    "width": 896,
+    "height": 320
+   },
+   "alwaysOnTopNow": true,
+   "pid": 12612,
+   "ipc": {
+    "startupReceived": null,
+    "ackRtMs": 9.2
+   },
+   "final": {
+    "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=LED&fit=cover&driver=raf&load=0&mode=opener&check=0",
+    "origin": "file://",
+    "preload": {
+     "ran": true,
+     "sandboxed": true,
+     "contextIsolated": true,
+     "hasRequireInMainWorld": "checked-in-page",
+     "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=LED&fit=cover&driver=raf&load=0&mode=opener&check=0",
+     "openerFromPreload": "opener.document OK (isolated world)",
+     "t": 1795466544590
+    },
+    "apiKeys": [
+     "send",
+     "receive",
+     "removeListener",
+     "getListeners",
+     "showFilePath"
+    ],
+    "requireInMainWorld": "undefined",
+    "dpr": 1,
+    "inner": [
+     896,
+     320
+    ],
+    "openerAccess": "OK: opener.document.querySelector(video)",
+    "openerOrigin": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+    "drawMode": "opener",
+    "ipc": {
+     "startupReceived": {
+      "channel": "TYPE",
+      "data": "output"
+     },
+     "ackRtMs": 9.2
+    }
+   }
+  },
+  "OUT3": {
+   "url": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT3&fit=contain&driver=raf&load=0&mode=opener&check=0",
+   "isBrowserWindow": true,
+   "boundsAsked": {
+    "x": 40,
+    "y": 480,
+    "width": 960,
+    "height": 540
+   },
+   "boundsGot": {
+    "x": 40,
+    "y": 480,
+    "width": 960,
+    "height": 540
+   },
+   "contentBounds": {
+    "x": 40,
+    "y": 480,
+    "width": 960,
+    "height": 540
+   },
+   "alwaysOnTop": true,
+   "visible": true,
+   "hello": {
+    "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT3&fit=contain&driver=raf&load=0&mode=opener&check=0",
+    "origin": "file://",
+    "preload": {
+     "ran": true,
+     "sandboxed": true,
+     "contextIsolated": true,
+     "hasRequireInMainWorld": "checked-in-page",
+     "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT3&fit=contain&driver=raf&load=0&mode=opener&check=0",
+     "openerFromPreload": "opener.document OK (isolated world)",
+     "t": 1795466544594
+    },
+    "apiKeys": [
+     "send",
+     "receive",
+     "removeListener",
+     "getListeners",
+     "showFilePath"
+    ],
+    "requireInMainWorld": "undefined",
+    "dpr": 1,
+    "inner": [
+     960,
+     540
+    ],
+    "openerAccess": "OK: opener.document.querySelector(video)",
+    "openerOrigin": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+    "drawMode": "opener"
+   },
+   "firstDraw": {
+    "wall": 1795466544605,
+    "ct": 0,
+    "clock": -1.367,
+    "offsetMs": 1367
+   },
+   "boundsNow": {
+    "x": 40,
+    "y": 480,
+    "width": 960,
+    "height": 540
+   },
+   "alwaysOnTopNow": true,
+   "pid": 12612,
+   "ipc": {
+    "startupReceived": null,
+    "ackRtMs": 3.6
+   },
+   "final": {
+    "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT3&fit=contain&driver=raf&load=0&mode=opener&check=0",
+    "origin": "file://",
+    "preload": {
+     "ran": true,
+     "sandboxed": true,
+     "contextIsolated": true,
+     "hasRequireInMainWorld": "checked-in-page",
+     "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=output&id=OUT3&fit=contain&driver=raf&load=0&mode=opener&check=0",
+     "openerFromPreload": "opener.document OK (isolated world)",
+     "t": 1795466544594
+    },
+    "apiKeys": [
+     "send",
+     "receive",
+     "removeListener",
+     "getListeners",
+     "showFilePath"
+    ],
+    "requireInMainWorld": "undefined",
+    "dpr": 1,
+    "inner": [
+     960,
+     540
+    ],
+    "openerAccess": "OK: opener.document.querySelector(video)",
+    "openerOrigin": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+    "drawMode": "opener",
+    "ipc": {
+     "startupReceived": {
+      "channel": "TYPE",
+      "data": "output"
+     },
+     "ackRtMs": 3.6
+    }
+   }
+  }
+ },
+ "ipc": {},
+ "stats": {
+  "engine": {
+   "dropped": 0,
+   "total": 900,
+   "longtasks": []
+  },
+  "OUT1": {
+   "id": "OUT1",
+   "driver": "raf",
+   "mode": "opener",
+   "check": true,
+   "canvas": [
+    1920,
+    1080
+   ],
+   "draws": 900,
+   "drawMsMean": 0.12,
+   "drawMsMax": 0.3,
+   "cadence": {
+    "n": 899,
+    "mean": 33.33,
+    "sd": 0.79,
+    "over50": 0,
+    "max": 50,
+    "hist": {
+     "1": 1,
+     "2": 897,
+     "3": 1
+    }
+   },
+   "frames": {
+    "skipped": 1,
+    "dup": 1,
+    "unreadable": 0,
+    "first": 200,
+    "last": 1099,
+    "n": 900
+   },
+   "vfErr": 0,
+   "longtasks": {
+    "n": 0,
+    "max": 0,
+    "sum": 0
+   }
+  },
+  "LED": {
+   "id": "LED",
+   "driver": "raf",
+   "mode": "opener",
+   "check": false,
+   "canvas": [
+    896,
+    320
+   ],
+   "draws": 900,
+   "drawMsMean": 0.05,
+   "drawMsMax": 0.3,
+   "cadence": {
+    "n": 899,
+    "mean": 33.35,
+    "sd": 8.59,
+    "over50": 0,
+    "max": 50,
+    "hist": {
+     "1": 119,
+     "2": 660,
+     "3": 120
+    }
+   },
+   "frames": null,
+   "vfErr": 0,
+   "longtasks": {
+    "n": 0,
+    "max": 0,
+    "sum": 0
+   }
+  },
+  "OUT3": {
+   "id": "OUT3",
+   "driver": "raf",
+   "mode": "opener",
+   "check": false,
+   "canvas": [
+    960,
+    540
+   ],
+   "draws": 900,
+   "drawMsMean": 0.06,
+   "drawMsMax": 0.3,
+   "cadence": {
+    "n": 899,
+    "mean": 33.31,
+    "sd": 9.51,
+    "over50": 0,
+    "max": 50,
+    "hist": {
+     "1": 147,
+     "2": 606,
+     "3": 146
+    }
+   },
+   "frames": null,
+   "vfErr": 0,
+   "longtasks": {
+    "n": 0,
+    "max": 0,
+    "sum": 0
+   }
+  }
+ },
+ "display": {
+  "bounds": {
+   "x": 0,
+   "y": 0,
+   "width": 1920,
+   "height": 1080
+  },
+  "scaleFactor": 1,
+  "n": 3
+ },
+ "lastEngineReady": 1795466544470,
+ "engineInfo": {
+  "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+  "origin": "file://",
+  "preload": {
+   "ran": true,
+   "sandboxed": true,
+   "contextIsolated": true,
+   "hasRequireInMainWorld": "checked-in-page",
+   "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+   "openerFromPreload": "no opener",
+   "t": 1795466544342
+  },
+  "apiKeys": [
+   "send",
+   "receive",
+   "removeListener",
+   "getListeners",
+   "showFilePath"
+  ],
+  "requireInMainWorld": "undefined",
+  "dpr": 1,
+  "inner": [
+   640,
+   360
+  ],
+  "proxy_OUT1": "WindowProxy",
+  "proxy_LED": "WindowProxy",
+  "proxy_OUT3": "WindowProxy"
+ },
+ "enginePid": 12612,
+ "engineOpened": {
+  "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+  "origin": "file://",
+  "preload": {
+   "ran": true,
+   "sandboxed": true,
+   "contextIsolated": true,
+   "hasRequireInMainWorld": "checked-in-page",
+   "href": "file:///C:/AliancaShow-dev/scripts/poc-video-unico/b3/app/index.html?role=engine&media=file%3A%2F%2F%2FC%3A%2FAliancaShow-dev%2Fscripts%2Fpoc-video-unico%2Fmedia%2Ftest_4k.mp4",
+   "openerFromPreload": "no opener",
+   "t": 1795466544342
+  },
+  "apiKeys": [
+   "send",
+   "receive",
+   "removeListener",
+   "getListeners",
+   "showFilePath"
+  ],
+  "requireInMainWorld": "undefined",
+  "dpr": 1,
+  "inner": [
+   640,
+   360
+  ],
+  "proxy_OUT1": "WindowProxy",
+  "proxy_LED": "WindowProxy",
+  "proxy_OUT3": "WindowProxy"
+ },
+ "pids": {
+  "engine": 12612,
+  "OUT1": 12612,
+  "LED": 12612,
+  "OUT3": 12612
+ },
+ "processTypes": [
+  {
+   "pid": 10516,
+   "type": "Browser"
+  },
+  {
+   "pid": 3624,
+   "type": "GPU"
+  },
+  {
+   "pid": 21020,
+   "type": "Utility",
+   "name": "Network Service"
+  },
+  {
+   "pid": 12612,
+   "type": "Tab"
+  }
+ ],
+ "measure": {
+  "label": "b3_file-prod_4k_raf",
+  "seconds": 30.004,
+  "cpuTotalPctOneCore": 18.8,
+  "cpu": {
+   "3624": {
+    "type": "GPU",
+    "pctOneCore": 10.2,
+    "memMB": 131
+   },
+   "10516": {
+    "type": "Browser",
+    "pctOneCore": 0.2,
+    "memMB": 94
+   },
+   "12612": {
+    "type": "Tab",
+    "pctOneCore": 8.4,
+    "memMB": 156
+   },
+   "21020": {
+    "type": "Utility",
+    "name": "Network Service",
+    "pctOneCore": 0,
+    "memMB": 47
+   }
+  },
+  "stats": {
+   "engine": {
+    "dropped": 0,
+    "total": 900,
+    "longtasks": []
+   },
+   "OUT1": {
+    "id": "OUT1",
+    "driver": "raf",
+    "mode": "opener",
+    "check": true,
+    "canvas": [
+     1920,
+     1080
+    ],
+    "draws": 900,
+    "drawMsMean": 0.12,
+    "drawMsMax": 0.3,
+    "cadence": {
+     "n": 899,
+     "mean": 33.33,
+     "sd": 0.79,
+     "over50": 0,
+     "max": 50,
+     "hist": {
+      "1": 1,
+      "2": 897,
+      "3": 1
+     }
+    },
+    "frames": {
+     "skipped": 1,
+     "dup": 1,
+     "unreadable": 0,
+     "first": 200,
+     "last": 1099,
+     "n": 900
+    },
+    "vfErr": 0,
+    "longtasks": {
+     "n": 0,
+     "max": 0,
+     "sum": 0
+    }
+   },
+   "LED": {
+    "id": "LED",
+    "driver": "raf",
+    "mode": "opener",
+    "check": false,
+    "canvas": [
+     896,
+     320
+    ],
+    "draws": 900,
+    "drawMsMean": 0.05,
+    "drawMsMax": 0.3,
+    "cadence": {
+     "n": 899,
+     "mean": 33.35,
+     "sd": 8.59,
+     "over50": 0,
+     "max": 50,
+     "hist": {
+      "1": 119,
+      "2": 660,
+      "3": 120
+     }
+    },
+    "frames": null,
+    "vfErr": 0,
+    "longtasks": {
+     "n": 0,
+     "max": 0,
+     "sum": 0
+    }
+   },
+   "OUT3": {
+    "id": "OUT3",
+    "driver": "raf",
+    "mode": "opener",
+    "check": false,
+    "canvas": [
+     960,
+     540
+    ],
+    "draws": 900,
+    "drawMsMean": 0.06,
+    "drawMsMax": 0.3,
+    "cadence": {
+     "n": 899,
+     "mean": 33.31,
+     "sd": 9.51,
+     "over50": 0,
+     "max": 50,
+     "hist": {
+      "1": 147,
+      "2": 606,
+      "3": 146
+     }
+    },
+    "frames": null,
+    "vfErr": 0,
+    "longtasks": {
+     "n": 0,
+     "max": 0,
+     "sum": 0
+    }
+   }
+  }
+ },
+ "capture": {
+  "mediaSourceId": "window:2819216:1",
+  "visible": {
+   "seq": "1099,1102,1105,1108,1112,1115,1118,1122,1126,1129",
+   "distinctFrames": 10
+  },
+  "engineNow": {
+   "t": "state",
+   "id": "engine",
+   "role": "engine",
+   "ct": 37.784687,
+   "frame": 1133,
+   "paused": false,
+   "tv": 1139
+  },
+  "OUT1visible": {
+   "ms": 104,
+   "size": {
+    "width": 1920,
+    "height": 1080
+   },
+   "frame": 1135,
+   "centerRGB": [
+    17,
+    30,
+    237
+   ]
+  },
+  "hiddenProbe": {
+   "t": "probe",
+   "id": "OUT3",
+   "role": "output",
+   "frame": null,
+   "draws": 939,
+   "hidden": true,
+   "vis": "hidden"
+  },
+  "hiddenPlain": {
+   "seq": "T",
+   "distinctFrames": 0
+  },
+  "hiddenProbe2": {
+   "t": "probe",
+   "id": "OUT3",
+   "role": "output",
+   "frame": null,
+   "draws": 940,
+   "hidden": false,
+   "vis": "visible"
+  },
+  "hiddenStay": {
+   "seq": "T",
+   "distinctFrames": 0
+  },
+  "hiddenProbe3": {
+   "t": "probe",
+   "id": "OUT3",
+   "role": "output",
+   "frame": null,
+   "draws": 940,
+   "hidden": false,
+   "vis": "visible"
+  },
+  "offscreenBounds": {
+   "x": -3000,
+   "y": 0,
+   "width": 960,
+   "height": 540
+  },
+  "offProbe": {
+   "t": "probe",
+   "id": "OUT3",
+   "role": "output",
+   "frame": null,
+   "draws": 941,
+   "hidden": true,
+   "vis": "hidden"
+  },
+  "offscreen": {
+   "seq": "1408,1412,1415,1419,1422,1426,1429,1433,1436,1440",
+   "distinctFrames": 10
+  },
+  "offProbe2": {
+   "t": "probe",
+   "id": "OUT3",
+   "role": "output",
+   "frame": null,
+   "draws": 955,
+   "hidden": true,
+   "vis": "hidden"
+  },
+  "controlStandaloneHidden": {
+   "first": "image {\"width\":960,\"height\":540}",
+   "second": "image"
+  }
+ }
+}

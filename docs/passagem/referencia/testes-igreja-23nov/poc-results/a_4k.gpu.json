@@ -1,0 +1,12 @@
+{
+    "tag":  "a_4k",
+    "samples":  28,
+    "cpuPctOneCore":  38.6,
+    "cpuPctMachine":  2.4,
+    "decodeMean":  96,
+    "decodeMax":  100.5,
+    "d3Mean":  20.3,
+    "d3Max":  23.8,
+    "decodeAllProcsMean":  96,
+    "d3AllProcsMean":  23.1
+}

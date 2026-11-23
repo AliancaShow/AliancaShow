@@ -1,0 +1,12 @@
+{
+    "tag":  "a_1080",
+    "samples":  28,
+    "cpuPctOneCore":  29.1,
+    "cpuPctMachine":  1.8,
+    "decodeMean":  61.8,
+    "decodeMax":  99.8,
+    "d3Mean":  7.6,
+    "d3Max":  8.1,
+    "decodeAllProcsMean":  61.8,
+    "d3AllProcsMean":  13.4
+}
