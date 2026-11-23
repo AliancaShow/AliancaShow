@@ -80,3 +80,21 @@ describe("a fila dos avisos (store)", () => {
         }
     })
 })
+
+import { describe as d2, it as i2, expect as e2 } from "vitest"
+import { avisos as av2, ligarFalhasNosAvisos as lig2, _zerarAvisos as z2 } from "./aliancaAvisos"
+import { falhaAlta as fa2 } from "./aliancaFalha"
+d2("queda de saida nao vira falha interna duplicada", () => {
+    i2("saida-caiu:* fica so no aviso da queda", () => {
+        z2()
+        const sair = lig2()
+        fa2("saida-caiu:Primary", new Error("x"))
+        e2(get2().some((a) => a.texto.includes("saida-caiu"))).toBe(false)
+        sair()
+    })
+})
+function get2() {
+    let v: any[] = []
+    av2.subscribe((x) => (v = x))()
+    return v
+}

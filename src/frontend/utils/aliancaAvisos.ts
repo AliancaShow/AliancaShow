@@ -92,6 +92,8 @@ export function ligarFalhasNosAvisos(): () => void {
     return falhas.subscribe((lista) => {
         for (const f of falhasNovas(lista, vistas)) {
             vistas.set(f.origem, f.vezes)
+            // a queda de saida ja tem aviso proprio (aliancaQuedaAvisos): nao repetir como "falha interna"
+            if (f.origem.startsWith("saida-caiu:")) continue
             avisar(textoDaFalha(f.origem, f.vezes), "erro", chaveDaFalha(f.origem), { soma: false, unicoNoHistorico: true })
         }
     })
