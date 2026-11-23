@@ -2,9 +2,13 @@
     // Cabine 6 (Andre, 23/nov): a LINHA DE AVISOS do pe da tela. Ocupa o proprio lugar no leiaute (AliancaTela, depois do corpo): nunca flutua por
     // cima do No ar nem da grade. Uma linha, alinhada a esquerda, na escala do app; o texto inteiro aparece no title (hover) e na lista dos ultimos.
     // Cor pelo nivel (so tokens): info neutro e some em 5 s; aviso (laranja) e erro (vermelho) ficam ate resolver ou ate o x.
-    // A fila e a conta: utils/aliancaAvisos.ts e aliancaAvisosLogica.ts. "Ultimos avisos" abre a lista NO LUGAR (empurra o corpo, nao cobre).
-    import { avisos, dispensarAviso, historicoDeAvisos } from "../../utils/aliancaAvisos"
-    import { principal } from "../../utils/aliancaAvisosLogica"
+    // A fila e a conta: utils/aliancaAvisos.ts e aliancaAvisosLogica.ts. "Ultimos avisos" abre a lista NO LUGAR (empurra o corpo, nao cobre),
+    // com uma divisoria em cima (AliancaDivisoria, como as da tela) que muda a altura dela; a altura fica gravada.
+    // Aviso `fixo` (a saida esta FORA DO AR, aliancaQuedaAvisos.ts) nao tem x: so sai quando resolve.
+    import { alturaDaListaDeAvisos, avisos, dispensarAviso, gravarAlturaDaLista, historicoDeAvisos } from "../../utils/aliancaAvisos"
+    import { alturaDaLista, arrastarLista, principal } from "../../utils/aliancaAvisosLogica"
+    import { falhaAlta } from "../../utils/aliancaFalha"
+    import AliancaDivisoria from "./AliancaDivisoria.svelte"
 
     $: atual = principal($avisos)
     $: aviso = atual.aviso
@@ -14,25 +18,46 @@
 
     const hora = (ms: number) => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     const rotulo = { info: "info", aviso: "aviso", erro: "erro" }
+
+    // ----- a divisoria da lista -----
+    let telaH = typeof window !== "undefined" ? window.innerHeight : 1080
+    $: altura = alturaDaLista($alturaDaListaDeAvisos, telaH)
+    let arrasto: { y: number; inicio: number } | null = null
+    function pegar(e: CustomEvent<{ x: number; y: number }>) {
+        arrasto = { y: e.detail.y, inicio: altura }
+    }
+    function mover(e: MouseEvent) {
+        if (!arrasto) return
+        alturaDaListaDeAvisos.set(arrastarLista(arrasto.inicio, e.clientY - arrasto.y, telaH))
+    }
+    function soltar() {
+        if (!arrasto) return
+        arrasto = null
+        const erro = gravarAlturaDaLista(altura)
+        if (erro) falhaAlta("avisos-altura-lista", erro)
+    }
 </script>
+
+<svelte:window bind:innerHeight={telaH} on:mousemove={mover} on:mouseup={soltar} />
 
 <!-- <footer>, nao <div>: AliancaTela esconde o `.corpo` que nao e o ultimo div (fade de saida do Svelte 3) -->
 <footer class="avisos" data-regiao="avisos">
     {#if aberto}
-        <ol class="lista" aria-label="Últimos avisos" data-acao="avisos-lista">
+        <AliancaDivisoria eixo="h" rotulo="Arraste para mudar a altura dos últimos avisos" on:pegar={pegar} />
+        <ol class="lista" class:arrastando={!!arrasto} style="height: {altura}px" aria-label="Últimos avisos" data-acao="avisos-lista">
             {#each $historicoDeAvisos as h (h.id)}
                 <li class="item {h.nivel}" title={h.texto}><span class="quando">{hora(h.em)}</span><span class="nivel">{rotulo[h.nivel]}</span><span class="txt">{h.texto}</span></li>
             {/each}
         </ol>
     {/if}
-    <div class="linha {aviso ? aviso.nivel : 'vazio'}" role="status" aria-live="polite" data-acao="aviso-linha" data-nivel={aviso ? aviso.nivel : ""}>
+    <div class="linha {aviso ? aviso.nivel : 'vazio'}" role="status" aria-live="polite" data-acao="aviso-linha" data-nivel={aviso ? aviso.nivel : ""} data-fixo={aviso?.fixo ? "sim" : ""}>
         {#if aviso}
             <span class="ponto" aria-hidden="true" />
             <span class="texto" title={aviso.texto} data-acao="aviso-texto"
                 >{aviso.texto}{#if aviso.vezes > 1}<span class="vezes">{` (${aviso.vezes}×)`}</span>{/if}</span
             >
             {#if atual.outros > 0}<span class="mais" title="mais avisos abertos: veja em Últimos avisos">+{atual.outros}</span>{/if}
-            {#if aviso.nivel !== "info"}
+            {#if aviso.nivel !== "info" && !aviso.fixo}
                 <button type="button" class="fechar" aria-label="Dispensar este aviso" title="Dispensar este aviso" data-acao="aviso-dispensar" on:mousedown|preventDefault on:click={() => aviso && dispensarAviso(aviso.id)}>×</button>
             {/if}
         {:else}
@@ -145,12 +170,15 @@
         list-style: none;
         margin: 0 0 4px;
         padding: 4px 0;
-        max-height: 132px;
+        box-sizing: border-box;
         overflow-y: auto;
         border-radius: var(--luz-raio-botao);
         background: var(--luz-painel);
         box-shadow: inset 0 0 0 1px var(--luz-linha);
         font-size: var(--luz-fs-nome);
+    }
+    .lista.arrastando {
+        user-select: none;
     }
     .item {
         display: flex;

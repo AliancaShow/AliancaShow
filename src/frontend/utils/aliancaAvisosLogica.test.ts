@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acrescentar, chaveSemTexto, HISTORICO_MAX, INFO_MS, nivelDaMensagem, noHistorico, principal, textoDaMensagem, tirarChave, tirarId, vencer, type Aviso } from "./aliancaAvisosLogica"
+import { acrescentar, alturaDaLista, alturaSalvaDaLista, arrastarLista, chaveSemTexto, HISTORICO_MAX, INFO_MS, LISTA_LIMITES, LISTA_PADRAO, nivelDaMensagem, noHistorico, principal, textoDaMensagem, tirarChave, tirarId, vencer, type Aviso } from "./aliancaAvisosLogica"
 
 const dic: Record<string, Record<string, string>> = { toast: { saved: "Salvo", saving: "Salvando", midi_no_slide: "Sem slide" }, error: { import: "Erro ao importar" }, output: { state_locked: "Saída travada" } }
 const tem = (g: string, c: string) => !!dic[g]?.[c]
@@ -101,5 +101,30 @@ describe("fila", () => {
         for (let i = 0; i < 50; i++) h = noHistorico(h, a("k" + i, 10 + i))
         expect(h.length).toBe(HISTORICO_MAX)
         expect(h[0].chave).toBe("k49")
+    })
+    it("historico: a mesma chave com texto novo (caiu -> voltou) entra como linha nova", () => {
+        const a = (texto: string, id: number): Aviso => ({ id, chave: "queda-saida:t", texto, nivel: "erro", em: id, vezes: 1 })
+        expect(noHistorico(noHistorico([], a("caiu", 1)), a("voltou", 2)).map((v) => v.texto)).toEqual(["voltou", "caiu"])
+    })
+})
+
+describe("altura da lista dos ultimos avisos (divisoria gravada)", () => {
+    it("o valor gravado: numero vira px nos limites; ausente ou torto = padrao", () => {
+        expect(alturaSalvaDaLista(null)).toBe(LISTA_PADRAO)
+        expect(alturaSalvaDaLista("")).toBe(LISTA_PADRAO)
+        expect(alturaSalvaDaLista("abc")).toBe(LISTA_PADRAO)
+        expect(alturaSalvaDaLista("250.6")).toBe(251)
+        expect(alturaSalvaDaLista("5")).toBe(LISTA_LIMITES[0])
+        expect(alturaSalvaDaLista("9999")).toBe(LISTA_LIMITES[1])
+    })
+    it("arrastar para cima aumenta, para baixo diminui, preso ao minimo e ao maximo", () => {
+        expect(arrastarLista(132, -100, 1080)).toBe(232)
+        expect(arrastarLista(132, 100, 1080)).toBe(LISTA_LIMITES[0])
+        expect(arrastarLista(132, -2000, 1080)).toBe(LISTA_LIMITES[1])
+    })
+    it("tela baixa: a lista nunca passa de 45% da altura, e nunca abaixo do minimo", () => {
+        expect(arrastarLista(132, -2000, 600)).toBe(270)
+        expect(alturaDaLista(480, 600)).toBe(270)
+        expect(alturaDaLista(480, 100)).toBe(LISTA_LIMITES[0])
     })
 })
