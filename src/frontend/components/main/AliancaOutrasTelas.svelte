@@ -1,11 +1,12 @@
 <script lang="ts">
-    // Leiaute v2, coluna No ar: as outras telas (uma aba por saida habilitada alem da principal), recolhivel. A previa e a mesma de
-    // PreviewOutput (a prova do telao nao muda: aqui so se olha).
+    // Leiaute v2, coluna No ar: as outras telas (uma aba por saida habilitada alem da principal), recolhivel. Cabine 6 (fatia A, D28): a
+    // previa e a captura ao vivo da janela daquela saida (AliancaCaptura), sem decodificar o video de novo; aba fechada = captura parada.
     import { outputDisplay, outputs } from "../../stores"
     import { getResolution } from "../helpers/output"
     import { proporcaoDaSaida } from "../../utils/aliancaCamadasLogica"
     import { styles } from "../../stores"
-    import PreviewOutput from "../output/preview/PreviewOutput.svelte"
+    import AliancaCaptura from "../output/AliancaCaptura.svelte"
+    import AliancaPreviaDesenhada from "./AliancaPreviaDesenhada.svelte"
 
     export let ids: string[] = []
 
@@ -30,7 +31,7 @@
         {#if aberta && escolhida}
             <div class="tela">
                 <div class="prev">
-                    {#key escolhida}<PreviewOutput outputId={escolhida} />{/key}
+                    {#key escolhida}<AliancaCaptura outputId={escolhida} proporcao="{res.width}/{res.height}"><AliancaPreviaDesenhada outputId={escolhida} /></AliancaCaptura>{/key}
                     <span class="estado">{nome(escolhida)} · {prop}{$outputDisplay ? "" : " · desligado"}</span>
                 </div>
                 <div class="espaco" aria-hidden="true"></div>

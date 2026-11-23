@@ -2,6 +2,7 @@
     import { getContext, onDestroy } from "svelte"
     import type { StageItem, StageLayout as TStageLayout } from "../../../types/Stage"
     import { activePopup, activeStage, activeTimers, allOutputs, currentWindow, dictionary, outputs, outputSlideCache, refreshEditSlide, stageShows, timers, variables } from "../../stores"
+    import { espelhoDeSiMesmo } from "../../utils/aliancaCapturaLogica"
     import { startResizing } from "../../utils/cursor"
     import { translateText } from "../../utils/language"
     import { sendBackgroundToStage } from "../../utils/stageTalk"
@@ -15,6 +16,7 @@
     import { getStyles } from "../helpers/style"
     import Button from "../inputs/Button.svelte"
     import Media from "../output/layers/Media.svelte"
+    import AliancaCaptura from "../output/AliancaCaptura.svelte"
     import Output from "../output/Output.svelte"
     import SlideItems from "../slide/SlideItems.svelte"
     import Textbox from "../slide/Textbox.svelte"
@@ -391,8 +393,11 @@
                         {#if !disableStagePreview}
                             <StageLayout outputId={outputWindowId} stageId={($outputs[outputWindowId] || $allOutputs[outputWindowId])?.stageOutput} edit={false} disableStagePreview={true} />
                         {/if}
-                    {:else}
+                    {:else if espelhoDeSiMesmo(outputWindowId, $currentWindow === "output" ? Object.keys($outputs)[0] : null)}
                         <Output outputId={outputWindowId} mirror style="width: 100%; height: 100%;" />
+                    {:else}
+                        <!-- cabine 6 (fatia A): captura ao vivo da janela da saida em vez de decodificar o video de novo; a propria janela (so retorno) desenha o conteudo -->
+                        <AliancaCaptura outputId={outputWindowId} uso="espelho" />
                     {/if}
 
                     {#if item.currentOutput?.showLabel}

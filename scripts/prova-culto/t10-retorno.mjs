@@ -17,6 +17,7 @@
 //   G. queda: modo "desligado" com a marca na fonte (sessao nova) e devolvida pelo assinante do topo, mesmo em Editar
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { conectar, PORTA } from "./cdp.mjs"
 import { abrir, clicarEm, esperar, localizar, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-8b"
@@ -47,6 +48,21 @@ const SHOW = "impulso_aos_teus_pes"
 const PERFIL_DIR = (process.env.FS_PERFIL_DIR || "C:/Users/andre.zagato/Documents/ProjetosPessoais/aliancashow/bancada/prova-perfil-9226").split(String.fromCharCode(92)).join("/")
 const PDF = PERFIL_DIR + "/midia/t10.pdf"
 const PDF_MINIMO = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R 5 0 R]/Count 2>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n5 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R/Size 6>>\n%%EOF\n"
+
+/** a janela de saida do retorno de teste (a que desenha o layout de palco com o item "c"); null se nao abriu em 20 s */
+async function janelaDoRetorno() {
+    for (let t = 0; t < 20; t++) {
+        const alvos = (await (await fetch(`http://127.0.0.1:${PORTA}/json/list`)).json()).filter((a) => a.type === "page" && a.url.startsWith("http://localhost:3000"))
+        for (const a of alvos) {
+            const c = await conectar(a.webSocketDebuggerUrl)
+            const eh = await c.avaliar(`return !document.querySelector('[data-regiao="topo"]') && !!document.querySelector('[id="c"].stage_item')`).catch(() => false)
+            if (eh) return c
+            c.fechar()
+        }
+        await esperar(1000)
+    }
+    return null
+}
 
 /** roda `acao`, e exige: telao identico, retorno diferente (ou satisfazendo `pred`) */
 async function caminho(nome, acao, pred = null, espera = 700) {
@@ -91,36 +107,41 @@ const {loadShows}=await import(U("components/helpers/setShow")); await loadShows
     ok("A. o retorno foi semeado com o slide do telao (nao apaga o monitor)", (await idxRet()) === 0, String(await idxRet()))
     ok("A. o telao nao foi tocado ao ligar", (await telao()) === tel0)
     // C3 (cabine 18/nov, contrato mudou): a tarja diz so "SÓ RETORNO · telão parado"; o que o retorno mostra esta na aba Retorno logo abaixo
-ok("A. a coluna No ar diz que o modo esta ligado e o telao parado", /telão parado/.test(await dom(`${sel("retorno-mostra")}?.textContent||""`)), await dom(`${sel("retorno-mostra")}?.textContent||""`))
+    ok("A. a coluna No ar diz que o modo esta ligado e o telao parado", /telão parado/.test(await dom(`${sel("retorno-mostra")}?.textContent||""`)), await dom(`${sel("retorno-mostra")}?.textContent||""`))
     await print("t10-a-ligado")
 
-    // ---------- A4 + A5 (cabine, 18/nov): o layout de palco do retorno com o modo LIGADO
+    // ---------- A4 + A5 (cabine, 18/nov; reescritas na cabine 6, fatia A): o layout de palco do retorno com o modo LIGADO, conferido na PROPRIA
+    // janela do retorno (a previa da principal agora e captura da janela, ou desenho com o video em miniatura quando a saida esta desligada).
     // A4: o item "saida atual" (current_output) SEM fonte propria cai em `settings.output`, que no modo e o PROPRIO retorno: antes desenhava o layout dele DENTRO
     // dele (recursao, com fundo opaco por cima da letra). Agora mostra o conteudo da saida (o que o modo mandou) e o texto do slide aparece.
-    const vis = (id) => `[...document.querySelectorAll('#ret_t10 [id="${id}"].stage_item')].find(e=>e.getBoundingClientRect().width>0)`
-    await j.ev(`S.stageShows.update(s=>{s.L_t10.settings.labels=true; s.L_t10.items={c:{type:"current_output",style:"left:0px;top:0px;width:1920px;height:1080px;"},t:{type:"slide_text",style:"left:0px;top:0px;width:1920px;height:540px;font-size:800px;",slideOffset:0},u:{type:"slide_text",style:"left:0px;top:560px;width:1200px;height:400px;font-size:800px;",slideOffset:1}}; return s}); await esp(1500); return 1`)
-    ok("A4. o item 'saida atual' do retorno NAO contem outro layout de palco dentro dele (sem recursao)", (await dom(`!!(${vis("c")}) && !(${vis("c")}).querySelector(".stageArea")`)) === true, await dom(`(${vis("c")})?.innerHTML.slice(0,120)`))
+    // So aqui a janela do retorno e ligada (e desligada no fim do bloco); o resto da fumaca segue sem janela.
+    await j.ev(
+        `S.stageShows.update(s=>{s.L_t10.settings.labels=true; s.L_t10.items={c:{type:"current_output",style:"left:0px;top:0px;width:1920px;height:1080px;"},t:{type:"slide_text",style:"left:0px;top:0px;width:1920px;height:540px;font-size:800px;",slideOffset:0},u:{type:"slide_text",style:"left:0px;top:560px;width:1200px;height:400px;font-size:800px;",slideOffset:1}}; return s}); await esp(500); const O=await import(U("components/helpers/output")); O.toggleOutputs(["ret_t10"],{state:true, force:true}); await esp(3500); return 1`
+    )
+    const ret = await janelaDoRetorno()
+    ok("A4. a janela do retorno abriu e mostra o layout de palco", !!ret)
+    const noRet = (expr) => (ret ? ret.avaliar(`return ${expr}`) : Promise.resolve(null))
+    const vis = (id) => `[...document.querySelectorAll('[id="${id}"].stage_item')].find(e=>e.getBoundingClientRect().width>0)`
+    ok("A4. o item 'saida atual' do retorno NAO contem outro layout de palco dentro dele (sem recursao)", (await noRet(`!!(${vis("c")}) && !(${vis("c")}).querySelector(".stageArea")`)) === true, String(await noRet(`(${vis("c")})?.innerHTML.slice(0,120)`)))
     const norm = (t) => String(t).split(/\s+/).join("").toLowerCase()
     const esperado = await dom(`(async()=>{const G=await import(U("components/edit/scripts/textStyle")); const sh=get(S.showsCache)["${SHOW}"]; const lay=sh.layouts[sh.settings.activeLayout]; const sl=sh.slides[lay.slides[0].id]; return sl.items.filter(i=>(i.type||"text")==="text").map(i=>G.getItemText(i)).join(" ")})()`)
-    const naTela = await dom(`(${vis("t")})?.innerText||""`)
+    const naTela = (await noRet(`(${vis("t")})?.innerText||""`)) || ""
     ok("A4. o texto do slide aparece no item de texto do layout do retorno (e e o do slide que o modo mandou)", norm(esperado).length > 5 && norm(naTela).includes(norm(esperado).slice(0, 12)), JSON.stringify([esperado.slice(0, 40), naTela.slice(0, 60)]))
+    if (ret) await ret.foto(join(saida, "t10-a4-janela-do-retorno.png")).catch(() => 0)
     await print("t10-a4-retorno-sem-recursao")
-    // A5: a miniatura e a mesma conta da saida real. Uma copia ESCONDIDA do layout (o Preview antigo) media 0x0 e gravava 800 px no cache dividido com a miniatura:
-    // fechar a aba, mudar o slide e reabrir deixava o texto gigante
-    const fonteDe = (id) => dom(`(()=>{const e=${vis(id)}; const s=e?.querySelector(".lines .break span"); return s?Math.round(parseFloat(getComputedStyle(s).fontSize)):null})()`)
-    const seta = async () => { const r = await localizar(j, `document.querySelector('[data-acao=outras-telas] .seta')`); await clicarEm(j, r.x, r.y) }
-    await seta()
-    await esperar(600)
+    // A5: o texto do slide escala como na saida real (o cache de autoajuste nao pode deixar 800 px). Muda o slide com clique real e confere na janela do retorno.
+    const fonteDe = (id) => noRet(`(()=>{const e=${vis(id)}; const s=e?.querySelector(".lines .break span"); return s?Math.round(parseFloat(getComputedStyle(s).fontSize)):null})()`)
     {
         const w = await localizar(j, `document.querySelectorAll("#showArea .slide")[4]`)
         await clicarEm(j, w.x, w.y)
     }
     await esperar(1500)
-    await seta()
-    await esperar(1500)
-    const f1 = await fonteDe("t"), f2 = await fonteDe("u")
-    ok("A5. miniatura do retorno: o texto do slide escala como na saida real (nao fica em 800 px depois de fechar a aba e mudar de slide)", f1 !== null && f1 > 10 && f1 < 400 && f2 !== null && f2 > 10 && f2 < 400, JSON.stringify([f1, f2]))
-    await print("t10-a5-miniatura")
+    const f1 = await fonteDe("t"),
+        f2 = await fonteDe("u")
+    ok("A5. janela do retorno: o texto do slide escala como na saida real (nao fica em 800 px depois de mudar de slide)", f1 !== null && f1 > 10 && f1 < 400 && f2 !== null && f2 > 10 && f2 < 400, JSON.stringify([f1, f2]))
+    await print("t10-a5-retorno")
+    if (ret) ret.fechar()
+    await j.ev(`const O=await import(U("components/helpers/output")); O.toggleOutputs(["ret_t10"],{state:false, force:true}); await esp(800); return 1`)
     await j.ev(`S.stageShows.update(s=>{s.L_t10.items={}; delete s.L_t10.settings.labels; return s}); await esp(400); return 1`)
 
     // ---------- B. cada caminho

@@ -2,6 +2,8 @@
     import type { MediaStyle } from "../../../../types/Main"
     import type { OutBackground } from "../../../../types/Show"
     import { downloadOnlineMedia, getExtension, getMediaType } from "../../helpers/media"
+    import { previaSemVideo } from "../../../utils/aliancaPreviaSemVideo"
+    import AliancaMiniaturaVideo from "../../media/AliancaMiniaturaVideo.svelte"
     import Image from "../../media/Image.svelte"
     import Video from "../../media/Video.svelte"
 
@@ -18,6 +20,9 @@
     // for previews that are not outputted
     export let videoData: any = { paused: false, muted: true, duration: 0, loop: data.loop === true }
     export let videoTime = 0
+
+    // AliancaShow cabine 6 (fatia A, b): so a previa desenhada da janela principal liga; na janela de saida e sempre false
+    const semVideo = previaSemVideo()
 
     $: extension = getExtension(path)
     $: type = data.type || getMediaType(extension)
@@ -57,7 +62,11 @@
 </script>
 
 {#key retryCount}
-    {#if type === "video"}
+    {#if type === "video" && semVideo}
+        <div class="video">
+            <AliancaMiniaturaVideo {path} {mediaStyle} {animationStyle} on:loaded />
+        </div>
+    {:else if type === "video"}
         <div class="video">
             <Video {outputId} {path} syncPath={currentSyncPath || path} bind:video bind:videoData bind:videoTime startAt={data.startAt} {mediaStyle} {animationStyle} {mirror} on:loaded on:ended on:error={reload} />
         </div>
