@@ -53,6 +53,8 @@ O que a cabine 5 já fez está nos commits da `feat/cabine-5` e nas anotações 
   - fumaças t2, t4, t6, t7-menus, t8, t9, t9-palco, t10, t11, t12, t13, t14 e vivo.
 
 ## Instalador
+**Versão (regra desde 23/nov):** todo instalador que vai para a cabine sobe a versão em `package.json` e `package-lock.json` ANTES do build. Função nova (cabine nova, Visual, Modelos) = sobe o meio (1.8.0 → 1.9.0); só correção = sobe o fim (1.8.0 → 1.8.1). A versão aparece na abertura (Splash) e em Sobre, e vai no nome do `.exe`. Histórico: 1.7.2 = instalador `fd8b5c6` (cabine-3); 1.8.0 = `feat/cabine-6` (cabines 4–6, Visual V1).
+
 Rode com o clone limpo e `bundled-bibles\` presente:
 ```
 npm run build
