@@ -28,7 +28,7 @@
     $: outras = abas.outras
     $: resolucao = principal ? getResolution(null, [$outputs, $styles], false, principal) : { width: 1920, height: 1080 }
     $: proporcao = proporcaoDaSaida(resolucao.width, resolucao.height)
-    // C3: a recusa do modo (falha `so-retorno-recusa`, que o FaixaDeFalha nao mostra) escreve na tarja por 5 s; outra recusa nesse intervalo reinicia a conta e troca o nome
+    // C3: a recusa do modo (falha `so-retorno-recusa`, que a linha de avisos nao mostra) escreve na tarja por 5 s; outra recusa nesse intervalo reinicia a conta e troca o nome
     let recusa: { nome: string; n: number } | null = null
     // achado 2 (PR #40): a tarja nasce vendo o contador de agora; recusa que ja existia (voltou de Editar) nao pisca de novo
     let vistas = vezesJaVistas(get(falhas))

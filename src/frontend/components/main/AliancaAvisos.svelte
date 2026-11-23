@@ -5,6 +5,9 @@
     // A fila e a conta: utils/aliancaAvisos.ts e aliancaAvisosLogica.ts. "Ultimos avisos" abre a lista NO LUGAR (empurra o corpo, nao cobre),
     // com uma divisoria em cima (AliancaDivisoria, como as da tela) que muda a altura dela; a altura fica gravada.
     // Aviso `fixo` (a saida esta FORA DO AR, aliancaQuedaAvisos.ts) nao tem x: so sai quando resolve.
+    // Andre, 23/nov: as falhas internas (falhaAlta) tambem moram aqui, como erro com x (a faixa vermelha fixa saiu: uma barra so).
+    // Abrir/fechar os ultimos avisos tem de ser obvio: o botao da direita tem seta (▴ abre, ▾ fecha) e clicar no texto da linha tambem alterna.
+    // Nunca o Esc (e a tecla de panico).
     import { alturaDaListaDeAvisos, avisos, dispensarAviso, gravarAlturaDaLista, historicoDeAvisos } from "../../utils/aliancaAvisos"
     import { alturaDaLista, arrastarLista, principal } from "../../utils/aliancaAvisosLogica"
     import { falhaAlta } from "../../utils/aliancaFalha"
@@ -15,6 +18,11 @@
     let aberto = false
     $: rotuloHist = $historicoDeAvisos.length ? `Últimos avisos · ${$historicoDeAvisos.length}` : "Últimos avisos"
     $: if (!$historicoDeAvisos.length) aberto = false
+    $: temHistorico = $historicoDeAvisos.length > 0
+    $: tituloHist = aberto ? "Esconder últimos avisos" : "Mostrar últimos avisos"
+    function alternar() {
+        if (temHistorico) aberto = !aberto
+    }
 
     const hora = (ms: number) => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     const rotulo = { info: "info", aviso: "aviso", erro: "erro" }
@@ -44,7 +52,7 @@
 <footer class="avisos" data-regiao="avisos">
     {#if aberto}
         <AliancaDivisoria eixo="h" rotulo="Arraste para mudar a altura dos últimos avisos" on:pegar={pegar} />
-        <ol class="lista" class:arrastando={!!arrasto} style="height: {altura}px" aria-label="Últimos avisos" data-acao="avisos-lista">
+        <ol id="avisos-lista" class="lista" class:arrastando={!!arrasto} style="height: {altura}px" aria-label="Últimos avisos" data-acao="avisos-lista">
             {#each $historicoDeAvisos as h (h.id)}
                 <li class="item {h.nivel}" title={h.texto}><span class="quando">{hora(h.em)}</span><span class="nivel">{rotulo[h.nivel]}</span><span class="txt">{h.texto}</span></li>
             {/each}
@@ -52,10 +60,10 @@
     {/if}
     <div class="linha {aviso ? aviso.nivel : 'vazio'}" role="status" aria-live="polite" data-acao="aviso-linha" data-nivel={aviso ? aviso.nivel : ""} data-fixo={aviso?.fixo ? "sim" : ""}>
         {#if aviso}
-            <span class="ponto" aria-hidden="true" />
-            <span class="texto" title={aviso.texto} data-acao="aviso-texto"
-                >{aviso.texto}{#if aviso.vezes > 1}<span class="vezes">{` (${aviso.vezes}×)`}</span>{/if}</span
-            >
+            <button type="button" class="alterna" title={`${aviso.texto} · clique: ${tituloHist.toLowerCase()}`} aria-expanded={aberto} aria-controls="avisos-lista" disabled={!temHistorico} data-acao="aviso-alterna" on:mousedown|preventDefault on:click={alternar}>
+                <span class="ponto" aria-hidden="true" />
+                <span class="texto" data-acao="aviso-texto">{aviso.texto}{#if aviso.vezes > 1}<span class="vezes">{` (${aviso.vezes}×)`}</span>{/if}</span>
+            </button>
             {#if atual.outros > 0}<span class="mais" title="mais avisos abertos: veja em Últimos avisos">+{atual.outros}</span>{/if}
             {#if aviso.nivel !== "info" && !aviso.fixo}
                 <button type="button" class="fechar" aria-label="Dispensar este aviso" title="Dispensar este aviso" data-acao="aviso-dispensar" on:mousedown|preventDefault on:click={() => aviso && dispensarAviso(aviso.id)}>×</button>
@@ -63,8 +71,9 @@
         {:else}
             <span class="texto vazio" />
         {/if}
-        <button type="button" class="hist" aria-expanded={aberto} disabled={!$historicoDeAvisos.length} title="Os últimos avisos desta sessão" data-acao="avisos-historico" on:mousedown|preventDefault on:click={() => (aberto = !aberto)}
->{rotuloHist}</button>
+        <button type="button" class="hist" class:aberto aria-expanded={aberto} aria-controls="avisos-lista" disabled={!temHistorico} title={tituloHist} data-acao="avisos-historico" on:mousedown|preventDefault on:click={alternar}
+            >{rotuloHist}<span class="seta" aria-hidden="true">{aberto ? "▾" : "▴"}</span></button
+        >
     </div>
 </footer>
 
@@ -99,6 +108,27 @@
         background: var(--luz-vermelho-lavagem);
         box-shadow: inset 0 0 0 1px var(--luz-vermelho);
         color: var(--luz-vermelho-claro);
+    }
+    .alterna {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        text-align: left;
+        border-radius: 0;
+    }
+    .alterna:hover:not(:disabled) {
+        background: transparent;
+    }
+    .alterna:hover:not(:disabled) .texto {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+    .alterna:disabled {
+        cursor: default;
     }
     .ponto {
         flex-shrink: 0;
@@ -159,9 +189,25 @@
         line-height: 1;
     }
     .hist {
+        display: flex;
+        align-items: center;
+        gap: 6px;
         padding: 0 8px;
-        color: var(--luz-mudo);
+        color: var(--luz-texto-80);
         font-size: var(--luz-fs-selo);
+        font-weight: 600;
+        box-shadow: inset 0 0 0 1px var(--luz-linha);
+    }
+    .hist.aberto {
+        background: var(--luz-hover);
+    }
+    .hist:disabled {
+        color: var(--luz-mudo);
+        box-shadow: none;
+    }
+    .seta {
+        font-size: var(--luz-fs-nome);
+        line-height: 1;
     }
     .hist:disabled {
         cursor: default;

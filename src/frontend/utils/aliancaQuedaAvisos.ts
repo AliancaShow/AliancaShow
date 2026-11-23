@@ -1,6 +1,6 @@
 // Cabine 6 (F1, vigia de queda): liga o canal ALIANCA_QUEDA_SAIDA (processo principal) a LINHA DE AVISOS da janela principal.
 // Substitui a faixa fixa AliancaQuedaSaida.svelte (Andre, 23/nov: nada flutua por cima do conteudo). O texto e o nivel: aliancaQuedaLogica.ts.
-// Cada queda tambem vai para falhaAlta (rodape persistente + rastro em disco), como antes. Ligado uma vez por AliancaTela (so a janela principal).
+// Cada queda tambem vai para falhaAlta (erro interno na mesma linha + rastro em disco), como antes. Ligado uma vez por AliancaTela (so a janela principal).
 import { get } from "svelte/store"
 import { ALIANCA_QUEDA_SAIDA, type QuedaSaida } from "../../types/aliancaSaidaCanais"
 import { outputs } from "../stores"

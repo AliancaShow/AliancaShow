@@ -1,9 +1,11 @@
 // Cabine 6: a fila dos avisos da janela principal (a conta mora em aliancaAvisosLogica.ts; quem desenha e AliancaAvisos.svelte, no pe do leiaute).
 // Entra por dois caminhos: `avisar` (codigo novo, com chave e nivel) e `receberToast` (o `newToast` antigo, que Toast.svelte repassa).
+// E um terceiro: `ligarFalhasNosAvisos` (as falhas altas de aliancaFalha.ts, que tambem so importa svelte/store).
 // So a janela principal monta a linha; a janela de saida nunca importa este arquivo. Importa SO svelte/store e a logica: aliancaToque e a
 // midia sumida o usam sem arrastar language/stores (e os testes deles nao carregam o app inteiro).
 import { get, writable } from "svelte/store"
-import { acrescentar, alturaSalvaDaLista, CHAVE_ALTURA_LISTA, noHistorico, textoDaMensagem, tirarChave, tirarId, vencer, type Aviso, type Nivel } from "./aliancaAvisosLogica"
+import { acrescentar, alturaSalvaDaLista, CHAVE_ALTURA_LISTA, chaveDaFalha, falhasNovas, noHistorico, textoDaFalha, textoDaMensagem, tirarChave, tirarId, vencer, type Aviso, type Nivel } from "./aliancaAvisosLogica"
+import { falhas } from "./aliancaFalha"
 
 export const avisos = writable<Aviso[]>([])
 export const historicoDeAvisos = writable<Aviso[]>([])
@@ -52,13 +54,14 @@ function armarRelogio() {
  * poe (ou atualiza) um aviso. `chave` identifica o assunto: a mesma chave substitui, `resolverAviso(chave)` tira.
  * `fixo`: sem x enquanto o assunto dura (saida fora do ar). `soma: false`: troca de estado da mesma chave sem contar outra vez
  */
-export function avisar(texto: string, nivel: Nivel, chave: string = texto, opcoes: { fixo?: boolean; soma?: boolean } = {}): void {
+export function avisar(texto: string, nivel: Nivel, chave: string = texto, opcoes: { fixo?: boolean; soma?: boolean; unicoNoHistorico?: boolean } = {}): void {
     const id = proximoId++
     const agora = Date.now()
-    avisos.update((l) => acrescentar(l, { chave, texto, nivel, ...opcoes }, id, agora))
+    const { unicoNoHistorico, ...fila } = opcoes
+    avisos.update((l) => acrescentar(l, { chave, texto, nivel, ...fila }, id, agora))
     const entrou = get(avisos).find((a) => a.chave === chave)
     // no historico cada entrada tem id PROPRIO (a chave do {#each}): a mesma chave muda de texto (caiu -> voltou) e as duas linhas ficam
-    if (entrou) historicoDeAvisos.update((h) => noHistorico(h, { ...entrou, id }))
+    if (entrou) historicoDeAvisos.update((h) => noHistorico(h, { ...entrou, id }, !!unicoNoHistorico))
     if (nivel === "info") armarRelogio()
 }
 
@@ -77,6 +80,21 @@ export function receberToast(msg: string, traduzir: (s: string) => string, tem: 
     if (!msg) return
     const { texto, nivel } = textoDaMensagem(msg, traduzir, tem)
     avisar(texto, nivel, msg)
+}
+
+/**
+ * cada falha alta (aliancaFalha.ts) vira ERRO na linha, com o texto da antiga faixa vermelha e as vezes. Nada se perde antes da linha existir:
+ * `falhas` guarda tudo desde a partida e a assinatura entrega a lista inteira na hora. Depois do x, a mesma origem so volta se acontecer de novo.
+ * Ligado uma vez por AliancaTela (so a janela principal); devolve o desligar.
+ */
+export function ligarFalhasNosAvisos(): () => void {
+    const vistas = new Map<string, number>()
+    return falhas.subscribe((lista) => {
+        for (const f of falhasNovas(lista, vistas)) {
+            vistas.set(f.origem, f.vezes)
+            avisar(textoDaFalha(f.origem, f.vezes), "erro", chaveDaFalha(f.origem), { soma: false, unicoNoHistorico: true })
+        }
+    })
 }
 
 /** so testes */

@@ -7,7 +7,8 @@
     // Cada regiao leva `data-regiao` (topo, roteiro, centro, no-ar, biblioteca, corpo-pagina): a Prova do Culto e a de fidelidade usam.
     //
     // MOTOR (montado desde o primeiro dia e fora de qualquer {#if}): o Preview escondido (teclado do telao, temporizadores de slide),
-    // FaixaDeFalha, AnteparoDeModo, ProfileChangerMenu e o disparo de show_opened. Nada disso tem markup visivel.
+    // AnteparoDeModo, ProfileChangerMenu e o disparo de show_opened. Nada disso tem markup visivel. As falhas altas (antes a FaixaDeFalha fixa
+    // no pe) vao para a linha de avisos (AliancaAvisos), como ERRO: uma barra so (Andre, 23/nov).
     import { onDestroy, onMount } from "svelte"
     import { customActionActivation } from "../actions/actions"
     import { isOutCleared } from "../helpers/output"
@@ -34,9 +35,8 @@
     import AliancaNoAr from "./AliancaNoAr.svelte"
     import AliancaTopo from "./AliancaTopo.svelte"
     import AnteparoDeModo from "./AnteparoDeModo.svelte"
-    import FaixaDeFalha from "./FaixaDeFalha.svelte"
     import AliancaAvisos from "./AliancaAvisos.svelte"
-    import { falhas } from "../../utils/aliancaFalha"
+    import { ligarFalhasNosAvisos } from "../../utils/aliancaAvisos"
     import ProfileChangerMenu from "./ProfileChangerMenu.svelte"
 
     // as duas travas de gesto da fatia 2 (Esc que fechou algo segura o seguinte 700 ms; clique repetido no mesmo item < 700 ms e engolido). Ligadas
@@ -54,6 +54,9 @@
     aplicarPadraoDaPartida()
     // cabine 6 (F1): a janela de uma saida caiu/travou/fora do ar -> ERRO na linha de avisos do pe (antes, uma faixa fixa por cima do conteudo)
     onDestroy(ligarQuedasNosAvisos())
+    // cabine 6 (Andre, 23/nov: "tem 2 barras de alerta"): cada falha alta vira ERRO na mesma linha de avisos. Agora, na criacao; as falhas de antes
+    // (a partida) estao guardadas em `falhas` e chegam todas na assinatura
+    onDestroy(ligarFalhasNosAvisos())
 
     $: pagina = $activePage
     $: paginaCorpo = (pagina === "stage" || pagina === "draw" ? pagina : "settings") as "settings" | "stage" | "draw"
@@ -61,7 +64,7 @@
     let origem: "show" | "edit" = "show"
     $: if (pagina === "show" || pagina === "edit") origem = pagina
     $: emPagina = pagina === "settings" || pagina === "stage" || pagina === "draw"
-    // pagina sem lugar na tela nova (scripture, calendar, reflow ou valor novo do upstream): corpo vazio com o nome, e a faixa de falha acende.
+    // pagina sem lugar na tela nova (scripture, calendar, reflow ou valor novo do upstream): corpo vazio com o nome, e a falha alta acende (na linha de avisos).
     // Nunca cai calado numa tela antiga e nunca "volta para show". (O guarda de activePage, commit 11, recusa a escrita antes de chegar aqui.)
     $: semLugar = !emPagina && pagina !== "show" && pagina !== "edit"
     $: if (semLugar) falhaAlta("pagina-sem-lugar", pagina)
@@ -90,10 +93,6 @@
         saved.set(false)
     }
 
-    // cabine 6: a faixa de falha (fixa, 24 px no pe) ganha o proprio lugar: a tela reserva a altura dela e ela nao cobre a linha de avisos
-    // (o mesmo filtro de FaixaDeFalha: a recusa do so retorno mora na tarja do No ar)
-    $: comFaixa = $falhas.some((f) => f.origem !== "so-retorno-recusa")
-
     // ----- luz ambiente: acende quando ha fundo no ar -----
     $: luz = !isOutCleared("background", $outputs)
 
@@ -120,7 +119,7 @@
 
 <svelte:window on:mousemove={mover} on:mouseup={soltar} />
 
-<div class="tela" class:arrastando={!!arrasto} class:comFaixa class:otimizado={$special.optimizedMode} bind:clientWidth={w} bind:clientHeight={h} data-tela="luz">
+<div class="tela" class:arrastando={!!arrasto} class:otimizado={$special.optimizedMode} bind:clientWidth={w} bind:clientHeight={h} data-tela="luz">
     <div class="ambiente" class:acesa={luz} aria-hidden="true" />
     <div class="vinheta" aria-hidden="true" />
 
@@ -165,7 +164,6 @@
 
 <!-- motor: sem markup visivel, sempre montado -->
 <Preview escondida />
-<FaixaDeFalha />
 <AnteparoDeModo />
 {#if $showChangeProfileMenu && $activeProfile !== null}
     <ProfileChangerMenu />
@@ -185,10 +183,6 @@
         color: var(--luz-texto);
         font-family: var(--luz-fonte);
         font-size: 13px;
-    }
-    .tela.comFaixa {
-        /* 24 px da FaixaDeFalha (fixa no pe) + o respiro */
-        padding-bottom: 30px;
     }
     .tela.arrastando {
         user-select: none;

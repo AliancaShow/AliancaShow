@@ -24,7 +24,7 @@ await instalarContagem(j)
     const b = await localizar(j, `[...document.querySelectorAll(".top.panel .modo button")].find(b=>b.innerText.trim()==="Culto")`)
     await clicarEm(j, b.x, b.y, 2) // duplo clique rapido no seletor
     await esperar(600)
-    const e = await j.ev(`return {modo:MODOATUAL(), faixa:!!document.querySelector(".faixaFalha"), falhas:get((await import(U("utils/aliancaFalha"))).falhas).length}`)
+    const e = await j.ev(`return {modo:MODOATUAL(), faixa:(document.querySelector('[data-acao=aviso-linha]')?.textContent||'').includes('Falha interna'), falhas:get((await import(U("utils/aliancaFalha"))).falhas).length}`)
     const c = await lerContagem(j)
     r.ok("T-1a-2.2 duplo clique no seletor termina num modo coerente, sem erro e sem escrita em outputs", (e.modo === "culto" || e.modo === "preparar") && !e.faixa && e.falhas === 0 && c.out === 0, JSON.stringify({ e, c }))
 }
@@ -169,19 +169,22 @@ await esperar(500)
 
 // T-1a-15 (busca no Preparar) morreu com o QuickSearch: a busca Spotlight (Ctrl+K) e provada em t6-busca.mjs.
 
-// ---------------------------------------------------------------- T-1a-12 (no Preparar): faixa de falha
+// ---------------------------------------------------------------- T-1a-12 (no Preparar): falha alta na linha de avisos (uma barra so)
 {
     await j.ev(`S.quickSearchActive.set(false); T.trocarTela("show", "segmentado"); await esp(400); return 1`)
     const varrer = async () => JSON.parse(await j.ev(VARREDURA)).els
     const antes = await varrer()
     await j.ev(`const f=await import(U("utils/aliancaFalha")); f.falhaAlta("teste-cdp", new Error("x")); return 1`)
     await esperar(400)
-    const depois = (await varrer()).filter((e) => !e.tag.includes("faixaFalha"))
+    // a linha de avisos ja tem lugar proprio: so o conteudo DELA muda (ponto, texto, x); nada fora dela se mexe
+    const fora = (l) => l.filter((e) => !e.sig.includes("data-regiao=avisos") && !/^(span|button)\.(ponto|texto|vezes|mais|fechar|alterna|seta|hist)\b/.test(e.tag))
+    const a0 = fora(antes)
+    const depois = fora(await varrer())
     const difs = []
-    for (let i = 0; i < Math.min(antes.length, depois.length); i++) if (JSON.stringify(antes[i].rect) !== JSON.stringify(depois[i].rect)) difs.push(antes[i].tag)
-    r.ok("T-1a-12.1 no Preparar a faixa nao muda nenhum rect (mesmo numero de elementos, todo rect igual)", antes.length === depois.length && difs.length === 0, `${antes.length} vs ${depois.length}; ${difs[0] || ""}`)
-    const e = await j.ev(`const f=document.querySelector(".faixaFalha"); const b=f.getBoundingClientRect(); const t=document.elementFromPoint(b.x+b.width/2,b.y+b.height/2); return {ehFaixa:!!t?.closest(".faixaFalha"), pos:getComputedStyle(f).position, pe:getComputedStyle(f).pointerEvents}`)
-    r.ok("T-1a-12.2 elementFromPoint no centro da faixa nao e a faixa; fixed e pointer-events none", !e.ehFaixa && e.pos === "fixed" && e.pe === "none", JSON.stringify(e))
+    for (let i = 0; i < Math.min(a0.length, depois.length); i++) if (JSON.stringify(a0[i].rect) !== JSON.stringify(depois[i].rect)) difs.push(a0[i].tag)
+    r.ok("T-1a-12.1 no Preparar a falha nao muda nenhum rect fora da linha de avisos", a0.length === depois.length && difs.length === 0, `${a0.length} vs ${depois.length}; ${difs[0] || ""}`)
+    const e = await j.ev(`const l=document.querySelector("[data-acao=aviso-linha]"); return {erro:l?.dataset.nivel, txt:l?.textContent||"", x:!!l?.querySelector("[data-acao=aviso-dispensar]"), faixas:document.querySelectorAll(".faixaFalha").length}`)
+    r.ok("T-1a-12.2 a falha e ERRO na linha de avisos, com x, e nao ha outra barra", e.erro === "erro" && e.txt.includes("Falha interna do AliançaShow: teste-cdp (1×)") && e.x && e.faixas === 0, JSON.stringify(e))
 }
 
 // ---------------------------------------------------------------- T-1a-10: NO AR nao zera e a barra fica forte com algo no ar

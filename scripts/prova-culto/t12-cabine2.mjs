@@ -147,7 +147,7 @@ try {
     const txt = await dom(`document.querySelector('[data-acao=faixa-so-retorno]').innerText`)
     ok("C3 recusa: a PROPRIA tarja diz \"Não foi ao ar: mídia\", invertida", txt.includes("Não foi ao ar:") && txt.includes("mídia") && (await dom(`getComputedStyle(document.querySelector('[data-acao=faixa-so-retorno]')).backgroundColor==='rgb(22, 22, 22)'`)) === true, txt + " | bg=" + (await dom(`getComputedStyle(document.querySelector("[data-acao=faixa-so-retorno]")).backgroundColor`)))
     ok("C3 recusa: nada se desloca nos 3 estados", y2.tela === y0.tela && y2.transporte === y0.transporte && y2.outra === y0.outra && y2.palco === y0.palco && y2.topoH === 32, JSON.stringify({ y0, y2 }))
-    ok("C3 recusa: nenhum toast de canto (faixa de falha apagada)", (await dom(`!document.querySelector('.faixaFalha')`)) === true)
+    ok("C3 recusa: nenhum toast de canto (nenhuma falha interna na linha de avisos)", (await dom(`!(document.querySelector('[data-acao=aviso-linha]')?.textContent||'').includes('Falha interna')`)) === true)
     const bRec = await caixa(`document.querySelector('[data-acao=desligar-so-retorno]')`)
     ok("C3 Desligar fica no mesmo pixel nos dois estados", bRec && bDes && Math.abs(bRec.x - bDes.x) <= 1 && Math.abs(bRec.y - bDes.y) <= 1 && bRec.w === bDes.w, JSON.stringify({ bDes, bRec }))
     await print("c3-recusa")

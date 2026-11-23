@@ -1,6 +1,7 @@
 import { get } from "svelte/store"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { _zerarAvisos, avisar, avisos, dispensarAviso, historicoDeAvisos, receberToast, resolverAviso } from "./aliancaAvisos"
+import { _zerarAvisos, avisar, avisos, dispensarAviso, historicoDeAvisos, ligarFalhasNosAvisos, receberToast, resolverAviso } from "./aliancaAvisos"
+import { _zerarFalhas, falhaAlta } from "./aliancaFalha"
 import { INFO_MS } from "./aliancaAvisosLogica"
 
 const tem = (g: string, c: string) => g === "toast" && c === "saved"
@@ -53,5 +54,29 @@ describe("a fila dos avisos (store)", () => {
         expect(get(historicoDeAvisos).map((a) => a.texto)).toEqual(["Telão caiu e voltou", "Telão FORA DO AR", "Telão CAIU"])
         // o historico e um {#each} com chave: id repetido quebra a lista
         expect(new Set(get(historicoDeAvisos).map((a) => a.id)).size).toBe(3)
+    })
+
+    it("falha alta vira ERRO na linha, com x; as falhas de ANTES de ligar nao se perdem; a mesma origem soma no texto", () => {
+        _zerarFalhas()
+        falhaAlta("cedo", new Error("antes da linha existir"))
+        const desligar = ligarFalhasNosAvisos()
+        try {
+            expect(get(avisos).map((a) => [a.texto, a.nivel, a.fixo])).toEqual([["Falha interna do AliançaShow: cedo (1×). Avise quem cuida do programa.", "erro", undefined]])
+            falhaAlta("cedo", new Error("de novo"))
+            falhaAlta("so-retorno-recusa", "fica na tarja do No ar")
+            expect(get(avisos).map((a) => [a.texto, a.vezes])).toEqual([["Falha interna do AliançaShow: cedo (2×). Avise quem cuida do programa.", 1]])
+            // uma linha so no historico para a mesma falha
+            expect(get(historicoDeAvisos).map((a) => a.texto)).toEqual(["Falha interna do AliançaShow: cedo (2×). Avise quem cuida do programa."])
+            dispensarAviso(get(avisos)[0].id)
+            expect(get(avisos)).toEqual([])
+            // depois do x so volta se acontecer de novo
+            avisar("outra coisa", "aviso", "w")
+            expect(get(avisos).map((a) => a.chave)).toEqual(["w"])
+            falhaAlta("cedo", new Error("terceira"))
+            expect(get(avisos).find((a) => a.chave === "falha:cedo")?.texto).toContain("(3×)")
+        } finally {
+            desligar()
+            _zerarFalhas()
+        }
     })
 })

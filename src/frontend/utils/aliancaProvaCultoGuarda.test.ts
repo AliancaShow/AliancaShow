@@ -61,8 +61,8 @@ describe("montagem unica (D2): o motor e a biblioteca sobem em UM ponto, a tela 
         }
         return achados
     }
-    it("<Preview sobe uma vez, FORA de qualquer {#if} ou {#key} (e o motor do teclado do telao); AnteparoDeModo e FaixaDeFalha tambem", () => {
-        for (const re of [/<Preview\b/, /<AnteparoDeModo\b/, /<FaixaDeFalha\b/]) {
+    it("<Preview sobe uma vez, FORA de qualquer {#if} ou {#key} (e o motor do teclado do telao); AnteparoDeModo e a linha de avisos (que leva as falhas altas) tambem", () => {
+        for (const re of [/<Preview\b/, /<AnteparoDeModo\b/, /<AliancaAvisos\b/]) {
             const p = pilhaEm(re)
             expect(p.length, String(re)).toBe(1)
             expect(p[0], `${re} montado dentro de um bloco`).toEqual([])
