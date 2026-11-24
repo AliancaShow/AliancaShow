@@ -71,6 +71,14 @@
         }
         cancelar()
     }
+    // ---- apagar categoria (× no chip escolhido; confirma no proprio chip). Os modelos dela ficam em "Sem categoria"; Ctrl+Z traz de volta
+    let apagando = ""
+    function apagarCategoria(id: string) {
+        apagando = ""
+        if (soLeitura || ($templateCategories as any)[id]?.default) return
+        history({ id: "UPDATE", newData: { id }, location: { page: "drawer", id: "category_templates" } })
+        categoriaDosModelos.set(TODOS)
+    }
     function cancelar() {
         criando = false
         renomeando = ""
@@ -92,9 +100,18 @@
         {#each cats as c (c.id)}
             {#if renomeando === c.id}
                 <input class="chip campo" bind:this={campo} value={c.nome} on:blur={confirmar} on:keydown={tecla} />
+            {:else if apagando === c.id}
+                <span class="chip confirma" data-acao="modelos-apagar-confirma" title={c.total ? `Os ${c.total} modelos dela vão para Sem categoria (nenhum modelo é apagado)` : ""}>
+                    Apagar “{c.nome}”?
+                    <button type="button" class="sim" tabindex="-1" data-acao="modelos-apagar-sim" on:click={() => apagarCategoria(c.id)}>Apagar</button>
+                    <button type="button" class="nao" tabindex="-1" on:click={() => (apagando = "")}>Não</button>
+                </span>
             {:else}
                 <button type="button" class="chip" class:on={$categoriaDosModelos === c.id} title={c.fixa ? "" : "Duplo clique: renomear"} tabindex="-1" on:click={() => categoriaDosModelos.set(c.id)} on:dblclick={() => comecarRenomear(c.id)}>
                     {c.nome}<small>{c.total}</small>
+                    {#if !c.fixa && !soLeitura && $categoriaDosModelos === c.id}
+                        <span class="x" role="button" tabindex="-1" title="Apagar esta categoria" data-acao="modelos-apagar-categoria" on:click|stopPropagation={() => (apagando = c.id)} on:keydown={() => {}}>×</span>
+                    {/if}
                 </button>
             {/if}
         {/each}
@@ -185,6 +202,42 @@
     .chip.on small {
         color: var(--luz-tinta);
         opacity: 0.6;
+    }
+    .chip .x {
+        margin: 0 -3px 0 1px;
+        padding: 0 3px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1;
+        opacity: 0.6;
+    }
+    .chip .x:hover {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.15);
+    }
+    .chip.confirma {
+        cursor: default;
+        background: var(--luz-vermelho-lavagem);
+        color: var(--luz-texto);
+        box-shadow: inset 0 0 0 1px var(--luz-vermelho);
+    }
+    .confirma button {
+        height: 18px;
+        padding: 0 6px;
+        border: 0;
+        border-radius: 9px;
+        font: inherit;
+        font-size: 11px;
+        cursor: pointer;
+    }
+    .confirma .sim {
+        background: var(--luz-vermelho);
+        color: #fff;
+        font-weight: 600;
+    }
+    .confirma .nao {
+        background: transparent;
+        color: var(--luz-texto-80);
     }
     .chip.mais {
         background: transparent;
