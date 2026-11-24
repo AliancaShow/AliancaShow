@@ -18,6 +18,7 @@
     import { getBoxStyle, getItemStyle, getSlideStyle, setBoxStyle, setItemStyle, setSlideStyle } from "./scripts/itemClipboard"
     import { DEFAULT_ITEM_STYLE } from "./scripts/itemHelpers"
     import { addStyleString } from "./scripts/textStyle"
+    import AliancaTextoLigado from "./tools/AliancaTextoLigado.svelte"
     import BoxStyle from "./tools/BoxStyle.svelte"
     import ItemsList from "./tools/ItemsList.svelte"
     import ItemStyle from "./tools/ItemStyle.svelte"
@@ -479,6 +480,7 @@
             {#if mostrarConteudo}
                 <div class="bloco">
                     <div class="blocoTitulo"><p>{tituloConteudo}</p></div>
+                    {#if tipoConteudo === "text" && escolhidos === 1}<AliancaTextoLigado {allSlideItems} />{/if}
                     <BoxStyle id={tipoConteudo} agrupar bind:allSlideItems bind:item />
                 </div>
             {:else if !templateItemMode}

@@ -55,6 +55,12 @@ Testes na última junção: `test:layout` 103/103, vitest 1679 ok (só os 4 Rtmp
 - Na primeira abertura com a versão nova, a migração lê os estilos de hoje (nada muda na tela) e separa saídas que dividiam estilo (na cabine: NDI-FullScreen e NDI-Alpha).
 - Testes: unit 1574 ok no frontend, svelte-check 151, `ANCORA: ok` sem exceção nova; migração provada na cópia da config real.
 
+## Texto ligado + Forma (24/nov, "Sim, assim") — `feat/cabine-6-texto-ligado`
+- **Texto ligado** (o Linked Text do ProPresenter): no Editar, com UMA caixa de texto escolhida, o painel mostra "Texto ligado" com a lista em português (Slide: atual, próximo, anterior, anotações, grupo, música; Bíblia, só em modelo: versículo com/sem número, referência, referência e versão em 2 linhas, completa, só no último, livro, capítulo, versículos, versão; Relógio e data; Cronômetros; Vídeo e áudio; Parte do culto). Grava o MESMO código dos Valores dinâmicos do FreeShow (botão direito continua para misturar texto fixo e valor). Prévia ao vivo; Ctrl+Z desfaz. Avisos pela regra do `mergeWithTemplate`: em modelo de música a letra cai na 1ª caixa de texto (ligar ou pôr forma nela = alerta); em modelo de Bíblia caixa sem valor fica vazia.
+- **Forma** (retângulo/círculo) no "+ Adicionar item": caixa de texto vazia com fundo.
+- Provado no perfil de teste: NDI-Alpha com modelo de música de 3 caixas mostrou letra + próximo slide + hora. Fora do fecho (`ANCORA: ok`). Lógica: `utils/aliancaTextoLigadoLogica.ts`; painel: `edit/tools/AliancaTextoLigado.svelte`.
+- **Depois do motor de vídeo único:** "Mídia ligada" na forma (vídeo tocando, slide atual, câmera) — precisa de aprovo (fecho) e não decodifica de novo.
+
 ## Pendências (perguntas abertas ao André)
 - **"aprovo selecionar-tela"** — tirar a janela que bloqueia quando o telão não liga (`src/frontend/IPC/responsesMain.ts`, fecho; diff de 1 linha pronto no histórico: `if (a === "error.display") return` antes do `alertMessage.set`). Depois do aprovo: registrar em `ancora.mjs` (EXCECOES + recalcular SHA_EXCECOES).
 - **V2 do Modelo** (modelo nasce no tamanho da tela; precisa de "aprovo" para TemplateSlide, Editbox, Snaplines, Textbox, autoPosition — ver `plano-modelos-visual.md` + adendo). Perguntas: (1) coluna única "Música e avisos" por enquanto? (2) cortar a reaplicação automática do modelo ao abrir a música (estampa D20)? (3) miniaturas do centro imitam o LED? (4) Bíblia com duas versões usa modelo próprio?
