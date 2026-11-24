@@ -19,6 +19,7 @@
     import { vigiarConfiguracaoDasSaidas } from "../../utils/aliancaSaidasSalvas"
     import { iniciarVisual } from "../../utils/aliancaVisualAplicador"
     import { aplicarPadraoDaPartida } from "../../utils/aliancaTelaoPartida"
+    import { soltarModelosDasCategorias } from "../../utils/aliancaModeloCategoria"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { ligarQuedasNosAvisos } from "../../utils/aliancaQuedaAvisos"
@@ -53,6 +54,8 @@
     // cabine 6 (Andre, 23/nov): o app abre com o telao ligado. Uma vez por perfil liga "Mostrar tela de saida ao iniciar" (autoOutput do
     // FreeShow, que so age na partida). Agora, na criacao: AliancaTela so existe depois de `loaded` e a partida liga 2,5 s depois disso.
     aplicarPadraoDaPartida()
+    // André, 24/nov: "modelo da categoria" virou "aplicar uma vez"; as categorias perdem o modelo fixo (o FreeShow recolava em toda abertura)
+    soltarModelosDasCategorias()
     // cabine 6 (F1): a janela de uma saida caiu/travou/fora do ar -> ERRO na linha de avisos do pe (antes, uma faixa fixa por cima do conteudo)
     onDestroy(ligarQuedasNosAvisos())
     // cabine 6 ("aprovo monitor-desconectado", 23/nov): a saida presa ao MONITOR; monitor desconectado -> erro fixo na linha de avisos, volta sozinha

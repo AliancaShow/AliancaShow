@@ -3,13 +3,14 @@
     // Nome editavel, categoria e "Aplicar numa musica…" (so aplica quando se pede; depois abre a musica em SLIDES para ver o resultado).
     // Tudo pelo history do FreeShow (Ctrl+Z desfaz). A aplicacao usa o mesmo TEMPLATE da gaveta de modelos do FreeShow.
     import { onDestroy, tick } from "svelte"
-    import { activeEdit, activePopup, activeShow, alertMessage, categories, refreshEditSlide, shows, showsCache, templateCategories, templates } from "../../stores"
+    import { activeEdit, activePopup, activeShow, alertMessage, refreshEditSlide, shows, showsCache, templateCategories, templates } from "../../stores"
     import { falhaAlta } from "../../utils/aliancaFalha"
     import { TODOS, SEM_CATEGORIA, categoriasDaLista, musicasDaBusca } from "../../utils/aliancaModelosLogica"
     import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
     import { history } from "../helpers/history"
     import { loadShows } from "../helpers/setShow"
+    import { _show } from "../helpers/shows"
     import AliancaEscolha from "../settings/AliancaEscolha.svelte"
 
     $: id = $activeEdit.id || ""
@@ -94,12 +95,12 @@
             if (show.locked) return avisar("show.locked")
             const perfilShows = getAccess("shows")
             if (perfilShows.global === "read" || perfilShows[show.category || ""] === "read") return avisar("profile.locked")
-            // a categoria da musica tem modelo proprio: o FreeShow nao deixa trocar (mesma regra da gaveta)
-            if (($categories as any)[show.category || ""]?.template) return avisar("tips.category_template")
 
             // o TEMPLATE do FreeShow le a musica do activeShow na hora: abre ela, aplica e mostra o resultado em SLIDES
             activeShow.set({ id: showId, type: "show" } as any)
             history({ id: "TEMPLATE", newData: { id: modeloId, data: { createItems: true } }, location: { page: "none", override: "show#" + showId } })
+            // ja colado: a abertura da musica (show/Slides.svelte) nao recola
+            _show(showId).set({ key: "settings.aliancaModeloColado", value: modeloId })
             activeEdit.set({ type: "show", slide: 0, items: [], showId } as any)
             refreshEditSlide.set(true)
         } catch (erro) {

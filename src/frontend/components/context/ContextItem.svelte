@@ -346,9 +346,9 @@
             const categoryId = $selected.data[0]
             enabled = !!$categories[categoryId]?.action
         },
+        // AliancaShow (24/nov): "aplicar uma vez" nao fica marcado (a categoria nao guarda modelo)
         category_template: () => {
-            const categoryId = $selected.data[0]
-            enabled = !!$categories[categoryId]?.template
+            enabled = false
         },
         metadata_display: () => {
             const categoryId = $selected.data[0]

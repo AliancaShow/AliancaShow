@@ -120,6 +120,7 @@ import { ajusteProprio, alvosDoMenu, moverArrastados } from "../../utils/alianca
 import { cortarAoMeio, juntarSelecao } from "../../utils/aliancaTesoura"
 import type { ContextMenuItem } from "./contextMenus"
 import { copiaSemSirvo } from "../../utils/aliancaSirvoMontagem"
+import { colarModeloNaCategoria } from "../../utils/aliancaModeloCategoria"
 
 interface ObjData {
     sel: Selected | null
@@ -813,17 +814,9 @@ const clickActions = {
         const id = obj.sel?.data[0]
         if (!id) return
 
-        const selectedTemplate = get(categories)[id]?.template
-
-        popupData.set({ active: selectedTemplate, allowEmpty: true, trigger: (value) => setCategoryTemplate(value) })
+        // AliancaShow (André, 24/nov): "aplicar uma vez". A categoria nao guarda mais modelo fixo: o escolhido e colado nas musicas dela
+        popupData.set({ allowEmpty: false, trigger: (value) => value && colarModeloNaCategoria(id, value) })
         activePopup.set("select_template")
-
-        function setCategoryTemplate(templateId: string) {
-            categories.update((a) => {
-                a[id].template = templateId
-                return a
-            })
-        }
     },
     metadata_display: (obj: ObjData) => {
         if (obj.sel?.id === "category_shows") {

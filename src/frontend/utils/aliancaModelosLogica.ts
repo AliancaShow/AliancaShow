@@ -107,3 +107,18 @@ export function deveColarModelo(escolhido: string, colado: string | null | undef
     if (!escolhido) return true
     return escolhido !== (colado || "")
 }
+
+// "aplicar uma vez" (André, 24/nov): utils/aliancaModeloCategoria.ts
+/** categorias que ainda guardam um modelo fixo (para a limpeza da partida) */
+export function categoriasComModeloFixo(cats: { [id: string]: { template?: string | null } } | null | undefined): string[] {
+    return Object.entries(cats || {})
+        .filter(([, c]) => !!c?.template)
+        .map(([id]) => id)
+}
+
+/** musicas da categoria (pelo indice `shows`, sem carregar) */
+export function musicasDaCategoria(lista: { [id: string]: { category?: string | null } } | null | undefined, categoria: string): string[] {
+    return Object.entries(lista || {})
+        .filter(([, s]) => (s?.category || "") === categoria)
+        .map(([id]) => id)
+}
