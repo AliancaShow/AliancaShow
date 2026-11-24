@@ -141,7 +141,7 @@
 {:else if aoVivo}
     <div class="faixa aviso" role="status" data-acao="editar-aviso-ao-vivo"><span class="txt">{aoVivo}</span></div>
 {/if}
-{#if nota}<div class="nota">{nota}</div>{/if}
+{#if nota}<div class="nota">{nota}</div>{:else if $activeEdit.type === "template"}<div class="nota" data-acao="modelo-nota">Mudar este modelo não muda as músicas onde ele já foi colado. As saídas que usam ele no Visual mudam na hora.</div>{/if}
 
 <style>
     .cab {
