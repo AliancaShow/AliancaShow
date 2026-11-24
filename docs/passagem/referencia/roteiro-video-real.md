@@ -37,3 +37,18 @@ Cada cena imprime, por saída: quadros, **perdidos (%)**, intervalo entre quadro
 
 ## Depois
 Guarde a pasta `resultados-video\` (ou mande os JSON aqui). Com os números: se tudo passa em 1080p, o motor vira melhoria e não urgência; se o 1080 com letra já perde quadros, o motor sobe de prioridade.
+
+## Resultado — 24/nov, cabine (app de dev, perfil de teste, 60 s por cena)
+
+| Cena | Painel LED | NDI-FullScreen | Decodificador (app) | Veredito |
+|---|---|---|---|---|
+| fundo-1080 (bg004, 1080p30) | 1801 quadros, 0 perdidos, 33,3 ±6,4 ms | 0 perdidos | 34% (máx 56%) | passa |
+| fundo-1080-letra (troca a cada 3 s) | 1801, 0 perdidos, 33,3 ±6,5 ms, 0 travadas | 0 perdidos (cadência não vale: invisível) | 28% (máx 39%) | passa |
+| contagem-led (896×320, 24 fps) | 1437, 0 perdidos | 0 perdidos | ~0% | passa |
+| estresse-4k (arquivo do POC) | ~4 quadros/s (intervalo 275 ms) | idem | **100%** | **reprova** |
+| estresse-4k-letra | ~12 quadros/s, 22 travadas | idem | **100%** | **reprova** |
+
+Leitura:
+- **Com os vídeos do acervo (todos ≤ 1080p), o app de hoje não perde quadro**, nem trocando slide durante o vídeo, com o decodificador abaixo de 60%. A janela principal não decodifica nada (prévias por captura).
+- **Um arquivo 4K ainda trava** (decodificador em 100% com 2 saídas decodificando). Hoje isso só acontece se entrar vídeo 4K no acervo.
+- Conclusão: o motor de vídeo único (F2/F3) deixa de ser urgente; vira melhoria. A proteção mais barata é **não deixar 4K chegar à saída** (avisar ou converter ao importar mídia acima de 1080p).

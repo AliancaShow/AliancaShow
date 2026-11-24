@@ -139,6 +139,9 @@ console.log("")
 for (const t of porTela) console.log(`  ${t.tela}: ${t.quadros} quadros, ${t.perdidos} perdidos (${t.pctPerdidos}%), intervalo ${t.intervaloMs} ms ±${t.desvioMs}, travadas ${t.travadas}`)
 console.log(`  janela principal: ${naPrincipal} vídeo(s) decodificando arquivo (as prévias por captura não contam)`)
 console.log(`  placa: decodificador ${placa.decodeMedia}% (máx ${placa.decodeMax}%), todos os programas ${placa.decodeTodosMedia}%, 3D ${placa.d3Media}%`)
+// reprova tambem quando o video quase nao anda (0 quadros contados: 24/nov, o 4K ficou a ~4 quadros/s com o decodificador em 100%) ou a placa satura
+const parado = porTela.some((t) => !t.quadros)
 const perdeu = porTela.some((t) => (t.pctPerdidos || 0) > 1)
-console.log(perdeu ? "  RESULTADO: PERDEU QUADROS" : "  RESULTADO: ok (até 1% perdido)")
+const saturou = (placa.decodeMedia || 0) >= 90
+console.log(parado ? "  RESULTADO: REPROVA (o vídeo quase não andou)" : perdeu ? "  RESULTADO: REPROVA (perdeu quadros)" : saturou ? "  RESULTADO: ATENÇÃO (decodificador saturado)" : "  RESULTADO: ok (até 1% perdido)")
 process.exit(0)
