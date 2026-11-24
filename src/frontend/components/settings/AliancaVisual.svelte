@@ -591,15 +591,15 @@
         justify-content: center;
         border: 0;
         border-radius: 6px;
-        background: transparent;
-        opacity: 0.75;
+        background: var(--luz-campo);
+        opacity: 0.9;
         cursor: pointer;
         padding: 0;
     }
     .eng:hover,
     .eng.on {
         opacity: 1;
-        background: var(--luz-campo);
+        background: var(--luz-hover);
     }
     .eng.vazio {
         visibility: hidden;
