@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte"
     import { soRetornoLigado } from "../../utils/aliancaSoRetorno"
-    import { activeEdit, activeFocus, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, notFound, outLocked, outputs, outputSlideCache, showsCache, slidesOptions, special, templates } from "../../stores"
+    import { activeEdit, activeFocus, activePopup, alertMessage, cachedShowsData, focusMode, lessonsLoaded, notFound, outLocked, outputs, outputSlideCache, showsCache, slidesOptions, special } from "../../stores"
     import { temFundoQuebrado } from "../../utils/aliancaFundoQuebrado"
     import { indiceDaFoto } from "../../utils/aliancaFotoLogica"
     import { deveColarModelo } from "../../utils/aliancaModelosLogica"
@@ -189,12 +189,7 @@
         let currentTemplate = currentShow?.settings?.template || ""
         let createItems = false
 
-        // override with category template if any
-        const categoryTemplate = $categories[currentShow?.category || ""]?.template || ""
-        if (categoryTemplate && $templates[categoryTemplate]) {
-            currentTemplate = categoryTemplate
-            createItems = true
-        }
+        // AliancaShow (André, 24/nov): o modelo da categoria nao vale mais por cima ("aplicar uma vez": utils/aliancaModeloCategoria.ts)
 
         // AliancaShow, "aplicar cola, nao liga" (André 24/nov): o FreeShow reaplicava o modelo ATUAL toda vez que a musica abria, entao editar
         // um modelo mudava todas as musicas ligadas a ele. Agora a musica guarda o modelo que ja foi colado nela e so reaplica quando o modelo
