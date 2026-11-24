@@ -10,6 +10,7 @@
     import { getAccess } from "../../utils/profile"
     import { history } from "../helpers/history"
     import { loadShows } from "../helpers/setShow"
+    import { _show } from "../helpers/shows"
     import AliancaEscolha from "../settings/AliancaEscolha.svelte"
 
     $: id = $activeEdit.id || ""
@@ -94,12 +95,14 @@
             if (show.locked) return avisar("show.locked")
             const perfilShows = getAccess("shows")
             if (perfilShows.global === "read" || perfilShows[show.category || ""] === "read") return avisar("profile.locked")
-            // a categoria da musica tem modelo proprio: o FreeShow nao deixa trocar (mesma regra da gaveta)
-            if (($categories as any)[show.category || ""]?.template) return avisar("tips.category_template")
+            // a categoria da musica tem modelo proprio: o FreeShow recusava. Aqui a escolha explicita GANHA ("aplicar cola", André 24/nov):
+            // aplica e marca o modelo da categoria como ja colado, para a abertura da musica (show/Slides.svelte) nao recolar o da categoria por cima
+            const daCategoria = ($categories as any)[show.category || ""]?.template || ""
 
             // o TEMPLATE do FreeShow le a musica do activeShow na hora: abre ela, aplica e mostra o resultado em SLIDES
             activeShow.set({ id: showId, type: "show" } as any)
             history({ id: "TEMPLATE", newData: { id: modeloId, data: { createItems: true } }, location: { page: "none", override: "show#" + showId } })
+            if (daCategoria && ($templates as any)[daCategoria]) _show(showId).set({ key: "settings.aliancaModeloColado", value: daCategoria })
             activeEdit.set({ type: "show", slide: 0, items: [], showId } as any)
             refreshEditSlide.set(true)
         } catch (erro) {
