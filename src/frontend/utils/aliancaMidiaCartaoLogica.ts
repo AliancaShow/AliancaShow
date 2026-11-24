@@ -75,3 +75,15 @@ export function criarCacheDeDuracao(ler: (caminho: string) => Promise<number>, l
         _lidos: () => prontos.size
     }
 }
+
+/**
+ * Teste real do vídeo na cabine (24/nov): até 1080p o telão não perde quadro; um arquivo 4K satura o decodificador da RX 580 e trava.
+ * Selo de AVISO (não bloqueia, pedido do André): vídeo maior que 1920×1080 (em pé ou deitado). null = dentro do recomendado ou ainda não lido.
+ */
+export function resolucaoAcimaDoRecomendado(largura: number, altura: number): { rotulo: string; dica: string } | null {
+    const maior = Math.max(largura || 0, altura || 0)
+    const menor = Math.min(largura || 0, altura || 0)
+    if (!maior || (maior <= 1920 && menor <= 1080)) return null
+    const rotulo = maior >= 7680 ? "8K" : maior >= 5760 ? "6K" : maior >= 3840 ? "4K" : maior >= 2560 ? "2.5K" : "HD+"
+    return { rotulo, dica: `Vídeo ${largura}×${altura}, acima de 1080p: pode travar o telão. Prefira uma versão em 1080p.` }
+}

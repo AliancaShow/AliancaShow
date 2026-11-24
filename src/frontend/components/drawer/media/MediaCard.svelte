@@ -16,9 +16,9 @@
     import Icon from "../../helpers/Icon.svelte"
     import { getMediaLayerType, getMediaStyle, getMediaType, loadThumbnail } from "../../helpers/media"
     import { VideoPlayer } from "../../media/video/videoPlayer"
-    import { acaoDoClique, estadoDoCartao, formatarDuracao, TRAVA_CARTAO_MS } from "../../../utils/aliancaMidiaCartaoLogica"
+    import { acaoDoClique, estadoDoCartao, formatarDuracao, resolucaoAcimaDoRecomendado, TRAVA_CARTAO_MS } from "../../../utils/aliancaMidiaCartaoLogica"
     import { registrarTentativa } from "../../../utils/aliancaTentativa"
-    import { duracaoDeMidia } from "../../../utils/aliancaMidiaDuracao"
+    import { duracaoDeMidia, resolucoesDeMidia } from "../../../utils/aliancaMidiaDuracao"
     import { findMatchingOut, getAllActiveOutputs, getFirstActiveOutput, setOutput } from "../../helpers/output"
     import Button from "../../inputs/Button.svelte"
     import { clearSlide } from "../../output/clear"
@@ -63,6 +63,8 @@
         if (p === path) duracaoLida = d
     }
     $: duracaoTxt = formatarDuracao(duration || duracaoLida)
+    // 24/nov: aviso (nao bloqueia) de video acima de 1080p, que trava o telao na RX 580
+    $: alta = type === "video" && $resolucoesDeMidia[path] ? resolucaoAcimaDoRecomendado($resolucoesDeMidia[path].largura, $resolucoesDeMidia[path].altura) : null
     $: noAr = findMatchingOut(path, $outputs) !== null
     let trava = false
     let travaTimer: ReturnType<typeof setTimeout> | undefined
@@ -408,7 +410,7 @@
         {/if}
 
         {#if gridCartao}
-            {#if duracaoTxt}<span class="dur" data-acao="midia-duracao">{duracaoTxt}{#if repete}<i class="rep" data-acao="midia-repete" title="Em repetição">↻</i>{/if}</span>{/if}
+            {#if duracaoTxt || alta}<span class="dur" data-acao="midia-duracao">{#if alta}<b class="alta" data-acao="midia-alta" data-title={alta.dica} title={alta.dica}>{alta.rotulo}</b>{/if}{duracaoTxt}{#if repete}<i class="rep" data-acao="midia-repete" title="Em repetição">↻</i>{/if}</span>{/if}
             {#if estado === "ar"}<span class="selo">NO AR</span>{/if}
             {#if estado === "repouso"}<span class="dica"><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor" /></svg>AO AR</span>{/if}
             <button type="button" class="mais" class:ok={jaNoRoteiro} data-acao="midia-mais" aria-label="Adicionar ao roteiro" title={jaNoRoteiro ? "Já está no roteiro — adicionar de novo" : "Adicionar ao fim do roteiro"} tabindex="-1" on:mousedown|preventDefault|stopPropagation on:click={maisNoRoteiro}>
@@ -488,6 +490,18 @@
         box-shadow: inset 0 0 0 2px var(--luz-anel);
         pointer-events: none;
         z-index: 2;
+    }
+    .alta {
+        margin: 0 5px 0 -5px;
+        padding: 0 5px;
+        height: 100%;
+        display: inline-flex;
+        align-items: center;
+        border-radius: var(--luz-raio-selo) 0 0 var(--luz-raio-selo);
+        background: var(--luz-laranja);
+        color: #111;
+        font-weight: 700;
+        cursor: help;
     }
     .dur {
         position: absolute;

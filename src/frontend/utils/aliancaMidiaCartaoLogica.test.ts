@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { acaoDoClique, criarCacheDeDuracao, estadoDoCartao, formatarDuracao, TRAVA_CARTAO_MS } from "./aliancaMidiaCartaoLogica"
+import { acaoDoClique, criarCacheDeDuracao, estadoDoCartao, formatarDuracao, resolucaoAcimaDoRecomendado, TRAVA_CARTAO_MS } from "./aliancaMidiaCartaoLogica"
 import { CLIQUE_MIDIA_MS, CLIQUE_REPETIDO_MS } from "./aliancaToqueLogica"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
@@ -70,5 +70,17 @@ describe("C1: o clique no thumb", () => {
         const css = fonte.slice(fonte.indexOf("<style>"))
         expect(css.match(/font-size: *[0-9]+px/g) || []).toEqual([])
         expect(css).not.toContain("var(--text)")
+    })
+})
+
+describe("resolucaoAcimaDoRecomendado", () => {
+    it("1080p, LED e vertical 1080×1920 não avisam; 4K e 2.5K avisam", () => {
+        expect(resolucaoAcimaDoRecomendado(1920, 1080)).toBeNull()
+        expect(resolucaoAcimaDoRecomendado(896, 320)).toBeNull()
+        expect(resolucaoAcimaDoRecomendado(1080, 1920)).toBeNull()
+        expect(resolucaoAcimaDoRecomendado(0, 0)).toBeNull()
+        expect(resolucaoAcimaDoRecomendado(3840, 2160)?.rotulo).toBe("4K")
+        expect(resolucaoAcimaDoRecomendado(2560, 1440)?.rotulo).toBe("2.5K")
+        expect(resolucaoAcimaDoRecomendado(1920, 1200)?.rotulo).toBe("HD+")
     })
 })
