@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { NENHUM, avisoDoModelo, estiloDaForma, gruposLigados, idDoCronometro, lerLigacao, linhasLigadas, todasAsOpcoes } from "./aliancaTextoLigadoLogica"
+import { NENHUM, avisoDoModelo, estiloDaForma, gruposLigados, indiceDaLetra, idDoCronometro, lerLigacao, linhasLigadas, todasAsOpcoes } from "./aliancaTextoLigadoLogica"
 
 const caixa = (...valores: (string | [string, string])[]) => ({ lines: [{ align: "text-align:left;", text: valores.map((v) => (Array.isArray(v) ? { value: v[0], style: v[1] } : { value: v, style: "font-size:80px;" })) }] })
 const opcoes = todasAsOpcoes(gruposLigados({ emModelo: true, cronometros: ["Pregação"] }))
@@ -91,5 +91,15 @@ describe("estiloDaForma", () => {
     it("retângulo e círculo com fundo", () => {
         expect(estiloDaForma("retangulo")["background-color"]).toBeTruthy()
         expect(estiloDaForma("circulo")["border-radius"]).toBe("50%")
+    })
+})
+
+describe("indiceDaLetra", () => {
+    it("1ª caixa de texto pela ordem dos itens; Bíblia e fora de modelo: nenhuma", () => {
+        const itens = [{ type: "media" }, caixa("{time_hours}"), caixa("Letra")]
+        expect(indiceDaLetra({ emModelo: true, itens })).toBe(1)
+        expect(indiceDaLetra({ emModelo: false, itens })).toBe(-1)
+        expect(indiceDaLetra({ emModelo: true, itens: [caixa("{scripture_text}"), caixa("x")] })).toBe(-1)
+        expect(indiceDaLetra({ emModelo: true, itens, modoBiblia: true })).toBe(-1)
     })
 })

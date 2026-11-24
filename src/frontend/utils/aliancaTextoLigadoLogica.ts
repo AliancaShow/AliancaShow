@@ -150,10 +150,10 @@ export function avisoDoModelo(c: { emModelo: boolean; itens: CaixaLigavel[]; ind
     }
     const caixasDeTexto = c.itens.filter((x) => x && (x.type || "text") === "text")
     const ordem = caixasDeTexto.indexOf(caixa)
-    if (ordem === 0 && temValor(caixa)) return { nivel: "alerta", texto: "Esta é a 1ª caixa de texto do modelo: numa música, a letra cai nela e apaga o valor ligado. Deixe a 1ª caixa para a letra e ligue outra." }
+    if (ordem === 0 && temValor(caixa)) return { nivel: "alerta", texto: "Esta é a caixa LETRA do modelo: numa música, a letra cai nela e apaga o valor ligado. Ligue outra caixa, ou suba esta em Organizar itens." }
     const forma = !trechos(caixa).join("").trim() && /background/.test(String(caixa.style || ""))
-    if (ordem === 0 && forma) return { nivel: "alerta", texto: "Esta forma é a 1ª caixa de texto do modelo: numa música, a letra cai dentro dela. Ponha a caixa da letra antes (Camadas)." }
-    if (ordem === 0) return { nivel: "info", texto: "1ª caixa de texto: numa música, a letra cai aqui." }
+    if (ordem === 0 && forma) return { nivel: "alerta", texto: "Esta forma ficou como caixa LETRA: numa música, a letra cai dentro dela. Por enquanto, a forma precisa ficar na frente da letra (mais acima em Organizar itens)." }
+    if (ordem === 0) return { nivel: "info", texto: "Caixa LETRA: numa música, a letra cai aqui." }
     return null
 }
 
@@ -161,4 +161,13 @@ export function avisoDoModelo(c: { emModelo: boolean; itens: CaixaLigavel[]; ind
 export function estiloDaForma(tipo: "retangulo" | "circulo"): { [k: string]: string } {
     const base = { "background-color": "rgba(255,255,255,0.25)", left: "660px", top: "290px", width: "600px", height: "500px" }
     return tipo === "circulo" ? { ...base, width: "500px", left: "710px", "border-radius": "50%" } : base
+}
+
+/**
+ * Qual caixa recebe a letra quando o modelo e aplicado numa musica (regra atual do FreeShow, `mergeWithTemplate`): a 1a caixa de texto
+ * pela ordem dos itens. Modelo de Bíblia: nenhuma (o versiculo vem pelos valores ligados). Fora de modelo: -1.
+ */
+export function indiceDaLetra(c: { emModelo: boolean; itens: CaixaLigavel[]; modoBiblia?: boolean }): number {
+    if (!c.emModelo || !!c.modoBiblia || temBiblia(c.itens || [])) return -1
+    return (c.itens || []).findIndex((x) => x && (x.type || "text") === "text")
 }
