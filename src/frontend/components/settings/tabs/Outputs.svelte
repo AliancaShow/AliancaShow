@@ -7,7 +7,7 @@
     import type { Output, RtmpDestination } from "../../../../types/Output"
     import { AudioAnalyser } from "../../../audio/audioAnalyser"
     import { requestMain, sendMain } from "../../../IPC/main"
-    import { activePopup, activeStage, activeStyle, alertMessage, currentOutputSettings, ndiData, outputDisplay, outputs, rtmpStatus, saved, settingsTab, special, stageShows, styles, templates, toggleOutputEnabled } from "../../../stores"
+    import { activePopup, activeStage, alertMessage, currentOutputSettings, ndiData, outputDisplay, outputs, rtmpStatus, saved, settingsTab, special, stageShows, templates, toggleOutputEnabled } from "../../../stores"
     import { trocarTela } from "../../../utils/aliancaTela"
     import { configSecao } from "../../../utils/aliancaConfigSecao"
     import { casaDe, COLUNAS, SEM_MODELO, SLIDE, visualAtivo } from "../../../utils/aliancaVisualLogica"
@@ -21,6 +21,7 @@
     import Title from "../../input/Title.svelte"
     import { estadoDaSaida, resumoDeRede } from "../../../utils/aliancaSaidasLogica"
     import AliancaMapaTelas from "../AliancaMapaTelas.svelte"
+    import AliancaTelaDaSaida from "../AliancaTelaDaSaida.svelte"
     import SecaoLuz from "../SecaoLuz.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialCheckbox from "../../inputs/MaterialCheckbox.svelte"
@@ -98,12 +99,6 @@
         }, 100)
     }
 
-    $: styleId = currentOutput?.style || ""
-    function editStyle() {
-        activeStyle.set(styleId)
-        configSecao.set("")
-        settingsTab.set("styles")
-    }
     // cabine 6 (V1): resumo do Visual valendo para esta saida
     $: visualDaSaida = visualAtivo($special)
     function abrirVisual() {
@@ -389,12 +384,8 @@
         {/if}
     </InputRow>
 {:else}
-    <InputRow>
-        <MaterialPopupButton label="settings.active_style" value={styleId} name={$styles[styleId]?.name} icon="styles" popupId="select_style" on:change={(e) => updateOutput("style", e.detail)} allowEmpty />
-        {#if $styles[styleId]}
-            <MaterialButton title="titlebar.edit" icon="edit" on:click={editStyle} />
-        {/if}
-    </InputRow>
+    <!-- "aprovo tela-visual" (23/nov): no lugar do "Estilo ativo", a Tela fisica da saida (o estilo virou resultado de Tela + Visual) -->
+    {#if currentOutput?.id}<AliancaTelaDaSaida outputId={currentOutput.id} />{/if}
     {#if visualDaSaida && currentOutput?.id}
         <!-- cabine 6 (V1, D13): a tela de saidas so mostra o resumo; quem manda e o Visual -->
         <div class="resumoVisual" data-acao="saida-resumo-visual">

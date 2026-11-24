@@ -6,8 +6,47 @@
     import { uid } from "uid"
     import { outputs, special, stageShows, styles, templates } from "../../stores"
     import { clone } from "../helpers/array"
-    import { aplicarVisualAtivo, ativarVisual, gravarVisuais, mudarCasa, mudarVisual, visualPendente } from "../../utils/aliancaVisualAplicador"
-    import { casaDe, COLUNAS, divergencias, duplicar, lerVisuais, novoVisual, planoDeEscrita, saidasDeRetorno, saidasNormais, SEM_MODELO, SLIDE, textoDoProblema, type Coluna, type Problema, type Visual } from "../../utils/aliancaVisualLogica"
+    import { aplicarVisualAtivo, ativarVisual, criarVisualNovo, gravarVisuais, mudarCasa, mudarLinha, mudarVisual, visualPendente } from "../../utils/aliancaVisualAplicador"
+    import { casaDe, COLUNAS, COLUNAS_EXTRA, divergencias, duplicar, lerVisuais, planoDeEscrita, saidasDeRetorno, saidasNormais, SEM_MODELO, SLIDE, textoDoProblema, type Coluna, type Problema, type Visual } from "../../utils/aliancaVisualLogica"
+
+    // "aprovo tela-visual" (23/nov): como o Look do ProPresenter, o Visual tambem diz QUAIS CAMADAS cada saida mostra (ex.: OBS por NDI sem a
+    // camada de fundo: video e imagem de fundo nao vao para ela), o fundo e o modelo da Biblia com 2–4 versoes. Camadas e fundo valem na hora.
+    const CAMADAS = [
+        { id: "background", rotulo: "Fundo", dica: "vídeos e imagens de fundo" },
+        { id: "slide", rotulo: "Texto", dica: "o slide (letra, Bíblia, avisos)" },
+        { id: "overlays", rotulo: "Sobreposições", dica: "sobreposições e mensagens" }
+    ]
+    const TODAS = CAMADAS.map((c) => c.id)
+    const camadasDe = (v: Visual | null, id: string): string[] => {
+        const l = (v?.saidas?.[id] as any)?.aparencia?.layers
+        return Array.isArray(l) ? l : TODAS
+    }
+    function alternarCamada(saida: string, camada: string) {
+        if (!sel) return
+        const atuais = camadasDe(sel, saida)
+        const novas = atuais.includes(camada) ? atuais.filter((c) => c !== camada) : TODAS.filter((c) => c === camada || atuais.includes(c))
+        mudarLinha(sel.id, saida, (l) => (l.aparencia = { ...(l.aparencia || {}), layers: novas }))
+    }
+    let abertas: { [saida: string]: boolean } = {}
+    const aparenciaDe = (v: Visual | null, id: string): any => (v?.saidas?.[id] as any)?.aparencia || {}
+    function mudarAparencia(saida: string, campo: string, valor: any) {
+        if (!sel) return
+        mudarLinha(sel.id, saida, (l) => {
+            const a = { ...(l.aparencia || {}) }
+            if (valor === undefined) delete a[campo]
+            else a[campo] = valor
+            l.aparencia = a
+        })
+    }
+    function escolherExtra(e: Event, saida: string, coluna: string) {
+        if (!sel) return
+        const valor = (e.currentTarget as HTMLSelectElement).value
+        mudarLinha(sel.id, saida, (l) => (l[coluna] = valor))
+    }
+    const nomeDoArquivo = (c: string) =>
+        String(c || "")
+            .split(/[\\/]/)
+            .pop()
 
     $: lista = lerVisuais($special)
     $: ativoId = $special?.aliancaVisualAtivo || ""
@@ -49,7 +88,7 @@
 
     // ---- lista de visuais
     function criar() {
-        const v = novoVisual(lista, $outputs, uid())
+        const v = criarVisualNovo(lista, uid())
         gravarVisuais([...lista, v])
         selId = v.id
     }
@@ -92,7 +131,7 @@
 </script>
 
 <div class="visual" data-acao="visual-pagina">
-    <p class="cota">Um Visual diz, para cada saída, que modelo veste cada tipo de conteúdo. Só um vale por vez; troca-se aqui ou no botão do telão, na barra de cima.</p>
+    <p class="cota">Um Visual diz, para cada saída, que camadas aparecem e que modelo veste cada tipo de conteúdo (como os Looks do ProPresenter). Só um vale por vez; troca-se aqui ou no botão do telão, na barra de cima.</p>
 
     <div class="corpo">
         <div class="lista" data-acao="visual-lista">
@@ -118,7 +157,7 @@
                 <div class="cab">
                     <input class="nome" value={sel.nome} aria-label="Nome do Visual" data-acao="visual-nome" on:change={renomear} on:keydown={(e) => e.key === "Enter" && e.currentTarget.blur()} />
                     {#if ehAtivo}<span class="tag valendo">VALENDO</span>{/if}
-                    <span class="cota dir" data-acao="visual-proximo">Vale a partir do próximo slide.</span>
+                    <span class="cota dir" data-acao="visual-proximo">Modelos valem a partir do próximo slide; camadas e fundo, na hora.</span>
                     {#if !ehAtivo}
                         {#if apagando}
                             <button type="button" class="bt perigo" data-acao="visual-apagar-mesmo" tabindex="-1" on:click={apagar}>Apagar mesmo</button>
@@ -131,20 +170,28 @@
 
                 {#if fora.length}
                     <div class="faixa" data-acao="visual-divergencia">
-                        <span>{fora.length === 1 ? "1 campo das saídas não está" : `${fora.length} campos das saídas não estão`} como o Visual diz (alguém mexeu em “Estilo da saída”).</span>
+                        <span>{fora.length === 1 ? "1 campo das saídas não está" : `${fora.length} campos das saídas não estão`} como o Visual diz (algo mudou a aparência por fora; o app refaz sozinho em instantes).</span>
                         <button type="button" class="bt" tabindex="-1" on:click={aplicarVisualAtivo}>Reaplicar o Visual</button>
                         <button type="button" class="bt" tabindex="-1" on:click={guardarDoQueEsta}>Guardar o que está na saída</button>
                     </div>
                 {/if}
 
-                <div class="mtz" style="grid-template-columns: minmax(160px, 200px) repeat({COLUNAS.length}, minmax(0, 1fr));" data-acao="visual-tabela">
+                <div class="mtz" style="grid-template-columns: minmax(160px, 200px) minmax(150px, 0.8fr) repeat({COLUNAS.length}, minmax(0, 1fr));" data-acao="visual-tabela">
                     <div />
+                    <div class="h">CAMADAS</div>
                     {#each COLUNAS as c}<div class="h">{c.rotulo.toUpperCase()}</div>{/each}
                     {#each normais as s (s.id)}
                         <div class="sd" data-saida={s.id}>
                             <b>{s.nome}</b>
                             {#if !($outputs[s.id]?.enabled ?? true)}<small>desligada</small>{/if}
                             <span class="tag">{temModelo(sel, s.id) ? "COM MODELO" : "SEM MODELO"}</span>
+                            <button type="button" class="bt fan mini" data-acao="visual-aparencia" tabindex="-1" aria-expanded={!!abertas[s.id]} on:click={() => (abertas = { ...abertas, [s.id]: !abertas[s.id] })}>{abertas[s.id] ? "▾" : "▸"} Aparência</button>
+                        </div>
+                        <div class="cel camadas" data-camadas={s.id}>
+                            {#each CAMADAS as c}
+                                {@const ligada = camadasDe(sel, s.id).includes(c.id)}
+                                <button type="button" class="chip" class:on={ligada} title="{c.rotulo}: {c.dica}{ligada ? '' : ' (não vai para esta saída)'}" aria-pressed={ligada} tabindex="-1" on:click={() => alternarCamada(s.id, c.id)}>{c.rotulo}</button>
+                            {/each}
                         </div>
                         {#each COLUNAS as c}
                             {@const casa = casaDe(sel, s.id, c.id)}
@@ -161,6 +208,31 @@
                                 </select>
                             </label>
                         {/each}
+                        {#if abertas[s.id]}
+                            {@const ap = aparenciaDe(sel, s.id)}
+                            <div class="aparencia" data-aparencia={s.id}>
+                                <label class="campo">
+                                    <span>Cor de fundo</span>
+                                    <input type="color" value={ap.background && ap.background !== "transparent" ? ap.background : "#000000"} disabled={ap.background === "transparent"} on:change={(e) => mudarAparencia(s.id, "background", e.currentTarget.value)} />
+                                    <label class="chk"><input type="checkbox" checked={ap.background === "transparent"} on:change={(e) => mudarAparencia(s.id, "background", e.currentTarget.checked ? "transparent" : "#000000")} /> Transparente (NDI com alpha)</label>
+                                </label>
+                                <label class="chk"><input type="checkbox" checked={!!ap.clearStyleBackgroundOnText} on:change={(e) => mudarAparencia(s.id, "clearStyleBackgroundOnText", e.currentTarget.checked)} /> Tirar o fundo quando houver texto</label>
+                                {#if ap.backgroundImage}
+                                    <span class="campo"><span>Imagem de fundo</span><b>{nomeDoArquivo(ap.backgroundImage)}</b><button type="button" class="bt mini" tabindex="-1" on:click={() => mudarAparencia(s.id, "backgroundImage", undefined)}>Tirar</button></span>
+                                {/if}
+                                {#each COLUNAS_EXTRA as c}
+                                    {@const casa = sel?.saidas?.[s.id]?.[c.id] || SLIDE}
+                                    <label class="campo">
+                                        <span>{c.rotulo}</span>
+                                        <select value={casa} on:change={(e) => escolherExtra(e, s.id, c.id)}>
+                                            <option value={SLIDE}>Igual à Bíblia</option>
+                                            {#if casa !== SLIDE && !$templates[casa]}<option value={casa}>modelo não existe mais</option>{/if}
+                                            {#each modelos as m (m.id)}<option value={m.id}>{m.nome}</option>{/each}
+                                        </select>
+                                    </label>
+                                {/each}
+                            </div>
+                        {/if}
                     {/each}
                 </div>
                 {#if !normais.length}<p class="cota">Nenhuma saída cadastrada. Crie as saídas em Telas e saídas.</p>{/if}
@@ -454,6 +526,60 @@
     }
     .cel.prob .tx small {
         color: var(--luz-laranja);
+    }
+    .bt.mini {
+        height: 22px;
+        padding: 0 6px;
+        font-size: 11px;
+    }
+    .cel.camadas {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        cursor: default;
+    }
+    .chip {
+        height: 24px;
+        padding: 0 8px;
+        border: 1px dashed var(--luz-borda);
+        border-radius: var(--luz-raio-selo);
+        background: transparent;
+        color: var(--luz-mudo);
+        font: inherit;
+        font-size: 11.5px;
+        text-decoration: line-through;
+        cursor: pointer;
+    }
+    .chip.on {
+        border-style: solid;
+        background: var(--luz-hover);
+        color: var(--luz-texto);
+        text-decoration: none;
+    }
+    .aparencia {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: var(--luz-raio-cartao);
+        background: var(--luz-trilho);
+        font-size: 12px;
+    }
+    .aparencia .campo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .aparencia .campo select {
+        width: 180px;
+    }
+    .aparencia .chk {
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
     select {
         height: 28px;

@@ -30,6 +30,8 @@
     $: tabId = $settingsTab
     // cabine 6 (V1): a pagina Visual mora na aba `styles` com a secao "visual"
     $: ehVisual = tabId === "styles" && $configSecao === "visual"
+    // "aprovo tela-visual" (23/nov): a aba Estilos saiu do menu. Todo atalho antigo que abre "styles" (prévia, modelo, Bíblia, busca) cai no Visual
+    $: if (tabId === "styles" && $configSecao !== "visual") configSecao.set("visual")
 
     let scrolled = false
     $: if (tabId === null) scrolled = false
