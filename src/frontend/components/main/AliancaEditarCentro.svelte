@@ -19,6 +19,7 @@
     import LazyLoad from "../helpers/LazyLoad.svelte"
     import AliancaDividir from "../show/AliancaDividir.svelte"
     import AliancaAdicionarItem from "./AliancaAdicionarItem.svelte"
+    import AliancaModeloCabecalho from "./AliancaModeloCabecalho.svelte"
 
     $: ehShow = ($activeEdit.type || "show") === "show"
     $: showId = ehShow ? ($activeShow?.type === undefined || $activeShow?.type === "show" ? $activeShow?.id : "") || $activeEdit.showId || "" : ""
@@ -91,7 +92,11 @@
 </script>
 
 <div class="cab" data-acao="editar-cabecalho">
-    <span class="item">{nomeFora}</span>
+    {#if $activeEdit.type === "template"}
+        <AliancaModeloCabecalho />
+    {:else}
+        <span class="item">{nomeFora}</span>
+    {/if}
     {#if modeloId && $templates[modeloId]}
         <button type="button" class="modelo" title="Modelo aplicado: {$templates[modeloId]?.name || ''}" on:click={() => activePopup.set("template_info")}>▤ {$templates[modeloId]?.name || "Modelo"}</button>
     {/if}
@@ -136,7 +141,7 @@
 {:else if aoVivo}
     <div class="faixa aviso" role="status" data-acao="editar-aviso-ao-vivo"><span class="txt">{aoVivo}</span></div>
 {/if}
-{#if nota}<div class="nota">{nota}</div>{/if}
+{#if nota}<div class="nota">{nota}</div>{:else if $activeEdit.type === "template"}<div class="nota" data-acao="modelo-nota">Mudar este modelo não muda as músicas onde ele já foi colado. As saídas que usam ele no Visual mudam na hora.</div>{/if}
 
 <style>
     .cab {

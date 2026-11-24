@@ -61,8 +61,8 @@ export const EXCECOES = {
         "sha": "d8ea6859563eb19ea94aa9c71de9cf7fc102fd02aa84e1eadf98cdd815b3c31c"
     },
     "src/frontend/components/helpers/output.ts": {
-        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): ponto unico do desvio em setOutput; recusa o que nao e letra; expiracao de sobreposicao em semDesvio. Modo desligado: identico",
-        "sha": "fb2140b8a4aa083b61f946213fe8eea9eb15714d106f0842b90618ac60a9bf50"
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): ponto unico do desvio em setOutput; recusa o que nao e letra; expiracao de sobreposicao em semDesvio. Modo desligado: identico. + \"aprovo caixa-da-letra\" (André 24/nov): mergeWithTemplate poe a letra na 1a caixa LIVRE do modelo (ordemDaLetra: livre > forma > ligada) e as caixas que sobram guardam a camada do modelo; modelo cuja 1a caixa e livre: identico; Biblia: identico",
+        "sha": "723d6107e9e8e01133a07e7ed0701a497a09849034055200618bc0c5fb0e6a2f"
     },
     "src/frontend/components/helpers/OutputHelper.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): setas leem a posicao do retorno no modo; automacao roda na janela propria. Modo desligado: identico",
@@ -213,7 +213,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "a43d74f390a12761fb6c963f3ab6f62e0e76f6ef22c7361ecd9e58a68905e3c9"
+export const SHA_EXCECOES = "e605aead6e67c5f62475db433ef6d2eb61013b55014cc6a63698d05e319bae94"
 export const SHA_NOVOS = "1546337f89ee9d2e52bddfbc2c610defc6db4c7a339ea74f90b566867a93fd1e"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")

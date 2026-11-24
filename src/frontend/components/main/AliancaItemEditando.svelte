@@ -3,8 +3,8 @@
     // ate 5 avulsos em memoria), as miniaturas com os selos EDITADO / NO AR (`edit/Slides.svelte`, que guarda a logica de selecao, arrastar e
     // lazy load), a dica do botao direito e o "＋ Slide" fixo no pe. Substitui `edit/Navigation.svelte` (apagado). Nada aqui escreve em `outputs`.
     import { onDestroy } from "svelte"
-    import { activeEdit, activePopup, activeProject, activeShow, categories, effects, overlays, popupData, projects, refreshEditSlide, shows, showsCache, templates, textCache } from "../../stores"
-    import { avulsosEditando, type Avulso } from "../../utils/aliancaEditarEstado"
+    import { activeEdit, activePopup, activeProject, activeShow, categories, effects, overlays, popupData, projects, refreshEditSlide, shows, showsCache, templateCategories, templates, textCache } from "../../stores"
+    import { avulsosEditando, modoDoEditar, ultimoModelo, type Avulso } from "../../utils/aliancaEditarEstado"
     import { SIMBOLO_DO_TIPO, contagemDeSlides, editDoItemDoRoteiro, empurrarAvulso, estaNoRoteiro, itemEmEdicao, tipoDeEdicaoDesconhecido, opcoesDoSeletor, tirarAvulso, ROTULO_DO_TIPO, type OpcaoDoSeletor, type TipoEditavel } from "../../utils/aliancaEditarLogica"
     import { escFechou } from "../../utils/aliancaToque"
     import { falhaAlta } from "../../utils/aliancaFalha"
@@ -17,6 +17,8 @@
     import { getLayoutRef } from "../helpers/show"
     import { loadShows } from "../helpers/setShow"
     import Slides from "../edit/Slides.svelte"
+    import AliancaModelosLista from "./AliancaModelosLista.svelte"
+    import { TODOS, modelosDaLista } from "../../utils/aliancaModelosLogica"
 
     // ----- o item que esta em edicao -----
     const nomeDe = (tipo: TipoEditavel, id: string): string => {
@@ -34,11 +36,14 @@
     $: if (tipoDeEdicaoDesconhecido(($activeEdit as any)?.type)) falhaAlta("editar-tipo-desconhecido", `activeEdit.type ${($activeEdit as any).type} nao se edita aqui`)
     $: foraRoteiro = !!atual && !estaNoRoteiro(roteiro, atual.tipo, atual.id)
 
-    // o que se abre e nao e do roteiro entra na lista de avulsos (a mais recente na frente)
+    // o que se abre e nao e do roteiro entra na lista de avulsos (a mais recente na frente). Modelo nao: ele mora no modo MODELOS (desenho C, 24/nov)
     let ultimaChave = ""
     $: if (atual && atual.chave !== ultimaChave) {
         ultimaChave = atual.chave
-        if (foraRoteiro) {
+        // abriu um modelo (pela biblioteca, pelo Visual...) = a coluna vira MODELOS; abriu outra coisa = volta para SLIDES
+        modoDoEditar.set(atual.tipo === "template" ? "modelos" : "slides")
+        if (atual.tipo === "template") ultimoModelo.set(atual.id)
+        if (foraRoteiro && atual.tipo !== "template") {
             const item: Avulso = { ...atual, edit: atual.tipo === "show" ? undefined : clone($activeEdit) }
             avulsosEditando.update((l) => empurrarAvulso(l, item) as Avulso[])
         }
@@ -162,56 +167,81 @@
     }
     onDestroy(fechar)
 
-    $: etiqueta = atual ? (atual.tipo === "show" ? contagemDeSlides(total) : ROTULO_DO_TIPO[atual.tipo]) : ""
+    $: etiqueta = atual && atual.tipo !== "template" ? (atual.tipo === "show" ? contagemDeSlides(total) : ROTULO_DO_TIPO[atual.tipo]) : ""
+
+    // ----- Slides | Modelos (desenho C) -----
+    // o item que estava aberto antes de ir para MODELOS: voltar para SLIDES reabre ele
+    let antesDosModelos: any = null
+    $: if (atual && atual.tipo !== "template") antesDosModelos = clone($activeEdit)
+    function irPara(modo: "slides" | "modelos") {
+        if (modo === $modoDoEditar) return
+        modoDoEditar.set(modo)
+        if (modo === "modelos") {
+            const id = $ultimoModelo && $templates[$ultimoModelo] ? $ultimoModelo : modelosDaLista($templates as any, $templateCategories as any, { categoria: TODOS })[0]?.id || ""
+            if (id) activeEdit.set({ type: "template", id, items: [] } as any)
+        } else if (($activeEdit as any)?.type === "template") {
+            if (antesDosModelos) activeEdit.set(clone(antesDosModelos))
+            else if ($activeShow?.id && ($activeShow.type || "show") === "show") activeEdit.set({ type: "show", slide: 0, items: [], showId: $activeShow.id } as any)
+            else activeEdit.set({ items: [] } as any)
+            refreshEditSlide.set(true)
+        }
+    }
 </script>
 
 <div class="cab">
-    <span class="rot">EDITANDO</span>
-    <span class="cont" data-acao="editando-contagem">{etiqueta}</span>
+    <div class="modo" role="tablist" aria-label="O que editar" data-acao="editar-modo">
+        <button type="button" role="tab" aria-selected={$modoDoEditar === "slides"} class:on={$modoDoEditar === "slides"} tabindex="-1" data-acao="editar-modo-slides" on:click={() => irPara("slides")}>Slides</button>
+        <button type="button" role="tab" aria-selected={$modoDoEditar === "modelos"} class:on={$modoDoEditar === "modelos"} tabindex="-1" data-acao="editar-modo-modelos" on:click={() => irPara("modelos")}>Modelos</button>
+    </div>
+    <span class="cont" data-acao="editando-contagem">{$modoDoEditar === "slides" ? etiqueta : ""}</span>
 </div>
 
-<div class="seletor">
-    <button bind:this={botao} class="sel" class:aberto type="button" aria-haspopup="listbox" aria-expanded={aberto} data-acao="editando-seletor" on:click={alternar}>
-        <span class="nome">{atual?.nome || "Nenhum item aberto"}</span>
-        {#if atual && foraRoteiro}<span class="etq">BIBLIOTECA</span>{/if}
-        <span class="chev" class:aberto>▾</span>
-    </button>
-    {#if aberto}
-        <div bind:this={pop} class="pop" role="listbox" data-acao="editando-lista">
-            {#each lista as o, i (o.chave)}
-                {#if i === 0 || lista[i - 1].secao !== o.secao}<div class="secao">{o.secao}</div>{/if}
-                <button type="button" role="option" aria-selected={o.marcado} class="op" class:marcado={o.marcado} class:destaque={destaque === i} on:mouseenter={() => (destaque = i)} on:click={() => escolher(o)}>
-                    <span class="tp">{SIMBOLO_DO_TIPO[o.tipo]}</span>
-                    <span class="on">{o.nome || "—"}</span>
-                    <span class="ck">{o.marcado ? "✓" : ""}</span>
-                </button>
-            {:else}
-                <div class="vazio">Nada para abrir</div>
-            {/each}
-        </div>
-    {/if}
-</div>
+{#if $modoDoEditar === "modelos"}
+    <AliancaModelosLista />
+{:else}
+    <div class="seletor">
+        <button bind:this={botao} class="sel" class:aberto type="button" aria-haspopup="listbox" aria-expanded={aberto} data-acao="editando-seletor" on:click={alternar}>
+            <span class="nome">{atual?.nome || "Nenhum item aberto"}</span>
+            {#if atual && foraRoteiro}<span class="etq">BIBLIOTECA</span>{/if}
+            <span class="chev" class:aberto>▾</span>
+        </button>
+        {#if aberto}
+            <div bind:this={pop} class="pop" role="listbox" data-acao="editando-lista">
+                {#each lista as o, i (o.chave)}
+                    {#if i === 0 || lista[i - 1].secao !== o.secao}<div class="secao">{o.secao}</div>{/if}
+                    <button type="button" role="option" aria-selected={o.marcado} class="op" class:marcado={o.marcado} class:destaque={destaque === i} on:mouseenter={() => (destaque = i)} on:click={() => escolher(o)}>
+                        <span class="tp">{SIMBOLO_DO_TIPO[o.tipo]}</span>
+                        <span class="on">{o.nome || "—"}</span>
+                        <span class="ck">{o.marcado ? "✓" : ""}</span>
+                    </button>
+                {:else}
+                    <div class="vazio">Nada para abrir</div>
+                {/each}
+            </div>
+        {/if}
+    </div>
 
-<div class="slides" data-acao="editando-slides">
-    {#if atual?.tipo === "show"}
-        {#key showId}
-            <Slides />
-        {/key}
-    {:else if atual}
-        <div class="semSlides">Este item não tem slides. As propriedades ficam à direita.</div>
-    {:else}
-        <div class="semSlides">Abra um item pelo roteiro ou pelo botão direito na biblioteca.</div>
-    {/if}
-</div>
+    <div class="slides" data-acao="editando-slides">
+        {#if atual?.tipo === "show"}
+            {#key showId}
+                <Slides />
+            {/key}
+        {:else if atual}
+            <div class="semSlides">Este item não tem slides. As propriedades ficam à direita.</div>
+        {:else}
+            <div class="semSlides">Abra um item pelo roteiro ou pelo botão direito na biblioteca.</div>
+        {/if}
+    </div>
 
-{#if temShow}
-    <div class="dica">Botão direito num slide: mandar pro ar</div>
-    {#if semLetra}
-        <button type="button" class="mais letra" title="Colar a letra desta música (pode ter acordes em cima)" on:click={colarLetra}
-            >Colar letra{#if artista}&nbsp;· {artista}{/if}</button
-        >
+    {#if temShow}
+        <div class="dica">Botão direito num slide: mandar pro ar</div>
+        {#if semLetra}
+            <button type="button" class="mais letra" title="Colar a letra desta música (pode ter acordes em cima)" on:click={colarLetra}
+                >Colar letra{#if artista}&nbsp;· {artista}{/if}</button
+            >
+        {/if}
+        <button type="button" class="mais" disabled={travado} data-acao="editando-mais-slide" title="Shift: novo grupo · Ctrl: em branco" on:click={maisSlide}>＋ Slide</button>
     {/if}
-    <button type="button" class="mais" disabled={travado} data-acao="editando-mais-slide" title="Shift: novo grupo · Ctrl: em branco" on:click={maisSlide}>＋ Slide</button>
 {/if}
 
 <style>
@@ -221,11 +251,30 @@
         justify-content: space-between;
         padding: 12px 12px 6px;
     }
-    .rot {
+    .modo {
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 8px;
+        background: var(--luz-trilho);
+        box-shadow: inset 0 0 0 1px var(--luz-linha);
+    }
+    .modo button {
+        height: 26px;
+        padding: 0 12px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--luz-mudo);
+        font: inherit;
         font-size: 12px;
         font-weight: 600;
-        color: var(--luz-mudo);
-        letter-spacing: 0.04em;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+    }
+    .modo button.on {
+        background: var(--luz-texto);
+        color: var(--luz-tinta);
     }
     .cont {
         font-size: 12px;

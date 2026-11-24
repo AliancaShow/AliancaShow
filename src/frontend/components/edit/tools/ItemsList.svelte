@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Item, ItemType } from "../../../../types/Show"
-    import { activeEdit, selected, timers, variables } from "../../../stores"
+    import { activeEdit, selected, templates, timers, variables } from "../../../stores"
     import { translateText } from "../../../utils/language"
     import { clone } from "../../helpers/array"
     import Icon from "../../helpers/Icon.svelte"
@@ -10,6 +10,7 @@
     import { getItemText } from "../scripts/textStyle"
     import { itemBoxes } from "../values/boxes"
     import { camadasAbertasPorPadrao } from "../../../utils/aliancaEditorLogica"
+    import { indiceDaLetra } from "../../../utils/aliancaTextoLigadoLogica"
 
     const getIdentifier = {
         text: (item: Item) => {
@@ -52,6 +53,13 @@
     $: invertedItemList = Array.isArray(allSlideItems) ? clone(allSlideItems).reverse() : []
 
     const getType = (item: Item) => (item?.type as ItemType) || "text"
+
+    // teste do Andre (24/nov): a lista e de CAMADAS (em cima = na frente), entao o numero confundia com a "1a caixa". Sem numero; a caixa
+    // que recebe a letra no modelo ganha a etiqueta LETRA (regra do FreeShow: 1a caixa de texto pela ordem dos itens).
+    $: emModelo = $activeEdit.type === "template"
+    $: modelo = emModelo ? $templates[$activeEdit.id || ""] : null
+    $: modoBiblia = !!modelo && (modelo.settings?.mode === "scripture" || modelo.category === "scripture")
+    $: letra = indiceDaLetra({ emModelo, itens: (allSlideItems || []) as any, modoBiblia })
 </script>
 
 {#if invertedItemList.length}
@@ -65,6 +73,7 @@
         </div>
 
         {#if mostrarLista}
+            {#if invertedItemList.length > 1}<p class="dicaCamadas" data-acao="camadas-dica">Em cima = na frente.{letra > -1 ? " A letra da música cai na caixa marcada LETRA." : ""}</p>{/if}
             <div
                 class="items {invertedItemList.length > 1 ? 'context #items_list_item' : ''}"
                 style="display: flex;flex-direction: column;"
@@ -100,9 +109,9 @@
                         }}
                     >
                         <span style="display: flex;align-items: center;max-width: 70%;">
-                            <p style="opacity: 0.7;margin-inline-end: 10px;">{i + 1}</p>
                             <Icon id={type === "icon" ? currentItem.id || "" : itemBoxes[type]?.icon || "text"} custom={type === "icon"} size={0.8} />
                             <p style="opacity: 0.9;margin-inline-start: 10px;">{translateText("items." + type)}</p>
+                            {#if index === letra}<b class="etqLetra" data-acao="camada-letra" title="Numa música, a letra cai nesta caixa">LETRA</b>{/if}
                             {#if getIdentifier[type]}<p style="margin-inline-start: 10px;max-width: 120px;opacity: 0.5;font-size: 0.8em;max-width: 40%;">{getIdentifier[type](currentItem)}</p>{/if}
                         </span>
                         <span>
@@ -126,6 +135,24 @@
         border-top-left-radius: 10px;
         border-top-right-radius: 10px;
         overflow: hidden;
+    }
+    .dicaCamadas {
+        margin: 0;
+        padding: 6px 12px 4px;
+        font-size: 11.5px;
+        opacity: 0.6;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+    .etqLetra {
+        margin-inline-start: 8px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: var(--secondary);
+        color: var(--secondary-text, #fff);
+        font-size: 10px;
+        letter-spacing: 0.04em;
     }
     .title.recolhivel .titleRow {
         cursor: pointer;

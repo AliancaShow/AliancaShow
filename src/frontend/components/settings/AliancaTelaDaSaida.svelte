@@ -47,7 +47,7 @@
 </script>
 
 <div class="tela" data-acao="saida-tela">
-    <div class="rot">TELA <small>configura uma vez; o que muda de culto para culto fica no Visual</small></div>
+    <div class="rot">Configura uma vez. O que muda de culto para culto fica no Visual.</div>
 
     <label class="campo">
         <span>Proporção</span>
@@ -106,15 +106,8 @@
         font-size: 13px;
     }
     .rot {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
+        font-size: 11.5px;
         color: var(--luz-mudo);
-    }
-    .rot small {
-        font-weight: 500;
-        letter-spacing: 0;
-        margin-left: 8px;
     }
     .campo {
         display: flex;

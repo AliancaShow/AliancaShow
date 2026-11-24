@@ -383,8 +383,16 @@
             <MaterialButton title="titlebar.edit" icon="edit" on:click={editStage} />
         {/if}
     </InputRow>
+{/if}
+
+</SecaoLuz>
+
+<!-- "aprovo tela-visual" (23/nov): no lugar do "Estilo ativo", a Tela fisica da saida. Teste do Andre (24/nov): escondida dentro de "Saida",
+     ninguem achava; agora e uma secao propria, logo abaixo do nome. -->
+<SecaoLuz titulo="Tela · proporção, fonte, vídeos" id="tela">
+{#if stageId}
+    <p class="notaTela" data-acao="saida-tela-retorno">Esta saída é um monitor de retorno: o que aparece nela é o layout escolhido acima (menu Telas e monitor de retorno).</p>
 {:else}
-    <!-- "aprovo tela-visual" (23/nov): no lugar do "Estilo ativo", a Tela fisica da saida (o estilo virou resultado de Tela + Visual) -->
     {#if currentOutput?.id}<AliancaTelaDaSaida outputId={currentOutput.id} />{/if}
     {#if visualDaSaida && currentOutput?.id}
         <!-- cabine 6 (V1, D13): a tela de saidas so mostra o resumo; quem manda e o Visual -->
@@ -589,6 +597,11 @@
         min-width: 0;
     }
     /* cabine 6 (V1, D13): resumo do Visual (neutro) */
+    .notaTela {
+        margin: 4px 0 8px;
+        font-size: 12.5px;
+        opacity: 0.7;
+    }
     .resumoVisual {
         display: flex;
         flex-wrap: wrap;

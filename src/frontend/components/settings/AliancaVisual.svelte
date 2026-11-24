@@ -4,17 +4,21 @@
     // Tudo vale na hora (nao conta como "alteracao nao salva"; o Descartar nao desfaz): quem escreve e aliancaVisualAplicador.ts.
     // O operador nunca pensa em "estilo" (Andre, 23/nov): a saida que divide estilo ganha um so dela sozinha (copia exata), sem pergunta.
     import { uid } from "uid"
+    import Icon from "../helpers/Icon.svelte"
+    import { indiceDaLetra } from "../../utils/aliancaTextoLigadoLogica"
+    import AliancaEscolha from "./AliancaEscolha.svelte"
     import { outputs, special, stageShows, styles, templates } from "../../stores"
     import { clone } from "../helpers/array"
     import { aplicarVisualAtivo, ativarVisual, criarVisualNovo, gravarVisuais, mudarCasa, mudarLinha, mudarVisual, visualPendente } from "../../utils/aliancaVisualAplicador"
-    import { casaDe, COLUNAS, COLUNAS_EXTRA, divergencias, duplicar, lerVisuais, planoDeEscrita, saidasDeRetorno, saidasNormais, SEM_MODELO, SLIDE, textoDoProblema, type Coluna, type Problema, type Visual } from "../../utils/aliancaVisualLogica"
+    import { casaDe, COLUNAS, divergencias, duplicar, lerVisuais, planoDeEscrita, saidasDeRetorno, saidasNormais, SEM_MODELO, SLIDE, textoDoProblema, type Coluna, type Problema, type Visual } from "../../utils/aliancaVisualLogica"
 
     // "aprovo tela-visual" (23/nov): como o Look do ProPresenter, o Visual tambem diz QUAIS CAMADAS cada saida mostra (ex.: OBS por NDI sem a
     // camada de fundo: video e imagem de fundo nao vao para ela), o fundo e o modelo da Biblia com 2–4 versoes. Camadas e fundo valem na hora.
+    // desenho v4 ("fechou", 24/nov): os mesmos icones e teclas dos botoes de limpar
     const CAMADAS = [
-        { id: "background", rotulo: "Fundo", dica: "vídeos e imagens de fundo" },
-        { id: "slide", rotulo: "Texto", dica: "o slide (letra, Bíblia, avisos)" },
-        { id: "overlays", rotulo: "Sobreposições", dica: "sobreposições e mensagens" }
+        { id: "background", rotulo: "Fundo", tecla: "F1", icone: "image" },
+        { id: "slide", rotulo: "Texto", tecla: "F2", icone: "slide" },
+        { id: "overlays", rotulo: "Avisos", tecla: "F3", icone: "overlays" }
     ]
     const TODAS = CAMADAS.map((c) => c.id)
     const camadasDe = (v: Visual | null, id: string): string[] => {
@@ -38,10 +42,21 @@
             l.aparencia = a
         })
     }
-    function escolherExtra(e: Event, saida: string, coluna: string) {
-        if (!sel) return
-        const valor = (e.currentTarget as HTMLSelectElement).value
-        mudarLinha(sel.id, saida, (l) => (l[coluna] = valor))
+    // mini monitor: a caixa LETRA do modelo de musica (mesma regra do telao) em % da tela; sem modelo, no centro
+    function caixaDaLetra(modeloId: string, todos: any): { l: number; t: number; w: number; h: number } | null {
+        const itens = modeloId && modeloId !== SLIDE ? todos?.[modeloId]?.items : null
+        if (!Array.isArray(itens)) return null
+        const i = indiceDaLetra({ emModelo: true, itens })
+        const estilo = String(itens[i]?.style || "")
+        const px = (k: string) => Number(estilo.match(new RegExp(`(?:^|;)\\s*${k}\\s*:\\s*(-?[\\d.]+)px`))?.[1])
+        const [l, t, w, h] = [px("left") / 19.2, px("top") / 10.8, px("width") / 19.2, px("height") / 10.8]
+        if (![l, t, w, h].every((n) => Number.isFinite(n)) || w <= 0 || h <= 0) return null
+        const c = (n: number) => Math.max(0, Math.min(100, n))
+        return { l: c(l), t: c(t), w: Math.min(c(w), 100 - c(l)), h: Math.min(c(h), 100 - c(t)) }
+    }
+    const resolucao = (id: string) => {
+        const b = ($outputs as any)[id]?.bounds
+        return b?.width && b?.height ? `${Math.round(b.width)}×${Math.round(b.height)}` : ""
     }
     const nomeDoArquivo = (c: string) =>
         String(c || "")
@@ -61,7 +76,7 @@
         .map(([id, t]: any) => ({ id, nome: t?.name || "modelo sem nome" }))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
     $: leiautes = Object.entries($stageShows || {})
-        .map(([id, l]: any) => ({ id, nome: l?.name || "leiaute sem nome" }))
+        .map(([id, l]: any) => ({ id, nome: l?.name || "modelo de retorno sem nome" }))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
     $: plano = sel ? planoDeEscrita(sel, $outputs, $styles, $templates, $stageShows) : { escritas: [], problemas: [] as Problema[] }
     $: fora = ehAtivo && sel ? divergencias(sel, $outputs, $styles, $visualPendente.chaves) : []
@@ -71,18 +86,12 @@
         const achado = p.find((x) => x.tipo === "modeloSumiu" && x.saida === saida && x.coluna === coluna)
         return achado ? textoDoProblema(achado, { saida: nomeSaida }) : ""
     }
-    const temModelo = (v: Visual | null, id: string) => !!v && COLUNAS.some((c) => casaDe(v, id, c.id) !== SLIDE)
 
-    // ---- escolher uma casa: se a saida divide o estilo, o aplicador da a ela um so dela antes (copia exata), sem perguntar
-    function escolher(e: Event, saida: string, coluna: Coluna) {
-        if (!sel) return
-        mudarCasa(sel.id, saida, coluna, (e.currentTarget as HTMLSelectElement).value)
-    }
-
-    function escolherRetorno(e: Event, saida: string) {
+    // ---- escolher uma casa (mudarCasa): se a saida divide o estilo, o aplicador da a ela um so dela antes (copia exata), sem perguntar
+    function escolherRetorno(valor: string, saida: string) {
         if (!sel) return
         const v = clone(sel) as Visual
-        v.retorno[saida] = (e.currentTarget as HTMLSelectElement).value || null
+        v.retorno[saida] = valor || null
         mudarVisual(v)
     }
 
@@ -176,91 +185,91 @@
                     </div>
                 {/if}
 
-                <div class="mtz" style="grid-template-columns: minmax(160px, 200px) minmax(150px, 0.8fr) repeat({COLUNAS.length}, minmax(0, 1fr));" data-acao="visual-tabela">
-                    <div />
-                    <div class="h">CAMADAS</div>
-                    {#each COLUNAS as c}<div class="h">{c.rotulo.toUpperCase()}</div>{/each}
+                <div class="linhas" data-acao="visual-tabela">
                     {#each normais as s (s.id)}
-                        <div class="sd" data-saida={s.id}>
-                            <b>{s.nome}</b>
-                            {#if !($outputs[s.id]?.enabled ?? true)}<small>desligada</small>{/if}
-                            <span class="tag">{temModelo(sel, s.id) ? "COM MODELO" : "SEM MODELO"}</span>
-                            <button type="button" class="bt fan mini" data-acao="visual-aparencia" tabindex="-1" aria-expanded={!!abertas[s.id]} on:click={() => (abertas = { ...abertas, [s.id]: !abertas[s.id] })}>{abertas[s.id] ? "▾" : "▸"} Aparência</button>
-                        </div>
-                        <div class="cel camadas" data-camadas={s.id}>
-                            {#each CAMADAS as c}
-                                {@const ligada = camadasDe(sel, s.id).includes(c.id)}
-                                <button type="button" class="chip" class:on={ligada} title="{c.rotulo}: {c.dica}{ligada ? '' : ' (não vai para esta saída)'}" aria-pressed={ligada} tabindex="-1" on:click={() => alternarCamada(s.id, c.id)}>{c.rotulo}</button>
-                            {/each}
-                        </div>
-                        {#each COLUNAS as c}
-                            {@const casa = casaDe(sel, s.id, c.id)}
-                            {@const prob = problemaDaCasa(plano.problemas, s.id, c.id)}
-                            <label class="cel" class:slide={casa === SLIDE} class:prob={!!prob} title={prob} data-casa="{s.id}:{c.id}">
-                                <span class="tx">
-                                    <b>{casa === SLIDE ? SEM_MODELO : $templates[casa]?.name || "modelo não existe mais"}</b>
-                                    {#if prob}<small>{prob}</small>{/if}
-                                </span>
-                                <select value={casa} aria-label="{s.nome}: {c.rotulo}" on:change={(e) => escolher(e, s.id, c.id)}>
-                                    <option value={SLIDE}>{SEM_MODELO}</option>
-                                    {#if casa !== SLIDE && !$templates[casa]}<option value={casa}>modelo não existe mais</option>{/if}
-                                    {#each modelos as m (m.id)}<option value={m.id}>{m.nome}</option>{/each}
-                                </select>
-                            </label>
-                        {/each}
-                        {#if abertas[s.id]}
-                            {@const ap = aparenciaDe(sel, s.id)}
-                            <div class="aparencia" data-aparencia={s.id}>
-                                <label class="campo">
-                                    <span>Cor de fundo</span>
-                                    <input type="color" value={ap.background && ap.background !== "transparent" ? ap.background : "#000000"} disabled={ap.background === "transparent"} on:change={(e) => mudarAparencia(s.id, "background", e.currentTarget.value)} />
-                                    <label class="chk"><input type="checkbox" checked={ap.background === "transparent"} on:change={(e) => mudarAparencia(s.id, "background", e.currentTarget.checked ? "transparent" : "#000000")} /> Transparente (NDI com alpha)</label>
-                                </label>
-                                <label class="chk"><input type="checkbox" checked={!!ap.clearStyleBackgroundOnText} on:change={(e) => mudarAparencia(s.id, "clearStyleBackgroundOnText", e.currentTarget.checked)} /> Tirar o fundo quando houver texto</label>
-                                {#if ap.backgroundImage}
-                                    <span class="campo"><span>Imagem de fundo</span><b>{nomeDoArquivo(ap.backgroundImage)}</b><button type="button" class="bt mini" tabindex="-1" on:click={() => mudarAparencia(s.id, "backgroundImage", undefined)}>Tirar</button></span>
-                                {/if}
-                                {#each COLUNAS_EXTRA as c}
-                                    {@const casa = sel?.saidas?.[s.id]?.[c.id] || SLIDE}
-                                    <label class="campo">
-                                        <span>{c.rotulo}</span>
-                                        <select value={casa} on:change={(e) => escolherExtra(e, s.id, c.id)}>
-                                            <option value={SLIDE}>Igual à Bíblia</option>
-                                            {#if casa !== SLIDE && !$templates[casa]}<option value={casa}>modelo não existe mais</option>{/if}
-                                            {#each modelos as m (m.id)}<option value={m.id}>{m.nome}</option>{/each}
-                                        </select>
-                                    </label>
-                                {/each}
+                        {@const ap = aparenciaDe(sel, s.id)}
+                        {@const camadas = camadasDe(sel, s.id)}
+                        {@const letra = caixaDaLetra(casaDe(sel, s.id, "musica"), $templates)}
+                        {@const desligada = !($outputs[s.id]?.enabled ?? true)}
+                        <div class="linha" data-saida={s.id}>
+                            <div class="principal">
+                                <div class="mon" title="Prévia: como esta saída mostra uma música">
+                                    <div class="mFundo" class:off={!camadas.includes("background")} class:transp={ap.background === "transparent"} style={ap.background && ap.background !== "transparent" && !ap.backgroundImage ? `background:${ap.background}` : ""} />
+                                    <div class="mTexto" class:off={!camadas.includes("slide")} style={letra ? `left:${letra.l}%;top:${letra.t}%;width:${letra.w}%;height:${letra.h}%;` : ""}>
+                                        <i style="width:78%" /><i style="width:58%" />
+                                    </div>
+                                    <div class="mAviso" class:off={!camadas.includes("overlays")} />
+                                </div>
+                                <div class="meio">
+                                    <div class="topo">
+                                        <b>{s.nome}</b>
+                                        <small>{desligada ? "desligada" : resolucao(s.id)}</small>
+                                        <div class="camadas" data-camadas={s.id}>
+                                            {#each CAMADAS as c}
+                                                {@const ligada = camadas.includes(c.id)}
+                                                <button type="button" class="cam" class:no={!ligada} title="{c.rotulo} ({c.tecla}): {ligada ? 'aparece' : 'não aparece'} nesta saída" aria-pressed={ligada} tabindex="-1" on:click={() => alternarCamada(s.id, c.id)}>
+                                                    <Icon id={c.icone} size={0.85} white />
+                                                </button>
+                                            {/each}
+                                        </div>
+                                    </div>
+                                    <div class="escolhas">
+                                        {#each COLUNAS as c}
+                                            <AliancaEscolha rotulo={c.id === "musica" ? "Música" : c.rotulo} valor={casaDe(sel, s.id, c.id)} opcoes={modelos} neutra={{ id: SLIDE, nome: SEM_MODELO }} problema={problemaDaCasa(plano.problemas, s.id, c.id)} acao="casa-{s.id}-{c.id}" on:escolher={(e) => sel && mudarCasa(sel.id, s.id, c.id, e.detail)} />
+                                        {/each}
+                                    </div>
+                                </div>
+                                <button type="button" class="eng" class:on={!!abertas[s.id]} title="Mais ajustes" data-acao="visual-aparencia" aria-expanded={!!abertas[s.id]} tabindex="-1" on:click={() => (abertas = { ...abertas, [s.id]: !abertas[s.id] })}>
+                                    <Icon id="settings" size={0.9} white />
+                                </button>
                             </div>
-                        {/if}
+                            {#if abertas[s.id]}
+                                <div class="ajustes" data-aparencia={s.id}>
+                                    <label class="aj" title="Cor quando não há imagem nem vídeo de fundo">
+                                        <span>Cor de fundo</span>
+                                        <span class="bolinha" class:transp={ap.background === "transparent"} style="background:{ap.background && ap.background !== 'transparent' ? ap.background : '#000000'}">
+                                            <input type="color" value={ap.background && ap.background !== "transparent" ? ap.background : "#000000"} disabled={ap.background === "transparent"} on:change={(e) => mudarAparencia(s.id, "background", e.currentTarget.value)} />
+                                        </span>
+                                    </label>
+                                    <button type="button" class="aj" title="Para NDI / OBS sobrepor no vídeo" tabindex="-1" on:click={() => mudarAparencia(s.id, "background", ap.background === "transparent" ? "#000000" : "transparent")}>
+                                        <span>Fundo transparente</span><i class="chave" class:on={ap.background === "transparent"} />
+                                    </button>
+                                    <button type="button" class="aj" title="Tira o fundo do estilo enquanto há letra na tela" tabindex="-1" on:click={() => mudarAparencia(s.id, "clearStyleBackgroundOnText", !ap.clearStyleBackgroundOnText)}>
+                                        <span>Sem fundo com letra</span><i class="chave" class:on={!!ap.clearStyleBackgroundOnText} />
+                                    </button>
+                                    {#if ap.backgroundImage}
+                                        <button type="button" class="aj" title={ap.backgroundImage} tabindex="-1" on:click={() => mudarAparencia(s.id, "backgroundImage", undefined)}>
+                                            <span>Imagem: {nomeDoArquivo(ap.backgroundImage)}</span><small>Tirar</small>
+                                        </button>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </div>
+                    {/each}
+
+                    {#each retornos as r (r.id)}
+                        {@const pedido = sel?.retorno?.[r.id] || ""}
+                        {@const sumiu = !!pedido && !$stageShows[pedido]}
+                        <div class="linha" data-retorno={r.id}>
+                            <div class="principal">
+                                <div class="mon retorno" title="Monitor de retorno: mostra o modelo de retorno inteiro">
+                                    <div class="r1" />
+                                    <div class="r2" />
+                                    <div class="r3" />
+                                </div>
+                                <div class="meio">
+                                    <div class="topo"><b>{r.nome}</b><small>retorno</small></div>
+                                    <div class="escolhas">
+                                        <AliancaEscolha rotulo="Modelo" valor={pedido} opcoes={leiautes} neutra={{ id: "", nome: "Não muda" }} problema={sumiu ? "o modelo de retorno foi apagado: o retorno fica como está" : ""} acao="retorno-{r.id}" on:escolher={(e) => escolherRetorno(e.detail, r.id)} />
+                                        <span />
+                                    </div>
+                                </div>
+                                <span class="eng vazio" />
+                            </div>
+                        </div>
                     {/each}
                 </div>
-                {#if !normais.length}<p class="cota">Nenhuma saída cadastrada. Crie as saídas em Telas e saídas.</p>{/if}
-
-                <!-- problema de verdade (modelo ou leiaute apagado) aparece na propria casa, em laranja -->
-                <div class="sec">LEIAUTE DO RETORNO <small>separado dos modelos: o retorno mostra o leiaute dele</small></div>
-                {#if retornos.length}
-                    <div class="mtz" style="grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);" data-acao="visual-retorno">
-                        {#each retornos as r (r.id)}
-                            {@const pedido = sel?.retorno?.[r.id] || ""}
-                            {@const sumiu = !!pedido && !$stageShows[pedido]}
-                            <div class="sd"><b>{r.nome}</b><span class="tag">LEIAUTE DE RETORNO</span></div>
-                            <label class="cel" class:slide={!pedido} class:prob={sumiu} data-retorno={r.id}>
-                                <span class="tx">
-                                    <b>{pedido ? $stageShows[pedido]?.name || "leiaute não existe mais" : "não muda"}</b>
-                                    <small>{sumiu ? "o leiaute foi apagado: o retorno fica como está" : pedido ? "vale para música, Bíblia e aviso" : "fica o leiaute que a saída já tem"}</small>
-                                </span>
-                                <select value={pedido} aria-label="{r.nome}: leiaute do retorno" on:change={(e) => escolherRetorno(e, r.id)}>
-                                    <option value="">não muda</option>
-                                    {#if sumiu}<option value={pedido}>leiaute não existe mais</option>{/if}
-                                    {#each leiautes as l (l.id)}<option value={l.id}>{l.nome}</option>{/each}
-                                </select>
-                            </label>
-                        {/each}
-                    </div>
-                {:else}
-                    <p class="cota">Nenhuma saída de retorno.</p>
-                {/if}
+                {#if !normais.length && !retornos.length}<p class="cota">Nenhuma saída cadastrada. Crie as saídas em Telas e saídas.</p>{/if}
             </div>
         {/if}
     </div>
@@ -294,21 +303,11 @@
         flex-direction: column;
         gap: 8px;
     }
-    .rot,
-    .sec {
+    .rot {
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.05em;
         color: var(--luz-mudo);
-    }
-    .sec {
-        margin-top: 22px;
-        margin-bottom: 8px;
-    }
-    .sec small {
-        font-weight: 500;
-        letter-spacing: 0;
-        margin-left: 8px;
     }
     .card {
         padding: 10px 12px;
@@ -444,153 +443,241 @@
         flex: 1;
         min-width: 200px;
     }
-    .mtz {
-        display: grid;
-        gap: 8px;
-        align-items: stretch;
+    .linhas {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-width: 760px;
     }
-    .mtz .h {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        color: var(--luz-mudo);
-        padding: 0 2px;
-        align-self: end;
-    }
-    .sd {
+    .linha {
         border-radius: var(--luz-raio-cartao);
         background: var(--luz-trilho);
         box-shadow: inset 0 0 0 1px var(--luz-linha);
-        padding: 10px 12px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 5px;
-        min-width: 0;
     }
-    .sd b {
-        font-size: 14px;
-        font-weight: 700;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    .principal {
+        display: grid;
+        grid-template-columns: 112px minmax(0, 1fr) 28px;
+        gap: 14px;
+        align-items: center;
+        padding: 9px 10px 9px 9px;
     }
-    .sd small {
-        font-size: 11.5px;
-        color: var(--luz-mudo);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .cel {
+    .mon {
         position: relative;
-        border-radius: var(--luz-raio-cartao);
-        border: 1px solid var(--luz-borda);
-        background: var(--luz-campo);
-        padding: 8px 10px;
+        width: 112px;
+        aspect-ratio: 16 / 9;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #000;
+        box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.08),
+            0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+    .mFundo {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #1d3557, #6a4c93 60%, #e07a5f);
+        transition: opacity 0.2s;
+    }
+    .mFundo.transp,
+    .bolinha.transp {
+        background: repeating-conic-gradient(#4a4a4a 0 25%, #2e2e2e 0 50%) 0 0 / 8px 8px !important;
+    }
+    .mTexto {
+        position: absolute;
+        left: 8%;
+        top: 30%;
+        width: 84%;
+        height: 40%;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        transition: opacity 0.2s;
+    }
+    .mTexto i {
+        height: 3.5px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.92);
+    }
+    .mAviso {
+        position: absolute;
+        right: 3px;
+        top: 3px;
+        width: 22px;
+        height: 7px;
+        border-radius: 2px;
+        background: var(--luz-vermelho);
+        transition: opacity 0.2s;
+    }
+    .off {
+        opacity: 0;
+    }
+    .mon.retorno {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 3px;
+        padding: 4px;
+        box-sizing: border-box;
+    }
+    .mon.retorno div {
+        border: 1px dashed #666;
+        border-radius: 2px;
+    }
+    .mon.retorno .r1 {
+        grid-row: span 2;
+        border-color: #aaa;
+    }
+    .meio {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
         min-width: 0;
-        cursor: pointer;
     }
-    .cel.slide {
-        border-style: dashed;
-        background: transparent;
-    }
-    .cel.prob {
-        box-shadow: 0 0 0 2px var(--luz-laranja);
-    }
-    .cel .tx {
+    .topo {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
         min-width: 0;
+        white-space: nowrap;
     }
-    .cel .tx b {
-        display: block;
+    .topo b {
         font-size: 13px;
         font-weight: 600;
-        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .cel.slide .tx b {
-        font-weight: 500;
-        color: var(--luz-texto-80);
-    }
-    .cel .tx small {
-        display: block;
-        font-size: 11px;
+    .topo small {
+        font-size: 10.5px;
         color: var(--luz-mudo);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-variant-numeric: tabular-nums;
     }
-    .cel.prob .tx small {
-        color: var(--luz-laranja);
+    .camadas {
+        display: flex;
+        gap: 1px;
+        margin-left: auto;
+        align-self: center;
+        padding: 2px;
+        border-radius: 6px;
+        background: var(--luz-campo);
     }
-    .bt.mini {
-        height: 22px;
-        padding: 0 6px;
-        font-size: 11px;
-    }
-    .cel.camadas {
-        flex-direction: row;
-        flex-wrap: wrap;
+    .cam {
+        width: 24px;
+        height: 20px;
+        display: flex;
         align-items: center;
-        gap: 4px;
-        cursor: default;
-    }
-    .chip {
-        height: 24px;
-        padding: 0 8px;
-        border: 1px dashed var(--luz-borda);
-        border-radius: var(--luz-raio-selo);
-        background: transparent;
-        color: var(--luz-mudo);
-        font: inherit;
-        font-size: 11.5px;
-        text-decoration: line-through;
-        cursor: pointer;
-    }
-    .chip.on {
-        border-style: solid;
+        justify-content: center;
+        border: 0;
+        border-radius: 4px;
         background: var(--luz-hover);
-        color: var(--luz-texto);
-        text-decoration: none;
+        cursor: pointer;
+        padding: 0;
     }
-    .aparencia {
-        grid-column: 1 / -1;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px 18px;
-        align-items: center;
-        padding: 10px 12px;
-        border-radius: var(--luz-raio-cartao);
-        background: var(--luz-trilho);
-        font-size: 12px;
+    .cam.no {
+        opacity: 0.35;
+        background: transparent;
     }
-    .aparencia .campo {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .aparencia .campo select {
-        width: 180px;
-    }
-    .aparencia .chk {
-        display: flex;
-        align-items: center;
+    .escolhas {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         gap: 6px;
     }
-    select {
+    .eng {
+        width: 28px;
         height: 28px;
-        width: 100%;
-        padding: 0 6px;
-        border: 1px solid var(--luz-borda);
-        border-radius: var(--luz-raio-campo);
-        background: var(--luz-pop-opaco);
-        color: var(--luz-texto);
-        font: inherit;
-        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 6px;
+        background: var(--luz-campo);
+        opacity: 0.9;
         cursor: pointer;
+        padding: 0;
+    }
+    .eng:hover,
+    .eng.on {
+        opacity: 1;
+        background: var(--luz-hover);
+    }
+    .eng.vazio {
+        visibility: hidden;
+    }
+    .ajustes {
+        display: flex;
+        gap: 6px;
+        padding: 0 10px 9px 135px;
+    }
+    .aj {
+        flex: 1;
+        min-width: 0;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 0 8px;
+        border: 1px solid var(--luz-linha);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--luz-texto-80);
+        font: inherit;
+        font-size: 11.5px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .aj:hover {
+        background: var(--luz-campo);
+    }
+    .aj > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .aj small {
+        color: var(--luz-mudo);
+        font-size: 11px;
+    }
+    .bolinha {
+        position: relative;
+        flex: none;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px var(--luz-borda);
+        overflow: hidden;
+    }
+    .bolinha input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .chave {
+        flex: none;
+        position: relative;
+        width: 26px;
+        height: 15px;
+        border-radius: 8px;
+        background: var(--luz-borda);
+        transition: background 0.15s;
+    }
+    .chave::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #fff;
+        transition: left 0.15s;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+    }
+    .chave.on {
+        background: var(--luz-verde);
+    }
+    .chave.on::after {
+        left: 13px;
     }
 </style>

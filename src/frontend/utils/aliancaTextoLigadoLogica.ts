@@ -134,10 +134,29 @@ export function linhasLigadas(caixa: CaixaLigavel | null | undefined, opcao: Opc
 const temValor = (c: CaixaLigavel) => /\{[^}]+\}/.test(trechos(c).join(""))
 const temBiblia = (itens: CaixaLigavel[]) => itens.some((c) => trechos(c).some((v) => v.includes("{scripture")))
 
+const ehForma = (c: CaixaLigavel) => !trechos(c).join("").trim() && /background/.test(String(c?.style || ""))
+
 /**
- * O aviso que o painel mostra embaixo da lista, por causa da regra do FreeShow ao aplicar um modelo (`mergeWithTemplate`, output.ts):
+ * "aprovo caixa-da-letra" (24/nov): qual caixa recebe a letra quando o modelo e aplicado numa musica. Espelha `ordemDaLetra` em output.ts:
+ * 1o as caixas livres (sem valor ligado e que nao sao forma), depois as formas, por ultimo as ligadas; empate pela ordem dos itens.
+ * Modelo de Bíblia: nenhuma (o versiculo vem pelos valores ligados). Fora de modelo: -1.
+ */
+export function indiceDaLetra(c: { emModelo: boolean; itens: CaixaLigavel[]; modoBiblia?: boolean }): number {
+    if (!c.emModelo || !!c.modoBiblia || temBiblia(c.itens || [])) return -1
+    const prioridade = (x: CaixaLigavel) => (temValor(x) ? 2 : ehForma(x) ? 1 : 0)
+    let melhor = -1
+    ;(c.itens || []).forEach((x, i) => {
+        if (!x || (x.type || "text") !== "text") return
+        if (melhor < 0 || prioridade(x) < prioridade(c.itens[melhor])) melhor = i
+    })
+    return melhor
+}
+
+/**
+ * O aviso que o painel mostra embaixo da lista:
  * - modelo de Bíblia: o texto do slide nao entra; caixa sem valor fica vazia no telao;
- * - outros modelos: a letra cai nas caixas de texto pela ORDEM; se a 1a caixa estiver ligada, a letra apaga o valor.
+ * - outros modelos: so a caixa LETRA recebe a letra (indiceDaLetra). Alerta quando a LETRA caiu numa forma ou numa caixa ligada
+ *   (nao sobrou caixa livre).
  */
 export function avisoDoModelo(c: { emModelo: boolean; itens: CaixaLigavel[]; indice: number; modoBiblia?: boolean }): { nivel: "info" | "alerta"; texto: string } | null {
     if (!c.emModelo) return null
@@ -148,13 +167,10 @@ export function avisoDoModelo(c: { emModelo: boolean; itens: CaixaLigavel[]; ind
         if (temValor(caixa)) return null
         return { nivel: "info", texto: "Modelo de Bíblia: esta caixa não recebe o versículo. Sem um valor ligado, ela fica vazia no telão." }
     }
-    const caixasDeTexto = c.itens.filter((x) => x && (x.type || "text") === "text")
-    const ordem = caixasDeTexto.indexOf(caixa)
-    if (ordem === 0 && temValor(caixa)) return { nivel: "alerta", texto: "Esta é a 1ª caixa de texto do modelo: numa música, a letra cai nela e apaga o valor ligado. Deixe a 1ª caixa para a letra e ligue outra." }
-    const forma = !trechos(caixa).join("").trim() && /background/.test(String(caixa.style || ""))
-    if (ordem === 0 && forma) return { nivel: "alerta", texto: "Esta forma é a 1ª caixa de texto do modelo: numa música, a letra cai dentro dela. Ponha a caixa da letra antes (Camadas)." }
-    if (ordem === 0) return { nivel: "info", texto: "1ª caixa de texto: numa música, a letra cai aqui." }
-    return null
+    if (indiceDaLetra(c) !== c.indice) return null
+    if (temValor(caixa)) return { nivel: "alerta", texto: "Não há caixa livre para a letra: numa música, ela cai aqui e apaga o valor ligado. Adicione uma caixa de texto para a letra." }
+    if (ehForma(caixa)) return { nivel: "alerta", texto: "Não há caixa livre para a letra: numa música, ela cai dentro desta forma. Adicione uma caixa de texto para a letra." }
+    return { nivel: "info", texto: "Caixa LETRA: numa música, a letra cai aqui." }
 }
 
 /** forma: uma caixa de texto vazia com fundo (o "shape" do ProPresenter). Estilo CSS dos itens do FreeShow. */
