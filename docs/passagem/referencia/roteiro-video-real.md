@@ -52,3 +52,5 @@ Leitura:
 - **Com os vídeos do acervo (todos ≤ 1080p), o app de hoje não perde quadro**, nem trocando slide durante o vídeo, com o decodificador abaixo de 60%. A janela principal não decodifica nada (prévias por captura).
 - **Um arquivo 4K ainda trava** (decodificador em 100% com 2 saídas decodificando). Hoje isso só acontece se entrar vídeo 4K no acervo.
 - Conclusão: o motor de vídeo único (F2/F3) deixa de ser urgente; vira melhoria. A proteção mais barata é **não deixar 4K chegar à saída** (avisar ou converter ao importar mídia acima de 1080p).
+
+**Decisão (André, 24/nov):** motor de vídeo único fica para depois ("por ora não"). No lugar, selo de aviso em vídeo acima de 1080p no cartão da biblioteca (commit 1d64985). Reabrir se passarem a usar 4K ou mais saídas com vídeo; lembrar que as saídas NDI (janelas invisíveis) continuariam decodificando à parte.
