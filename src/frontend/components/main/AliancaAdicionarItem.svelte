@@ -6,6 +6,7 @@
     import { activeEdit, activePopup, dictionary, selected } from "../../stores"
     import { acaoDoEnter, linhasDoMenu, moverFoco } from "../../utils/aliancaAdicionarItemLogica"
     import { itensDoMenuAdicionar } from "../../utils/aliancaEditorLogica"
+    import { estiloDaForma } from "../../utils/aliancaTextoLigadoLogica"
     import { translateText } from "../../utils/language"
     import { addItem } from "../edit/scripts/itemHelpers"
     import { slideItems } from "../edit/values/items"
@@ -18,7 +19,12 @@
     let foco = -1
     let raiz: HTMLDivElement
 
-    const grupos = itensDoMenuAdicionar(slideItems)
+    // "Forma" (24/nov): o shape do ProPresenter = caixa de texto vazia com fundo; fica logo depois de "Texto"
+    const FORMAS = [
+        { id: "forma", icon: "item", label: "Forma (retângulo)" },
+        { id: "forma_circulo", icon: "item", label: "Forma (círculo)" }
+    ]
+    const grupos = itensDoMenuAdicionar(slideItems).map((g, i) => (i === 0 ? { ...g, items: [...g.items, ...FORMAS] } : g))
     $: linhas = linhasDoMenu(grupos, vista)
     $: if (!aberto) {
         vista = "raiz"
@@ -40,6 +46,7 @@
             activePopup.set("icon")
             return
         }
+        if (tipo === "forma" || tipo === "forma_circulo") return addItem("text", null, {}, "", estiloDaForma(tipo === "forma" ? "retangulo" : "circulo"))
         const textoDeExemplo = tipo === "text" && $activeEdit.type === "template" ? translateText("example.text", $dictionary) : ""
         addItem(tipo as any, null, {}, textoDeExemplo)
     }
