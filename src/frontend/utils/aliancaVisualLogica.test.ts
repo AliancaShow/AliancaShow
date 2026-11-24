@@ -7,8 +7,15 @@ const saidas = () => ({
     ret: { name: "Retorno", stageOutput: "palco1", enabled: true },
     key: { name: "Chave", isKeyOutput: true, enabled: true }
 })
-const estilos = () => ({ s1: { name: "Telão" }, s2: { name: "LED", template: "letraLed", templateScripture: "versLed" } })
-const modelos = { letraLed: { name: "Letra LED" }, versLed: { name: "Versículo LED" }, outro: { name: "Outro" } }
+const estilos = () => ({
+    s1: { name: "Telão" },
+    s2: { name: "LED", template: "letraLed", templateScripture: "versLed" }
+})
+const modelos = {
+    letraLed: { name: "Letra LED" },
+    versLed: { name: "Versículo LED" },
+    outro: { name: "Outro" }
+}
 const leiautes = { palco1: { name: "Só texto" }, palco2: { name: "Espelho" } }
 
 const visual = (saidasV: Visual["saidas"], retorno: Visual["retorno"] = {}): Visual => ({ id: "v", nome: "V", saidas: saidasV, retorno })
@@ -30,7 +37,10 @@ describe("migrar", () => {
         expect(m.aliancaVisuais).toHaveLength(1)
         const v = m.aliancaVisuais[0]
         expect(v.nome).toBe("Culto padrão")
-        expect(v.saidas).toEqual({ tel: { musica: "slide", biblia: "slide" }, led: { musica: "letraLed", biblia: "versLed" } })
+        expect(v.saidas).toEqual({
+            tel: { musica: "slide", biblia: "slide" },
+            led: { musica: "letraLed", biblia: "versLed" }
+        })
         expect(v.retorno).toEqual({ ret: "palco1" })
     })
     it("perfil sem estilos: tudo em 'Sem modelo'", () => {
@@ -41,7 +51,10 @@ describe("migrar", () => {
         const o = { ...saidas(), tel: { name: "Telão", style: "s2" } }
         const v = migrar({}, o, estilos(), "x")!.aliancaVisuais[0]
         expect(v.saidas.tel).toEqual(v.saidas.led)
-        expect(planoDeEscrita(v, o, estilos(), modelos, leiautes)).toEqual({ escritas: [], problemas: [] })
+        expect(planoDeEscrita(v, o, estilos(), modelos, leiautes)).toEqual({
+            escritas: [],
+            problemas: []
+        })
     })
     it("nunca refaz: com lista existente (mesmo vazia) devolve null", () => {
         expect(migrar({ aliancaVisuais: [] }, saidas(), estilos(), "x")).toBeNull()
@@ -54,7 +67,10 @@ describe("migrar", () => {
 
 describe("lerVisuais / visualAtivo / casaDe", () => {
     it("ignora lixo e acha o ativo", () => {
-        const s = { aliancaVisuais: [null, { id: "" }, { id: "a", nome: "A" }], aliancaVisualAtivo: "a" }
+        const s = {
+            aliancaVisuais: [null, { id: "" }, { id: "a", nome: "A" }],
+            aliancaVisualAtivo: "a"
+        }
         expect(lerVisuais(s).map((v) => v.id)).toEqual(["a"])
         expect(visualAtivo(s)?.nome).toBe("A")
         expect(visualAtivo({ aliancaVisuais: [{ id: "a" }], aliancaVisualAtivo: "b" })).toBeNull()
@@ -69,25 +85,51 @@ describe("lerVisuais / visualAtivo / casaDe", () => {
         d.saidas.led.musica = "outro"
         expect(a.saidas.led.musica).toBe("letraLed")
         const n = novoVisual([a], saidas(), "n")
-        expect(n.saidas).toEqual({ tel: { musica: "slide", biblia: "slide" }, led: { musica: "slide", biblia: "slide" } })
+        expect(n.saidas).toEqual({
+            tel: { musica: "slide", biblia: "slide" },
+            led: { musica: "slide", biblia: "slide" }
+        })
         expect(n.retorno).toEqual({ ret: "palco1" })
     })
 })
 
 describe("planoDeEscrita", () => {
     it("modelo -> template/templateScripture; 'slide' -> limpa (undefined); retorno -> stageOutput", () => {
-        const v = visual({ tel: { musica: "outro", biblia: "slide" }, led: { musica: "slide", biblia: "versLed" } }, { ret: "palco2" })
+        const v = visual(
+            {
+                tel: { musica: "outro", biblia: "slide" },
+                led: { musica: "slide", biblia: "versLed" }
+            },
+            { ret: "palco2" }
+        )
         const p = planoDeEscrita(v, saidas(), estilos(), modelos, leiautes)
         expect(p.problemas).toEqual([])
         expect(p.escritas).toEqual([
-            { tipo: "estilo", estilo: "s1", campo: "template", valor: "outro", saidas: ["tel"] },
-            { tipo: "estilo", estilo: "s2", campo: "template", valor: undefined, saidas: ["led"] },
+            {
+                tipo: "estilo",
+                estilo: "s1",
+                campo: "template",
+                valor: "outro",
+                saidas: ["tel"],
+                espera: true
+            },
+            {
+                tipo: "estilo",
+                estilo: "s2",
+                campo: "template",
+                valor: undefined,
+                saidas: ["led"],
+                espera: true
+            },
             { tipo: "retorno", saida: "ret", valor: "palco2" }
         ])
     })
     it("estilo dividido com pedidos diferentes: NÃO é problema e nada é escrito naquele campo (o aplicador separa antes; o outro campo segue)", () => {
         const o = { ...saidas(), tel: { name: "Telão", style: "s2" } }
-        const v = visual({ tel: { musica: "slide", biblia: "versLed" }, led: { musica: "letraLed", biblia: "versLed" } })
+        const v = visual({
+            tel: { musica: "slide", biblia: "versLed" },
+            led: { musica: "letraLed", biblia: "versLed" }
+        })
         const p = planoDeEscrita(v, o, estilos(), modelos, leiautes)
         expect(p.problemas).toEqual([])
         expect(p.escritas.filter((e) => e.tipo === "estilo")).toEqual([])
@@ -103,12 +145,28 @@ describe("planoDeEscrita", () => {
     })
     it("modelo apagado: problema laranja (e escreve o id assim mesmo: a saída cai no slide como foi feito)", () => {
         const p = planoDeEscrita(visual({ tel: { musica: "sumiu" } }), saidas(), estilos(), modelos, leiautes)
-        expect(p.problemas).toContainEqual({ tipo: "modeloSumiu", saida: "tel", coluna: "musica", modelo: "sumiu" })
-        expect(p.escritas).toContainEqual({ tipo: "estilo", estilo: "s1", campo: "template", valor: "sumiu", saidas: ["tel"] })
+        expect(p.problemas).toContainEqual({
+            tipo: "modeloSumiu",
+            saida: "tel",
+            coluna: "musica",
+            modelo: "sumiu"
+        })
+        expect(p.escritas).toContainEqual({
+            tipo: "estilo",
+            estilo: "s1",
+            campo: "template",
+            valor: "sumiu",
+            saidas: ["tel"],
+            espera: true
+        })
     })
     it("leiaute de retorno apagado: problema e NÃO escreve (não vira saída normal nem aponta pro nada)", () => {
         const p = planoDeEscrita(visual({}, { ret: "sumiu" }), saidas(), estilos(), modelos, leiautes)
-        expect(p.problemas).toContainEqual({ tipo: "leiauteSumiu", saida: "ret", leiaute: "sumiu" })
+        expect(p.problemas).toContainEqual({
+            tipo: "leiauteSumiu",
+            saida: "ret",
+            leiaute: "sumiu"
+        })
         expect(p.escritas.some((e) => e.tipo === "retorno")).toBe(false)
     })
     it("retorno null = o Visual não mexe; saída normal nunca recebe stageOutput", () => {
@@ -120,14 +178,30 @@ describe("planoDeEscrita", () => {
 describe("saidasParaSeparar / nomeDoEstiloProprio (o operador nunca pensa em estilo)", () => {
     it("estilo dividido pedindo o MESMO em tudo: ninguém separa", () => {
         const o = { ...saidas(), tel: { name: "Telão", style: "s2" } }
-        expect(saidasParaSeparar(visual({ tel: { musica: "letraLed", biblia: "slide" }, led: { musica: "letraLed", biblia: "slide" } }), o, estilos())).toEqual([])
+        expect(
+            saidasParaSeparar(
+                visual({
+                    tel: { musica: "letraLed", biblia: "slide" },
+                    led: { musica: "letraLed", biblia: "slide" }
+                }),
+                o,
+                estilos()
+            )
+        ).toEqual([])
     })
     it("três dividindo, uma diferente: todas menos a primeira separam (a primeira fica com o estilo original)", () => {
-        const o = { a: { name: "A", style: "s1" }, b: { name: "B", style: "s1" }, c: { name: "C", style: "s1" } }
+        const o = {
+            a: { name: "A", style: "s1" },
+            b: { name: "B", style: "s1" },
+            c: { name: "C", style: "s1" }
+        }
         expect(saidasParaSeparar(visual({ c: { musica: "outro" } }), o, estilos())).toEqual(["b", "c"])
     })
     it("retorno e chave nunca separam", () => {
-        const o = { ...saidas(), ret: { name: "R", stageOutput: "palco1", style: "s1" } }
+        const o = {
+            ...saidas(),
+            ret: { name: "R", stageOutput: "palco1", style: "s1" }
+        }
         expect(saidasParaSeparar(visual({ ret: { musica: "outro" } } as any), o, estilos())).toEqual([])
     })
     it("o estilo novo tem o nome da saída; se já existe, ganha número", () => {
@@ -140,7 +214,10 @@ describe("saidasParaSeparar / nomeDoEstiloProprio (o operador nunca pensa em est
 describe("precisaDeEstiloProprio", () => {
     const o = { ...saidas(), tel: { name: "Telão", style: "s2" } }
     it("dividido: pôr outro modelo numa saída que divide o estilo pede estilo próprio", () => {
-        const v = visual({ tel: { musica: "letraLed" }, led: { musica: "letraLed" } })
+        const v = visual({
+            tel: { musica: "letraLed" },
+            led: { musica: "letraLed" }
+        })
         expect(precisaDeEstiloProprio(v, o, estilos(), "tel", "musica", "outro")).toBe("dividido")
         expect(precisaDeEstiloProprio(v, o, estilos(), "tel", "musica", "letraLed")).toBeNull()
     })
@@ -168,18 +245,47 @@ describe("identidadeDoSlide (D15)", () => {
         expect(identidadeDoSlide({})).toBeNull()
     })
     it("Bíblia da gaveta (id temp): versículo novo com o mesmo id é outro slide (tempItems/customDynamicValues)", () => {
-        const a = identidadeDoSlide({ id: "temp", tempItems: [{ lines: [{ text: [{ value: "v1" }] }] }], customDynamicValues: { scripture_reference: "Jo 3:16" } })
-        const b = identidadeDoSlide({ id: "temp", tempItems: [{ lines: [{ text: [{ value: "v2" }] }] }], customDynamicValues: { scripture_reference: "Jo 3:17" } })
-        const c = identidadeDoSlide({ id: "temp", tempItems: [{ lines: [{ text: [{ value: "v1" }] }] }], customDynamicValues: { scripture_reference: "Jo 3:17" } })
+        const a = identidadeDoSlide({
+            id: "temp",
+            tempItems: [{ lines: [{ text: [{ value: "v1" }] }] }],
+            customDynamicValues: { scripture_reference: "Jo 3:16" }
+        })
+        const b = identidadeDoSlide({
+            id: "temp",
+            tempItems: [{ lines: [{ text: [{ value: "v2" }] }] }],
+            customDynamicValues: { scripture_reference: "Jo 3:17" }
+        })
+        const c = identidadeDoSlide({
+            id: "temp",
+            tempItems: [{ lines: [{ text: [{ value: "v1" }] }] }],
+            customDynamicValues: { scripture_reference: "Jo 3:17" }
+        })
         expect(a).not.toBe(b)
         expect(a).not.toBe(c)
     })
 })
 
 describe("Pendencias (D15, plano A)", () => {
-    const comSlide = (slide: any) => ({ ...saidas(), led: { ...saidas().led, out: { slide } } })
-    const escLed = { tipo: "estilo" as const, estilo: "s2", campo: "template" as const, valor: "outro", saidas: ["led"] }
-    const escTel = { tipo: "estilo" as const, estilo: "s1", campo: "template" as const, valor: "outro", saidas: ["tel"] }
+    const comSlide = (slide: any) => ({
+        ...saidas(),
+        led: { ...saidas().led, out: { slide } }
+    })
+    const escLed = {
+        tipo: "estilo" as const,
+        estilo: "s2",
+        campo: "template" as const,
+        valor: "outro",
+        saidas: ["led"],
+        espera: true
+    }
+    const escTel = {
+        tipo: "estilo" as const,
+        estilo: "s1",
+        campo: "template" as const,
+        valor: "outro",
+        saidas: ["tel"],
+        espera: true
+    }
 
     it("nada no ar: entra já", () => {
         const p = new Pendencias()
@@ -218,13 +324,21 @@ describe("Pendencias (D15, plano A)", () => {
     })
     it("saída desligada (enabled false) não segura", () => {
         const p = new Pendencias()
-        const o = { ...saidas(), led: { ...saidas().led, enabled: false, out: { slide: { id: "s" } } } }
+        const o = {
+            ...saidas(),
+            led: { ...saidas().led, enabled: false, out: { slide: { id: "s" } } }
+        }
         expect(p.registrar([escLed], o)).toEqual([escLed])
     })
 })
 
 describe("linhaDeOrigem (D14)", () => {
-    const base = { outputs: saidas(), estilos: estilos(), templates: modelos, leiautes }
+    const base = {
+        outputs: saidas(),
+        estilos: estilos(),
+        templates: modelos,
+        leiautes
+    }
     const v = migrar({}, saidas(), estilos(), "x")!.aliancaVisuais[0]
     it("neutra quando bate: modelo da saída, slide como foi feito e o leiaute do retorno", () => {
         const l = linhaDeOrigem(v, "musica", base)
@@ -240,6 +354,12 @@ describe("linhaDeOrigem (D14)", () => {
         expect(linhaDeOrigem(v, "musica", { ...base, estilos: e2 })[1]).toMatchObject({ texto: "modelo não existe mais" })
         const e3 = { ...estilos(), s2: { ...estilos().s2, template: "outro" } }
         expect(linhaDeOrigem(v, "musica", { ...base, estilos: e3 })[1].problema).toBe("a saída não está como o Visual diz")
-        expect(linhaDeOrigem(v, "musica", { ...base, estilos: e3, pendentes: new Set(["estilo:s2:template"]) })[1]).toMatchObject({ problema: "", pendente: true })
+        expect(
+            linhaDeOrigem(v, "musica", {
+                ...base,
+                estilos: e3,
+                pendentes: new Set(["estilo:s2:template"])
+            })[1]
+        ).toMatchObject({ problema: "", pendente: true })
     })
 })

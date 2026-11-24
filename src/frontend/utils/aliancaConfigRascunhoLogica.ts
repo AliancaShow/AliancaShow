@@ -9,7 +9,7 @@ export type Foto = { [loja: string]: any }
  * Fora, de proposito: criar/apagar saida, ligar/desligar saida/janela/NDI/RTMP/WebRTC/Blackmagic, `transparent`/`invisible` (recriam a janela), tela e limites
  * (o mapa tem o seu Desfazer), Blackmagic e `forcedResolution` (amarrados a placa) e `cropping`. Tudo isso vale NA HORA, nao conta e o Descartar nao toca.
  */
-export const CHAVES_DE_SAIDA = ["name", "color", "style", "stageOutput", "alwaysOnTop", "ndiData", "rtmpData", "webrtcData"] as const
+export const CHAVES_DE_SAIDA = ["name", "color", "style", "aliancaTelaFisica", "stageOutput", "alwaysOnTop", "ndiData", "rtmpData", "webrtcData"] as const
 
 /** dentro de rtmpData/webrtcData, `streaming` e estado vivo da transmissao (nao e configuracao) */
 const SEM_VIVO = ["rtmpData", "webrtcData"]
@@ -70,7 +70,10 @@ export function lojasMudadas(foto: Foto, agora: Foto): string[] {
     return Object.keys(foto).filter((loja) => mudancasDaLoja(...parDaLoja(loja, foto, agora)).length > 0)
 }
 
-export type EfeitosDeSaida = { estilo: boolean; sempreNoTopo: { id: string; valor: boolean }[] }
+export type EfeitosDeSaida = {
+    estilo: boolean
+    sempreNoTopo: { id: string; valor: boolean }[]
+}
 
 /**
  * devolve, DENTRO de `atual` (as saidas vivas), cada chave de papel ao que a foto guardou. So mexe em saida que existe nos dois lados
@@ -86,7 +89,11 @@ export function restaurarSaidas(atual: { [id: string]: any }, fotoSaidas: { [id:
             const viva = vistaDasSaidas({ [id]: o })[id][k]
             if (igual(guardado, viva)) continue
             if (guardado === undefined) delete o[k]
-            else if (SEM_VIVO.includes(k) && ehObjeto(guardado)) o[k] = { ...JSON.parse(JSON.stringify(guardado)), ...(ehObjeto(o[k]) && o[k].streaming !== undefined ? { streaming: o[k].streaming } : {}) }
+            else if (SEM_VIVO.includes(k) && ehObjeto(guardado))
+                o[k] = {
+                    ...JSON.parse(JSON.stringify(guardado)),
+                    ...(ehObjeto(o[k]) && o[k].streaming !== undefined ? { streaming: o[k].streaming } : {})
+                }
             else o[k] = JSON.parse(JSON.stringify(guardado))
             if (k === "style") efeitos.estilo = true
             if (k === "alwaysOnTop") efeitos.sempreNoTopo.push({ id, valor: guardado !== false })

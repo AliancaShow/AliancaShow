@@ -11,10 +11,33 @@ export const COLUNAS = [
 ] as const
 
 export type Coluna = (typeof COLUNAS)[number]["id"]
-export type CampoDeEstilo = (typeof COLUNAS)[number]["campo"]
+export type CampoDeEstilo = string
 /** "slide" = Sem modelo (a saida mostra o slide como foi feito); qualquer outro texto = id de modelo */
 export type Casa = "slide" | string
-export type SaidaDoVisual = { [c in Coluna]?: Casa }
+
+// ---------------------------------------------------------------- Tela + Visual ("aprovo tela-visual", 23/nov; desenho-tela-e-visual.md)
+// O estilo de cada saida virou RESULTADO: estilo = Tela fisica da saida (outputs[id].aliancaTelaFisica) + o que o Visual ativo diz para ela.
+// Os dois guardam os campos com o MESMO nome do estilo; chave ausente = nao escreve (o que estiver no estilo fica como esta).
+
+/** Biblia com 2, 3 e 4 versoes: modelo proprio (vazio = igual a Biblia; output.ts cai em templateScripture). Ausente no Visual = nao mexe. */
+export const COLUNAS_EXTRA = [
+    { id: "biblia2", rotulo: "Bíblia, 2 versões", campo: "templateScripture_2" },
+    { id: "biblia3", rotulo: "Bíblia, 3 versões", campo: "templateScripture_3" },
+    { id: "biblia4", rotulo: "Bíblia, 4 versões", campo: "templateScripture_4" }
+] as const
+export type ColunaExtra = (typeof COLUNAS_EXTRA)[number]["id"]
+
+/** o que e da TELA (o Screens do ProPresenter): nao muda de culto para culto */
+export const CAMPOS_FISICOS = ["aspectRatio", "fit", "lines", "volume", "blurAmount", "blurOpacity", "showAsFaded", "lineOpacity", "skipVirtualBreaks"] as const
+/** o que e do VISUAL alem dos modelos (o Look): camadas, fundo, transicao, creditos */
+export const CAMPOS_DE_APARENCIA = ["layers", "background", "backgroundImage", "clearStyleBackgroundOnText", "transition", "metadata"] as const
+/** campos de modelo: so estes esperam o proximo slide (D15); camadas, fundo e transicao valem na hora, como o Look */
+export const CAMPOS_DE_MODELO: string[] = [...COLUNAS.map((c) => c.campo), ...COLUNAS_EXTRA.map((c) => c.campo)]
+
+export type Aparencia = { [campo: string]: any }
+export type SaidaDoVisual = { [c in Coluna]?: Casa } & {
+    [c in ColunaExtra]?: Casa
+} & { aparencia?: Aparencia }
 export type Visual = {
     id: string
     nome: string
@@ -64,7 +87,14 @@ export function estiloDaSaida(o: any, estilos: Estilos): string {
 export function lerVisuais(special: any): Visual[] {
     const l = special?.aliancaVisuais
     if (!Array.isArray(l)) return []
-    return l.filter((v) => ehObjeto(v) && typeof v.id === "string" && v.id).map((v) => ({ id: v.id, nome: String(v.nome || ""), saidas: ehObjeto(v.saidas) ? v.saidas : {}, retorno: ehObjeto(v.retorno) ? v.retorno : {} }))
+    return l
+        .filter((v) => ehObjeto(v) && typeof v.id === "string" && v.id)
+        .map((v) => ({
+            id: v.id,
+            nome: String(v.nome || ""),
+            saidas: ehObjeto(v.saidas) ? v.saidas : {},
+            retorno: ehObjeto(v.retorno) ? v.retorno : {}
+        }))
 }
 
 export function visualAtivo(special: any): Visual | null {
@@ -98,21 +128,134 @@ export function nomeLivre(visuais: Visual[], base: string): string {
 }
 
 export function duplicar(v: Visual, visuais: Visual[], novoId: string): Visual {
-    return { id: novoId, nome: nomeLivre(visuais, `${v.nome} (cópia)`), saidas: JSON.parse(JSON.stringify(v.saidas || {})), retorno: JSON.parse(JSON.stringify(v.retorno || {})) }
+    return {
+        id: novoId,
+        nome: nomeLivre(visuais, `${v.nome} (cópia)`),
+        saidas: JSON.parse(JSON.stringify(v.saidas || {})),
+        retorno: JSON.parse(JSON.stringify(v.retorno || {}))
+    }
 }
 
-/** Visual novo: toda saida em "Sem modelo" e o retorno como esta hoje */
-export function novoVisual(visuais: Visual[], outputs: Saidas, novoId: string): Visual {
-    const v: Visual = { id: novoId, nome: nomeLivre(visuais, "Visual novo"), saidas: {}, retorno: {} }
-    for (const s of saidasNormais(outputs)) v.saidas[s.id] = { musica: SLIDE, biblia: SLIDE }
+/**
+ * Visual novo: toda saida em "Sem modelo" e o retorno como esta hoje. Camadas, fundo e transicao vem de `base` (o Visual ativo): sem isso,
+ * ativar o Visual novo nao mexeria neles, mas trocar de volta para ele depois de outro Visual deixaria o que o outro escreveu (revisao, achado 5).
+ */
+export function novoVisual(visuais: Visual[], outputs: Saidas, novoId: string, base: Visual | null = null): Visual {
+    const v: Visual = {
+        id: novoId,
+        nome: nomeLivre(visuais, "Visual novo"),
+        saidas: {},
+        retorno: {}
+    }
+    for (const s of saidasNormais(outputs)) {
+        const linha: SaidaDoVisual = { musica: SLIDE, biblia: SLIDE }
+        const b = base?.saidas?.[s.id]
+        if (b) {
+            for (const c of COLUNAS_EXTRA) if (b[c.id] !== undefined) linha[c.id] = SLIDE
+            if (ehObjeto(b.aparencia)) linha.aparencia = JSON.parse(JSON.stringify(b.aparencia))
+        }
+        v.saidas[s.id] = linha
+    }
     for (const r of saidasDeRetorno(outputs)) v.retorno[r.id] = r.leiaute || null
     return v
 }
 
+// ---------------------------------------------------------------- Tela + Visual: o estilo composto
+
+/** valor comparavel: undefined (apagar o campo) e diferente de null; objetos com chaves em ordem */
+export function estavel(x: any): string {
+    if (x === undefined) return "\u0000apagar"
+    return JSON.stringify(ordenarChaves(x))
+}
+function ordenarChaves(x: any): any {
+    if (Array.isArray(x)) return x.map(ordenarChaves)
+    if (!ehObjeto(x)) return x
+    const r: { [k: string]: any } = {}
+    for (const k of Object.keys(x).sort()) r[k] = ordenarChaves(x[k])
+    return r
+}
+/** pedido inteiro (chaves presentes, inclusive as de apagar) num texto comparavel */
+const estavelDoPedido = (d: { [k: string]: any }): string =>
+    Object.keys(d)
+        .sort()
+        .map((k) => `${k}=${estavel(d[k])}`)
+        .join("\u0001")
+
+/** a Tela fisica da saida (outputs[id].aliancaTelaFisica) ou null (saida ainda nao migrada) */
+export function telaFisicaDe(o: any): Aparencia | null {
+    const t = o?.aliancaTelaFisica
+    return ehObjeto(t) ? t : null
+}
+
+/** copia so os campos pedidos que existem em `de` (valor undefined nao conta) */
+export function escolherCampos(de: any, campos: readonly string[]): Aparencia {
+    const r: Aparencia = {}
+    if (!ehObjeto(de)) return r
+    for (const k of campos) if (de[k] !== undefined) r[k] = JSON.parse(JSON.stringify(de[k]))
+    return r
+}
+
+/**
+ * o que a saida PEDE ao estilo dela: campos da Tela fisica + modelos e aparencia do Visual. Chave presente com valor undefined = apagar o
+ * campo do estilo ("Sem modelo"); chave ausente = nao mexer.
+ */
+export function desejadoDaSaida(v: Visual | null, outputId: string, o: any): { [campo: string]: any } {
+    const r: { [campo: string]: any } = {}
+    const t = telaFisicaDe(o)
+    if (t) for (const k of CAMPOS_FISICOS) if (k in t && t[k] !== undefined) r[k] = t[k]
+    if (!v) return r
+    for (const c of COLUNAS) {
+        const casa = casaDe(v, outputId, c.id)
+        r[c.campo] = casa === SLIDE ? undefined : casa
+    }
+    const linha: SaidaDoVisual = v.saidas?.[outputId] || {}
+    for (const c of COLUNAS_EXTRA) {
+        const casa = linha[c.id]
+        if (casa === undefined) continue
+        r[c.campo] = !casa || casa === SLIDE ? undefined : casa
+    }
+    if (ehObjeto(linha.aparencia)) for (const k of CAMPOS_DE_APARENCIA) if (k in linha.aparencia && linha.aparencia[k] !== undefined) r[k] = linha.aparencia[k]
+    return r
+}
+
+export const VERSAO_TELA = 1
+
+/**
+ * migracao Tela + Visual (uma vez; marcador special.aliancaTelaVersao). LE o estilo de cada saida normal, sem mudar nada na tela:
+ * a Tela fisica recebe os campos fisicos e CADA Visual recebe a aparencia e os modelos de 2–4 versoes de hoje.
+ * Quem chama tem de ter dado antes um estilo proprio a cada saida (saidasParaSeparar estrito). Devolve null se ja migrou.
+ */
+export function migrarTela(special: any, outputs: Saidas, estilos: Estilos): { telas: { [outputId: string]: Aparencia }; visuais: Visual[] } | null {
+    if ((Number(special?.aliancaTelaVersao) || 0) >= VERSAO_TELA) return null
+    const telas: { [id: string]: Aparencia } = {}
+    const visuais: Visual[] = JSON.parse(JSON.stringify(lerVisuais(special)))
+    for (const s of saidasNormais(outputs)) {
+        const est = estilos?.[estiloDaSaida(outputs[s.id], estilos)] || {}
+        telas[s.id] = escolherCampos(est, CAMPOS_FISICOS)
+        for (const v of visuais) {
+            const linha: SaidaDoVisual = v.saidas[s.id] || (v.saidas[s.id] = {})
+            linha.aparencia = escolherCampos(est, CAMPOS_DE_APARENCIA)
+            for (const c of COLUNAS_EXTRA) linha[c.id] = est[c.campo] || SLIDE
+        }
+    }
+    return { telas, visuais }
+}
+
 // ---------------------------------------------------------------- plano de escrita
 
-export type EscritaDeEstilo = { tipo: "estilo"; estilo: string; campo: CampoDeEstilo; valor: string | undefined; saidas: string[] }
-export type EscritaDeRetorno = { tipo: "retorno"; saida: string; valor: string }
+export type EscritaDeEstilo = {
+    tipo: "estilo"
+    estilo: string
+    campo: CampoDeEstilo
+    valor: any
+    saidas: string[]
+    espera?: boolean
+}
+export type EscritaDeRetorno = {
+    tipo: "retorno"
+    saida: string
+    valor: string
+}
 export type Escrita = EscritaDeEstilo | EscritaDeRetorno
 
 /**
@@ -132,13 +275,14 @@ export const chaveDaEscrita = (e: Escrita): string => (e.tipo === "estilo" ? `es
  * dividido por saidas que pedem coisas diferentes em alguma coluna, todas menos a primeira (a primeira fica com o estilo original).
  * O aplicador da a cada uma uma copia exata do estilo atual (desenha igual) com o nome da saida e so depois escreve. Nunca na carga.
  */
-export function saidasParaSeparar(v: Visual, outputs: Saidas, estilos: Estilos): string[] {
+export function saidasParaSeparar(v: Visual | null, outputs: Saidas, estilos: Estilos, estrito = false): string[] {
     const r: string[] = []
     const porEstilo = new Map<string, string[]>()
     for (const s of saidasNormais(outputs)) {
         const est = estiloDaSaida(outputs[s.id], estilos)
         if (!est) {
-            if (COLUNAS.some((c) => casaDe(v, s.id, c.id) !== SLIDE)) r.push(s.id)
+            // estrito (depois da migracao Tela + Visual): toda saida normal tem estilo so dela, mesmo sem pedir nada
+            if (estrito || Object.values(desejadoDaSaida(v, s.id, outputs[s.id])).some((x) => x !== undefined)) r.push(s.id)
             continue
         }
         porEstilo.set(est, [...(porEstilo.get(est) || []), s.id])
@@ -146,7 +290,11 @@ export function saidasParaSeparar(v: Visual, outputs: Saidas, estilos: Estilos):
     for (const ids of porEstilo.values()) {
         if (ids.length < 2) continue
         const [primeira, ...outras] = ids
-        const pedidoDe = (id: string) => COLUNAS.map((c) => casaDe(v, id, c.id)).join("\u0000")
+        if (estrito) {
+            r.push(...outras)
+            continue
+        }
+        const pedidoDe = (id: string) => estavelDoPedido(desejadoDaSaida(v, id, outputs[id]))
         if (outras.some((id) => pedidoDe(id) !== pedidoDe(primeira))) r.push(...outras)
     }
     return r
@@ -155,7 +303,13 @@ export function saidasParaSeparar(v: Visual, outputs: Saidas, estilos: Estilos):
 /** o nome do estilo proprio de uma saida: o nome dela (com numero se ja existir um estilo com esse nome) */
 export function nomeDoEstiloProprio(nomeDaSaida: string, estilos: Estilos): string {
     const base = (nomeDaSaida || "Saída").trim() || "Saída"
-    const nomes = new Set(Object.values(estilos || {}).map((e: any) => String(e?.name || "").trim().toLowerCase()))
+    const nomes = new Set(
+        Object.values(estilos || {}).map((e: any) =>
+            String(e?.name || "")
+                .trim()
+                .toLowerCase()
+        )
+    )
     if (!nomes.has(base.toLowerCase())) return base
     for (let i = 2; ; i++) if (!nomes.has(`${base} ${i}`.toLowerCase())) return `${base} ${i}`
 }
@@ -164,7 +318,7 @@ export function nomeDoEstiloProprio(nomeDaSaida: string, estilos: Estilos): stri
  * o que ativar `v` escreveria. So devolve escrita que muda algo (valor atual diferente). Saida sem estilo ou estilo dividido com pedidos
  * diferentes nao gera escrita (o aplicador separa antes: `saidasParaSeparar`); nada e escrito calado num estilo que outra saida usa.
  */
-export function planoDeEscrita(v: Visual, outputs: Saidas, estilos: Estilos, templates: Mapa = {}, leiautes: Mapa = {}): { escritas: Escrita[]; problemas: Problema[] } {
+export function planoDeEscrita(v: Visual | null, outputs: Saidas, estilos: Estilos, templates: Mapa = {}, leiautes: Mapa = {}): { escritas: Escrita[]; problemas: Problema[] } {
     const escritas: Escrita[] = []
     const problemas: Problema[] = []
     const porEstilo = new Map<string, string[]>()
@@ -173,21 +327,40 @@ export function planoDeEscrita(v: Visual, outputs: Saidas, estilos: Estilos, tem
         if (!est) continue
         porEstilo.set(est, [...(porEstilo.get(est) || []), s.id])
     }
-    for (const s of saidasNormais(outputs))
-        for (const c of COLUNAS) {
-            const casa = casaDe(v, s.id, c.id)
-            if (casa !== SLIDE && !ehObjeto(templates?.[casa])) problemas.push({ tipo: "modeloSumiu", saida: s.id, coluna: c.id, modelo: casa })
-        }
+    if (v)
+        for (const s of saidasNormais(outputs))
+            for (const c of COLUNAS) {
+                const casa = casaDe(v, s.id, c.id)
+                if (casa !== SLIDE && !ehObjeto(templates?.[casa]))
+                    problemas.push({
+                        tipo: "modeloSumiu",
+                        saida: s.id,
+                        coluna: c.id,
+                        modelo: casa
+                    })
+            }
     for (const [est, ids] of porEstilo) {
-        for (const c of COLUNAS) {
-            const pedidos = new Set(ids.map((id) => casaDe(v, id, c.id)))
-            if (pedidos.size > 1) continue // separar antes (saidasParaSeparar)
-            const casa = [...pedidos][0]
-            const valor = casa === SLIDE ? undefined : casa
-            const atual = estilos[est]?.[c.campo] || undefined
-            if (atual !== valor) escritas.push({ tipo: "estilo", estilo: est, campo: c.campo, valor, saidas: ids })
+        const pedidos = ids.map((id) => desejadoDaSaida(v, id, outputs[id]))
+        const campos = new Set(pedidos.flatMap((d) => Object.keys(d)))
+        for (const campo of campos) {
+            // alguem nao pede ou pede outra coisa: estilo dividido, separar antes (saidasParaSeparar)
+            if (pedidos.some((d) => !(campo in d))) continue
+            if (new Set(pedidos.map((d) => estavel(d[campo]))).size > 1) continue
+            const valor = pedidos[0][campo]
+            const modelo = CAMPOS_DE_MODELO.includes(campo)
+            const atual = modelo ? estilos[est]?.[campo] || undefined : estilos[est]?.[campo]
+            if (estavel(atual) !== estavel(valor))
+                escritas.push({
+                    tipo: "estilo",
+                    estilo: est,
+                    campo,
+                    valor,
+                    saidas: ids,
+                    espera: modelo
+                })
         }
     }
+    if (!v) return { escritas, problemas }
     for (const r of saidasDeRetorno(outputs)) {
         const l = v.retorno?.[r.id]
         if (!l) continue
@@ -234,7 +407,12 @@ export function divergencias(v: Visual, outputs: Saidas, estilos: Estilos, pende
  */
 export function identidadeDoSlide(slide: any): string | null {
     if (!ehObjeto(slide) || !slide.id) return null
-    const base: any = { id: slide.id, layout: slide.layout ?? null, index: slide.index ?? null, page: slide.page ?? null }
+    const base: any = {
+        id: slide.id,
+        layout: slide.layout ?? null,
+        index: slide.index ?? null,
+        page: slide.page ?? null
+    }
     if (slide.id === "temp") {
         base.tempItems = slide.tempItems ?? null
         base.customDynamicValues = slide.customDynamicValues ?? null
@@ -252,7 +430,10 @@ export const slideNoAr = (o: any): boolean => ehObjeto(o) && o.enabled !== false
 /** as saidas cujo slide decide quando a escrita entra: estilo = as saidas que o usam; retorno = a propria saida */
 export const saidasDaEscrita = (e: Escrita): string[] => (e.tipo === "estilo" ? e.saidas : [e.saida])
 
-type Pendente = { escrita: Escrita; vigiadas: { [outputId: string]: string | null } }
+type Pendente = {
+    escrita: Escrita
+    vigiadas: { [outputId: string]: string | null }
+}
 
 /**
  * pendencias por chave de escrita. `registrar` separa o que entra ja (nenhuma saida vigiada com slide no ar) do que espera; `aoMudar`
@@ -281,7 +462,8 @@ export class Pendencias {
         for (const e of escritas) {
             const vigiadas: { [id: string]: string | null } = {}
             for (const id of saidasDaEscrita(e)) if (slideNoAr(outputs?.[id])) vigiadas[id] = identidadeDoSlide(outputs[id].out.slide)
-            if (!Object.keys(vigiadas).length) ja.push(e)
+            // camadas, fundo e transicao valem na hora, como o Look do ProPresenter; so modelo e leiaute de retorno esperam o proximo slide
+            if (!Object.keys(vigiadas).length || (e.tipo === "estilo" && !e.espera)) ja.push(e)
             else this.mapa.set(chaveDaEscrita(e), { escrita: e, vigiadas })
         }
         return ja
@@ -308,13 +490,29 @@ export class Pendencias {
 
 // ---------------------------------------------------------------- linha de origem (D14)
 
-export type EtiquetaDeOrigem = { saida: string; nome: string; texto: string; problema: string; pendente: boolean }
+export type EtiquetaDeOrigem = {
+    saida: string
+    nome: string
+    texto: string
+    problema: string
+    pendente: boolean
+}
 
 /**
  * a linha de origem de Mostrar: por saida normal, de onde vem a cara (modelo do Visual ou o slide como foi feito) e, por retorno, o leiaute.
  * Le o que a saida usa DE FATO (os campos do estilo), compara com o Visual e so marca problema quando algo nao bate.
  */
-export function linhaDeOrigem(v: Visual | null, coluna: Coluna, o: { outputs: Saidas; estilos: Estilos; templates: Mapa; leiautes: Mapa; pendentes?: Set<string> }): EtiquetaDeOrigem[] {
+export function linhaDeOrigem(
+    v: Visual | null,
+    coluna: Coluna,
+    o: {
+        outputs: Saidas
+        estilos: Estilos
+        templates: Mapa
+        leiautes: Mapa
+        pendentes?: Set<string>
+    }
+): EtiquetaDeOrigem[] {
     const r: EtiquetaDeOrigem[] = []
     const campo = COLUNAS.find((c) => c.id === coluna)!.campo
     const pend = o.pendentes || new Set<string>()
@@ -335,7 +533,13 @@ export function linhaDeOrigem(v: Visual | null, coluna: Coluna, o: { outputs: Sa
     }
     for (const s of saidasDeRetorno(o.outputs)) {
         const existe = ehObjeto(o.leiautes?.[s.leiaute])
-        r.push({ saida: s.id, nome: s.nome, texto: existe ? o.leiautes[s.leiaute].name || "leiaute sem nome" : "leiaute não existe mais", problema: existe ? "" : "o leiaute do retorno foi apagado", pendente: pend.has(`retorno:${s.id}`) })
+        r.push({
+            saida: s.id,
+            nome: s.nome,
+            texto: existe ? o.leiautes[s.leiaute].name || "leiaute sem nome" : "leiaute não existe mais",
+            problema: existe ? "" : "o leiaute do retorno foi apagado",
+            pendente: pend.has(`retorno:${s.id}`)
+        })
     }
     return r
 }

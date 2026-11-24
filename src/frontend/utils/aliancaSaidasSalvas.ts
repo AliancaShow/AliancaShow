@@ -23,9 +23,11 @@ export const CAMPOS_DE_CONFIGURACAO = [
     "invisible",
     "taskbar",
     "style",
+    // "aprovo tela-visual": a Tela fisica da saida (proporcao, preenchimento, linhas)
+    "aliancaTelaFisica",
     "stageOutput",
     "hideFromPreview",
-    "forcedResolution",
+    "forcedResolution"
 ] as const
 
 /** a assinatura da configuração de todas as saídas, sem o estado ao vivo; `null` se não dá para comparar */

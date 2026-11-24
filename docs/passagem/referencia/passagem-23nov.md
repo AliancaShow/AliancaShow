@@ -50,6 +50,11 @@ Testes na última junção: `test:layout` 103/103, vitest 1679 ok (só os 4 Rtmp
 - **Achado do perfil de teste:** com `FS_MOCK_STORE_PATH`, os arquivos portáteis (estilos, modelos, cultos, palco: `settings_synced.json` etc.) são lidos da pasta `store\`, não de `Config\`. Para testar com uma cópia dos dados reais, copie também `Documentos\AliancaShow\Config\*.json` para `store\`. Sem isso o LED perde o estilo e sai 16:9 com barras (foi o que pareceu defeito no teste).
 - **Próxima conversa:** Visual × Estilo. O André quer **uma opção só** (hoje há "Visual" e "Estilos", herdado do FreeShow, e "Proporção = resolução da saída" fica escondido em Estilos). Também: quando o estilo de uma saída some, o Visual cria um estilo vazio e o LED cai em 16:9 calado — tem de quebrar alto.
 
+## Tela + Visual ("aprovo tela-visual", 24/nov) — `feat/cabine-6-tela-visual`
+- O "Estilo" do FreeShow deixou de ser opção: cada saída tem a **Tela** (física: proporção, posição, fonte, linhas, como vídeos e imagens preenchem) e o **Visual** é o Look do ProPresenter (por saída: camadas, modelos de Música e Bíblia, fundo). Desenho, revisão cética e o que foi feito: `desenho-tela-e-visual.md`.
+- Na primeira abertura com a versão nova, a migração lê os estilos de hoje (nada muda na tela) e separa saídas que dividiam estilo (na cabine: NDI-FullScreen e NDI-Alpha).
+- Testes: unit 1574 ok no frontend, svelte-check 151, `ANCORA: ok` sem exceção nova; migração provada na cópia da config real.
+
 ## Pendências (perguntas abertas ao André)
 - **"aprovo selecionar-tela"** — tirar a janela que bloqueia quando o telão não liga (`src/frontend/IPC/responsesMain.ts`, fecho; diff de 1 linha pronto no histórico: `if (a === "error.display") return` antes do `alertMessage.set`). Depois do aprovo: registrar em `ancora.mjs` (EXCECOES + recalcular SHA_EXCECOES).
 - **V2 do Modelo** (modelo nasce no tamanho da tela; precisa de "aprovo" para TemplateSlide, Editbox, Snaplines, Textbox, autoPosition — ver `plano-modelos-visual.md` + adendo). Perguntas: (1) coluna única "Música e avisos" por enquanto? (2) cortar a reaplicação automática do modelo ao abrir a música (estampa D20)? (3) miniaturas do centro imitam o LED? (4) Bíblia com duas versões usa modelo próprio?

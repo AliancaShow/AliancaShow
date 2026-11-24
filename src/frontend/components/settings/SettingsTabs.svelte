@@ -61,10 +61,13 @@
 <!-- C4: lista lateral do desenho (item de 36 px, ativo = fundo hover com barra creme); Sirvo e Controle remoto sao itens proprios -->
 <div class="main" data-acao="config-itens">
     {#each activeTabs as tab}
+        <!-- "aprovo tela-visual" (23/nov): "Estilos" saiu do menu (o estilo virou resultado de Tela + Visual); a aba segue existindo para o Visual -->
+        {#if tab !== "styles"}
         <button type="button" class="it" class:a={$settingsTab === tab && $configSecao === ""} data-aba={tab} tabindex="-1" on:click={() => abrir(tab)}>
             <Icon id={tab} white />
             <span>{ROTULOS_CONFIG[tab] || tab}</span>
         </button>
+        {/if}
         {#if tab === "display_settings" && activeTabs.includes("styles")}
             <!-- cabine 6 (V1, P2): o Visual (qual modelo cada saida usa em cada tipo de conteudo); mora na aba `styles` -->
             <button type="button" class="it" class:a={$settingsTab === "styles" && $configSecao === "visual"} data-aba="visual" tabindex="-1" on:click={() => abrir("styles", "visual")}>
