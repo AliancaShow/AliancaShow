@@ -66,18 +66,20 @@ describe("linhasLigadas", () => {
 
 describe("avisoDoModelo", () => {
     const fundo = { type: "media" }
+    const forma = { style: "background-color:red;", lines: [{ text: [{ value: "" }] }] }
     it("fora de modelo: nada", () => {
         expect(avisoDoModelo({ emModelo: false, itens: [caixa("{time_hours}")], indice: 0 })).toBeNull()
     })
-    it("música: 1ª caixa ligada = alerta; 1ª sem valor = info; as outras, nada", () => {
+    it("música: caixa ligada antes da letra não leva aviso; a LETRA leva info", () => {
         const itens = [fundo, caixa("{time_hours}"), caixa("Letra")]
-        expect(avisoDoModelo({ emModelo: true, itens, indice: 1 })?.nivel).toBe("alerta")
-        expect(avisoDoModelo({ emModelo: true, itens: [caixa("Letra"), caixa("{time_hours}")], indice: 0 })?.nivel).toBe("info")
-        expect(avisoDoModelo({ emModelo: true, itens: [caixa("Letra"), caixa("{time_hours}")], indice: 1 })).toBeNull()
+        expect(avisoDoModelo({ emModelo: true, itens, indice: 1 })).toBeNull()
+        expect(avisoDoModelo({ emModelo: true, itens, indice: 2 })?.nivel).toBe("info")
     })
-    it("música: forma (vazia com fundo) como 1ª caixa = alerta", () => {
-        const forma = { style: "background-color:red;", lines: [{ text: [{ value: "" }] }] }
-        expect(avisoDoModelo({ emModelo: true, itens: [forma, caixa("Letra")], indice: 0 })?.nivel).toBe("alerta")
+    it("música: sem caixa livre, a letra cai na forma ou na ligada = alerta", () => {
+        expect(avisoDoModelo({ emModelo: true, itens: [forma, caixa("{time_hours}")], indice: 0 })?.nivel).toBe("alerta")
+        expect(avisoDoModelo({ emModelo: true, itens: [forma, caixa("{time_hours}")], indice: 1 })).toBeNull()
+        expect(avisoDoModelo({ emModelo: true, itens: [caixa("{time_hours}")], indice: 0 })?.nivel).toBe("alerta")
+        expect(avisoDoModelo({ emModelo: true, itens: [forma, caixa("Letra")], indice: 0 })).toBeNull()
     })
     it("Bíblia: caixa sem valor fica vazia (info); com valor, nada", () => {
         const itens = [caixa("{scripture_text}"), caixa("Fixo")]
@@ -95,9 +97,13 @@ describe("estiloDaForma", () => {
 })
 
 describe("indiceDaLetra", () => {
-    it("1ª caixa de texto pela ordem dos itens; Bíblia e fora de modelo: nenhuma", () => {
+    it("livre > forma > ligada, empate pela ordem; Bíblia e fora de modelo: nenhuma", () => {
         const itens = [{ type: "media" }, caixa("{time_hours}"), caixa("Letra")]
-        expect(indiceDaLetra({ emModelo: true, itens })).toBe(1)
+        expect(indiceDaLetra({ emModelo: true, itens })).toBe(2)
+        const forma = { style: "background-color:red;", lines: [{ text: [{ value: "" }] }] }
+        expect(indiceDaLetra({ emModelo: true, itens: [forma, caixa("{time_hours}"), caixa("")] })).toBe(2)
+        expect(indiceDaLetra({ emModelo: true, itens: [caixa("{time_hours}"), forma] })).toBe(1)
+        expect(indiceDaLetra({ emModelo: true, itens: [caixa("{time_hours}"), caixa("{slide_text_next}")] })).toBe(0)
         expect(indiceDaLetra({ emModelo: false, itens })).toBe(-1)
         expect(indiceDaLetra({ emModelo: true, itens: [caixa("{scripture_text}"), caixa("x")] })).toBe(-1)
         expect(indiceDaLetra({ emModelo: true, itens, modoBiblia: true })).toBe(-1)

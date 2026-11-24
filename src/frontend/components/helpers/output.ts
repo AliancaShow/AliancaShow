@@ -1239,6 +1239,17 @@ export function mergeWithTemplate(slideItems: Item[], templateItems: Item[], add
 
     const hasScriptureDynamicValue = Object.keys(customDynamicValues).length && templateItems?.some((item) => item?.lines?.some((line) => line?.text?.some((text) => text.value?.includes("{scripture"))))
 
+    // "aprovo caixa-da-letra" (24/nov): a letra cai primeiro nas caixas livres, depois nas formas, por ultimo nas ligadas (ordemDaLetra).
+    // posicaoNoModelo[k] = posicao original da k-esima caixa de texto, para as que sobram guardarem a camada do modelo (atras/na frente da letra).
+    // Modelo de Biblia: inalterado (o texto do slide nao entra).
+    let posicaoNoModelo: number[] = []
+    if (!hasScriptureDynamicValue && sorted.text?.length) {
+        posicaoNoModelo = ordemDaLetra(sorted.text)
+        sorted.text = posicaoNoModelo.map((i) => sorted.text[i])
+        sortedTemplateItems.text = posicaoNoModelo.map((i) => sortedTemplateItems.text[i])
+    }
+    let caixasUsadas = 0
+
     // reduce template textboxes to slide items
     const slideTextboxes = hasScriptureDynamicValue ? 0 : slideItems.reduce((count, a) => (count += (a?.type || "text") === "text" ? 1 : 0), 0)
     if (!templateClicked && slideTextboxes < (sortedTemplateItems.text?.length || 0)) {
@@ -1259,6 +1270,7 @@ export function mergeWithTemplate(slideItems: Item[], templateItems: Item[], add
 
         const templateItem = clone(sortedTemplateItems[type]?.shift())
         if (!templateItem) return finish()
+        if (type === "text") caixasUsadas++
 
         item.style = templateItem.style || ""
         item.align = templateItem.align || ""
@@ -1358,6 +1370,7 @@ export function mergeWithTemplate(slideItems: Item[], templateItems: Item[], add
         }
     })
 
+    let caixasAtras: Item[] = []
     if (addOverflowTemplateItems || hasScriptureDynamicValue) {
         const remainingTextTemplateItems = !templateClicked || hasScriptureDynamicValue ? sorted.text?.slice(slideTextboxes) || [] : sortedTemplateItems.text || []
 
@@ -1379,6 +1392,15 @@ export function mergeWithTemplate(slideItems: Item[], templateItems: Item[], add
         }
 
         sortedTemplateItems.text = removeTextValue(remainingTextTemplateItems)
+
+        // "aprovo caixa-da-letra": a que estava ATRAS da caixa da letra no modelo (ex.: forma de fundo) continua atras
+        if (posicaoNoModelo.length && caixasUsadas) {
+            const posDaLetra = Math.min(...posicaoNoModelo.slice(0, caixasUsadas))
+            const inicio = !templateClicked ? slideTextboxes : caixasUsadas
+            const sobra = sortedTemplateItems.text || []
+            caixasAtras = sobra.filter((_a, j) => (posicaoNoModelo[inicio + j] ?? -1) < posDaLetra)
+            sortedTemplateItems.text = sobra.filter((_a, j) => (posicaoNoModelo[inicio + j] ?? -1) >= posDaLetra)
+        }
     } else {
         delete sortedTemplateItems.text
 
@@ -1411,7 +1433,7 @@ export function mergeWithTemplate(slideItems: Item[], templateItems: Item[], add
     // add template marker
     remainingTemplateItems = remainingTemplateItems.map((a) => ({ ...a, fromTemplate: true }))
     // add behind existing items (any textboxes previously on top not in use will not be replaced by any underneath)
-    newSlideItems = [...remainingTemplateItems, ...newSlideItems, ...(sortedTemplateItems.text || [])]
+    newSlideItems = [...remainingTemplateItems, ...caixasAtras, ...newSlideItems, ...(sortedTemplateItems.text || [])]
 
     newSlideItems = replaceScriptureValues(newSlideItems, originalTemplateItems, customDynamicValues)
 
@@ -1628,6 +1650,20 @@ export function isEmptyOrSpecial(item: Item) {
 
 export function isEmpty(item: Item) {
     return !getItemText(item).length
+}
+
+// "aprovo caixa-da-letra" (24/nov): em que ordem as caixas de texto do modelo recebem a letra. 1o as livres (sem "{...}" e que nao sao forma),
+// depois as formas (caixa vazia com fundo), por ultimo as ligadas a um valor. Estavel. Devolve as posicoes originais na nova ordem.
+// Mesma regra em utils/aliancaTextoLigadoLogica.ts (indiceDaLetra), que pinta a etiqueta LETRA no editor.
+export function ordemDaLetra(caixas: Item[]): number[] {
+    const prioridade = (item: Item) => {
+        const texto = item ? getItemText(item) : ""
+        if (texto.includes("{")) return 2
+        if (!texto.trim() && /background/.test(item?.style || "")) return 1
+        return 0
+    }
+    const p = caixas.map(prioridade)
+    return caixas.map((_a, i) => i).sort((a, b) => p[a] - p[b] || a - b)
 }
 
 export function sortItemsByType(items: Item[]) {
