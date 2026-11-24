@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { SEM_CATEGORIA, TODOS, categoriaDoNovo, categoriasDaLista, modelosDaLista, musicasDaBusca, nomeDaCategoria, nomeLivre } from "./aliancaModelosLogica"
+import { SEM_CATEGORIA, TODOS, categoriaDoNovo, deveColarModelo, categoriasDaLista, modelosDaLista, musicasDaBusca, nomeDaCategoria, nomeLivre } from "./aliancaModelosLogica"
 
 const categorias = {
     scripture: { name: "category.scripture", default: true },
@@ -51,5 +51,14 @@ describe("pequenos", () => {
     it("busca de música: começa-com primeiro, sem as privadas", () => {
         const shows = { 1: { name: "Grande é o Senhor" }, 2: { name: "Quão Grande" }, 3: { name: "Grandioso", private: true } }
         expect(musicasDaBusca(shows, "grande").map((s) => s.id)).toEqual(["1", "2"])
+    })
+})
+
+describe("deveColarModelo", () => {
+    it("cola na primeira vez e quando o modelo escolhido muda; editar o mesmo modelo não recola", () => {
+        expect(deveColarModelo("letras", undefined)).toBe(true)
+        expect(deveColarModelo("letras", "letras")).toBe(false)
+        expect(deveColarModelo("teste", "letras")).toBe(true)
+        expect(deveColarModelo("", "letras")).toBe(true)
     })
 })

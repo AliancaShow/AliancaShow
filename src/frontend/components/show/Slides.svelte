@@ -4,6 +4,7 @@
     import { activeEdit, activeFocus, activePopup, alertMessage, cachedShowsData, categories, focusMode, lessonsLoaded, notFound, outLocked, outputs, outputSlideCache, showsCache, slidesOptions, special, templates } from "../../stores"
     import { temFundoQuebrado } from "../../utils/aliancaFundoQuebrado"
     import { indiceDaFoto } from "../../utils/aliancaFotoLogica"
+    import { deveColarModelo } from "../../utils/aliancaModelosLogica"
     import { hasNewerUpdate, wait } from "../../utils/common"
     import { getAccess } from "../../utils/profile"
     import { videoExtensions } from "../../values/extensions"
@@ -195,7 +196,12 @@
             createItems = true
         }
 
+        // AliancaShow, "aplicar cola, nao liga" (André 24/nov): o FreeShow reaplicava o modelo ATUAL toda vez que a musica abria, entao editar
+        // um modelo mudava todas as musicas ligadas a ele. Agora a musica guarda o modelo que ja foi colado nela e so reaplica quando o modelo
+        // ESCOLHIDO muda (outro modelo na musica ou na categoria); editar o modelo nao mexe mais nas musicas. A saida continua ao vivo (Visual).
+        if (!deveColarModelo(currentTemplate, (currentShow?.settings as any)?.aliancaModeloColado)) return
         history({ id: "TEMPLATE", save: false, newData: { id: currentTemplate, data: { createItems } }, location: { page: "show" } })
+        if (currentTemplate && $showsCache[showId]) _show(showId).set({ key: "settings.aliancaModeloColado", value: currentTemplate })
     }
 
     $: if (showId && $special.capitalize_words) capitalizeWords()

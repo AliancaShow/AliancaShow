@@ -98,3 +98,12 @@ export function musicasDaBusca(shows: Mapa<{ name?: string; private?: boolean }>
         })
         .slice(0, limite)
 }
+
+/**
+ * "aplicar cola, nao liga" (André 24/nov): ao abrir uma musica, o FreeShow reaplicava o modelo dela toda vez (editar o modelo mudava todas as
+ * musicas). Agora so cola quando o modelo escolhido (o da musica ou o da categoria) e outro que o ja colado. Sem modelo: como o FreeShow fazia.
+ */
+export function deveColarModelo(escolhido: string, colado: string | null | undefined): boolean {
+    if (!escolhido) return true
+    return escolhido !== (colado || "")
+}
