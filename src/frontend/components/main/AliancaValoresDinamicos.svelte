@@ -182,11 +182,14 @@
         background: var(--luz-hover, rgba(255, 255, 255, 0.08));
     }
     .corpo {
+        display: block;
         flex: 1;
+        min-height: 0;
         overflow-y: auto;
         padding: 4px 14px 12px;
     }
     .grupo {
+        display: block;
         margin: 12px 0 6px;
         font-size: 11px;
         font-weight: 600;
@@ -196,6 +199,8 @@
     }
     .grade {
         display: grid;
+        align-items: start;
+        grid-auto-rows: min-content;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 6px;
     }
@@ -217,7 +222,18 @@
         font-size: 12.5px;
         font-weight: 600;
     }
+    .previa :global(*) {
+        background: none !important;
+        color: inherit !important;
+        font-size: inherit !important;
+        padding: 0 !important;
+    }
+    .previa,
+    .rotulo {
+        background: none !important;
+    }
     .previa {
+        display: block;
         font-size: 12px;
         color: var(--luz-mudo, #bbb);
         max-height: 34px;
