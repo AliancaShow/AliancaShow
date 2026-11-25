@@ -10,7 +10,7 @@
     import { naoEMostrar, tela } from "../../../utils/aliancaTela"
     import { marcarBiblia } from "../../../utils/aliancaGaveta"
     import { teclaIgnorada } from "../../../utils/aliancaModo"
-    import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
+    import { gavetaNaoToca, podeMarcar } from "../../../utils/aliancaGavetaToque"
     import { cliqueVaiSerEngolido } from "../../../utils/aliancaToque"
     import { wait } from "../../../utils/common"
     import { translateText } from "../../../utils/language"
@@ -170,6 +170,18 @@
     }
 
     $: isActiveInOutput = outputIsScripture($outputs)
+
+    // Andre, 25/nov ("soltar a Biblia mais rapido"): em Mostrar o DUPLO CLIQUE no versiculo vai ao ar. O 1o clique ja mostra a previa; o 2o (clique
+    // repetido) e engolido pela trava de toque, que deixa este duplo clique passar (aliancaToque, VERSICULO_2_CLIQUES). Em Editar nada vai ao ar.
+    // O "Mostrar agora" (evento sintetico, guarda levantada) segue o caminho de antes. Telao congelado: playScripture nao faz nada.
+    function duploNoVersiculo(e: MouseEvent) {
+        if (!gavetaNaoToca()) {
+            if (!(isActiveInOutput && !e.ctrlKey && !e.metaKey)) playScripture()
+            return
+        }
+        if (podeMarcar() || e.ctrlKey || e.metaKey || e.shiftKey) return
+        playScripture()
+    }
 
     type Reference = {
         book: number | string | null
@@ -1152,7 +1164,7 @@
                                     on:mousedown={(e) => (cliqueVaiSerEngolido(e) ? null : openVerse(updateVersesSelection(e, content.id)))}
                                     on:click={(e) => openVerse(updateVersesSelection(e, content.id, true))}
                                     on:click={(e) => (!gavetaNaoToca() && isActiveInOutput && !e.ctrlKey && !e.metaKey ? playScripture() : false)}
-                                    on:dblclick={(e) => (gavetaNaoToca() || (isActiveInOutput && !e.ctrlKey && !e.metaKey) ? false : playScripture())}
+                                    on:dblclick={duploNoVersiculo}
                                     role="none"
                                 >
                                     <span class="v" style={endNumber && subverse && showSuffixInPicker ? "width: 60px;" : ""}

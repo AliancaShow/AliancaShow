@@ -111,6 +111,20 @@ describe("a guarda da biblioteca (fatia 6)", () => {
     })
 })
 
+describe("Andre 25/nov: duplo clique no versiculo da Biblia vai ao ar em Mostrar", () => {
+    const t = ler("src/frontend/components/drawer/bible/Scripture.svelte")
+    const corpo = t.slice(t.indexOf("function duploNoVersiculo("), t.indexOf("function duploNoVersiculo(") + 600)
+    it("so em Mostrar (podeMarcar barra Editar) e sem modificador", () => {
+        expect(corpo).toMatch(/if \(podeMarcar\(\) \|\| e\.ctrlKey \|\| e\.metaKey \|\| e\.shiftKey\) return\s+playScripture\(\)/)
+        expect(t).toContain("on:dblclick={duploNoVersiculo}")
+    })
+    it("a trava de toque deixa passar o duplo clique SO do versiculo da biblioteca; o resto segue engolido", () => {
+        const q = ler("src/frontend/utils/aliancaToque.ts")
+        expect(q).toContain(`const VERSICULO_2_CLIQUES = '[data-regiao="biblioteca"] .verse'`)
+        expect(q).toMatch(/if \(alvo\.closest\(VERSICULO_2_CLIQUES\)\) return\s+e\.preventDefault\(\)/)
+    })
+})
+
 describe("cabine 18/nov, B1: clique simples numa midia (video ou imagem) vai ao ar em Mostrar", () => {
     const t = ler("src/frontend/components/drawer/media/MediaCard.svelte")
     const ini = t.indexOf("function click(")

@@ -98,6 +98,8 @@ function aoEsc(e: KeyboardEvent) {
  * que mandava ao ar ou punha no roteiro some; o clique so seleciona e ir ao ar e ▶, Ctrl+Enter ou o botao direito).
  */
 const ITEM_DO_CENTRO = '[data-regiao="centro"] .context, [data-regiao="biblioteca"] .context, [data-regiao="roteiro"] .context'
+/** Andre, 25/nov ("soltar a Biblia mais rapido"): o duplo clique no versiculo da Biblia passa (vai ao ar em Mostrar) */
+const VERSICULO_2_CLIQUES = '[data-regiao="biblioteca"] .verse'
 /** campos de texto continuam recebendo o duplo clique (selecionar palavra, renomear) */
 const CAMPO = 'input, textarea, select, [contenteditable="true"], [contenteditable=""]'
 
@@ -131,6 +133,8 @@ function aoClique(e: MouseEvent) {
         // a mesma regra; fora o duplo clique, o clique repetido (< 700 ms no mesmo item) tambem e engolido.
         if (e.type === "dblclick") {
             if (!alvo.closest(ITEM_DO_CENTRO) || alvo.closest(CAMPO)) return
+            // Andre, 25/nov: o duplo clique no VERSICULO da Biblia vai ao ar (Scripture.svelte, duploNoVersiculo); o resto segue engolido
+            if (alvo.closest(VERSICULO_2_CLIQUES)) return
             e.preventDefault()
             e.stopImmediatePropagation()
             e.stopPropagation()
