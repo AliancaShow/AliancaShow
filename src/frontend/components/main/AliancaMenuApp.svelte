@@ -24,7 +24,7 @@
     type Item = { id: string; nome: string; agir: () => void; mudo?: boolean; atalho?: string }
     type Grupo = Item[]
     $: grupos = [
-        [...(settingsDisabled ? [] : [{ id: "settings", nome: "Configurações…", agir: () => ir("settings") }]), { id: "stage", nome: "Telas e monitor de retorno…", agir: () => ir("stage") }, { id: "draw", nome: "Ferramentas da saída (desenhar, zoom)", agir: () => ir("draw") }],
+        [...(settingsDisabled ? [] : [{ id: "settings", nome: "Configurações…", agir: () => ir("settings") }]), { id: "draw", nome: "Ferramentas da saída (desenhar, zoom)", agir: () => ir("draw") }],
         [
             { id: "save", nome: "Salvar", agir: salvarAgora, atalho: "Ctrl+S" },
             { id: "undo", nome: "Desfazer", agir: desfazerAgora, atalho: "Ctrl+Z" },

@@ -9,6 +9,7 @@
     import { TODOS, categoriaDoNovo, categoriasDaLista, modelosDaLista, nomeLivre, usosDoModelo } from "../../utils/aliancaModelosLogica"
     import { saidaDoEditor } from "../../utils/aliancaSaidaDoEditorLogica"
     import { lerVisuais } from "../../utils/aliancaVisualLogica"
+    import { abrirModelosDeRetorno } from "../../utils/aliancaModelosRetorno"
     import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
     import { clone } from "../helpers/array"
@@ -102,7 +103,7 @@
         deleteAction({ id: "template", data: [id] } as any)
     }
     // a miniatura na proporcao do telao (a mesma do editor)
-    $: res = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
+    $: res = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal))
 
     function cancelar() {
         criando = false
@@ -119,6 +120,11 @@
 </script>
 
 <div class="modelos" data-acao="modelos-lista">
+    <!-- 25/nov ("aprovo papeis-saida"): Modelos de slides e Modelos de retorno moram juntos; Retorno abre o editor de retorno -->
+    <div class="tiposModelo" role="tablist" data-acao="modelos-tipo">
+        <button type="button" role="tab" aria-selected="true" class="on" tabindex="-1" data-tipo="slides">Slides</button>
+        <button type="button" role="tab" aria-selected="false" tabindex="-1" data-tipo="retorno" title="Os modelos do monitor de retorno (palco)" on:click={() => abrirModelosDeRetorno()}>Retorno</button>
+    </div>
     <input class="busca" type="search" placeholder="Buscar modelo" bind:value={busca} on:keydown|stopPropagation data-acao="modelos-busca" />
 
     <div class="cats" data-acao="modelos-categorias">
@@ -192,6 +198,31 @@
         flex-direction: column;
         gap: 8px;
         padding: 0 12px;
+    }
+    .tiposModelo {
+        display: flex;
+        gap: 2px;
+        flex-shrink: 0;
+        padding: 2px;
+        border-radius: 7px;
+        background: var(--luz-trilho);
+    }
+    .tiposModelo button {
+        flex: 1 1 0;
+        height: 26px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--luz-mudo);
+        font: inherit;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .tiposModelo button.on {
+        background: var(--luz-texto);
+        color: var(--luz-tinta);
+        cursor: default;
     }
     .busca {
         height: 32px;

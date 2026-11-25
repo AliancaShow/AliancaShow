@@ -9,7 +9,7 @@ export const configSecao: Writable<SecaoDeConexao> = writable("")
 /** nomes da lista lateral e dos titulos de pagina (o desenho C4 renomeia Saidas e Outro) */
 export const ROTULOS_CONFIG: { [aba: string]: string } = {
     general: "Geral",
-    display_settings: "Telas e saídas",
+    display_settings: "Telas",
     styles: "Estilo da saída",
     visual: "Visual",
     audio: "Áudio",

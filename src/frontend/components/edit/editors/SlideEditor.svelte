@@ -60,7 +60,7 @@
     let width = 0
     let height = 0
     // Slide?.settings?.resolution
-    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal))
 
     let ratio = 1
 

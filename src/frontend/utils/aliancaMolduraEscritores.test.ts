@@ -52,13 +52,13 @@ export const CLASSES: Record<string, string> = {
     "components/main/popups/TemplateStyleOverrides.svelte": "gesto: botao de pagina (popup)",
     "components/output/preview/MultiOutputs.svelte": "gesto, morre com o arquivo",
     "components/settings/SettingsTabs.svelte": "gesto, morre com o arquivo (fatia 4)",
-    "components/settings/tabs/Outputs.svelte": "gesto: botao de pagina",
     "components/settings/tabs/Styles.svelte": "gesto: botao de pagina (editar o modelo)",
     "components/stage/StageLayout.svelte": "gesto: botao de pagina",
     "utils/aliancaChamadas.ts": "gesto: botao Salvar e ajustar da chamada (Chamadas, coluna No ar) abre a sobreposicao no Editar",
     "utils/aliancaBiblioteca.ts": "gesto: Editar da biblioteca",
     "utils/aliancaSpotlight.ts": "gesto: busca Spotlight (Ctrl+K): Configuracoes, Telas e abrir o que vive em Mostrar quando a busca abre numa pagina do menu",
-    "utils/aliancaPilula.ts": "gesto: chips que levam a Mostrar"
+    "utils/aliancaPilula.ts": "gesto: chips que levam a Mostrar",
+    "utils/aliancaModelosRetorno.ts": "gesto: abas Slides | Retorno de Modelos (Editar e a pagina Modelos de retorno) e o lapis do modelo do retorno em Telas (25/nov, aprovo papeis-saida)"
 }
 
 /** arquivos que tinham `activePage.set(` e perderam: nao trocam a tela (efeito colateral ou origem remota) */

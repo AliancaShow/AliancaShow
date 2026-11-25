@@ -213,7 +213,7 @@ export type AcaoDoApp = { id: string; nome: string; aliases: string[]; atalho?: 
 export const ACOES_DO_APP: AcaoDoApp[] = [
     { id: "settings", nome: "Configurações", aliases: ["ajustes", "preferencias", "opcoes"] },
     { id: "display_settings", nome: "Telas", aliases: ["saida", "monitor", "projetor", "telao", "display"] },
-    { id: "stage", nome: "Telas e monitor de retorno", aliases: ["palco", "retorno", "stage"] },
+    { id: "stage", nome: "Modelos de retorno", aliases: ["palco", "retorno", "stage", "monitor de retorno"] },
     { id: "styles", nome: "Estilos da saída", aliases: ["estilo", "fundo", "aparencia"] },
     { id: "connection", nome: "Conexões", aliases: ["sirvo", "rede", "remoto"] },
     { id: "save", nome: "Salvar", aliases: ["gravar"], atalho: "Ctrl+S" },

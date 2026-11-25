@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Template } from "../../../../types/Show"
-    import { activeEdit, outputs, overlays, styles } from "../../../stores"
+    import { activeEdit, outputs, overlays, special, styles } from "../../../stores"
     import Editbox from "../../edit/editbox/Editbox.svelte"
     import { getMedia, getThumbnailPath, mediaSize } from "../../helpers/media"
     import { getResolution } from "../../helpers/output"
@@ -32,7 +32,7 @@
 
     // RESOLUTION
     // template?.settings?.resolution
-    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal))
 
     // LOAD BACKGROUND
 

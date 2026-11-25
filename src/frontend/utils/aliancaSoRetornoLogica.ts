@@ -16,7 +16,7 @@ export function idsDeRetorno(outs: { [id: string]: SaidaMinima } | null | undefi
 
 /** Por que o botao nao pode ligar ("" = pode) */
 export function porQueNaoLigar(retornos: string[]): string {
-    if (!retornos.length) return "Nenhum monitor de retorno ligado. Configure em Telas e monitor de retorno."
+    if (!retornos.length) return "Nenhum monitor de retorno ligado. Em Configurações → Telas, escolha uma tela para mostrar o Retorno."
     return ""
 }
 

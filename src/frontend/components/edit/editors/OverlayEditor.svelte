@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
     import { OUTPUT } from "../../../../types/Channels"
-    import { activeEdit, outputs, overlays, styles } from "../../../stores"
+    import { activeEdit, outputs, overlays, special, styles } from "../../../stores"
     import { translateText } from "../../../utils/language"
     import { send } from "../../../utils/request"
     import Icon from "../../helpers/Icon.svelte"
@@ -41,7 +41,7 @@
 
     let width = 0
     let height = 0
-    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal))
 
     let ratio = 1
 

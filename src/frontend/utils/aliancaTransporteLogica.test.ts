@@ -142,9 +142,10 @@ describe("faixa de transporte (guarda de texto)", () => {
         expect(caixa).not.toMatch(/position:\s*(absolute|fixed)/)
     })
     it("a faixa e a tela No ar escolhem a saida pela MESMA funcao (achado 4)", () => {
-        // a tela No ar usa `saidasDasAbas` (A1, cabine 18/nov), cuja principal e a PRIMEIRA de `saidasHabilitadas`: a mesma que a faixa controla
-        expect(ler("components/main/AliancaNoAr.svelte")).toContain("saidasDasAbas($outputs)")
-        expect(ler("utils/aliancaTransporteLogica.ts")).toContain("const principal = saidasHabilitadas(outputs)[0]")
+        // 25/nov ("aprovo papeis-saida"): a tela No ar (`saidasDasAbas`) e a faixa pegam a principal pela MESMA `telaPrincipal`, com a mesma escolha de Telas
+        expect(ler("components/main/AliancaNoAr.svelte")).toContain("saidasDasAbas($outputs, $special?.aliancaSaidaPrincipal)")
+        expect(ler("utils/aliancaTransporteLogica.ts")).toContain("const principal = telaPrincipal(outputs, escolhida)")
+        expect(ler("components/main/AliancaTransporte.svelte")).toContain("telaPrincipal($outputs, $special?.aliancaSaidaPrincipal)")
         expect(ler("components/main/AliancaTransporte.svelte")).toContain("saidasHabilitadas($outputs)")
         expect(ler("components/main/AliancaTransporte.svelte")).not.toContain("getFirstOutputIdWithBackground")
     })

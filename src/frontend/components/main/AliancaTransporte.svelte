@@ -6,8 +6,9 @@
     // Nenhuma tecla nova: os atalhos de midia continuam no Preview escondido.
     import { onDestroy } from "svelte"
     import { AudioPlayer } from "../../audio/audioPlayer"
-    import { activePage, activeTimers, media, outLocked, outputs, playingAudio, timers } from "../../stores"
+    import { activePage, activeTimers, media, outLocked, outputs, playingAudio, special, timers } from "../../stores"
     import { criarLimitador, etiquetaDeSaidaNecessaria, nomeDaEtiqueta, pilhaAlturaMaxima, prenderBusca, prenderVolume, saidasHabilitadas, timersNaFaixa, videosDaPilha, type FundoDeSaida } from "../../utils/aliancaTransporteLogica"
+    import { telaPrincipal } from "../../utils/aliancaSaidaDoEditorLogica"
     import { getAccess } from "../../utils/profile"
     import AudioMeter from "../drawer/audio/AudioMeter.svelte"
     import { getCurrentTimerValue, playPauseGlobal, resetTimer } from "../drawer/timers/timers"
@@ -25,7 +26,9 @@
 
     // ---------------- video: um cartao por ARQUIVO no fundo das saidas (a primeira saida que o toca o comanda) ----------------
     const ehVideo = (b: any, c: string) => !!c && (b?.type === "video" || b?.type === "player" || (!b?.type && getMediaType(getExtension(c)) === "video"))
-    $: habilitadas = saidasHabilitadas($outputs)
+    // 25/nov ("aprovo papeis-saida"): a faixa comanda a tela principal (a mesma da coluna No ar): ela vem primeiro
+    $: tp = telaPrincipal($outputs, $special?.aliancaSaidaPrincipal)
+    $: habilitadas = [...saidasHabilitadas($outputs)].sort((a, b) => (a === tp ? -1 : b === tp ? 1 : 0))
     $: fundos = habilitadas.map((id) => {
         const b = $outputs[id]?.out?.background
         const c = (b?.path || b?.id || "") as string

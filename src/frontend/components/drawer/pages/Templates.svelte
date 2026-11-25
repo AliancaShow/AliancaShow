@@ -27,7 +27,7 @@
     const profile = getAccess("templates")
     $: readOnly = profile.global === "read" || profile[active || ""] === "read"
 
-    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs)) // $templates[active || ""]?.settings?.resolution
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal)) // $templates[active || ""]?.settings?.resolution
     let filteredTemplates: (Template & { id: string })[] = []
 
     $: activeTemplate = ($activeShow && $activeShow.type === undefined) || $activeShow?.type === "show" ? $showsCache[$activeShow.id]?.settings?.template : null

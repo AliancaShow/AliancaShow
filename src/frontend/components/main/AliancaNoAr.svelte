@@ -4,7 +4,7 @@
     // O `Preview` antigo continua montado e escondido em AliancaTela: e ele que escuta o teclado.
     import { onDestroy, onMount } from "svelte"
     import { get } from "svelte/store"
-    import { outputDisplay, outputs, styles } from "../../stores"
+    import { outputDisplay, outputs, special, styles } from "../../stores"
     import { falhas } from "../../utils/aliancaFalha"
     import { RECUSA_MS, estadoDaTarja, nomeDaRecusa, recusaNova, vezesJaVistas } from "../../utils/aliancaTarjaLogica"
     import { consumirTentativa, ligarTentativas } from "../../utils/aliancaTentativa"
@@ -23,7 +23,7 @@
 
     // saidas habilitadas; a primeira com janela e a principal ("Telao") e a que a faixa de transporte controla (`saidasHabilitadas`), as demais viram abas
     // (A1, cabine 18/nov: a saida de rede, NDI, tambem vira aba: `saidasDasAbas`)
-    $: abas = saidasDasAbas($outputs)
+    $: abas = saidasDasAbas($outputs, $special?.aliancaSaidaPrincipal)
     $: principal = abas.principal
     $: outras = abas.outras
     $: resolucao = principal ? getResolution(null, [$outputs, $styles], false, principal) : { width: 1920, height: 1080 }

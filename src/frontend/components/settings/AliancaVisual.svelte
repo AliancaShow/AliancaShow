@@ -269,7 +269,7 @@
                         </div>
                     {/each}
                 </div>
-                {#if !normais.length && !retornos.length}<p class="cota">Nenhuma saída cadastrada. Crie as saídas em Telas e saídas.</p>{/if}
+                {#if !normais.length && !retornos.length}<p class="cota">Nenhuma saída cadastrada. Crie as telas em Configurações → Telas.</p>{/if}
             </div>
         {/if}
     </div>

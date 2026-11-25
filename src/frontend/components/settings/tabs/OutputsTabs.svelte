@@ -7,9 +7,11 @@
     import type { Output } from "../../../../types/Output"
     import { AudioAnalyser } from "../../../audio/audioAnalyser"
     import { checkPrimaryOutputRouting, createOutputAudioChannel } from "../../../audio/routing/audioRoutingInit"
-    import { activeRename, activeTriggerFunction, currentOutputSettings, outputDisplay, outputs, popupData, stageShows, styles, toggleOutputEnabled } from "../../../stores"
+    import { activeRename, activeTriggerFunction, currentOutputSettings, outputDisplay, outputs, popupData, special, stageShows, styles, toggleOutputEnabled } from "../../../stores"
     import { newToast } from "../../../utils/common"
     import { estadoDaSaida } from "../../../utils/aliancaSaidasLogica"
+    import { escolherPrincipal } from "../../../utils/aliancaPapelDaSaida"
+    import { telaPrincipal } from "../../../utils/aliancaSaidaDoEditorLogica"
     import { translateText } from "../../../utils/language"
     import { waitForPopupData } from "../../../utils/popup"
     import { send } from "../../../utils/request"
@@ -89,9 +91,8 @@
         const skipPopup = e?.detail.ctrl
         const stageLayouts = keysToID($stageShows)
 
-        // input type (normal/stage)
-        const type = stageLayouts.length && !skipPopup ? await waitForPopupData("choose_output_input") : "normal"
-        if (!type) return
+        // 25/nov ("aprovo papeis-saida"): toda tela nasce de slides; virar Retorno e o "Esta tela mostra" da propria tela (sem o "tipo" do FreeShow)
+        const type: string = "normal"
 
         // data (style/layout)
         let styleId = ""
@@ -172,6 +173,11 @@
         createOutput({ detail: { ctrl: e.ctrlKey } } as unknown as ClickEvent)
     }
 
+    // 25/nov ("aprovo papeis-saida"): a SAIDA PRINCIPAL (tela grande do No ar, a que a faixa de video comanda, o formato do editor)
+    $: deSlides = outputsList.filter((o) => o.enabled && !o.stageOutput)
+    $: principal = telaPrincipal($outputs, $special?.aliancaSaidaPrincipal)
+    $: escolhidaDeVerdade = !!$special?.aliancaSaidaPrincipal && $special.aliancaSaidaPrincipal === principal
+
     async function identificar() {
         const telas = (await requestMain(Main.GET_DISPLAYS)) || []
         send(OUTPUT, ["IDENTIFY_SCREENS"], telas)
@@ -209,10 +215,46 @@
         Identificar telas
     </button>
 </div>
+<div class="principal" data-acao="saida-principal">
+    <span class="rotP">Saída principal</span>
+    <select value={principal} on:change={(e) => escolherPrincipal(e.currentTarget.value)} disabled={!deSlides.length}>
+        {#each deSlides as o (o.id)}<option value={o.id}>{o.name || "Sem nome"}</option>{/each}
+        {#if !deSlides.length}<option value="">Nenhuma tela de slides ligada</option>{/if}
+    </select>
+    <small>A tela grande do No ar, a que a faixa de vídeo comanda e o formato do editor.{escolhidaDeVerdade ? "" : " Sem escolha: a primeira tela de slides com janela."}</small>
+</div>
 <p class="naHora" data-acao="saidas-na-hora">Criar e apagar saídas, ligar e desligar saída, janela ou NDI e mover de tela aplicam na hora: não entram em “alterações não salvas” nem no Descartar.</p>
 </div>
 
 <style>
+    .principal {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        margin: 10px 0 0;
+    }
+    .rotP {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--luz-texto);
+    }
+    .principal select {
+        min-width: 200px;
+        height: 28px;
+        padding: 0 6px;
+        border: 1px solid var(--luz-borda);
+        border-radius: var(--luz-raio-campo);
+        background: var(--luz-pop-opaco);
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .principal small {
+        font-size: 11.5px;
+        color: var(--luz-mudo);
+    }
     .naHora {
         margin: 6px 0 0;
         font-size: 11px;

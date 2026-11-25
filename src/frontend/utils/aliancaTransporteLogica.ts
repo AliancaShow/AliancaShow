@@ -1,6 +1,8 @@
 // Leiaute v2, fatia 7: a faixa de transporte da coluna No ar (video, audio, temporizadores, Spotify). Pura: quem le os stores e o componente.
 // Reaproveita o que o Preview antigo ja tinha (MediaControls, Audio, TimerControls, SpotifyController); aqui so mora a conta.
 
+import { telaPrincipal } from "./aliancaSaidaDoEditorLogica"
+
 /** "m:ss" (ou "h:mm:ss" a partir de 1 hora). Negativo, NaN e infinito viram 0:00. */
 export function tempoCurto(seg: number): string {
     const s = Number.isFinite(seg) && seg > 0 ? Math.floor(seg) : 0
@@ -100,11 +102,12 @@ export function saidasHabilitadas(outputs: Record<string, { enabled?: boolean; i
  * `saidasHabilitadas` esconde de proposito (a faixa de transporte e a tela principal so falam de saida com janela). A principal e a primeira com janela;
  * so se TODAS forem de rede a primeira delas assume. As demais, na ordem do objeto, sao as abas.
  */
-export function saidasDasAbas(outputs: Record<string, { enabled?: boolean; invisible?: boolean } | undefined> | null | undefined): { principal: string; outras: string[] } {
+export function saidasDasAbas(outputs: Record<string, { enabled?: boolean; invisible?: boolean; stageOutput?: string | boolean } | undefined> | null | undefined, escolhida?: string | null): { principal: string; outras: string[] } {
     const todas = Object.entries(outputs || {})
         .filter(([, o]) => o?.enabled)
         .map(([id]) => id)
-    const principal = saidasHabilitadas(outputs)[0] || todas[0] || ""
+    // 25/nov ("aprovo papeis-saida"): a principal e a `telaPrincipal` (a escolhida em Telas; retorno nunca). So retorno ligado: o primeiro deles
+    const principal = telaPrincipal(outputs, escolhida) || todas[0] || ""
     return { principal, outras: todas.filter((id) => id !== principal) }
 }
 

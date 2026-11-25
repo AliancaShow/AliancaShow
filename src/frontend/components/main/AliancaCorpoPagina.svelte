@@ -17,6 +17,7 @@
     import { alteracoesNaoSalvas, descartarAlteracoes, fotoParaSalvar, iniciarRascunho, pararRascunho, tirarFoto } from "../../utils/aliancaConfigRascunho"
     import { textoDeAlteracoes } from "../../utils/aliancaConfigRascunhoLogica"
     import { trocarTela } from "../../utils/aliancaTela"
+    import { abrirModelosDeSlides } from "../../utils/aliancaModelosRetorno"
     import { cancelarPendenciasDoVisual } from "../../utils/aliancaVisualAplicador"
     import { save } from "../../utils/save"
 
@@ -26,7 +27,8 @@
     export let esq = 280
     export let dir = 330
 
-    const TITULOS = { settings: "Configurações", stage: "Telas e monitor de retorno", draw: "Ferramentas da saída" }
+    // 25/nov ("aprovo papeis-saida"): a pagina "stage" e o editor dos MODELOS DE RETORNO; abre pela aba Retorno de Editar > Modelos
+    const TITULOS = { settings: "Configurações", stage: "Modelos de retorno", draw: "Ferramentas da saída" }
     function fechar() {
         if (origem === "edit") trocarTela("edit", "voltar-de-pagina")
         else trocarTela("show", "voltar-de-pagina")
@@ -107,6 +109,12 @@
 <div class="corpoPagina luz-pele" data-pagina={pagina}>
     <header class="cab" data-acao="pagina-cabecalho">
         <h1>{TITULOS[pagina]}</h1>
+        {#if pagina === "stage"}
+            <div class="tiposModelo" role="tablist" data-acao="modelos-tipo">
+                <button type="button" role="tab" aria-selected="false" tabindex="-1" data-tipo="slides" on:mousedown|preventDefault on:click={abrirModelosDeSlides}>Slides</button>
+                <button type="button" role="tab" aria-selected="true" class="on" tabindex="-1" data-tipo="retorno">Retorno</button>
+            </div>
+        {/if}
         <div class="acoes">
             <span class="aviso" data-acao="pagina-aviso" role="status" aria-live="polite">{aviso}</span>
             {#if pagina === "settings"}
@@ -162,6 +170,31 @@
         box-sizing: border-box;
         border-radius: var(--luz-raio);
         overflow: hidden;
+    }
+    .tiposModelo {
+        display: flex;
+        gap: 2px;
+        margin: 0 auto 0 16px;
+        padding: 2px;
+        border-radius: 7px;
+        background: var(--luz-trilho);
+    }
+    .tiposModelo button {
+        height: 26px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--luz-mudo);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .tiposModelo button.on {
+        background: var(--luz-texto);
+        color: var(--luz-tinta);
+        cursor: default;
     }
     .cab {
         flex-shrink: 0;

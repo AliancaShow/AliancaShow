@@ -7,8 +7,7 @@
     import type { Output, RtmpDestination } from "../../../../types/Output"
     import { AudioAnalyser } from "../../../audio/audioAnalyser"
     import { requestMain, sendMain } from "../../../IPC/main"
-    import { activePopup, activeStage, alertMessage, currentOutputSettings, ndiData, outputDisplay, outputs, rtmpStatus, saved, settingsTab, special, stageShows, templates, toggleOutputEnabled } from "../../../stores"
-    import { trocarTela } from "../../../utils/aliancaTela"
+    import { activePopup, alertMessage, currentOutputSettings, ndiData, outputDisplay, outputs, rtmpStatus, saved, settingsTab, special, stageShows, templates, toggleOutputEnabled } from "../../../stores"
     import { configSecao } from "../../../utils/aliancaConfigSecao"
     import { casaDe, COLUNAS, SEM_MODELO, SLIDE, visualAtivo } from "../../../utils/aliancaVisualLogica"
     import { newToast } from "../../../utils/common"
@@ -22,6 +21,8 @@
     import { estadoDaSaida, resumoDeRede } from "../../../utils/aliancaSaidasLogica"
     import AliancaMapaTelas from "../AliancaMapaTelas.svelte"
     import AliancaTelaDaSaida from "../AliancaTelaDaSaida.svelte"
+    import { mudarPapel, papelDe, primeiroModeloDeRetorno } from "../../../utils/aliancaPapelDaSaida"
+    import { abrirModelosDeRetorno } from "../../../utils/aliancaModelosRetorno"
     import SecaoLuz from "../SecaoLuz.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import MaterialCheckbox from "../../inputs/MaterialCheckbox.svelte"
@@ -107,9 +108,23 @@
     }
 
     $: stageId = currentOutput?.stageOutput || ""
+    // 25/nov ("aprovo papeis-saida"): o modelo do retorno se edita em Editar > Modelos > Retorno (a pagina "Telas e monitor de retorno" saiu do menu)
     function editStage() {
-        activeStage.set({ id: stageId, items: [] })
-        trocarTela("stage", "botao-de-pagina")
+        abrirModelosDeRetorno(stageId)
+    }
+    // o que esta tela mostra (Slides ou Retorno): qualquer tela vira retorno e volta
+    $: papel = papelDe(currentOutput)
+    $: semModeloDeRetorno = !Object.keys($stageShows || {}).length
+    let avisoPapel = ""
+    $: if (currentOutput?.id) avisoPapel = ""
+    function trocarPapel(p: "slides" | "retorno") {
+        avisoPapel = ""
+        if (!currentOutput?.id || p === papel) return
+        if (p === "retorno" && !primeiroModeloDeRetorno()) {
+            avisoPapel = "Ainda não há modelo de retorno. Crie um em Editar → Modelos → Retorno."
+            return
+        }
+        mudarPapel(currentOutput.id, p)
     }
 
     // ndi
@@ -376,9 +391,18 @@
 
 <div data-acao="saida-nome"><MaterialTextInput label="inputs.name" value={currentOutput?.name || ""} on:change={(e) => updateOutput("name", e.detail)} /></div>
 
+<div class="papel" data-acao="saida-papel">
+    <span class="papelRot">Esta tela mostra</span>
+    <div class="papelSeg" role="tablist">
+        <button type="button" role="tab" class:on={papel === "slides"} aria-selected={papel === "slides"} data-papel="slides" on:click={() => trocarPapel("slides")}>Slides</button>
+        <button type="button" role="tab" class:on={papel === "retorno"} aria-selected={papel === "retorno"} data-papel="retorno" title={semModeloDeRetorno ? "Crie um modelo de retorno em Editar → Modelos → Retorno" : "Monitor do palco: mostra um modelo de retorno"} on:click={() => trocarPapel("retorno")}>Retorno</button>
+    </div>
+</div>
+{#if avisoPapel}<p class="notaTela" data-acao="saida-papel-aviso">{avisoPapel}</p>{/if}
+
 {#if stageId}
     <InputRow>
-        <MaterialPopupButton label="stage.stage_layout" value={stageId} name={$stageShows[stageId]?.name} icon="stage" popupId="select_stage_layout" on:change={(e) => updateOutput("stageOutput", e.detail)} />
+        <MaterialPopupButton label="Modelo do retorno" value={stageId} name={$stageShows[stageId]?.name} icon="stage" popupId="select_stage_layout" on:change={(e) => updateOutput("stageOutput", e.detail)} />
         {#if $stageShows[stageId]}
             <MaterialButton title="titlebar.edit" icon="edit" on:click={editStage} />
         {/if}
@@ -391,7 +415,7 @@
      ninguem achava; agora e uma secao propria, logo abaixo do nome. -->
 <SecaoLuz titulo="Tela · proporção, fonte, vídeos" id="tela">
 {#if stageId}
-    <p class="notaTela" data-acao="saida-tela-retorno">Esta saída é um monitor de retorno: o que aparece nela é o layout escolhido acima (menu Telas e monitor de retorno).</p>
+    <p class="notaTela" data-acao="saida-tela-retorno">Esta tela é um retorno: mostra o modelo do retorno escolhido acima (o Visual pode trocar por culto). Os modelos de retorno ficam em Editar → Modelos → Retorno.</p>
 {:else}
     {#if currentOutput?.id}<AliancaTelaDaSaida outputId={currentOutput.id} />{/if}
     {#if visualDaSaida && currentOutput?.id}
@@ -595,6 +619,41 @@
         width: 560px;
         flex-shrink: 0;
         min-width: 0;
+    }
+    /* 25/nov (papeis-saida): o que a tela mostra */
+    .papel {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0;
+    }
+    .papelRot {
+        width: 140px;
+        font-size: 13px;
+        color: var(--luz-texto-80);
+    }
+    .papelSeg {
+        display: flex;
+        gap: 2px;
+        padding: 2px;
+        border-radius: 7px;
+        background: var(--luz-trilho);
+    }
+    .papelSeg button {
+        height: 28px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--luz-mudo);
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .papelSeg button.on {
+        background: var(--luz-texto);
+        color: var(--luz-tinta);
     }
     /* cabine 6 (V1, D13): resumo do Visual (neutro) */
     .notaTela {

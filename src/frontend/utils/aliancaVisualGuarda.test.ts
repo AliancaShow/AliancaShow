@@ -45,7 +45,8 @@ describe("so o aplicador escreve os campos do Visual", () => {
                 .replace(/<!--[\s\S]*?-->/g, "")
                 .replace(/^\s*\/\/.*$/gm, "")
         const quem = arquivos.filter((p) => escreve.test(semComentario(readFileSync(p, "utf8")))).map((p) => p.replace(/\\/g, "/").split("/src/frontend/")[1])
-        expect(quem).toEqual(["utils/aliancaVisualAplicador.ts"])
+        // 25/nov ("aprovo papeis-saida"): o "Esta tela mostra" (Slides/Retorno) liga e desliga o retorno de uma tela; o Visual so TROCA o modelo de quem ja e retorno
+        expect(quem).toEqual(["utils/aliancaPapelDaSaida.ts", "utils/aliancaVisualAplicador.ts"])
     })
     it("o aplicador nao usa history", () => {
         const t = lerArq("src/frontend/utils/aliancaVisualAplicador.ts") as string

@@ -85,13 +85,8 @@
         <Icon id="broadcast" white />
         <span>{ROTULOS_CONFIG.remote}</span>
     </button>
-    <hr />
-    <!-- 1b, D7 (regra B da fatia 2: sempre): o Monitor de retorno (as telas do palco) mora aqui; a moldura de `stage` volta para Configuracoes -->
-    <button type="button" class="it" data-aba="stage" tabindex="-1" on:click={() => trocarTela("stage", "botao-de-pagina")}>
-        <Icon id="stage" white />
-        <span>Monitor de retorno</span>
-        <Icon id="launch" size={0.8} white style="margin-left: auto; opacity: 0.5;" />
-    </button>
+    <!-- 25/nov ("aprovo papeis-saida"): o atalho "Monitor de retorno" saiu: os modelos de retorno ficam em Editar > Modelos > Retorno, e qual tela e
+         retorno se escolhe em Telas ("Esta tela mostra") -->
 </div>
 
 <style>

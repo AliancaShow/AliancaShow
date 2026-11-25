@@ -135,14 +135,7 @@
         "components/settings/SettingsTabs.svelte": {
             "classe": "gesto, morre com o arquivo (fatia 4)",
             "chamadas": [
-                "\"show\", \"voltar-de-pagina\"",
-                "\"stage\", \"botao-de-pagina\""
-            ]
-        },
-        "components/settings/tabs/Outputs.svelte": {
-            "classe": "gesto: botao de pagina",
-            "chamadas": [
-                "\"stage\", \"botao-de-pagina\""
+                "\"show\", \"voltar-de-pagina\""
             ]
         },
         "components/settings/tabs/Styles.svelte": {
@@ -168,6 +161,13 @@
             "classe": "gesto: botao Salvar e ajustar da chamada (Chamadas, coluna No ar) abre a sobreposicao no Editar",
             "chamadas": [
                 "\"edit\", \"biblioteca-editar\""
+            ]
+        },
+        "utils/aliancaModelosRetorno.ts": {
+            "classe": "gesto: abas Slides | Retorno de Modelos (Editar e a pagina Modelos de retorno) e o lapis do modelo do retorno em Telas (25/nov, aprovo papeis-saida)",
+            "chamadas": [
+                "\"stage\", \"botao-de-pagina\"",
+                "\"edit\", \"botao-de-pagina\""
             ]
         },
         "utils/aliancaPilula.ts": {
