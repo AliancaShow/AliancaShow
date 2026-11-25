@@ -164,6 +164,12 @@
                 "\"edit\", \"biblioteca-editar\""
             ]
         },
+        "utils/aliancaChamadas.ts": {
+            "classe": "gesto: botao Salvar e ajustar da chamada (Chamadas, coluna No ar) abre a sobreposicao no Editar",
+            "chamadas": [
+                "\"edit\", \"biblioteca-editar\""
+            ]
+        },
         "utils/aliancaPilula.ts": {
             "classe": "gesto: chips que levam a Mostrar",
             "chamadas": [

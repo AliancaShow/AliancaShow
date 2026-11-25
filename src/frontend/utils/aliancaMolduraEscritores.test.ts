@@ -55,6 +55,7 @@ export const CLASSES: Record<string, string> = {
     "components/settings/tabs/Outputs.svelte": "gesto: botao de pagina",
     "components/settings/tabs/Styles.svelte": "gesto: botao de pagina (editar o modelo)",
     "components/stage/StageLayout.svelte": "gesto: botao de pagina",
+    "utils/aliancaChamadas.ts": "gesto: botao Salvar e ajustar da chamada (Chamadas, coluna No ar) abre a sobreposicao no Editar",
     "utils/aliancaBiblioteca.ts": "gesto: Editar da biblioteca",
     "utils/aliancaSpotlight.ts": "gesto: busca Spotlight (Ctrl+K): Configuracoes, Telas e abrir o que vive em Mostrar quando a busca abre numa pagina do menu",
     "utils/aliancaPilula.ts": "gesto: chips que levam a Mostrar"
