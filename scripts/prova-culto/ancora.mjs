@@ -53,8 +53,8 @@ export const EXCECOES = {
         "sha": "9ffaa005809bbc29f23e7e8777b840462f2dc40d570f9b85388611c6cc0c787f"
     },
     "src/frontend/components/context/contextMenus.ts": {
-        "motivo": "fatia 4 (aprovada 18/nov): apaga os layouts `file/edit/view/help` da barra de menus que saiu (MenuBar.svelte apagado); nenhum outro layout muda. cabine-6 (aprovado pelo André 25/nov, \"aprovo estilo-menus\"): output_preview perde change_style/edit_style (o estilo virou resultado de Tela + Visual)",
-        "sha": "519cec9d4600ea3ce1727f7b3c0c4b328f81d6bffbe7e71cf3858c7aafbbc621"
+        "motivo": "fatia 4 (aprovada 18/nov): apaga os layouts `file/edit/view/help` da barra de menus que saiu (MenuBar.svelte apagado); nenhum outro layout muda. cabine-6 (aprovado pelo André 25/nov, \"aprovo estilo-menus\"): output_preview perde change_style/edit_style (o estilo virou resultado de Tela + Visual) | ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): item novo alianca_ajuste (\"Ajuste na tela\", submenu LOAD_alianca_ajuste); nenhum layout existente muda (o media_card novo mora em aliancaMenusBibliotecaLayouts)",
+        "sha": "3e9a01000f429bac612389b74e81961af88c2e275ea336d95f8bc689e6a215bb"
     },
     "src/frontend/utils/common.ts": {
         "motivo": "fatia 4 (aprovada 18/nov): apaga a constante `MENU_BAR_HEIGHT` (sem mais usos); nada mais muda",
@@ -85,8 +85,8 @@ export const EXCECOES = {
         "sha": "ee4ba33f1e44e552cc1dddc3ad87a26ff35796ef6ab5395cedebf86f4a54fb78"
     },
     "src/frontend/components/context/menuClick.ts": {
-        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): midia nao limpa o telao antes de enviar no modo. Modo desligado: identico",
-        "sha": "dcdd1aadf3852a18ea71a23329a020bb37c4ceb1a870d17aa0f291dcbd86c877"
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): midia nao limpa o telao antes de enviar no modo. Modo desligado: identico | ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): acao nova alianca_ajuste (grava o fit proprio pelo ajusteProprio, so fora de Mostrar); nenhuma acao existente muda",
+        "sha": "dabfdfa6465a0d72495d29e0e5ccb24906ccd04dc97fec705908d046e325863b"
     },
     "src/frontend/utils/shortcuts.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): togglePlayingMedia recusa no modo (Espaco/seta nao mexem no video do telao); playFolder herda a janela de automacao. Modo desligado: identico",
@@ -161,8 +161,24 @@ export const EXCECOES = {
         "sha": "543fde66a7b0a4d2a8e62b163ec3bce171b97bdb807c27567ccfefb462e72687"
     },
     "src/frontend/components/drawer/pages/TemplateSlide.svelte": {
-        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): a proporcao do desenho do modelo passa a vir de saidaDoEditor($outputs) (a tela principal da coluna No ar) em vez da primeira saida ativa em ordem alfabetica. So o editor de modelo, a lista de modelos e o popup de escolher modelo desenham este componente; a janela de saida nao o monta",
-        "sha": "a66ba7887138646a5b823aac2b008843f01fee5c531bbda334c795a86a2bf8cf"
+        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): a proporcao do desenho do modelo passa a vir de saidaDoEditor($outputs) (a tela principal da coluna No ar) em vez da primeira saida ativa em ordem alfabetica. So o editor de modelo, a lista de modelos e o popup de escolher modelo desenham este componente; a janela de saida nao o monta | papeis-saida (aprovado pelo André 25/nov, \"aprovo papeis-saida\"): a proporcao passa a escolha de Telas (saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal)); a janela de saida nao monta este componente",
+        "sha": "e8964c8e6e7de8b9f3d099ba8aeb8d4ba31ec29774e22f55adebdaf2f2c74e30"
+    },
+    "src/frontend/components/helpers/media.ts": {
+        "motivo": "ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): getMediaStyle aplica o ajuste da PASTA da midia (ajusteDaPasta) antes do ajuste proprio (fit), que continua vencendo; sem pasta pedindo, vale o fit do estilo como antes. Na janela de saida o fit ja chega resolvido no fundo que a janela principal mandou (as etiquetas podem nao existir ali)",
+        "sha": "d6605a4c7f3a23c6c9b68ec72566adcd1f0388ce9fe7e56aed45f8a51312424f"
+    },
+    "src/frontend/utils/aliancaPastasMidia.ts": {
+        "motivo": "ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): ajusteProprio aceita fit (o \"Ajuste na tela\" do botao direito); temAjuste e \"Voltar todas pra pasta\" contam/soltam o fit. So a janela principal chama",
+        "sha": "9ff98ca1652e439f49c54691909dbb296d0d3e8cd3758162c1f5ecb7b518f7fe"
+    },
+    "src/frontend/utils/aliancaPastasMidiaLogica.ts": {
+        "motivo": "ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): funcao pura nova ajusteDaPasta (+ AJUSTES); MidiaDaPasta ganha fit; CAMPOS_DO_AJUSTE ganha fit (o Ctrl+Z desfaz o ajuste proprio). Nada existente muda de comportamento",
+        "sha": "5f2030289afc12d99b08b7e4b16473503c23c929785704e6dc5686c262bc3fc8"
+    },
+    "src/types/Show.ts": {
+        "motivo": "ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): so tipos: AliancaPasta.ajuste opcional e o tipo AjusteMidia",
+        "sha": "3dec292a0b5102fef26664ec30bb2d167e2c6371e4ebf3ab096e2be1ee20f050"
     }
 }
 
@@ -180,8 +196,8 @@ export const NOVOS_NO_FECHO = {
         "sha": "277556209cdaed9a0daf779564f94d3dec590e84ee305558b9b04d7c857f7221"
     },
     "src/frontend/utils/aliancaSoRetornoLogica.ts": {
-        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): arquivo novo: parte pura (aceitaNoModo, oQueRecusou, motivoDaRecusa)",
-        "sha": "cbf854f6e38498cb2214baae2898e72394de0ee07d1ad1b5974780c49fd5274d"
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): arquivo novo: parte pura (aceitaNoModo, oQueRecusou, motivoDaRecusa) | papeis-saida (aprovado pelo André 25/nov, \"aprovo papeis-saida\"): so o texto do motivo \"nenhum monitor de retorno ligado\" aponta para Configuracoes > Telas (a pagina \"Telas e monitor de retorno\" saiu do menu)",
+        "sha": "8ee76eec07399accd061f19f1099f029c4a1235e0bc7320e51df321b1fc09070"
     },
     "src/frontend/utils/bibliasEmbutidasLogica.ts": {
         "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): logica pura do registro (sem efeito colateral); entra no fecho via bibliasEmbutidas.ts",
@@ -232,17 +248,13 @@ export const NOVOS_NO_FECHO = {
         "sha": "f778032e020fefc1f9f92c794d1ea7bfb69502f8b29a8279f61d64a83715c170"
     },
     "src/frontend/utils/aliancaSaidaDoEditorLogica.ts": {
-        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): arquivo novo: funcao pura saidaDoEditor (qual saida da a proporcao do editor), com testes; entra no fecho via TemplateSlide.svelte",
-        "sha": "caedf4bcd55ffbf360bfae51a4bf3a4abaccc82704ebd7da70e3b75761c4dcb5"
-    },
-    "src/frontend/utils/aliancaTransporteLogica.ts": {
-        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): arquivo que ja existia (logica pura da coluna No ar), sem mudanca; entra no fecho porque aliancaSaidaDoEditorLogica.ts importa saidasHabilitadas",
-        "sha": "9183e3f26eeda86d1aac1e8774d6407adaaea96d168b9ffb4551596608d83659"
+        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): arquivo novo: funcao pura saidaDoEditor (qual saida da a proporcao do editor), com testes; entra no fecho via TemplateSlide.svelte | papeis-saida (aprovado pelo André 25/nov, \"aprovo papeis-saida\"): vira a regra unica telaPrincipal (escolhida em Telas, senao a primeira de slides com janela, retorno nunca); sem imports (aliancaTransporteLogica saiu do fecho)",
+        "sha": "aff3963c079dae19ad65f09fb575d6e86a05667f9ffe52000da68ea3cef82844"
     }
 }
 
-export const SHA_EXCECOES = "7e5cec7c969cca22eb92c04b6bf0134c60838e7795659863cd4b8e77e3b3aae3"
-export const SHA_NOVOS = "150808e96d6c2d240a5c4b155436856f2550f6776655b1d183b9c928c64049e2"
+export const SHA_EXCECOES = "f4034790063a54aa1f99111de2aa7bf58082f0775475ae799f9d40494626b72f"
+export const SHA_NOVOS = "04241b465ab289c9143cc06bed1438f070c1de9f661990fcd7bb4a442fc88877"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
