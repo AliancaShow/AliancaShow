@@ -36,3 +36,5 @@ scripts/prova-culto/gravacoes/
 resultados-video/
 # perfis do Electron criados pelos POCs (nao sao codigo)
 scripts/poc-video-unico/.userdata-*/
+# prints das fumacas (FS_PRINTS / pastas de prints)
+prints-*/
