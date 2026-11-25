@@ -9,7 +9,7 @@ import type { Cropping, Styles } from "../../../types/Settings"
 import type { ShowType } from "../../../types/Show"
 import { requestMain, sendMain } from "../../IPC/main"
 import { audioFolders, cachePath, loadedMediaThumbnails, media, mediaFolders, mediaTags, special } from "../../stores"
-import { camadaNaHora } from "../../utils/aliancaPastasMidiaLogica"
+import { ajusteDaPasta, camadaNaHora } from "../../utils/aliancaPastasMidiaLogica"
 import { addToMediaFolder } from "../../utils/cloudSync"
 import { isMainWindow, newToast, wait, waitUntilValueIsDefined } from "../../utils/common"
 import { audioExtensions, imageExtensions, mediaExtensions, presentationExtensions, videoExtensions } from "../../values/extensions"
@@ -392,6 +392,11 @@ export function getMediaStyle(mediaObj: MediaStyle | undefined, currentStyle: St
     }
 
     if (!mediaObj && !currentStyle) return mediaStyle
+
+    // AliancaShow (25/nov, "aprovo ajuste-pasta"): o ajuste da PASTA da midia vale sobre o da Tela; o proprio da midia (`fit`, abaixo) vence os dois.
+    // Na janela de saida as etiquetas podem nao existir: ali o `fit` ja chega resolvido no fundo que a janela principal mandou.
+    const daPasta = ajusteDaPasta(mediaObj as any, get(mediaTags))
+    if (daPasta) mediaStyle.fit = daPasta
 
     Object.keys(mediaStyle).forEach((key) => {
         if (!mediaObj?.[key]) return

@@ -1,4 +1,4 @@
-import type { AliancaFimMidia, AliancaPasta, Tag } from "../../types/Show"
+import type { AjusteMidia, AliancaFimMidia, AliancaPasta, Tag } from "../../types/Show"
 
 // ----- AliançaShow · Preparar, fatia 7: pastas de mídia (etiquetas) -----
 //
@@ -12,6 +12,7 @@ export type MidiaDaPasta = {
     videoType?: string
     loop?: boolean
     aliancaFim?: AliancaFimMidia
+    fit?: string
 }
 
 export const PASTA_RAIZ = "pasta:raiz"
@@ -74,6 +75,17 @@ export function membrosPorPasta(media: { [caminho: string]: MidiaDaPasta }, medi
     return r
 }
 
+/**
+ * 25/nov ("aprovo ajuste-pasta", André: "não tentar adivinhar"): o ajuste (encaixar/preencher/esticar/desfocado) que a PASTA da mídia pede.
+ * null = a pasta não pede (ou a mídia não está em pasta): vale a Tela da saída. O ajuste próprio da mídia (`fit`) vence este (getMediaStyle).
+ */
+export const AJUSTES: AjusteMidia[] = ["contain", "cover", "fill", "blur"]
+export function ajusteDaPasta(midia: MidiaDaPasta | undefined, mediaTags: TagsDeMidia): AjusteMidia | null {
+    const id = pastaDaMidia(midia?.tags, mediaTags)
+    const a = id ? mediaTags[id]?.aliancaPasta?.ajuste : undefined
+    return a && AJUSTES.includes(a) ? a : null
+}
+
 /** a camada na hora de tocar: a própria da mídia, depois a da pasta; null = vale o disco ou o padrão de hoje */
 export function camadaNaHora(midia: MidiaDaPasta | undefined, mediaTags: TagsDeMidia): "background" | "foreground" | null {
     if (midia?.videoType === "background" || midia?.videoType === "foreground") return midia.videoType
@@ -120,7 +132,7 @@ export function audioRepete(midia: MidiaDaPasta | undefined, mediaTags: TagsDeMi
 // ---------------------------------------------------------------- o estado que o histórico guarda
 
 /** só estes campos da mídia entram no desfazer (nunca o objeto inteiro: `info`, `tracks` etc. chegam em segundo plano) */
-export const CAMPOS_DO_AJUSTE = ["tags", "aliancaFim", "videoType", "loop"] as const
+export const CAMPOS_DO_AJUSTE = ["tags", "aliancaFim", "videoType", "loop", "fit"] as const
 export type CampoDoAjuste = (typeof CAMPOS_DO_AJUSTE)[number]
 /** valor `null` = a chave não existe */
 export type EstadoDePastas = {

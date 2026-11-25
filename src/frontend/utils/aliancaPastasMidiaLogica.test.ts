@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { abaDaPasta, audioRepete, aplicarEstado, camadaNaHora, capturar, etiquetasComuns, idDaAba, listarPastas, membrosPorPasta, moverTags, pastaDaMidia, resolverFim, tagsSemPasta, type TagsDeMidia } from "./aliancaPastasMidiaLogica"
+import { CAMPOS_DO_AJUSTE, abaDaPasta, ajusteDaPasta, audioRepete, aplicarEstado, camadaNaHora, capturar, etiquetasComuns, idDaAba, listarPastas, membrosPorPasta, moverTags, pastaDaMidia, resolverFim, tagsSemPasta, type TagsDeMidia } from "./aliancaPastasMidiaLogica"
 
 const mediaTags: TagsDeMidia = {
     c1: { name: "Comum", color: "#fff" },
@@ -100,11 +100,11 @@ describe("áudio", () => {
 describe("estado do histórico", () => {
     const alvo = () => ({ mediaTags: JSON.parse(JSON.stringify(mediaTags)) as TagsDeMidia, media: { A: { tags: ["p1"], aliancaFim: "parar", info: { codec: "x" } }, B: { tags: ["c1"] } } as any })
 
-    it("captura só os 4 campos, nunca o objeto inteiro", () => {
+    it("captura só os 5 campos (o `fit` entrou em 25/nov, aprovo ajuste-pasta), nunca o objeto inteiro", () => {
         const e = capturar(alvo(), ["p1", "novo"], ["A", "Z"])
         expect(e.mediaTags).toEqual({ p1: mediaTags.p1, novo: null })
-        expect(e.midia!.A).toEqual({ tags: ["p1"], aliancaFim: "parar", videoType: null, loop: null })
-        expect(e.midia!.Z).toEqual({ tags: null, aliancaFim: null, videoType: null, loop: null })
+        expect(e.midia!.A).toEqual({ tags: ["p1"], aliancaFim: "parar", videoType: null, loop: null, fit: null })
+        expect(e.midia!.Z).toEqual({ tags: null, aliancaFim: null, videoType: null, loop: null, fit: null })
     })
     it("aplicar e desfazer devolvem tudo, e o `info` que chegou no meio sobrevive", () => {
         const a = alvo()
@@ -122,5 +122,21 @@ describe("estado do histórico", () => {
         expect(a.media.A.aliancaFim).toBe("parar")
         expect(a.media.A.creationTime).toBe(99)
         expect(a.media.A.info).toEqual({ codec: "x" })
+    })
+})
+
+describe("ajuste na tela pela pasta (André 25/nov, aprovo ajuste-pasta)", () => {
+    const tags: any = { bg: { name: "Backgrounds", color: "", aliancaPasta: { fim: "repetir", camada: "fundo", ajuste: "cover" } }, ev: { name: "Eventos", color: "", aliancaPasta: { fim: "parar", camada: "frente" } }, comum: { name: "x", color: "" } }
+    it("a pasta que pede um ajuste o devolve", () => {
+        expect(ajusteDaPasta({ tags: ["comum", "bg"] }, tags)).toBe("cover")
+    })
+    it("pasta sem ajuste, midia sem pasta ou valor estranho: null (vale a Tela)", () => {
+        expect(ajusteDaPasta({ tags: ["ev"] }, tags)).toBeNull()
+        expect(ajusteDaPasta({ tags: ["comum"] }, tags)).toBeNull()
+        expect(ajusteDaPasta(undefined, tags)).toBeNull()
+        expect(ajusteDaPasta({ tags: ["x"] }, { x: { name: "x", color: "", aliancaPasta: { fim: "parar", camada: "fundo", ajuste: "zoom" } } } as any)).toBeNull()
+    })
+    it("o ajuste proprio entra no desfazer (CAMPOS_DO_AJUSTE)", () => {
+        expect(CAMPOS_DO_AJUSTE).toContain("fit")
     })
 })

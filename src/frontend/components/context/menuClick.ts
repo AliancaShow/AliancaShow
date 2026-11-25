@@ -275,6 +275,11 @@ const clickActions = {
         const id = obj.menu.id
         ajusteProprio(alvosDoMenu(obj.sel.data, "video"), { aliancaFim: id === "repetir" ? "repetir" : id === "parar" ? "parar" : null })
     },
+    alianca_ajuste: (obj: ObjData) => {
+        if (!naoEMostrar() || !obj.sel) return
+        const id = obj.menu.id || ""
+        ajusteProprio(alvosDoMenu(obj.sel.data, "video"), { fit: ["contain", "cover", "fill", "blur"].includes(id) ? id : null })
+    },
     alianca_camada: (obj: ObjData) => {
         if (!naoEMostrar() || !obj.sel) return
         const id = obj.menu.id

@@ -84,11 +84,11 @@
         <small>0 = todas</small>
     </label>
     <label class="campo">
-        <span>Vídeos e imagens</span>
+        <span>Vídeos e imagens (padrão)</span>
         <select value={preencher} data-acao="tela-preencher" on:change={(e) => mudarTelaFisica(outputId, { fit: e.currentTarget.value })}>
             {#each PREENCHER as p}<option value={p.id}>{p.rotulo}</option>{/each}
         </select>
-        <small>{PREENCHER.find((p) => p.id === preencher)?.dica || ""}</small>
+        <small>{PREENCHER.find((p) => p.id === preencher)?.dica || ""}. Vale para o que não tem ajuste na pasta nem no próprio arquivo.</small>
     </label>
 </div>
 

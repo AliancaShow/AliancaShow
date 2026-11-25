@@ -116,6 +116,8 @@ export const contextMenuItems: { [key: string]: ContextMenuItem } = {
     alianca_mover: { label: "Mover para", icon: "folder", iconColor: "#979aff", items: ["LOAD_alianca_mover"], translate: false },
     alianca_fim: { label: "Ao terminar", icon: "loop", iconColor: "#979aff", items: ["LOAD_alianca_fim"], translate: false },
     alianca_camada: { label: "Camada", icon: "media", iconColor: "#979aff", items: ["LOAD_alianca_camada"], translate: false },
+    // 25/nov ("aprovo ajuste-pasta"): como o video/foto preenche a tela; o proprio vence a pasta, que vence a Tela
+    alianca_ajuste: { label: "Ajuste na tela", icon: "fullscreen", iconColor: "#979aff", items: ["LOAD_alianca_ajuste"], translate: false },
     // SHOWS
     lock_group: { label: "context.lockForChanges", icon: "lock", iconColor: "#ff5454" },
     remove: { label: "actions.remove", icon: "delete", iconColor: "#ff6b54" },

@@ -112,6 +112,16 @@ const loadActions = {
         ]
     },
     alianca_so: () => saidasDoMenu().map((s) => ({ label: s.nome, icon: "play", id: s.id, translate: false })),
+    alianca_ajuste: () => {
+        const fit = get(media)[get(selected).data[0]?.path || ""]?.fit || ""
+        return [
+            { label: "Seguir a pasta", id: "seguir", enabled: !fit, translate: false },
+            { label: "Encaixar (imagem inteira)", id: "contain", enabled: fit === "contain", translate: false },
+            { label: "Preencher (corta o que passar)", id: "cover", enabled: fit === "cover", translate: false },
+            { label: "Esticar", id: "fill", enabled: fit === "fill", translate: false },
+            { label: "Encaixar com fundo desfocado", id: "blur", enabled: fit === "blur", translate: false }
+        ]
+    },
     alianca_camada: () => {
         const vt = get(media)[get(selected).data[0]?.path || ""]?.videoType || ""
         return [

@@ -642,7 +642,10 @@ export interface AliancaPasta {
     camada: "fundo" | "frente"
     /** audio so repete se isto for ligado de proposito (padrao: o audio para) */
     repetirAudio?: boolean
+    /** 25/nov ("aprovo ajuste-pasta"): como o video/foto preenche a tela; ausente = segue a Tela da saida. O ajuste proprio da midia (`fit`) vence */
+    ajuste?: AjusteMidia
 }
+export type AjusteMidia = "contain" | "cover" | "fill" | "blur"
 export interface Tag {
     name: string
     color: string

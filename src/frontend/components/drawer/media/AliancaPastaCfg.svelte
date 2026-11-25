@@ -4,6 +4,7 @@
     import { apagarPasta, mudarComportamento, quantasComAjuste, renomearPasta, voltarTodasPraPasta } from "../../../utils/aliancaPastasMidia"
     import { membros } from "../../../utils/aliancaPastasMidiaEstado"
     import { newToast } from "../../../utils/common"
+    import type { AjusteMidia } from "../../../../types/Show"
 
     // AliançaShow (Preparar F7): o ⚙ da pasta. Só existe no Preparar. Nunca apaga arquivo: a pasta é uma etiqueta.
     export let pastaId: string
@@ -29,6 +30,11 @@
     function salvarNome() {
         if (nome.trim() && nome.trim() !== tag?.name) renomearPasta(pastaId, nome)
         else nome = tag?.name || ""
+    }
+
+    // 25/nov ("aprovo ajuste-pasta"): "" = segue a Tela da saida
+    function trocarAjuste(v: string) {
+        mudarComportamento(pastaId, { ajuste: (v || undefined) as AjusteMidia | undefined })
     }
 
     function trocarCamada(camada: "fundo" | "frente") {
@@ -75,6 +81,17 @@
                 <button type="button" class:ligado={pasta.camada === "frente"} data-camada="frente" on:click={() => trocarCamada("frente")}>Frente (com som, limpa os slides)</button>
             </div>
         </div>
+        <!-- 25/nov ("aprovo ajuste-pasta"): sem adivinhar; quem nao escolhe segue a Tela da saida; o ajuste proprio da midia vence -->
+        <label class="linha">
+            <span class="rotulo">Ajuste na tela</span>
+            <select data-acao="pasta-ajuste" value={pasta.ajuste || ""} on:change={(e) => trocarAjuste(e.currentTarget.value)}>
+                <option value="">Segue a tela da saída</option>
+                <option value="contain">Encaixar (imagem inteira)</option>
+                <option value="cover">Preencher (corta o que passar)</option>
+                <option value="fill">Esticar</option>
+                <option value="blur">Encaixar com fundo desfocado</option>
+            </select>
+        </label>
         <p class="aviso">Mudar a camada vale para as {total} mídias da pasta, inclusive quando são fundo de slide em shows. Fundo de slide de pasta "frente" fica mudo, e o próximo slide do mesmo show o limpa.</p>
 
         <label class="linha check">
@@ -121,6 +138,14 @@
         border: 1px solid var(--primary-lighter);
         color: var(--text);
         border-radius: 6px;
+    }
+    select {
+        padding: 4px 8px;
+        background: var(--primary-darkest);
+        border: 1px solid var(--primary-lighter);
+        color: var(--text);
+        border-radius: 6px;
+        font: inherit;
     }
     .grupo {
         display: flex;

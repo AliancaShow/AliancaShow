@@ -75,7 +75,7 @@ export function moverParaPasta(caminhos: string[], pastaId: string | null): numb
 }
 
 /** ajuste próprio de fim/camada. `null` = "seguir a pasta" (apaga o ajuste) */
-export function ajusteProprio(caminhos: string[], campos: { aliancaFim?: "repetir" | "parar" | null; videoType?: "background" | "foreground" | null }) {
+export function ajusteProprio(caminhos: string[], campos: { aliancaFim?: "repetir" | "parar" | null; videoType?: "background" | "foreground" | null; fit?: string | null }) {
     const unicos = Array.from(new Set(caminhos.filter(Boolean)))
     if (!unicos.length) return
     const midia: Midia = {}
@@ -87,12 +87,13 @@ export function ajusteProprio(caminhos: string[], campos: { aliancaFim?: "repeti
             if (campos.aliancaFim === null) o.loop = null
         }
         if ("videoType" in campos) o.videoType = campos.videoType
+        if ("fit" in campos) o.fit = campos.fit
         midia[c] = o
     }
     registrar(instantaneo([], unicos), { midia })
 }
 
-const temAjuste = (m: any) => !!(m?.aliancaFim || m?.videoType || typeof m?.loop === "boolean")
+const temAjuste = (m: any) => !!(m?.aliancaFim || m?.videoType || m?.fit || typeof m?.loop === "boolean")
 
 /** quantas mídias da pasta têm ajuste próprio */
 export function quantasComAjuste(id: string): number {
@@ -105,7 +106,7 @@ export function voltarTodasPraPasta(id: string) {
     const caminhos = (get(membros)[id] || []).filter((c) => temAjuste(m[c]))
     if (!caminhos.length) return
     const midia: Midia = {}
-    for (const c of caminhos) midia[c] = { aliancaFim: null, videoType: null, loop: null }
+    for (const c of caminhos) midia[c] = { aliancaFim: null, videoType: null, loop: null, fit: null }
     registrar(instantaneo([], caminhos), { midia })
 }
 
