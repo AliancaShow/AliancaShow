@@ -69,7 +69,8 @@
 
 {#if enableStylePreview}
     <!-- Output has a style template. -->
-    <p><b>{translateText("edit.style")}:</b> {translateText(`settings.override${isScripture ? "_scripture" : ""}_with_template`)}</p>
+    <!-- AliancaShow ("aprovo estilo-menus"): quem escolhe o modelo da saida e o Visual -->
+    <p><b>Visual:</b> esta saída usa o modelo {isScripture ? "de Bíblia" : "de música"} escolhido no Visual (vale por cima do modelo do slide).</p>
 
     <div class="flex">
         <MaterialButton style="flex: 1;" variant="outlined" title="menu.edit: {$templates[outputStyleTemplate]?.name || ''}" on:click={() => editTemplate(outputStyleTemplate)}>
@@ -77,9 +78,9 @@
             <p>{translateText("menu.edit")}: <b>{$templates[outputStyleTemplate]?.name || ""}</b></p>
         </MaterialButton>
 
-        <MaterialButton style="flex: 1;" variant="outlined" title="edit.style: {$styles[outputStyleId]?.name || ''}" on:click={openStylePage}>
+        <MaterialButton style="flex: 1;" variant="outlined" title="Abrir a página Visual" on:click={openStylePage}>
             <Icon size={1.1} id="styles" />
-            <p>{translateText("edit.style")}: <b>{$styles[outputStyleId]?.name || ""}</b></p>
+            <p>Abrir o Visual</p>
         </MaterialButton>
     </div>
 {/if}

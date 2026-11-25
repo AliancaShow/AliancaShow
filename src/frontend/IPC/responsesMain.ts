@@ -141,6 +141,9 @@ export const mainResponses: MainResponses = {
     [ToMain.API]: async (a) => await API_ACTIONS[a.action]?.(a.data),
     [Main.DATA_PATH]: (a) => dataPath.set(a),
     [ToMain.ALERT]: (a) => {
+        // AliancaShow ("aprovo selecionar-tela"): telao que nao liga nao abre mais a janela que bloqueia; o aviso de saida fora do ar
+        // (linha de avisos do pe) ja diz qual saida caiu
+        if (a === "error.display") return
         alertMessage.set(a || "")
 
         if (a === "error.display") {
