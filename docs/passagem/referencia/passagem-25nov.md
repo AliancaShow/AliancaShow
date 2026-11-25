@@ -1,4 +1,4 @@
-# Passagem 25/nov (madrugada): versão 1.9.1
+# Passagem 25/nov: versões 1.9.1 (madrugada) e 1.9.2 (manhã)
 
 Pedido do André (24/nov, noite): "faz tudo isso durante a madrugada… me entrega um 1.9.1… bateria extensa de testes… nada de deixar coisa para depois".
 
@@ -44,3 +44,14 @@ Depois do aprovo: juntar a branch, registrar EXCECOES + shas na âncora, rodar a
 3. Botão direito numa caixa de texto do Editar › Valores dinâmicos: janela em português.
 4. Modelo de Bíblia › "2+ versões…": escolher o modelo de 2 versões e projetar um versículo em 2 traduções.
 5. Responder os 3 aprovos (acima).
+
+## Manhã de 25/nov: 1.9.2
+- André: "Pode enviar" (feat/cabine-6 e fecho/aguarda-aprovo enviados, sem força) e "aprovo os 3".
+- `fecho/aguarda-aprovo` juntada no `feat/cabine-6`; âncora com EXCECOES de `backup.ts`, `responsesMain.ts`, `TemplateInfo.svelte` e motivo/sha novos de `contextMenus.ts` (commit d566f60). Versão 1.9.2 (a14de36).
+- Bateria: `ANCORA: ok`; test:layout 495/495; vitest 1760 ok (+1, o teste do backup), só os 6 do RTMP (ffmpeg); svelte-check 151.
+- Fumaças, cada uma num perfil de prova restaurado: t2, t4, t6, t7-menus, t8, t9, t9-palco, t10, t12, t14, vivo, t17 ok. t11 (A6c), t13 (A3, G3/G4/G8–G12) e t16 (14): as mesmas falhas antigas.
+- t15 é instável: cai às vezes com "CDP: Promise was collected" (linha 40 ou 99), sem a página recarregar. Na base `3f82b62`, com vite próprio, caiu 3 em 4; no HEAD passou 2 em 6. É da fumaça/CDP, não desta versão.
+- t17: 5 de 6 rodadas ok; a única falha (F, valor no cursor) foi logo depois do `npm run build`, com o vite frio.
+- No app (perfil de prova): `ALERT "error.display"` não abre mais a janela (outros avisos abrem); menu da prévia = editar, preparar, padrão de teste; popup de informação do modelo diz "escolhido no Visual" e "Abrir o Visual".
+- Instalador: `dist\AliancaShow-1.9.2-x64.exe` (138 MB, 09:59), com as 2 Bíblias. Não aberto (dados reais).
+- Cuidado: `npx asar extract-file ... package.json` extrai na pasta atual e sobrescreve o `package.json` do repo; o `npm run build` muda `public/index.html` (voltar com `git checkout`).
