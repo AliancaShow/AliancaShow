@@ -4,13 +4,17 @@
     // Criar modelo e criar/renomear categoria passam pelo history do FreeShow (Ctrl+Z desfaz). Conta e filtro: utils/aliancaModelosLogica.ts.
     import { tick } from "svelte"
     import { uid } from "uid"
-    import { activeEdit, activeRename, templateCategories, templates } from "../../stores"
+    import { activeEdit, activeRename, categories, outputs, scriptureSettings, special, styles, templateCategories, templates } from "../../stores"
     import { categoriaDosModelos, ultimoModelo } from "../../utils/aliancaEditarEstado"
-    import { TODOS, categoriaDoNovo, categoriasDaLista, modelosDaLista, nomeLivre } from "../../utils/aliancaModelosLogica"
+    import { TODOS, categoriaDoNovo, categoriasDaLista, modelosDaLista, nomeLivre, usosDoModelo } from "../../utils/aliancaModelosLogica"
+    import { saidaDoEditor } from "../../utils/aliancaSaidaDoEditorLogica"
+    import { lerVisuais } from "../../utils/aliancaVisualLogica"
     import { translateText } from "../../utils/language"
     import { getAccess } from "../../utils/profile"
     import { clone } from "../helpers/array"
+    import { deleteAction } from "../helpers/clipboard"
     import { history } from "../helpers/history"
+    import { getResolution } from "../helpers/output"
     import TemplateSlide from "../drawer/pages/TemplateSlide.svelte"
     import { EMPTY_SLIDE } from "../../values/empty"
 
@@ -79,6 +83,27 @@
         history({ id: "UPDATE", newData: { id }, location: { page: "drawer", id: "category_templates" } })
         categoriaDosModelos.set(TODOS)
     }
+    // ---- apagar modelo (André 25/nov: "temos como apagar modelos?"): × no cartao ou botao direito; confirma no proprio cartao; Ctrl+Z desfaz.
+    // Em uso num Visual, estilo, outro modelo, Biblia padrao ou categoria: NAO apaga e diz onde (a saida ficaria apontando para nada).
+    let apagandoModelo = ""
+    let emUso: { id: string; usos: string[] } | null = null
+    function pedirApagar(id: string) {
+        if (soLeitura) return
+        apagandoModelo = ""
+        emUso = null
+        const usos = usosDoModelo(id, { visuais: lerVisuais($special), estilos: $styles as any, modelos: $templates as any, bibliaPadrao: $scriptureSettings?.template, categoriasDeMusica: $categories as any })
+        if (usos.length) emUso = { id, usos }
+        else apagandoModelo = id
+    }
+    function apagarModelo(id: string) {
+        apagandoModelo = ""
+        if (soLeitura || !$templates[id]) return
+        if (aberto === id) activeEdit.set({ items: [] } as any)
+        deleteAction({ id: "template", data: [id] } as any)
+    }
+    // a miniatura na proporcao do telao (a mesma do editor)
+    $: res = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
+
     function cancelar() {
         criando = false
         renomeando = ""
@@ -125,12 +150,30 @@
     <div class="grade" data-acao="modelos-grade">
         {#each lista as m (m.id)}
             {@const t = $templates[m.id]}
-            <button type="button" class="card" class:on={aberto === m.id} title={m.nome} tabindex="-1" data-modelo={m.id} on:click={() => abrir(m.id)}>
-                <span class="mini"
-                    >{#if t}<TemplateSlide templateId={m.id} template={t} preview />{/if}</span
-                >
-                <span class="nome">{m.nome}</span>
-            </button>
+            <div class="celula">
+                <button type="button" class="card" class:on={aberto === m.id} title={m.nome} tabindex="-1" data-modelo={m.id} on:click={() => abrir(m.id)} on:contextmenu|preventDefault|stopPropagation={() => pedirApagar(m.id)}>
+                    <span class="mini" style="aspect-ratio: {res.width} / {res.height}"
+                        >{#if t}<TemplateSlide templateId={m.id} template={t} preview />{/if}</span
+                    >
+                    <span class="nome">{m.nome}</span>
+                </button>
+                {#if apagandoModelo === m.id}
+                    <div class="aviso confirma" data-acao="modelo-apagar-confirma">
+                        <span>Apagar “{m.nome}”?</span>
+                        <div class="botoes">
+                            <button type="button" class="sim" tabindex="-1" data-acao="modelo-apagar-sim" on:click={() => apagarModelo(m.id)}>Apagar</button>
+                            <button type="button" class="nao" tabindex="-1" on:click={() => (apagandoModelo = "")}>Não</button>
+                        </div>
+                    </div>
+                {:else if emUso?.id === m.id}
+                    <div class="aviso" data-acao="modelo-em-uso">
+                        <span>Em uso: {emUso.usos.join(", ")}. Troque lá antes de apagar.</span>
+                        <div class="botoes"><button type="button" class="nao" tabindex="-1" on:click={() => (emUso = null)}>Ok</button></div>
+                    </div>
+                {:else if !soLeitura}
+                    <button type="button" class="apagar" tabindex="-1" title="Apagar este modelo" data-acao="modelo-apagar" on:click={() => pedirApagar(m.id)}>×</button>
+                {/if}
+            </div>
         {:else}
             <p class="vazio">{busca ? "Nenhum modelo com esse nome." : "Nenhum modelo nesta categoria."}</p>
         {/each}
@@ -260,7 +303,76 @@
         gap: 8px;
         padding-bottom: 8px;
     }
+    .celula {
+        position: relative;
+        min-width: 0;
+    }
+    .apagar {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 11px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font: inherit;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 120ms;
+    }
+    .celula:hover .apagar {
+        opacity: 1;
+    }
+    .apagar:hover {
+        background: var(--luz-vermelho);
+    }
+    .aviso {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px;
+        border-radius: 8px;
+        background: var(--luz-pop-opaco);
+        box-shadow: inset 0 0 0 1px var(--luz-borda-forte);
+        color: var(--luz-texto);
+        font-size: 11.5px;
+        line-height: 1.3;
+    }
+    .aviso.confirma {
+        background: var(--luz-vermelho-lavagem);
+        box-shadow: inset 0 0 0 1px var(--luz-vermelho);
+    }
+    .aviso .botoes {
+        display: flex;
+        gap: 6px;
+    }
+    .aviso button {
+        height: 22px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 11px;
+        font: inherit;
+        font-size: 11px;
+        cursor: pointer;
+    }
+    .aviso .sim {
+        background: var(--luz-vermelho);
+        color: #fff;
+        font-weight: 600;
+    }
+    .aviso .nao {
+        background: var(--luz-campo);
+        color: var(--luz-texto);
+    }
     .card {
+        width: 100%;
         display: flex;
         flex-direction: column;
         gap: 4px;

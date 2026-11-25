@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { SEM_CATEGORIA, TODOS, categoriaDoNovo, deveColarModelo, categoriasDaLista, modelosDaLista, musicasDaBusca, nomeDaCategoria, nomeLivre } from "./aliancaModelosLogica"
+import { SEM_CATEGORIA, TODOS, categoriaDoNovo, deveColarModelo, categoriasDaLista, modelosDaLista, musicasDaBusca, nomeDaCategoria, nomeLivre, usosDoModelo } from "./aliancaModelosLogica"
 
 const categorias = {
     scripture: { name: "category.scripture", default: true },
@@ -60,5 +60,26 @@ describe("deveColarModelo", () => {
         expect(deveColarModelo("letras", "letras")).toBe(false)
         expect(deveColarModelo("teste", "letras")).toBe(true)
         expect(deveColarModelo("", "letras")).toBe(true)
+    })
+})
+
+describe("apagar modelo: onde ele esta em uso (André 25/nov)", () => {
+    it("sem uso: lista vazia (pode apagar)", () => {
+        expect(usosDoModelo("m1", { visuais: [{ nome: "Culto", saidas: { a: { musica: "m2", biblia: "slide" } } }], estilos: { s: { name: "LED", template: "m2" } } })).toEqual([])
+    })
+    it("um Visual que veste o modelo em qualquer coluna (inclusive as de 2-4 versoes) bloqueia", () => {
+        expect(usosDoModelo("m1", { visuais: [{ nome: "Culto", saidas: { a: { biblia3: "m1" } } }] })).toEqual(["Visual “Culto”"])
+    })
+    it("estilo, outro modelo (versoes ou primeiro slide), Biblia padrao e categoria de musica", () => {
+        const r = usosDoModelo("m1", {
+            estilos: { s: { name: "TELÃO LED", templateScripture_2: "m1" } },
+            modelos: { m1: { name: "Ele mesmo", settings: { firstSlideTemplate: "m1" } }, b: { name: "Bíblia", settings: { aliancaVersoes: { "2": "m1" } } } },
+            bibliaPadrao: "m1",
+            categoriasDeMusica: { c: { name: "Louvor", template: "m1" } }
+        })
+        expect(r).toEqual(["estilo “TELÃO LED”", "modelo “Bíblia”", "modelo padrão da Bíblia", "categoria “Louvor”"])
+    })
+    it("a aparencia do Visual nao e coluna de modelo", () => {
+        expect(usosDoModelo("m1", { visuais: [{ nome: "X", saidas: { a: { aparencia: "m1" } } }] })).toEqual([])
     })
 })

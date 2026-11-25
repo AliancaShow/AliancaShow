@@ -122,3 +122,37 @@ export function musicasDaCategoria(lista: { [id: string]: { category?: string | 
         .filter(([, s]) => (s?.category || "") === categoria)
         .map(([id]) => id)
 }
+
+/**
+ * Apagar modelo (André, 25/nov: "temos como apagar modelos? isso tava faltando"). Onde o modelo esta em uso: se a lista vier com algo, NAO apaga e diz
+ * onde (apagar um modelo que um Visual veste deixaria a saida apontando para nada). Musicas onde ele ja foi colado nao contam: o modelo foi copiado nelas.
+ */
+export function usosDoModelo(
+    id: string,
+    ctx: {
+        visuais?: { nome?: string; saidas?: { [saida: string]: { [coluna: string]: any } } }[] | null
+        estilos?: Mapa<{ name?: string; [campo: string]: any }> | null
+        modelos?: Mapa<{ name?: string; settings?: { firstSlideTemplate?: string; aliancaVersoes?: { [n: string]: string } } | null }> | null
+        bibliaPadrao?: string | null
+        categoriasDeMusica?: Mapa<{ name?: string; template?: string | null }> | null
+    }
+): string[] {
+    if (!id) return []
+    const usos: string[] = []
+    const ehModelo = (campo: string) => campo === "template" || campo.startsWith("templateScripture")
+    for (const v of ctx.visuais || []) {
+        const usa = Object.values(v?.saidas || {}).some((s) => Object.entries(s || {}).some(([c, x]) => c !== "aparencia" && x === id))
+        if (usa) usos.push(`Visual “${v?.nome || "sem nome"}”`)
+    }
+    for (const e of Object.values(ctx.estilos || {})) {
+        if (Object.entries(e || {}).some(([c, x]) => ehModelo(c) && x === id)) usos.push(`estilo “${e?.name || "sem nome"}”`)
+    }
+    for (const [mid, m] of Object.entries(ctx.modelos || {})) {
+        if (mid === id) continue
+        const versoes = Object.values(m?.settings?.aliancaVersoes || {})
+        if (m?.settings?.firstSlideTemplate === id || versoes.includes(id)) usos.push(`modelo “${m?.name || "sem nome"}”`)
+    }
+    if (ctx.bibliaPadrao === id) usos.push("modelo padrão da Bíblia")
+    for (const c of Object.values(ctx.categoriasDeMusica || {})) if (c?.template === id) usos.push(`categoria “${c?.name || "sem nome"}”`)
+    return [...new Set(usos)]
+}
