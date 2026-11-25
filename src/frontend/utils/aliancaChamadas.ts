@@ -16,7 +16,8 @@ export interface Chamada extends DadosDaChamada {
     nome: string
 }
 
-const MARCA = "aliancaChamadasCriadas"
+/** o operador apagou a ultima chamada de proposito: nao recriar Kids e Estacionamento */
+const MARCA_VAZIA = "aliancaChamadasSemPadrao"
 
 /** a chamada no ar (a ultima chamada); `ateMs` null = ate tirar */
 export const chamadaNoAr = writable<{ id: string; texto: string; ateMs: number | null } | null>(null)
@@ -29,43 +30,30 @@ export function listaDeChamadas(todas: Record<string, any>): Chamada[] {
 }
 
 /**
- * uma vez por perfil: cria Kids e Estacionamento (apagar depois nao recria). A carga do disco pode chegar DEPOIS (o IPC entrega `overlays` e
- * `special` em separado e sobrescreve a loja inteira): por 20 s um vigia recoloca as duas e a marca se a carga as levou (fumaca t17, 25/nov).
+ * Kids e Estacionamento nascem sempre que NAO ha nenhuma chamada, menos quando o operador apagou a ultima de proposito (marca `MARCA_VAZIA`).
+ * Nao ha marca de "ja criei": as sobreposicoes so vao ao disco no Salvar, a configuracao vai na hora; uma marca sobreviveria a um app que
+ * fechou/recarregou sem salvar e as duas sumiriam de vez (fumaca t17, 25/nov). A carga do disco pode chegar DEPOIS do painel (o IPC
+ * sobrescreve a loja inteira): por 20 s um vigia recoloca as duas se a carga as levou.
  */
 let apagouNestaSessao = false
 export function garantirChamadasPadrao(): void {
     try {
-        if ((get(special) as any)?.[MARCA]) return
-        if (!listaDeChamadas(get(overlays) as any).length) semear()
-        marcar()
-        const parar = overlays.subscribe((o) => {
-            if (apagouNestaSessao) return
-            if (!listaDeChamadas(o as any).length) queueMicrotask(semear)
-        })
-        const pararMarca = special.subscribe((s: any) => {
-            if (!s?.[MARCA]) queueMicrotask(marcar)
-        })
-        setTimeout(() => {
-            parar()
-            pararMarca()
-        }, 20000)
+        if ((get(special) as any)?.[MARCA_VAZIA]) return
+        semear()
+        const parar = overlays.subscribe(() => queueMicrotask(semear))
+        setTimeout(parar, 20000)
     } catch (erro) {
         falhaAlta("chamadas-padrao", erro)
     }
 }
 function semear() {
-    if (apagouNestaSessao || listaDeChamadas(get(overlays) as any).length) return
+    if (apagouNestaSessao || (get(special) as any)?.[MARCA_VAZIA] || listaDeChamadas(get(overlays) as any).length) return
     overlays.update((a: any) => {
         CHAMADAS_PADRAO.forEach((c, i) => {
             a[uid()] = novaSobreposicao(c.nome, { modelo: c.modelo, posicao: "faixa", saidas: [] }, i, c.cor)
         })
         return a
     })
-}
-function marcar() {
-    if ((get(special) as any)?.[MARCA]) return
-    special.update((s: any) => ({ ...s, [MARCA]: true }))
-    aceitarCaminhosNaFoto([["special", MARCA]])
 }
 
 function novaSobreposicao(nome: string, dados: DadosDaChamada, ordem: number, cor = "#e63946") {
@@ -95,6 +83,10 @@ export function apagarChamada(id: string): void {
         delete a[id]
         return a
     })
+    if (!listaDeChamadas(get(overlays) as any).length) {
+        special.update((s: any) => ({ ...s, [MARCA_VAZIA]: true }))
+        aceitarCaminhosNaFoto([["special", MARCA_VAZIA]])
+    }
 }
 
 /** "Livre…": abre a sobreposicao no Editar (cor, fonte, tamanho e lugar como qualquer sobreposicao) */
