@@ -159,6 +159,10 @@ export const EXCECOES = {
     "src/frontend/components/main/popups/TemplateInfo.svelte": {
         "motivo": "cabine-6 (aprovado pelo André 25/nov, \"aprovo estilo-menus\"): so textos do popup de informacoes do modelo (fala em Visual; o botao diz \"Abrir o Visual\"); a acao do botao e a mesma",
         "sha": "543fde66a7b0a4d2a8e62b163ec3bce171b97bdb807c27567ccfefb462e72687"
+    },
+    "src/frontend/components/drawer/pages/TemplateSlide.svelte": {
+        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): a proporcao do desenho do modelo passa a vir de saidaDoEditor($outputs) (a tela principal da coluna No ar) em vez da primeira saida ativa em ordem alfabetica. So o editor de modelo, a lista de modelos e o popup de escolher modelo desenham este componente; a janela de saida nao o monta",
+        "sha": "a66ba7887138646a5b823aac2b008843f01fee5c531bbda334c795a86a2bf8cf"
     }
 }
 
@@ -226,11 +230,19 @@ export const NOVOS_NO_FECHO = {
     "src/types/aliancaMonitorCanais.ts": {
         "motivo": "cabine-6 (aprovado pelo André 23/nov no PC da igreja, \"aprovo monitor-desconectado\"): arquivo novo: so tipos e nomes dos canais ALIANCA_MONITOR_REGISTRO / ALIANCA_MONITOR_AVISO",
         "sha": "f778032e020fefc1f9f92c794d1ea7bfb69502f8b29a8279f61d64a83715c170"
+    },
+    "src/frontend/utils/aliancaSaidaDoEditorLogica.ts": {
+        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): arquivo novo: funcao pura saidaDoEditor (qual saida da a proporcao do editor), com testes; entra no fecho via TemplateSlide.svelte",
+        "sha": "caedf4bcd55ffbf360bfae51a4bf3a4abaccc82704ebd7da70e3b75761c4dcb5"
+    },
+    "src/frontend/utils/aliancaTransporteLogica.ts": {
+        "motivo": "editor-telao (aprovado pelo André 25/nov, \"aprovo editor-telao\"): arquivo que ja existia (logica pura da coluna No ar), sem mudanca; entra no fecho porque aliancaSaidaDoEditorLogica.ts importa saidasHabilitadas",
+        "sha": "9183e3f26eeda86d1aac1e8774d6407adaaea96d168b9ffb4551596608d83659"
     }
 }
 
-export const SHA_EXCECOES = "6b567a68e5c85b6ba29919027087c090bebb6d230abb33197c61eea3cb44e8ad"
-export const SHA_NOVOS = "1546337f89ee9d2e52bddfbc2c610defc6db4c7a339ea74f90b566867a93fd1e"
+export const SHA_EXCECOES = "7e5cec7c969cca22eb92c04b6bf0134c60838e7795659863cd4b8e77e3b3aae3"
+export const SHA_NOVOS = "150808e96d6c2d240a5c4b155436856f2550f6776655b1d183b9c928c64049e2"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
 /** SHA-256 do texto com CRLF trocado por LF (o checkout do Windows nao pode mudar o sha) */
