@@ -12,6 +12,8 @@
     import { loadShows } from "../helpers/setShow"
     import { _show } from "../helpers/shows"
     import AliancaEscolha from "../settings/AliancaEscolha.svelte"
+    import { mudarVersoesDaBiblia } from "../../utils/aliancaVisualAplicador"
+    import { VERSOES_DA_BIBLIA, versoesDoModelo, type QuantasVersoes } from "../../utils/aliancaVisualLogica"
 
     $: id = $activeEdit.id || ""
     $: modelo = ($templates as any)[id]
@@ -37,6 +39,19 @@
     $: categoriaAtual = modelo?.category && ($templateCategories as any)[modelo.category] ? modelo.category : ""
     function mudarCategoria(nova: string) {
         history({ id: "UPDATE", oldData: { id }, newData: { key: "category", data: nova || null }, location: { page: "drawer", id: "template_category" } })
+    }
+
+    // ---- Biblia com 2+ versoes (25/nov, item 3 da fila): so em modelo da categoria Biblia. Vale nas saidas cuja Biblia (Visual) e este modelo
+    $: ehBiblia = modelo?.category === "scripture"
+    let versoesAberto = false
+    $: versoes = versoesDoModelo(modelo)
+    $: opcoesDeBiblia = Object.entries($templates as any)
+        .filter(([tid, m]: any) => tid !== id && m?.category === "scripture")
+        .map(([tid, m]: any) => ({ id: tid, nome: m.name || "Sem nome" }))
+        .sort((a, b) => a.nome.localeCompare(b.nome))
+    $: resumoVersoes = VERSOES_DA_BIBLIA.filter((n) => versoes[n]).length
+    function mudarVersoes(n: QuantasVersoes, valor: string) {
+        mudarVersoesDaBiblia(id, n, valor)
     }
 
     // ---- aplicar numa musica
@@ -114,6 +129,20 @@
     <div class="cat" data-acao="modelo-categoria">
         <AliancaEscolha rotulo="Categoria" valor={categoriaAtual} opcoes={opcoesDeCategoria} neutra={{ id: "", nome: "Sem categoria" }} on:escolher={(e) => mudarCategoria(e.detail)} />
     </div>
+    {#if ehBiblia}
+        <div class="aplicar">
+            <button type="button" class="bt" class:aberto={versoesAberto} data-acao="modelo-versoes" title="Qual modelo usar quando o versículo sai em 2, 3 ou 4 traduções ao mesmo tempo" on:click={() => (versoesAberto = !versoesAberto)}>2+ versões{resumoVersoes ? ` (${resumoVersoes})` : ""}…</button>
+            {#if versoesAberto}
+                <div class="pop versoes" data-acao="modelo-versoes-lista">
+                    <p class="vazio">Quando o versículo sai em mais de uma tradução ao mesmo tempo (ex.: ARA e NVI), as saídas que usam este modelo de Bíblia usam:</p>
+                    {#each VERSOES_DA_BIBLIA as n}
+                        <AliancaEscolha rotulo="{n} versões" valor={versoes[n] || ""} opcoes={opcoesDeBiblia} neutra={{ id: "", nome: "Este mesmo modelo" }} acao="modelo-versoes-{n}" on:escolher={(e) => mudarVersoes(n, e.detail)} />
+                    {/each}
+                    <button type="button" class="bt" on:click={() => (versoesAberto = false)}>Fechar</button>
+                </div>
+            {/if}
+        </div>
+    {/if}
     <div class="aplicar">
         <button bind:this={botao} type="button" class="bt" class:aberto data-acao="modelo-aplicar" title="Copia este modelo para os slides de uma música" on:click={abrir}>Aplicar numa música…</button>
         {#if aberto}

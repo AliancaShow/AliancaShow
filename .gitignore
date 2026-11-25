@@ -34,3 +34,5 @@ bundled-shows/*.show
 # saida da prova do Culto (gravacoes e prints)
 scripts/prova-culto/gravacoes/
 resultados-video/
+# perfis do Electron criados pelos POCs (nao sao codigo)
+scripts/poc-video-unico/.userdata-*/

@@ -20,6 +20,8 @@
     import { iniciarVisual } from "../../utils/aliancaVisualAplicador"
     import { aplicarPadraoDaPartida } from "../../utils/aliancaTelaoPartida"
     import { soltarModelosDasCategorias, vigiarModeloDasCategorias } from "../../utils/aliancaModeloCategoria"
+    import { interceptarValoresDinamicos, valoresAbertos } from "../../utils/aliancaValoresDinamicos"
+    import AliancaValoresDinamicos from "./AliancaValoresDinamicos.svelte"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { ligarQuedasNosAvisos } from "../../utils/aliancaQuedaAvisos"
@@ -57,6 +59,8 @@
     // André, 24/nov: "modelo da categoria" virou "aplicar uma vez"; as categorias perdem o modelo fixo (o FreeShow recolava em toda abertura)
     soltarModelosDasCategorias()
     onDestroy(vigiarModeloDasCategorias())
+    // fila de 24/nov: botao direito > Valores dinamicos abre a janela em portugues (o popup do FreeShow e do fecho e nao muda)
+    onDestroy(interceptarValoresDinamicos())
     // cabine 6 (F1): a janela de uma saida caiu/travou/fora do ar -> ERRO na linha de avisos do pe (antes, uma faixa fixa por cima do conteudo)
     onDestroy(ligarQuedasNosAvisos())
     // cabine 6 ("aprovo monitor-desconectado", 23/nov): a saida presa ao MONITOR; monitor desconectado -> erro fixo na linha de avisos, volta sozinha
@@ -172,6 +176,9 @@
 <!-- motor: sem markup visivel, sempre montado -->
 <Preview escondida />
 <AnteparoDeModo />
+{#if $valoresAbertos}
+    <AliancaValoresDinamicos />
+{/if}
 {#if $showChangeProfileMenu && $activeProfile !== null}
     <ProfileChangerMenu />
 {/if}
