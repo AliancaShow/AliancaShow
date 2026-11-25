@@ -189,6 +189,19 @@ describe("composição", () => {
         delete v.saidas.led.biblia2
         expect(planoDeEscrita(v, o, est).escritas).toEqual([])
     })
+    it("desejadoDaSaida: 2+ versões vêm do modelo de Bíblia e vencem a coluna extra", () => {
+        const v: any = { id: "v", nome: "V", retorno: {}, saidas: { led: { musica: "slide", biblia: "bib", biblia2: "velho" } } }
+        const modelos: any = { bib: { name: "Bíblia", settings: { aliancaVersoes: { "2": "bib2", "3": "", "4": "sumiu" } } }, bib2: { name: "Duas" }, velho: { name: "Velho" } }
+        const d = desejadoDaSaida(v, "led", {}, modelos)
+        expect(d.templateScripture).toBe("bib")
+        expect(d.templateScripture_2).toBe("bib2")
+        expect("templateScripture_3" in d && d.templateScripture_3 === undefined).toBe(true)
+        expect("templateScripture_4" in d && d.templateScripture_4 === undefined).toBe(true)
+        // modelo sem a escolha: a coluna extra decide como antes
+        expect(desejadoDaSaida(v, "led", {}, { bib: { name: "Bíblia" }, velho: { name: "Velho" } }).templateScripture_2).toBe("velho")
+        // Bíblia em "Sem modelo": o modelo não manda
+        expect(desejadoDaSaida({ ...v, saidas: { led: { biblia: "slide" } } }, "led", {}, modelos)).not.toHaveProperty("templateScripture_2")
+    })
     it("desejadoDaSaida: sem Visual só a Tela; undefined ≠ null", () => {
         expect(desejadoDaSaida(null, "obs", { aliancaTelaFisica: { fit: null } })).toEqual({ fit: null })
         expect(estavel(undefined)).not.toBe(estavel(null))

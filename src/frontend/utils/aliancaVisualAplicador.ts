@@ -20,7 +20,7 @@ import { clone } from "../components/helpers/array"
 import { avisar } from "./aliancaAvisos"
 import { aceitarCaminhosNaFoto } from "./aliancaConfigRascunho"
 import { falhaAlta } from "./aliancaFalha"
-import { CAMPOS_FISICOS, estavel, lerVisuais, migrar, migrarTela, nomeDoEstiloProprio, novoVisual as novoVisualPuro, Pendencias, planoDeEscrita, precisaDeEstiloProprio, saidasNormais, saidasParaSeparar, telaFisicaDe, VERSAO_TELA, visualAtivo, type Aparencia, type Casa, type Coluna, type Escrita, type Problema, type Visual } from "./aliancaVisualLogica"
+import { CAMPOS_FISICOS, estavel, lerVisuais, migrar, migrarTela, nomeDoEstiloProprio, novoVisual as novoVisualPuro, Pendencias, planoDeEscrita, precisaDeEstiloProprio, saidasNormais, saidasParaSeparar, telaFisicaDe, VERSAO_TELA, visualAtivo, versoesDoModelo, type Aparencia, type QuantasVersoes, type Casa, type Coluna, type Escrita, type Problema, type Visual } from "./aliancaVisualLogica"
 
 /** o que espera o proximo slide (para a linha de origem nao acusar divergencia e Configuracoes > Visual dizer onde espera) */
 export const visualPendente: Writable<{
@@ -80,6 +80,21 @@ export function aplicarVisualAtivo(): void {
     const ja = pendencias.registrar(plano.escritas, get(outputs))
     escrever(ja)
     publicarPendencias()
+}
+
+/**
+ * 25/nov: "Biblia com 2+ versoes" no modelo de Biblia. `valor` "" = igual ao proprio modelo. Grava em `templates[id].settings.aliancaVersoes`
+ * e reaplica o Visual (as saidas cuja Biblia e este modelo recebem o novo modelo de N versoes no proximo slide, como qualquer modelo, D15).
+ */
+export function mudarVersoesDaBiblia(modeloId: string, n: QuantasVersoes, valor: string): void {
+    if (!(get(templates) as any)[modeloId]) return falhaAlta("visual", `mudarVersoesDaBiblia: modelo "${modeloId}" não existe`)
+    templates.update((a: any) => {
+        const m = a[modeloId]
+        if (!m) return a
+        m.settings = { ...(m.settings || {}), aliancaVersoes: { ...versoesDoModelo(m), [n]: valor || "" } }
+        return a
+    })
+    // quem reaplica e o vigia de `templates` em iniciarVisual (pega tambem o Ctrl+Z)
 }
 
 /**
@@ -267,6 +282,11 @@ function assinaturaDaConferencia(): string {
     return estavel([partes, sp?.aliancaVisualAtivo ?? null, sp?.aliancaVisuais ?? null, sp?.aliancaTelaVersao ?? null])
 }
 
+function assinaturaDasVersoes(): string {
+    const m: any = get(templates)
+    return estavel(Object.keys(m || {}).sort().map((id) => [id, versoesDoModelo(m[id])]))
+}
+
 let ultimaAssinatura = ""
 let conferenciaSilenciosa = false
 let tConferencia: ReturnType<typeof setTimeout> | null = null
@@ -345,6 +365,20 @@ export function iniciarVisual(): () => void {
         )
         paradas.push(styles.subscribe(vigiar))
         paradas.push(special.subscribe(vigiar))
+        // 25/nov: "Biblia com 2+ versoes" mora no modelo; mudou (inclusive por Ctrl+Z) -> reaplica o Visual
+        let versoes = assinaturaDasVersoes()
+        paradas.push(
+            templates.subscribe(() => {
+                const a = assinaturaDasVersoes()
+                if (a === versoes) return
+                versoes = a
+                try {
+                    aplicarVisualAtivo()
+                } catch (e) {
+                    falhaAlta("visual", e)
+                }
+            })
+        )
     }
     // so agenda quando algo que a conferencia olha mudou (o slide no ar muda `outputs` a toda hora)
     const vigiar = () => {
