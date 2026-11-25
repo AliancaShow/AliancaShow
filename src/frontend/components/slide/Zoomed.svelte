@@ -112,7 +112,7 @@
     $: canOverflow = false // $special.textCanOverflow !== false
 </script>
 
-<div id={outputId} class:center class:disabled class="zoomed" style="width: 100%;height: 100%;{outline ? `border: 2px solid ${outline};` : ''}{alignStyle}{center ? 'display: flex;justify-content: safe center;align-items: safe center;overflow: visible;' : ''}" use:observeResize={(r) => { elemWidth = r.width; elemHeight = r.height }}>
+<div id={outputId} class:center class:alinhado={!!align && align !== "center"} class:disabled class="zoomed" style="width: 100%;height: 100%;{outline ? `border: 2px solid ${outline};` : ''}{center ? 'display: flex;justify-content: safe center;align-items: safe center;overflow: visible;' : ''}{alignStyle}" use:observeResize={(r) => { elemWidth = r.width; elemHeight = r.height }}>
     <div
         use:observeResize={(r) => { slideWidth = r.width; slideHeight = r.height }}
         class="slide"
@@ -188,6 +188,11 @@
     .center .slide {
         margin: auto;
         flex: 0 0 auto;
+    }
+    /* AliancaShow (teste 13, "aprovo posição-sobra" 24/nov): "Posição quando sobra espaço" fora do centro. A margem automática centralizava
+       por cima do justify-content/align-items; sem ela, o alinhamento escolhido (que agora vem depois do centro no style) vale. */
+    .center.alinhado .slide {
+        margin: 0;
     }
 
     /* .zoom {
