@@ -29,6 +29,7 @@ const existe = (id) => j.ev(`return !!get(S.templates)[${JSON.stringify(id)}]`)
 const cartao = (id) => `document.querySelector('[data-modelo="${id}"]')`
 const xDo = (id) => `document.querySelector('[data-modelo="${id}"]')?.parentElement.querySelector('[data-acao="modelo-apagar"]')`
 let novo = ""
+let biblia = null
 
 try {
     await j.ev(`const E=await import(U("utils/aliancaEditarEstado")); MODO("preparar"); await esp(600); E.modoDoEditar.set("modelos"); E.categoriaDosModelos.set("todos"); await esp(800); return 1`)
@@ -58,7 +59,9 @@ try {
     await clicar("Nao", `document.querySelector('[data-acao="modelo-apagar-confirma"] .nao')`)
     ok("C Nao cancela", (await existe(novo)) && !(await j.ev(`return !!document.querySelector('[data-acao="modelo-apagar-confirma"]')`)))
 
-    // D: modelo em uso nao apaga
+    // D: modelo em uso nao apaga. Perfil sem nenhum em uso: o primeiro da lista vira o modelo padrao da Biblia so durante o teste
+    biblia = await j.ev(`const s=get(S.scriptureSettings)||{}; const usado=s.template&&document.querySelector('[data-modelo="'+s.template+'"]'); if(usado) return null
+        const id=document.querySelector('[data-modelo]')?.dataset.modelo||""; S.scriptureSettings.update(x=>({...x, template:id})); await esp(300); return {antes: s.template ?? null}`)
     const emUso = await j.ev(`const L=await import(U("utils/aliancaModelosLogica")); const V=await import(U("utils/aliancaVisualLogica"))
         const ctx={visuais:V.lerVisuais(get(S.special)), estilos:get(S.styles), modelos:get(S.templates), bibliaPadrao:get(S.scriptureSettings)?.template, categoriasDeMusica:get(S.categories)}
         return Object.keys(get(S.templates)).find(id=>L.usosDoModelo(id,ctx).length && document.querySelector('[data-modelo="'+id+'"]'))||""`)
@@ -78,6 +81,7 @@ try {
 } catch (e) {
     ok("sem excecao", false, String(e?.stack || e))
 } finally {
+    if (biblia) await j.ev(`S.scriptureSettings.update(x=>{const y={...x}; if(${JSON.stringify(biblia.antes)}===null) delete y.template; else y.template=${JSON.stringify(biblia.antes)}; return y}); return 1`).catch(() => {})
     if (novo) await j.ev(`S.templates.update(a=>{delete a[${JSON.stringify(novo)}]; return a}); return 1`).catch(() => {})
     await j.ev(`const E=await import(U("utils/aliancaEditarEstado")); E.modoDoEditar.set("slides"); S.activeEdit.set({items:[]}); MODO("culto"); return 1`).catch(() => {})
     await j.enviar("Emulation.clearDeviceMetricsOverride", {}).catch(() => {})
