@@ -27,6 +27,18 @@ export const COLUNAS_EXTRA = [
 ] as const
 export type ColunaExtra = (typeof COLUNAS_EXTRA)[number]["id"]
 
+/**
+ * 25/nov (fila do André, item 3): o modelo de 2, 3 e 4 versoes mora no MODELO DE BIBLIA (`settings.aliancaVersoes`: { "2": id, ... }).
+ * Chave presente vence a coluna extra do Visual ("" = igual ao proprio modelo); chave ausente = a coluna extra decide como antes.
+ */
+export const VERSOES_DA_BIBLIA = ["2", "3", "4"] as const
+export type QuantasVersoes = (typeof VERSOES_DA_BIBLIA)[number]
+export const campoDasVersoes = (n: QuantasVersoes) => `templateScripture_${n}`
+export function versoesDoModelo(modelo: any): { [n: string]: string } {
+    const v = modelo?.settings?.aliancaVersoes
+    return v && typeof v === "object" && !Array.isArray(v) ? v : {}
+}
+
 /** o que e da TELA (o Screens do ProPresenter): nao muda de culto para culto */
 export const CAMPOS_FISICOS = ["aspectRatio", "fit", "lines", "volume", "blurAmount", "blurOpacity", "showAsFaded", "lineOpacity", "skipVirtualBreaks"] as const
 /** o que e do VISUAL alem dos modelos (o Look): camadas, fundo, transicao, creditos */
@@ -199,7 +211,7 @@ export function escolherCampos(de: any, campos: readonly string[]): Aparencia {
  * o que a saida PEDE ao estilo dela: campos da Tela fisica + modelos e aparencia do Visual. Chave presente com valor undefined = apagar o
  * campo do estilo ("Sem modelo"); chave ausente = nao mexer.
  */
-export function desejadoDaSaida(v: Visual | null, outputId: string, o: any): { [campo: string]: any } {
+export function desejadoDaSaida(v: Visual | null, outputId: string, o: any, templates: Mapa = {}): { [campo: string]: any } {
     const r: { [campo: string]: any } = {}
     const t = telaFisicaDe(o)
     if (t) for (const k of CAMPOS_FISICOS) if (k in t && t[k] !== undefined) r[k] = t[k]
@@ -209,7 +221,15 @@ export function desejadoDaSaida(v: Visual | null, outputId: string, o: any): { [
         r[c.campo] = casa === SLIDE ? undefined : casa
     }
     const linha: SaidaDoVisual = v.saidas?.[outputId] || {}
+    const biblia = casaDe(v, outputId, "biblia")
+    const doModelo = biblia !== SLIDE ? versoesDoModelo(templates?.[biblia]) : {}
     for (const c of COLUNAS_EXTRA) {
+        const n = c.campo.slice(-1)
+        if (Object.prototype.hasOwnProperty.call(doModelo, n)) {
+            const id = doModelo[n]
+            r[c.campo] = id && id !== SLIDE && ehObjeto(templates?.[id]) ? id : undefined
+            continue
+        }
         const casa = linha[c.id]
         if (casa === undefined) continue
         r[c.campo] = !casa || casa === SLIDE ? undefined : casa
@@ -340,7 +360,7 @@ export function planoDeEscrita(v: Visual | null, outputs: Saidas, estilos: Estil
                     })
             }
     for (const [est, ids] of porEstilo) {
-        const pedidos = ids.map((id) => desejadoDaSaida(v, id, outputs[id]))
+        const pedidos = ids.map((id) => desejadoDaSaida(v, id, outputs[id], templates))
         const campos = new Set(pedidos.flatMap((d) => Object.keys(d)))
         for (const campo of campos) {
             // alguem nao pede ou pede outra coisa: estilo dividido, separar antes (saidasParaSeparar)
