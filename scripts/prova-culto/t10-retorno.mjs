@@ -18,7 +18,7 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { conectar, PORTA } from "./cdp.mjs"
-import { abrir, clicarEm, esperar, localizar, tecla } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, RECADOS, tecla } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-8b"
 mkdirSync(saida, { recursive: true })
@@ -99,7 +99,8 @@ const {loadShows}=await import(U("components/helpers/setShow")); await loadShows
     ok("0. o telao mostra o slide 0", (await idxTel()) === 0, String(await idxTel()))
     const tel0 = await telao()
 
-    // ---------- A. ligar
+    // ---------- A. ligar (o botao do modo esta na aba Palco de Recados)
+    await j.ev(`${RECADOS("palco")} return 1`)
     await clicarAcao("modo-so-retorno")
     await esperar(600)
     ok("A. o botao acendeu", (await dom(`${sel("modo-so-retorno")}.getAttribute("aria-pressed")`)) === "true")

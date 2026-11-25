@@ -16,6 +16,8 @@
     import { teclaNoCampo } from "../../utils/aliancaCampoTeclasLogica"
     import { dicaDoEsc } from "../../utils/aliancaToque"
 
+    /** dentro de Recados (25/nov) o titulo e o da secao */
+    export let semTitulo = false
     let texto = ""
     let enviando = false
     let erro = ""
@@ -158,10 +160,14 @@
 </script>
 
 <div class="palco" data-regiao-filho="mensagem-palco">
-    <div class="cabeca">
-        <span class="titulo">MENSAGEM PRO PALCO</span>
-        <button type="button" class="modo" class:ligado={$soRetorno} class:inerte={!$soRetorno && !!motivoModo} aria-pressed={$soRetorno} aria-disabled={!$soRetorno && !!motivoModo} tabindex="-1" data-acao="modo-so-retorno" title={$soRetorno ? "Só retorno ligado: clique para voltar ao normal." : motivoModo || "Só retorno: o que você mandar ao ar vai só para o monitor de retorno, não para o telão."} on:mousedown|preventDefault on:click={modo}>{$soRetorno ? "● Só retorno" : "○ Só retorno"}</button>
-    </div>
+    {#if !semTitulo}
+        <div class="cabeca">
+            <span class="titulo">MENSAGEM PRO PALCO</span>
+            <button type="button" class="modo" class:ligado={$soRetorno} class:inerte={!$soRetorno && !!motivoModo} aria-pressed={$soRetorno} aria-disabled={!$soRetorno && !!motivoModo} tabindex="-1" data-acao="modo-so-retorno" title={$soRetorno ? "Só retorno ligado: clique para voltar ao normal." : motivoModo || "Só retorno: o que você mandar ao ar vai só para o monitor de retorno, não para o telão."} on:mousedown|preventDefault on:click={modo}
+                >{$soRetorno ? "● Só retorno" : "○ Só retorno"}</button
+            >
+        </div>
+    {/if}
     <div class="linha">
         <input class="edit campo" class:noar={noPalco} type="text" maxlength={LIMITE_MENSAGEM} placeholder="Pastor, 5 min pro fim" aria-label="Mensagem pro palco" data-acao="mensagem-palco" bind:value={texto} on:keydown={aoTeclar} />
         <button type="button" class="enviar" tabindex="-1" disabled={enviando || !texto.trim()} data-acao="enviar-mensagem-palco" on:mousedown|preventDefault on:click={enviar}>Enviar</button>
@@ -173,11 +179,19 @@
             {/each}
             <span class="un">min</span>
         </div>
+        {#if semTitulo}<!-- dentro de Recados (25/nov): o modo fica na linha dos minutos -->
+            <button type="button" class="modo" class:ligado={$soRetorno} class:inerte={!$soRetorno && !!motivoModo} aria-pressed={$soRetorno} aria-disabled={!$soRetorno && !!motivoModo} tabindex="-1" data-acao="modo-so-retorno" title={$soRetorno ? "Só retorno ligado: clique para voltar ao normal." : motivoModo || "Só retorno: o que você mandar ao ar vai só para o monitor de retorno, não para o telão."} on:mousedown|preventDefault on:click={modo}
+                >{$soRetorno ? "● Só retorno" : "○ Só retorno"}</button
+            >
+        {/if}
         <span class="conta" class:cheio={texto.length >= LIMITE_MENSAGEM} data-acao="contador-mensagem">{texto.length}/{LIMITE_MENSAGEM}</span>
     </div>
     <div class="estado" data-acao="estado-mensagem-palco">
         {#if viva}
-            <span class="vt"><b class="pal" data-acao="restante-mensagem">● {rotuloNoPalco(viva.ateMs, agora || sirvoAgora())}</b>{#if !noPalco} · “{viva.texto}”{/if}</span><button type="button" class="limpar" tabindex="-1" data-acao="limpar-mensagem-palco" on:mousedown|preventDefault on:click={limpar}>Limpar</button>
+            <span class="vt"
+                ><b class="pal" data-acao="restante-mensagem">● {rotuloNoPalco(viva.ateMs, agora || sirvoAgora())}</b>{#if !noPalco}
+                    · “{viva.texto}”{/if}</span
+            ><button type="button" class="limpar" tabindex="-1" data-acao="limpar-mensagem-palco" on:mousedown|preventDefault on:click={limpar}>Limpar</button>
         {/if}
     </div>
     <div class="estado" data-acao="aviso-mensagem-palco" role="status">
@@ -259,6 +273,10 @@
     }
     .un,
     .conta {
+        /* largura fixa: o "Só retorno" ao lado (dentro de Recados) nao anda quando o contador cresce (t9 F) */
+        min-width: 42px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
         font-size: 11px;
         color: var(--luz-mudo);
     }

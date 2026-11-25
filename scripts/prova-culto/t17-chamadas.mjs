@@ -10,7 +10,7 @@
 //   F  Valores dinamicos: o botao direito abre a janela em portugues (nao o popup do FreeShow); clicar "Hora" poe o codigo no cursor;
 //      "Todos os codigos (avancado)" abre o popup original
 //   G  nada sobrou: nenhuma chamada no ar, chamada e modelo de teste apagados
-import { abrir, clicarEm, esperar, localizar, tecla } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, RECADOS, tecla } from "./lib.mjs"
 
 const falhas = []
 const ok = (n, c, x = "") => (console.log(`${c ? "ok   " : "FALHA"} ${n}${x ? " :: " + x : ""}`), c || falhas.push(n))
@@ -34,7 +34,7 @@ const noAr = (nome) => j.ev(`const o=get(S.overlays); const id=Object.keys(o).fi
 const normaisLigadas = () => j.ev(`return Object.values(get(S.outputs)).filter(o=>o.enabled && !o.stageOutput && !o.isKeyOutput).length`)
 
 try {
-    await j.ev(`S.activePopup.set(null); MODO("culto"); await esp(600); return 1`)
+    await j.ev(`S.activePopup.set(null); MODO("culto"); await esp(600); ${RECADOS("chamadas")} return 1`)
 
     // A
     ok("A painel CHAMADAS em Mostrar", await j.ev(`return !!document.querySelector('[data-regiao-filho="chamadas"]')`))

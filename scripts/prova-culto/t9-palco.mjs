@@ -12,7 +12,7 @@
 //   F. nenhum alvo de clique da coluna se desloca entre o estado em repouso e com texto/erro (a linha de estado e fixa)
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { abrir, clicarEm, esperar, localizar } from "./lib.mjs"
+import { abrir, clicarEm, esperar, localizar, RECADOS } from "./lib.mjs"
 
 const saida = process.argv[2] || "prints-v2-8"
 mkdirSync(saida, { recursive: true })
@@ -42,7 +42,7 @@ const saidasJson = () => dom(`JSON.stringify(get(S.outputs))`)
 
 // ---------- estado inicial: restaura o que o teste mexe
 await j.ev(`const A=await import(U("utils/aliancaSirvo")); window.__sirvoAntes=JSON.stringify(get(A.sirvo)); return 1`)
-await j.ev(`MODO("culto"); await esp(600); return 1`)
+await j.ev(`MODO("culto"); await esp(600); ${RECADOS("palco")} return 1`)
 const base = await saidasJson()
 
 // ---------- A. sem chave
@@ -67,7 +67,7 @@ await j.enviar("Input.insertText", { text: "x".repeat(100) })
 await esperar(150)
 ok("B. o campo para em 120 e o contador fica cheio", (await textoDe("contador-mensagem")) === "120/120" && (await dom(`${sel("contador-mensagem")}.classList.contains("cheio")`)), await textoDe("contador-mensagem"))
 ok("B. validade padrao = 3", (await dom(`document.querySelector('[data-acao=duracao-mensagem][aria-pressed=true]').dataset.min`)) === "3")
-await clicarAcao("duracao-mensagem", "[data-min=\"5\"]")
+await clicarAcao("duracao-mensagem", '[data-min="5"]')
 ok("B. clicar em 5 seleciona 5", (await dom(`document.querySelector('[data-acao=duracao-mensagem][aria-pressed=true]').dataset.min`)) === "5")
 ok("B. so as 4 validades existem", (await dom(`[...document.querySelectorAll('[data-acao=duracao-mensagem]')].map(b=>b.dataset.min).join(",")`)) === "1,3,5,10")
 await print("t9-b-texto-120")
@@ -78,7 +78,11 @@ await esperar(900)
 const err = await estado()
 ok("C. o erro do envio aparece na linha de estado", /chave/i.test(err), err)
 const pos1 = await posicoes()
-ok("F. o campo, o Enviar e o modo nao se deslocaram com texto + erro", ["mensagem-palco", "enviar-mensagem-palco", "modo-so-retorno"].every((k) => JSON.stringify(pos0[k]) === JSON.stringify(pos1[k])), JSON.stringify([pos0, pos1]))
+ok(
+    "F. o campo, o Enviar e o modo nao se deslocaram com texto + erro",
+    ["mensagem-palco", "enviar-mensagem-palco", "modo-so-retorno"].every((k) => JSON.stringify(pos0[k]) === JSON.stringify(pos1[k])),
+    JSON.stringify([pos0, pos1])
+)
 await print("t9-c-erro")
 
 // ---------- D. modo so retorno

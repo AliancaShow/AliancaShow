@@ -10,6 +10,8 @@
     import { teclaNoCampo } from "../../utils/aliancaCampoTeclasLogica"
     import { dicaDoEsc } from "../../utils/aliancaToque"
 
+    /** dentro de Recados (25/nov) o titulo e o da secao */
+    export let semTitulo = false
     garantirChamadasPadrao()
 
     $: lista = listaDeChamadas($overlays as any)
@@ -132,15 +134,18 @@
 
 <div class="chamadas" data-regiao-filho="chamadas">
     {#if !editando}
-        <div class="cabeca">
-            <span class="titulo">CHAMADAS</span>
-            {#if atual}<button type="button" class="link" tabindex="-1" data-acao="editar-chamada" on:mousedown|preventDefault on:click={() => abrirEditor(escolhida)}>editar</button>{/if}
-        </div>
+        {#if !semTitulo}
+            <div class="cabeca">
+                <span class="titulo">CHAMADAS</span>
+                {#if atual}<button type="button" class="link" tabindex="-1" data-acao="editar-chamada" on:mousedown|preventDefault on:click={() => abrirEditor(escolhida)}>editar</button>{/if}
+            </div>
+        {/if}
         <div class="chips" role="group" aria-label="Chamadas">
             {#each lista as c (c.id)}
                 <button type="button" class="chip" class:sel={c.id === escolhida} class:noar={$chamadaNoAr?.id === c.id} tabindex="-1" data-acao="chip-chamada" on:mousedown|preventDefault on:click={() => (escolhida = c.id)}>{c.nome}</button>
             {/each}
             <button type="button" class="chip mais" tabindex="-1" data-acao="nova-chamada" on:mousedown|preventDefault on:click={() => abrirEditor(null)}>+ Chamada</button>
+            {#if semTitulo && atual}<button type="button" class="link fim" tabindex="-1" data-acao="editar-chamada" on:mousedown|preventDefault on:click={() => abrirEditor(escolhida)}>editar</button>{/if}
         </div>
         {#if atual}
             {#if campos.length}
@@ -241,6 +246,10 @@
         font-weight: 600;
         color: var(--luz-mudo);
         letter-spacing: 0.04em;
+    }
+    .cabeca .link,
+    .link.fim {
+        margin-left: auto;
     }
     .link {
         border: 0;

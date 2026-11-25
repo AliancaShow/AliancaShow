@@ -1,5 +1,5 @@
 <script lang="ts">
-    // Leiaute v2, coluna No ar: as outras telas (uma aba por saida habilitada alem da principal), recolhivel. Cabine 6 (fatia A, D28): a
+    // Leiaute v2, coluna No ar: as outras telas (uma aba por saida habilitada alem da principal), recolhivel (25/nov: titulo OUTRAS TELAS e abas so aberta). Cabine 6 (fatia A, D28): a
     // previa e a captura ao vivo da janela daquela saida (AliancaCaptura), sem decodificar o video de novo; aba fechada = captura parada.
     import { outputDisplay, outputs } from "../../stores"
     import { getResolution } from "../helpers/output"
@@ -7,10 +7,11 @@
     import { styles } from "../../stores"
     import AliancaCaptura from "../output/AliancaCaptura.svelte"
     import AliancaPreviaDesenhada from "./AliancaPreviaDesenhada.svelte"
+    import AliancaSecaoNoAr from "./AliancaSecaoNoAr.svelte"
+    import { CHAVE_OUTRAS, OUTRAS_ABERTA_PADRAO } from "../../utils/aliancaRecadosLogica"
 
     export let ids: string[] = []
 
-    let aberta = true
     let escolhida = ""
     $: if (!ids.includes(escolhida)) escolhida = ids[0] || ""
     $: nome = (id: string) => $outputs[id]?.name || "Saída"
@@ -19,16 +20,13 @@
 </script>
 
 {#if ids.length}
-    <div class="outras" data-acao="outras-telas">
-        <div class="linha">
-            <button class="seta" aria-expanded={aberta} aria-label="Mostrar ou esconder as outras telas" tabindex="-1" on:mousedown|preventDefault on:click={() => (aberta = !aberta)}><span class="chev" class:aberta>▸</span></button>
-            <div class="abas" role="tablist" aria-label="Outras telas">
-                {#each ids as id (id)}
-                    <button role="tab" class="aba" class:on={aberta && id === escolhida} aria-selected={aberta && id === escolhida} tabindex="-1" on:mousedown|preventDefault on:click={() => ((escolhida = id), (aberta = true))}>{nome(id)}</button>
-                {/each}
-            </div>
+    <AliancaSecaoNoAr titulo="OUTRAS TELAS" chave={CHAVE_OUTRAS} padrao={OUTRAS_ABERTA_PADRAO} conta={ids.length} acao="outras-telas">
+        <div class="abas" role="tablist" aria-label="Outras telas">
+            {#each ids as id (id)}
+                <button role="tab" class="aba" class:on={id === escolhida} aria-selected={id === escolhida} tabindex="-1" on:mousedown|preventDefault on:click={() => (escolhida = id)} title={nome(id)}>{nome(id)}</button>
+            {/each}
         </div>
-        {#if aberta && escolhida}
+        {#if escolhida}
             <div class="tela">
                 <div class="prev">
                     {#key escolhida}<AliancaCaptura outputId={escolhida} proporcao="{res.width}/{res.height}"><AliancaPreviaDesenhada outputId={escolhida} /></AliancaCaptura>{/key}
@@ -37,37 +35,10 @@
                 <div class="espaco" aria-hidden="true"></div>
             </div>
         {/if}
-    </div>
+    </AliancaSecaoNoAr>
 {/if}
 
 <style>
-    .outras {
-        flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    .linha {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .seta {
-        width: 24px;
-        height: 28px;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        padding: 0;
-        color: var(--luz-mudo);
-    }
-    .chev {
-        display: inline-block;
-        transition: transform 160ms ease;
-    }
-    .chev.aberta {
-        transform: rotate(90deg);
-    }
     .abas {
         flex-grow: 1;
         min-width: 0;

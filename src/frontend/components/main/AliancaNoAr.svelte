@@ -17,8 +17,7 @@
     import AliancaPreviaDesenhada from "./AliancaPreviaDesenhada.svelte"
     import AliancaCamadas from "./AliancaCamadas.svelte"
     import AliancaChat from "./AliancaChat.svelte"
-    import AliancaMensagemPalco from "./AliancaMensagemPalco.svelte"
-    import AliancaChamadas from "./AliancaChamadas.svelte"
+    import AliancaRecados from "./AliancaRecados.svelte"
     import AliancaOutrasTelas from "./AliancaOutrasTelas.svelte"
     import AliancaTransporte from "./AliancaTransporte.svelte"
 
@@ -96,9 +95,8 @@
 
 <AliancaOutrasTelas ids={outras} />
 
-<AliancaMensagemPalco />
-
-<AliancaChamadas />
+<!-- 25/nov (Andre): Mensagem pro palco e Chamadas viraram a secao recolhivel "Recados" (abas Palco / Chamadas) -->
+<AliancaRecados />
 
 <AliancaChat />
 

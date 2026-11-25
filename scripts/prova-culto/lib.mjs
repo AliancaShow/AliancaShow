@@ -80,4 +80,6 @@ export async function localizar(j, expr) {
 
 /** cabine-5: a raiz da Midia e a BIBLIOTECA (nao le mais as pastas do disco). As fumacas que clicam f1/v1 na raiz importam os dois para a raiz antes.
  *  Usa a chave que o `media` ja tem (o perfil grava "C:/..." com barra). */
+/** 25/nov: a Mensagem pro palco e as Chamadas moram na secao recolhivel "Recados" (nasce recolhida). Abre na aba pedida (use dentro de j.ev). */
+export const RECADOS = (aba) => `const _BE=await import(U("utils/aliancaBlocosEstado")); _BE.definirBloco("noar|recados", true); _BE.definirBloco("noar|recados-aba-palco", ${aba === "palco"}); await esp(300);`
 export const BIB_RAIZ = `const _B=await import(U("utils/aliancaBibliotecaMidia")); const _r=Object.values(get(S.mediaFolders))[0].path; _B.importarCaminhos([_r+"/f1.png", _r+"/v1.mp4"], null); await esp(400);`
