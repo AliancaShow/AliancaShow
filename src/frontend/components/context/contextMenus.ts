@@ -249,7 +249,8 @@ export const contextMenuLayouts: { [key: string]: string[] } = {
     output: ["force_output", "SEPARATOR", "align_with_screen", "choose_screen"], // , "SEPARATOR", "edit"
 
     // OUTPUTS
-    output_preview: ["GROUP_edit", "change_style", "edit_style", "SEPARATOR", "live_prepare", "SEPARATOR", "test_pattern"],
+    // AliancaShow ("aprovo estilo-menus"): o estilo virou resultado de Tela + Visual; trocar/editar estilo por aqui era desfeito pelo compositor
+    output_preview: ["GROUP_edit", "live_prepare", "SEPARATOR", "test_pattern"],
     output_active_button: ["GROUP_edit", "toggle_output", "move_to_front", "SEPARATOR", "hide_from_preview"],
 
     // DRAWER
