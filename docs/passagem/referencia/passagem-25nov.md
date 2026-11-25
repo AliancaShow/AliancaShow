@@ -36,7 +36,7 @@ Depois do aprovo: juntar a branch, registrar EXCECOES + shas na âncora, rodar a
 - Defeitos achados e corrigidos pela t17: Kids e Estacionamento sumiam na primeira abertura (corrida com a carga do disco e marca gravada antes do Salvar).
 
 ## Instalador
-`dist\AliancaShow-1.9.1-x64.exe` (132 MB, 25/nov 02:02), com as 2 Bíblias em `resourcesibles`. Gerado do `feat/cabine-6`. Não foi aberto (abriria os dados reais da igreja): o André instala.
+`dist\AliancaShow-1.9.1-x64.exe` (132 MB, 25/nov 02:02), com as 2 Bíblias em `resources\bibles`. Gerado do `feat/cabine-6`. Não foi aberto (abriria os dados reais da igreja): o André instala.
 
 ## Para o André testar de manhã
 1. Instalar o 1.9.1. Na primeira abertura: Canções/Novas do Sirvo perdem o modelo "teste"; aparecem as Chamadas Kids e Estacionamento em Mostrar.
