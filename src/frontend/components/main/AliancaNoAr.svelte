@@ -18,6 +18,7 @@
     import AliancaCamadas from "./AliancaCamadas.svelte"
     import AliancaChat from "./AliancaChat.svelte"
     import AliancaMensagemPalco from "./AliancaMensagemPalco.svelte"
+    import AliancaChamadas from "./AliancaChamadas.svelte"
     import AliancaOutrasTelas from "./AliancaOutrasTelas.svelte"
     import AliancaTransporte from "./AliancaTransporte.svelte"
 
@@ -96,6 +97,8 @@
 <AliancaOutrasTelas ids={outras} />
 
 <AliancaMensagemPalco />
+
+<AliancaChamadas />
 
 <AliancaChat />
 
