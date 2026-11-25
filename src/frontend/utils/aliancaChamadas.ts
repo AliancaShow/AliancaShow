@@ -28,23 +28,44 @@ export function listaDeChamadas(todas: Record<string, any>): Chamada[] {
         .sort((a, b) => (get(overlays)[a.id]?.aliancaOrdem ?? 0) - (get(overlays)[b.id]?.aliancaOrdem ?? 0) || a.nome.localeCompare(b.nome))
 }
 
-/** uma vez por perfil: cria Kids e Estacionamento (apagar depois nao recria) */
+/**
+ * uma vez por perfil: cria Kids e Estacionamento (apagar depois nao recria). A carga do disco pode chegar DEPOIS (o IPC entrega `overlays` e
+ * `special` em separado e sobrescreve a loja inteira): por 20 s um vigia recoloca as duas e a marca se a carga as levou (fumaca t17, 25/nov).
+ */
+let apagouNestaSessao = false
 export function garantirChamadasPadrao(): void {
     try {
         if ((get(special) as any)?.[MARCA]) return
-        if (!listaDeChamadas(get(overlays) as any).length) {
-            overlays.update((a: any) => {
-                CHAMADAS_PADRAO.forEach((c, i) => {
-                    a[uid()] = novaSobreposicao(c.nome, { modelo: c.modelo, posicao: "faixa", saidas: [] }, i, c.cor)
-                })
-                return a
-            })
-        }
-        special.update((s: any) => ({ ...s, [MARCA]: true }))
-        aceitarCaminhosNaFoto([["special", MARCA]])
+        if (!listaDeChamadas(get(overlays) as any).length) semear()
+        marcar()
+        const parar = overlays.subscribe((o) => {
+            if (apagouNestaSessao) return
+            if (!listaDeChamadas(o as any).length) queueMicrotask(semear)
+        })
+        const pararMarca = special.subscribe((s: any) => {
+            if (!s?.[MARCA]) queueMicrotask(marcar)
+        })
+        setTimeout(() => {
+            parar()
+            pararMarca()
+        }, 20000)
     } catch (erro) {
         falhaAlta("chamadas-padrao", erro)
     }
+}
+function semear() {
+    if (apagouNestaSessao || listaDeChamadas(get(overlays) as any).length) return
+    overlays.update((a: any) => {
+        CHAMADAS_PADRAO.forEach((c, i) => {
+            a[uid()] = novaSobreposicao(c.nome, { modelo: c.modelo, posicao: "faixa", saidas: [] }, i, c.cor)
+        })
+        return a
+    })
+}
+function marcar() {
+    if ((get(special) as any)?.[MARCA]) return
+    special.update((s: any) => ({ ...s, [MARCA]: true }))
+    aceitarCaminhosNaFoto([["special", MARCA]])
 }
 
 function novaSobreposicao(nome: string, dados: DadosDaChamada, ordem: number, cor = "#e63946") {
@@ -68,6 +89,7 @@ export function salvarChamada(id: string | null, nome: string, dados: DadosDaCha
 }
 
 export function apagarChamada(id: string): void {
+    apagouNestaSessao = true
     tirarChamada(id)
     overlays.update((a: any) => {
         delete a[id]
