@@ -7,6 +7,7 @@
     import { clone, keysToID, sortByName } from "../../helpers/array"
     import { history } from "../../helpers/history"
     import { getFirstActiveOutput, getResolution } from "../../helpers/output"
+    import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
     import { deselect } from "../../helpers/select"
     import { getLayoutRef } from "../../helpers/show"
     import { _show } from "../../helpers/shows"
@@ -26,7 +27,7 @@
     const profile = getAccess("templates")
     $: readOnly = profile.global === "read" || profile[active || ""] === "read"
 
-    $: resolution = getResolution(null, { $outputs, $styles }) // $templates[active || ""]?.settings?.resolution
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs)) // $templates[active || ""]?.settings?.resolution
     let filteredTemplates: (Template & { id: string })[] = []
 
     $: activeTemplate = ($activeShow && $activeShow.type === undefined) || $activeShow?.type === "show" ? $showsCache[$activeShow.id]?.settings?.template : null

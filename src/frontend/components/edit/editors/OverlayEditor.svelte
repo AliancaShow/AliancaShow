@@ -9,6 +9,7 @@
     import { clone } from "../../helpers/array"
     import { history } from "../../helpers/history"
     import { getResolution } from "../../helpers/output"
+    import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
     import { getStyles } from "../../helpers/style"
     import FloatingInputs from "../../input/FloatingInputs.svelte"
     import MaterialZoom from "../../inputs/MaterialZoom.svelte"
@@ -40,7 +41,7 @@
 
     let width = 0
     let height = 0
-    $: resolution = getResolution(null, { $outputs, $styles })
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
 
     let ratio = 1
 

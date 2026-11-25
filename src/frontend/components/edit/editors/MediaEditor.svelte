@@ -4,6 +4,7 @@
     import Icon from "../../helpers/Icon.svelte"
     import { getExtension, getMedia, getMediaStyle, getMediaType } from "../../helpers/media"
     import { getCurrentStyle, getFirstActiveOutput, getResolution } from "../../helpers/output"
+    import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
     import FloatingInputs from "../../input/FloatingInputs.svelte"
     import MaterialButton from "../../inputs/MaterialButton.svelte"
     import { VideoPlayer } from "../../media/video/videoPlayer"
@@ -39,7 +40,7 @@
 
     let width = 0
     let height = 0
-    $: resolution = getResolution(null, { $outputs, $styles })
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
     $: widthOrHeight = getStyleResolution(resolution, width, height, "fit")
 
     $: extension = getExtension(mediaPath)

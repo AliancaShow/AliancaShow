@@ -3,6 +3,7 @@
     import { translateText } from "../../../utils/language"
     import Icon from "../../helpers/Icon.svelte"
     import { getResolution } from "../../helpers/output"
+    import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
     import T from "../../helpers/T.svelte"
     import Effect from "../../output/effects/Effect.svelte"
     import { getStyleResolution } from "../../slide/getStyleResolution"
@@ -15,7 +16,7 @@
 
     let width = 0
     let height = 0
-    $: resolution = getResolution(null, { $outputs, $styles })
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
 
     let zoom = 1
 </script>

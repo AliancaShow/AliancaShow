@@ -15,6 +15,7 @@
     import { history } from "../../helpers/history"
     import { getExtension, getMedia, getMediaFileFromClipboard, getMediaLayerType, getMediaStyle, getMediaType, getThumbnailPath, mediaSize } from "../../helpers/media"
     import { getFirstActiveOutput, getResolution, getSlideFilter } from "../../helpers/output"
+    import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
     import { getLayoutRef, isSlideLocked } from "../../helpers/show"
     import { _show } from "../../helpers/shows"
     import { getStyles } from "../../helpers/style"
@@ -59,7 +60,7 @@
     let width = 0
     let height = 0
     // Slide?.settings?.resolution
-    $: resolution = getResolution(null, { $outputs, $styles })
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
 
     let ratio = 1
 

@@ -4,6 +4,7 @@
     import Editbox from "../../edit/editbox/Editbox.svelte"
     import { getMedia, getThumbnailPath, mediaSize } from "../../helpers/media"
     import { getResolution } from "../../helpers/output"
+    import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
     import Textbox from "../../slide/Textbox.svelte"
     import Zoomed from "../../slide/Zoomed.svelte"
     import { getStyleResolution } from "../../slide/getStyleResolution"
@@ -31,7 +32,7 @@
 
     // RESOLUTION
     // template?.settings?.resolution
-    $: resolution = getResolution(null, { $outputs, $styles })
+    $: resolution = getResolution(null, { $outputs, $styles }, false, saidaDoEditor($outputs))
 
     // LOAD BACKGROUND
 
