@@ -324,7 +324,8 @@
     }
     .previa {
         position: relative;
-        aspect-ratio: 16 / 5;
+        height: 46px;
+        flex-shrink: 0;
         border-radius: 4px;
         background: linear-gradient(135deg, #1d3557, #4a3a6b);
         overflow: hidden;
