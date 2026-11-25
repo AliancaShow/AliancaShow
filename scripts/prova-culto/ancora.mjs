@@ -53,8 +53,8 @@ export const EXCECOES = {
         "sha": "9ffaa005809bbc29f23e7e8777b840462f2dc40d570f9b85388611c6cc0c787f"
     },
     "src/frontend/components/context/contextMenus.ts": {
-        "motivo": "fatia 4 (aprovada 18/nov): apaga os layouts `file/edit/view/help` da barra de menus que saiu (MenuBar.svelte apagado); nenhum outro layout muda",
-        "sha": "f9b1c63342f5be2693e494f4c64ab4cdaa86aab7bd1a2babd2b67d57a5c0befa"
+        "motivo": "fatia 4 (aprovada 18/nov): apaga os layouts `file/edit/view/help` da barra de menus que saiu (MenuBar.svelte apagado); nenhum outro layout muda. cabine-6 (aprovado pelo André 25/nov, \"aprovo estilo-menus\"): output_preview perde change_style/edit_style (o estilo virou resultado de Tela + Visual)",
+        "sha": "519cec9d4600ea3ce1727f7b3c0c4b328f81d6bffbe7e71cf3858c7aafbbc621"
     },
     "src/frontend/utils/common.ts": {
         "motivo": "fatia 4 (aprovada 18/nov): apaga a constante `MENU_BAR_HEIGHT` (sem mais usos); nada mais muda",
@@ -147,6 +147,18 @@ export const EXCECOES = {
     "src/electron/output/helpers/OutputVisibility.ts": {
         "motivo": "cabine-6 (aprovado pelo André 23/nov no PC da igreja, \"aprovo monitor-desconectado\"): a saida presa ao MONITOR. `resolveOutputBounds` consulta o registro da saida (aliancaMonitorSaida): screen = monitor inteiro, aliancaMonitor = tamanho proprio dentro do monitor; monitor ausente nao move (antes caia calado nas coordenadas soltas e a janela ia para o monitor que o Windows pos no lugar). `toggleOutput` com o monitor ausente esconde a janela, mantem a saida ligada e avisa (vale com force). Config antiga (sem screen e sem aliancaMonitor) segue o caminho de sempre. Nada do que a saida desenha muda",
         "sha": "96205aa9f9e300eaaf976148d4025163a126745c5e611bb1fd0d14ba56dce600"
+    },
+    "src/electron/data/backup.ts": {
+        "motivo": "cabine-6 (aprovado pelo André 25/nov, \"aprovo backup-settings\"): restaurar um backup mandava SYNCED_SETTINGS.json para o store SETTINGS (o teste de nome casava as duas) e sobrescrevia as configuracoes locais; a condicao do SETTINGS passa a excluir SYNCED_SETTINGS. Teste em backup.test.ts. Nada do que a saida desenha muda",
+        "sha": "470fdf98a8c47c8a7d530c5896f5456b7aa9b098e92e340e0b9218af201a7389"
+    },
+    "src/frontend/IPC/responsesMain.ts": {
+        "motivo": "cabine-6 (aprovado pelo André 25/nov, \"aprovo selecionar-tela\"): ToMain.ALERT ignora \"error.display\" (a janela que bloqueia quando o telao nao liga); o aviso de saida fora do ar no pe ja diz qual saida caiu. Uma linha; nada do que a saida desenha muda",
+        "sha": "c7f10aaf51d9abe6c4523a584e83082c3ea94f075849954398a240fdc1ad778d"
+    },
+    "src/frontend/components/main/popups/TemplateInfo.svelte": {
+        "motivo": "cabine-6 (aprovado pelo André 25/nov, \"aprovo estilo-menus\"): so textos do popup de informacoes do modelo (fala em Visual; o botao diz \"Abrir o Visual\"); a acao do botao e a mesma",
+        "sha": "543fde66a7b0a4d2a8e62b163ec3bce171b97bdb807c27567ccfefb462e72687"
     }
 }
 
@@ -217,7 +229,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "eff8ea3b940c212da72535a7370a4421baf44bda7b0c7289d509b8998720c881"
+export const SHA_EXCECOES = "6b567a68e5c85b6ba29919027087c090bebb6d230abb33197c61eea3cb44e8ad"
 export const SHA_NOVOS = "1546337f89ee9d2e52bddfbc2c610defc6db4c7a339ea74f90b566867a93fd1e"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
