@@ -78,7 +78,7 @@ export const contextMenuItems: { [key: string]: ContextMenuItem } = {
     createCollection: { label: "new.collection", icon: "collection" },
     changeIcon: { label: "context.changeIcon", icon: "star", iconColor: "#6effbe" },
     category_action: { label: "popup.category_action", icon: "actions", iconColor: "#d497ff" },
-    category_template: { label: "Aplicar modelo em todas as músicas…", icon: "templates", iconColor: "#d497ff", translate: false },
+    category_template: { label: "popup.category_template", icon: "templates", iconColor: "#d497ff" },
     metadata_display: { label: "popup.metadata_display", icon: "info" },
     use_as_archive: { label: "context.use_as_archive", icon: "archive" },
     archive: { label: "actions.move_to_archive", icon: "archive" },

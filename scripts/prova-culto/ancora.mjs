@@ -16,6 +16,10 @@ const ENTRADA = "src/frontend/MainOutput.svelte"
 
 /** excecoes: arquivo do fecho que a pilha de layout PODE mudar, e por que a saida continua igual */
 export const EXCECOES = {
+    "src/frontend/components/slide/Zoomed.svelte": {
+        "motivo": "teste 13 (\"aprovo posição-sobra\", André 24/nov): \"Posição quando sobra espaço\" (alignPosition) não tinha efeito. O alignStyle passa a vir DEPOIS do bloco de centro no style, e com classe `alinhado` (align fora de center) a .slide perde a margem automática. Com align center (padrão de todas as saídas) o resultado é o mesmo de antes",
+        "sha": "e1950c3835d173ec04cc99dd573161bba7b1feaff379cf3cd4b3ea1eeb0113fd"
+    },
     "src/frontend/utils/aliancaTela.ts": {
         "motivo": "revisao da fatia 2 (achado 2): `tecladoLivre` passa de `tela === mostrar` para `tela !== editar` (o teclado da saida vive nas paginas do menu). Na saida `tela` e sempre `mostrar` (derivada com currentWindow !== null), entao o resultado e o mesmo de antes",
         "sha": "fd746e6f21ff4c7fc67a9ab5e9dd1e0bfb405bf5aa9867e9fd2f7a6fa70bdd47"
@@ -213,7 +217,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "e605aead6e67c5f62475db433ef6d2eb61013b55014cc6a63698d05e319bae94"
+export const SHA_EXCECOES = "eff8ea3b940c212da72535a7370a4421baf44bda7b0c7289d509b8998720c881"
 export const SHA_NOVOS = "1546337f89ee9d2e52bddfbc2c610defc6db4c7a339ea74f90b566867a93fd1e"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
