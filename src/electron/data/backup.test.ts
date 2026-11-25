@@ -211,6 +211,19 @@ describe("backup.ts", () => {
             expect(sendToMain).toHaveBeenCalledWith(ToMain.RESTORE2, { finished: true })
         })
 
+        it("AliancaShow: SYNCED_SETTINGS vai para o proprio store, nunca para SETTINGS", async () => {
+            vi.mocked(decompressZip).mockResolvedValue([
+                { name: "SYNCED_SETTINGS.json", content: JSON.stringify({ outputs: { o: 1 } }) },
+                { name: "SETTINGS.json", content: JSON.stringify({ theme: "dark" }) }
+            ] as any)
+
+            await restoreFiles({ path: "/mock/backups/backup.zip" })
+
+            expect(setStore).toHaveBeenCalledWith(_store.SYNCED_SETTINGS, { outputs: { o: 1 } })
+            expect(setStore).toHaveBeenCalledWith(_store.SETTINGS, { theme: "dark" })
+            expect(setStore).not.toHaveBeenCalledWith(_store.SETTINGS, { outputs: { o: 1 } })
+        })
+
         it("restores legacy SHOWS_CONTENT format", async () => {
             vi.mocked(readFolder).mockReturnValue(["SHOWS_CONTENT.json"])
             vi.mocked(readFile).mockReturnValue(JSON.stringify({ s1: { name: "Show One" } }))

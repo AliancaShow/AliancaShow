@@ -215,7 +215,8 @@ export async function restoreFiles(data?: { path: string }) {
             return
         }
 
-        if (filePath.includes("SETTINGS")) {
+        // AliancaShow: "SYNCED_SETTINGS.json" tambem contem "SETTINGS" e caia aqui (as configuracoes sincronizadas sobrescreviam as locais)
+        if (filePath.includes("SETTINGS") && !filePath.includes("SYNCED_SETTINGS")) {
             restoreStore(file.content, "SETTINGS")
             return
         }
