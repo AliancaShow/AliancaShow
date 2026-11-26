@@ -1,6 +1,6 @@
 <script lang="ts">
-    // AliancaShow (26/nov, "janelas nossas"): escolher modelo sem a parede de slides enormes. Lista de 36 px (miniatura pequena + nome),
-    // em faixas Modelos / Biblia, e uma previa grande do modelo sob o mouse. Mesma logica do SelectTemplate do FreeShow (busca, tipos da
+    // AliancaShow (26/nov, "janelas nossas"): escolher modelo sem a parede de slides enormes. Grade de 4 por linha (miniatura + nome),
+    // em faixas Modelos / Biblia (opcao A, 26/nov). Mesma logica do SelectTemplate do FreeShow (busca, tipos da
     // Biblia 1-4, "Nenhum"/"Padrao", trigger, doubleClick, revert); o SelectTemplate original segue intacto no fecho.
     import { activePopup, activeStyle, drawerTabsData, outputs, popupData, scriptures, special, styles, templates } from "../../../stores"
     import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
@@ -73,9 +73,6 @@
     ).filter(([, l]) => (l as any[]).length) as [string, any[]][]
     $: primeiro = grupos[0]?.[1]?.[0]
 
-    let sob: any = null
-    $: emFoco = sob || todos.find((a: any) => a.id === valor) || primeiro || null
-
     function escolher(modelo: any, teclado = false) {
         const anterior = valor
         const novo = modelo?.id || ""
@@ -118,36 +115,28 @@
         {/if}
     </div>
 
-    <div class="corpo">
-        <div class="lista">
-            {#if permiteVazio || (variosTipos && tipo !== tipos[0]?.value)}
-                <button class="linha" class:ativo={!valor} on:mouseenter={() => (sob = null)} on:click={() => escolher(null)}>
-                    <span class="mini-thumb vazio"><Icon id="close" size={0.8} white /></span>
+    <div class="grade-rolagem">
+        {#if permiteVazio || (variosTipos && tipo !== tipos[0]?.value)}
+            <div class="grade">
+                <button class="cel" class:ativo={!valor} on:click={() => escolher(null)}>
+                    <span class="thumb vazio"><Icon id="close" size={1} white /></span>
                     <span class="nome">{permiteVazio ? "Nenhum" : "Padrão"}</span>
                 </button>
-            {/if}
-            {#each grupos as [titulo, lista] (titulo)}
-                {#if grupos.length > 1}<div class="faixa">{titulo}</div>{/if}
+            </div>
+        {/if}
+        {#each grupos as [titulo, lista] (titulo)}
+            {#if grupos.length > 1}<div class="faixa">{titulo}</div>{/if}
+            <div class="grade">
                 {#each lista as m (m.id)}
-                    <button class="linha" class:ativo={valor === m.id} data-modelo={m.id} on:mouseenter={() => (sob = m)} on:click={() => escolher(m)}>
-                        <span class="mini-thumb"><TemplateSlide templateId={m.id} template={m} preview /></span>
+                    <button class="cel" class:ativo={valor === m.id} data-modelo={m.id} data-title={m.name} on:click={() => escolher(m)}>
+                        <span class="thumb"><TemplateSlide templateId={m.id} template={m} preview /></span>
                         <span class="nome">{m.name || "Sem nome"}</span>
-                        {#if valor === m.id}<Icon id="check" size={0.8} white />{/if}
                     </button>
                 {/each}
-            {:else}
-                <p class="nada">{todos.length ? "Nenhum modelo com esse nome" : "Nenhum modelo criado"}</p>
-            {/each}
-        </div>
-
-        <div class="previa">
-            {#if emFoco}
-                {#key emFoco.id}
-                    <div class="tela"><TemplateSlide templateId={emFoco.id} template={emFoco} preview /></div>
-                {/key}
-                <div class="legenda">{emFoco.name || "Sem nome"}</div>
-            {/if}
-        </div>
+            </div>
+        {:else}
+            <p class="nada">{todos.length ? "Nenhum modelo com esse nome" : "Nenhum modelo criado"}</p>
+        {/each}
     </div>
 </div>
 
@@ -232,26 +221,18 @@
         background: var(--luz-texto);
         color: var(--luz-tinta);
     }
-    .corpo {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 360px;
-        gap: 16px;
-        height: min(460px, calc(100vh - 200px));
-    }
-    .lista {
+    /* opcao A (26/nov): grade de 4 por linha, nome embaixo, o escolhido com borda clara. Sem previa ao lado. */
+    .grade-rolagem {
+        max-height: min(520px, calc(100vh - 200px));
         overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 1px;
-        padding-inline-end: 4px;
+        padding: 2px 4px 2px 2px;
     }
     .faixa {
-        flex-shrink: 0;
         height: 24px;
         display: flex;
         align-items: center;
         padding: 0 8px;
-        margin: 8px 0 4px;
+        margin: 14px 0 8px;
         border-radius: 4px;
         background: var(--luz-campo);
         color: var(--luz-mudo);
@@ -262,81 +243,73 @@
     .faixa:first-child {
         margin-top: 0;
     }
-    .linha {
-        flex-shrink: 0;
+    .grade {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px 12px;
+    }
+    .grade + .grade {
+        margin-top: 14px;
+    }
+    .cel {
         display: flex;
-        align-items: center;
-        gap: 10px;
-        height: 36px;
-        padding: 0 8px 0 4px;
+        flex-direction: column;
+        gap: 6px;
+        padding: 0;
         border: 0;
-        border-radius: 6px;
         background: transparent;
         color: var(--luz-texto);
         font-family: inherit;
-        font-size: 13px;
         text-align: start;
         cursor: pointer;
     }
-    .linha:hover {
-        background: var(--luz-hover);
-    }
-    .linha.ativo {
-        background: var(--luz-campo);
-        font-weight: 600;
-    }
-    .mini-thumb {
-        flex-shrink: 0;
-        width: 40px;
+    .thumb {
+        width: 100%;
         aspect-ratio: var(--proporcao);
         overflow: hidden;
-        border-radius: 3px;
+        border-radius: 5px;
         background: #000;
         outline: 1px solid var(--luz-linha);
         pointer-events: none;
+        transition: outline-color 0.1s ease;
     }
-    .mini-thumb.vazio {
+    .cel:hover .thumb {
+        outline: 1px solid var(--luz-borda-forte);
+    }
+    .cel.ativo .thumb {
+        outline: 2px solid var(--luz-texto);
+    }
+    .thumb.vazio {
         display: flex;
         align-items: center;
         justify-content: center;
         background: var(--luz-campo);
     }
-    .mini-thumb.vazio :global(svg) {
+    .thumb.vazio :global(svg) {
         opacity: 0.5;
     }
     .nome {
-        flex: 1;
+        font-size: 12px;
+        color: var(--luz-mudo);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+    .cel:hover .nome,
+    .cel.ativo .nome {
+        color: var(--luz-texto);
+    }
+    .cel.ativo .nome {
+        font-weight: 600;
     }
     .nada {
         margin: 16px 8px;
         color: var(--luz-mudo);
         font-size: 12px;
     }
-    .previa {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .tela {
-        width: 100%;
-        aspect-ratio: var(--proporcao);
-        overflow: hidden;
-        border-radius: 6px;
-        background: #000;
-        outline: 1px solid var(--luz-borda);
-        pointer-events: none;
-    }
     /* sem o xadrez do FreeShow atras do modelo: fundo preto, como sai na tela */
-    .tela :global(.slide.checkered),
-    .mini-thumb :global(.slide.checkered) {
+    .thumb :global(.slide.checkered) {
         background-image: none !important;
         background-color: #000 !important;
-    }
-    .legenda {
-        color: var(--luz-mudo);
-        font-size: 12px;
     }
 </style>
