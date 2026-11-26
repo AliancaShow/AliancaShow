@@ -43,6 +43,7 @@
     $: subAba = $drawerTabsData[aba as DrawerTabIds]?.activeSubTab || ""
     $: raizes = RAIZES.filter((r) => (r.id === "ferramentas" ? FILHOS_FERRAMENTAS.some((f) => getAccess(f.id).global !== "none") : getAccess(r.abre).global !== "none"))
     $: filhosFerramentas = FILHOS_FERRAMENTAS.filter((f) => getAccess(f.id).global !== "none")
+    $: raiz = raizes.find((r) => r.id === raizAberta) || null
     $: totalShows = Object.values($shows).filter((s: any) => s && !s.private).length
 
     function definirSub(destino: DrawerTabIds, sub: string) {
@@ -67,36 +68,34 @@
     const ehSub = (destino: DrawerTabIds, sub: string) => aba === destino && subAba === sub
 </script>
 
-<nav class="arvore" aria-label="Biblioteca" data-acao="arvore">
-    {#each raizes as r (r.id)}
-        {@const aberta = raizAberta === r.id}
-        {@const tudo = aberta && raizMostraTudo(r.id, aba, subAba)}
-        <button class="no" class:on={tudo} data-no={r.id} aria-expanded={aberta} tabindex="-1" on:mousedown|preventDefault on:click={() => abrirRaiz(r)}>
-            <span class="seta">{aberta ? "▾" : "▸"}</span>
-            <span class="nome">{r.nome}</span>
-            {#if r.id === "shows"}<span class="ct">{totalShows}</span>{/if}
-        </button>
-        {#if aberta}
-            <div class="filhos">
-                {#if r.id === "ferramentas"}
-                    {#each filhosFerramentas as f (f.id)}
-                        <button class="fil" class:on={aba === f.id} data-no={f.id} tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho(f.id)}>{f.nome}</button>
-                        <!-- Funcoes, Sobreposicoes, Modelos (categorias, "Nova categoria") e Calendario ("Importar calendario") guardam sub-abas/acoes de verdade: abertos, mostram os delas embaixo (revisao do PR #40, achado 6) -->
-                        {#if aba === f.id && SUBABAS_NA_ARVORE.includes(f.id)}<div class="neto"><Navigation id={f.id} /></div>{/if}
-                    {/each}
-                {:else}
-                    <Navigation id={r.id} />
-                    {#if r.id === "media"}
-                        <div class="fio"></div>
-                        <button class="fil" class:on={aba === "audio"} data-no="audio" tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho("audio")}><Icon id="audio" size={0.8} white />Áudio</button>
-                        {#if aba === "audio"}<div class="neto"><Navigation id="audio" /></div>{/if}
-                        <button class="fil" class:on={ehSub("media", "inputs")} data-no="inputs" tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho("media", "inputs")}><Icon id="input" size={0.8} white />Entradas</button>
-                        <button class="fil" class:on={ehSub("media", "online")} data-no="online" tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho("media", "online")}><Icon id="web" size={0.8} white />Online</button>
-                    {/if}
+<!-- 26/nov: as raizes viraram abas fixas na barra (AliancaBibliotecaAbas); a arvore mostra so o que mora na aba aberta -->
+<nav class="arvore" aria-label="Pastas" data-acao="arvore">
+    {#if raiz}
+        <div class="filhos" data-raiz={raiz.id}>
+            {#if raiz.id === "shows" || raiz.id === "media"}
+                <button class="fil" class:on={raizMostraTudo(raiz.id, aba, subAba)} data-no={raiz.id} tabindex="-1" on:mousedown|preventDefault on:click={() => abrirRaiz(raiz)}>
+                    <span class="nome">Todos</span>
+                    {#if raiz.id === "shows"}<span class="ct">{totalShows}</span>{/if}
+                </button>
+            {/if}
+            {#if raiz.id === "ferramentas"}
+                {#each filhosFerramentas as f (f.id)}
+                    <button class="fil" class:on={aba === f.id} data-no={f.id} tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho(f.id)}>{f.nome}</button>
+                    <!-- Funcoes, Sobreposicoes, Modelos (categorias, "Nova categoria") e Calendario ("Importar calendario") guardam sub-abas/acoes de verdade: abertos, mostram os delas embaixo (revisao do PR #40, achado 6) -->
+                    {#if aba === f.id && SUBABAS_NA_ARVORE.includes(f.id)}<div class="neto"><Navigation id={f.id} /></div>{/if}
+                {/each}
+            {:else}
+                <Navigation id={raiz.id} />
+                {#if raiz.id === "media"}
+                    <div class="fio"></div>
+                    <button class="fil" class:on={aba === "audio"} data-no="audio" tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho("audio")}><Icon id="audio" size={0.8} white />Áudio</button>
+                    {#if aba === "audio"}<div class="neto"><Navigation id="audio" /></div>{/if}
+                    <button class="fil" class:on={ehSub("media", "inputs")} data-no="inputs" tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho("media", "inputs")}><Icon id="input" size={0.8} white />Entradas</button>
+                    <button class="fil" class:on={ehSub("media", "online")} data-no="online" tabindex="-1" on:mousedown|preventDefault on:click={() => abrirFilho("media", "online")}><Icon id="web" size={0.8} white />Online</button>
                 {/if}
-            </div>
-        {/if}
-    {/each}
+            {/if}
+        </div>
+    {/if}
 </nav>
 
 <style>
@@ -105,32 +104,6 @@
         box-sizing: border-box;
         overflow: auto;
         height: 100%;
-    }
-    .no {
-        width: 100%;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        padding: 0 6px;
-        border: none;
-        border-radius: 6px;
-        text-align: left;
-        font: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--luz-texto);
-        background: transparent;
-    }
-    /* raiz SELECIONADA (mostrando tudo) = fundo claro na propria raiz; filho selecionado = so a raiz aberta */
-    .no.on {
-        background: var(--luz-hover);
-    }
-    .seta {
-        width: 14px;
-        color: var(--luz-mudo);
-        font-size: 11px;
     }
     .nome {
         flex-grow: 1;
@@ -142,9 +115,6 @@
         color: var(--luz-mudo);
     }
     .filhos {
-        margin: 0 0 4px 13px;
-        padding-left: 6px;
-        border-left: 1px solid var(--luz-linha);
         animation: luz-descer 140ms ease-out;
     }
     .filhos :global(.main),

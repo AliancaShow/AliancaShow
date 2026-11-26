@@ -1,5 +1,5 @@
 <script lang="ts">
-    // Leiaute v2, biblioteca: a lista da pasta Shows (musicas e apresentacoes), em colunas de 320 px, linha de 44 px com "＋ roteiro".
+    // Leiaute v2, biblioteca: a lista da pasta Shows (musicas e apresentacoes), em colunas de 300 px, linha de 30 px ("＋ roteiro" e ▶ ao passar o mouse).
     // A logica de listar/filtrar/buscar e a de AliancaBiblioteca (Preparar): `listarBiblioteca` + `showSearch`. Clicar na linha ABRE o show no
     // centro (nao vai ao ar); "＋ roteiro" poe no fim do culto (uma entrada de historico). Chips e busca moram no cabecalho do painel.
     import { onDestroy } from "svelte"
@@ -83,9 +83,9 @@
         {#each lista as linha (linha.id)}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="linha context #show_drawer" class:on={aberto === linha.id} role="button" tabindex="-1" data-show={linha.id} data-menu-titulo={linha.nome} data-title="Botão direito: editar, mostrar agora…" on:click={() => openShow(linha.id)}>
-                <div class="nome">
+                <!-- 26/nov: sem a categoria repetida embaixo de cada nome (a arvore ja diz qual e); passar o mouse mostra -->
+                <div class="nome" title={nomeDaCategoria(linha.categoria)}>
                     <span class="t">{linha.nome}</span>
-                    <span class="s">{nomeDaCategoria(linha.categoria)}</span>
                 </div>
                 {#if linha.semLetra}<span class="selo aviso">sem letra</span>{/if}
                 {#if noCulto.has(linha.id)}<span class="selo">no roteiro</span>{/if}
@@ -101,21 +101,33 @@
 {/if}
 
 <style>
+    /* 26/nov: linhas de 30 px; "＋ roteiro" e ▶ so aparecem ao passar o mouse e na musica aberta (o resto da lista fica so com nomes) */
     .grade {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         column-gap: 16px;
+        padding: 4px 0;
     }
     .linha {
-        min-height: 44px;
+        min-height: 30px;
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 0 8px;
-        border-bottom: 1px solid var(--luz-linha);
+        gap: 8px;
+        padding: 0 4px 0 8px;
+        border-radius: 5px;
         cursor: pointer;
         content-visibility: auto;
-        contain-intrinsic-size: 44px;
+        contain-intrinsic-size: 30px;
+    }
+    .linha .mais,
+    .linha .tocar {
+        visibility: hidden;
+    }
+    .linha:hover .mais,
+    .linha:hover .tocar,
+    .linha.on .mais,
+    .linha.on .tocar {
+        visibility: visible;
     }
     .linha:hover,
     .linha.on {
@@ -134,14 +146,12 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .s {
-        font-size: 11px;
-        color: var(--luz-mudo);
-    }
     .selo {
+        flex-shrink: 0;
+        white-space: nowrap;
         font-size: 10px;
-        font-weight: 700;
-        padding: 2px 6px;
+        font-weight: 600;
+        padding: 1px 6px;
         border-radius: 4px;
         background: var(--luz-trilho);
         color: var(--luz-mudo);
@@ -150,8 +160,8 @@
         color: var(--luz-laranja);
     }
     .mais {
-        height: 32px;
-        padding: 0 10px;
+        height: 24px;
+        padding: 0 8px;
         border: 1px solid var(--luz-borda);
         border-radius: 6px;
         background: var(--luz-campo);
@@ -161,8 +171,8 @@
         color: var(--luz-texto);
     }
     .tocar {
-        width: 32px;
-        height: 32px;
+        width: 24px;
+        height: 24px;
         padding: 0;
         border: 1px solid var(--luz-borda);
         border-radius: 6px;

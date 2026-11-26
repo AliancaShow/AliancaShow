@@ -24,6 +24,8 @@
     import AliancaFiltros from "../drawer/media/AliancaFiltros.svelte"
     import { drawerTabsData } from "../../stores"
     import AliancaArvore from "./AliancaArvore.svelte"
+    import AliancaBibliotecaAbas from "./AliancaBibliotecaAbas.svelte"
+    import Icon from "../helpers/Icon.svelte"
     import AliancaMidiaControles from "./AliancaMidiaControles.svelte"
     import AliancaShowsLista from "./AliancaShowsLista.svelte"
     import AliancaModeloBiblia from "./AliancaModeloBiblia.svelte"
@@ -98,16 +100,20 @@
     // ouvinte de janela (`teclar`) e para os atalhos globais UMA vez. Chamar `teclar` daqui mandava o primeiro slide ao ar duas vezes (Ctrl+Enter).
 
     const NOVOS = [
-        { id: "musica", rotulo: "＋ Nova música" },
-        { id: "apresentacao", rotulo: "＋ Nova apresentação" },
-        { id: "importar", rotulo: "Importar arquivo" }
+        { id: "musica", rotulo: "Nova música", icone: "music" },
+        { id: "apresentacao", rotulo: "Nova apresentação", icone: "slide" },
+        { id: "importar", rotulo: "Importar arquivo", icone: "import" }
     ] as const
+    let filtroAberto = false
+    // quantos filtros fogem do padrao (Musicas, tudo): a bolinha do funil
+    $: nFiltros = ($tipoDaBiblioteca === "apresentacoes" ? 1 : 0) + ($soSemLetraNaBiblioteca ? 1 : 0) + (filtro.ativo ? 1 : 0)
     function novo(id: "musica" | "apresentacao" | "importar") {
         novoAberto = false
         executarComandoNovo(id)
     }
     function fora(e: MouseEvent) {
         if (novoAberto && !(e.target as HTMLElement).closest?.(".novoRaiz")) novoAberto = false
+        if (filtroAberto && !(e.target as HTMLElement).closest?.(".filtroRaiz")) filtroAberto = false
     }
 </script>
 
@@ -115,24 +121,38 @@
 
 <div class="drawer painelBib" data-acao="biblioteca">
     <div class="cab">
-        <span class="rotulo">BIBLIOTECA</span>
+        <!-- 26/nov: abas fixas (nivel 1) no lugar do rotulo e das raizes da arvore; os 4 chips de texto viraram dois icones: funil e ＋ -->
+        <AliancaBibliotecaAbas />
         {#if emShows}
-            <button class="chip" class:on={$tipoDaBiblioteca === "musicas" && !$soSemLetraNaBiblioteca} tabindex="-1" on:mousedown|preventDefault on:click={() => (tipoDaBiblioteca.set("musicas"), soSemLetraNaBiblioteca.set(false))}>Músicas</button>
-            <button class="chip" class:on={$tipoDaBiblioteca === "apresentacoes"} tabindex="-1" on:mousedown|preventDefault on:click={() => (tipoDaBiblioteca.set("apresentacoes"), soSemLetraNaBiblioteca.set(false))}>Apresentações</button>
-            <button class="chip" class:on={$soSemLetraNaBiblioteca} tabindex="-1" on:mousedown|preventDefault on:click={() => (tipoDaBiblioteca.set("musicas"), soSemLetraNaBiblioteca.update((v) => !v))}>Sem letra</button>
-            <div class="novoRaiz">
-                <button class="chip" tabindex="-1" aria-haspopup="menu" aria-expanded={novoAberto} on:mousedown|preventDefault on:click={() => (novoAberto = !novoAberto)}>＋ Novo</button>
+            <div class="menuRaiz filtroRaiz">
+                <button class="ico" class:ligado={nFiltros > 0} data-acao="biblioteca-filtro" data-title={nFiltros ? `Filtros ligados: ${nFiltros}` : "Filtrar"} aria-label="Filtrar" aria-haspopup="menu" aria-expanded={filtroAberto} tabindex="-1" on:mousedown|preventDefault on:click={() => ((filtroAberto = !filtroAberto), (novoAberto = false))}>
+                    <!-- funil desenhado aqui: a lista de icones (values/icons.ts) e do fecho e nao tem funil -->
+                    <svg class="funil" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39A1 1 0 0 0 18.95 4H5.04a1 1 0 0 0-.79 1.61z" /></svg>
+                    {#if nFiltros}<span class="bolinha">{nFiltros}</span>{:else if semCategoria}<span class="pingo" />{/if}
+                </button>
+                {#if filtroAberto}
+                    <div class="pop" role="menu">
+                        <div class="sec">Mostrar</div>
+                        <button class="item" role="menuitemradio" aria-checked={$tipoDaBiblioteca === "musicas"} tabindex="-1" on:mousedown|preventDefault on:click={() => tipoDaBiblioteca.set("musicas")}><span class="ck">{$tipoDaBiblioteca === "musicas" ? "✓" : ""}</span>Músicas</button>
+                        <button class="item" role="menuitemradio" aria-checked={$tipoDaBiblioteca === "apresentacoes"} tabindex="-1" on:mousedown|preventDefault on:click={() => (tipoDaBiblioteca.set("apresentacoes"), soSemLetraNaBiblioteca.set(false))}><span class="ck">{$tipoDaBiblioteca === "apresentacoes" ? "✓" : ""}</span>Apresentações</button>
+                        <div class="sec">Pendências</div>
+                        <button class="item" role="menuitemcheckbox" aria-checked={$soSemLetraNaBiblioteca} data-acao="filtro-sem-letra" tabindex="-1" on:mousedown|preventDefault on:click={() => (tipoDaBiblioteca.set("musicas"), soSemLetraNaBiblioteca.update((v) => !v))}><span class="ck">{$soSemLetraNaBiblioteca ? "✓" : ""}</span>Sem letra</button>
+                        {#if filtro.visivel}
+                            <button class="item" role="menuitemcheckbox" aria-checked={filtro.ativo} data-acao="filtro-sem-categoria" tabindex="-1" on:mousedown|preventDefault on:click={alternarSemCategoria}><span class="ck">{filtro.ativo ? "✓" : ""}</span>Sem categoria<span class="n">{semCategoria}</span></button>
+                        {/if}
+                    </div>
+                {/if}
+            </div>
+            <div class="menuRaiz novoRaiz">
+                <button class="ico" data-acao="biblioteca-novo" data-title="Novo" aria-label="Novo" aria-haspopup="menu" aria-expanded={novoAberto} tabindex="-1" on:mousedown|preventDefault on:click={() => ((novoAberto = !novoAberto), (filtroAberto = false))}><Icon id="add" size={1.05} white /></button>
                 {#if novoAberto}
                     <div class="pop" role="menu">
                         {#each NOVOS as n (n.id)}
-                            <button class="item" role="menuitem" tabindex="-1" on:mousedown|preventDefault on:click={() => novo(n.id)}>{n.rotulo}</button>
+                            <button class="item" role="menuitem" tabindex="-1" on:mousedown|preventDefault on:click={() => novo(n.id)}><span class="ck"><Icon id={n.icone} size={0.8} white /></span>{n.rotulo}</button>
                         {/each}
                     </div>
                 {/if}
             </div>
-            {#if filtro.visivel}
-                <button class="chip semCat" class:on={filtro.ativo} tabindex="-1" data-acao="filtro-sem-categoria" aria-pressed={filtro.ativo} on:mousedown|preventDefault on:click={alternarSemCategoria}>Sem categoria <b>{semCategoria}</b></button>
-            {/if}
         {/if}
         {#if emMidia}
             <AliancaFiltros />
@@ -181,49 +201,86 @@
         padding: 0 12px;
         border-bottom: 1px solid var(--luz-linha);
     }
-    .rotulo {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--luz-mudo);
-        letter-spacing: 0.04em;
-        margin-right: 4px;
-    }
-    .chip {
+    /* funil e ＋: botoes de icone de 28 px; o funil ligado fica claro, com a bolinha do numero de filtros */
+    .ico {
+        position: relative;
+        width: 28px;
         height: 28px;
-        padding: 0 10px;
-        border-radius: 14px;
-        font: inherit;
-        font-size: 12px;
-        cursor: pointer;
-        border: 1px solid var(--luz-borda);
-        background: var(--luz-campo);
-        color: var(--luz-texto);
-    }
-    /* pendencia de arrumacao (nao um lugar): laranja, com o contador; so existe enquanto houver algum */
-    .chip.semCat {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        border-color: var(--luz-laranja-borda);
-        color: var(--luz-laranja);
+        justify-content: center;
+        padding: 0;
+        border: 1px solid var(--luz-borda);
+        border-radius: 6px;
+        background: transparent;
+        cursor: pointer;
     }
-    .chip.semCat b {
-        font-variant-numeric: tabular-nums;
+    .ico:hover,
+    .ico[aria-expanded="true"] {
+        background: var(--luz-hover);
     }
-    .chip.semCat.on {
-        background: var(--luz-laranja);
-        color: var(--luz-tinta);
+    .ico.ligado {
+        border-color: var(--luz-borda-forte);
+        background: var(--luz-hover);
     }
-    .chip.on {
-        border-color: var(--luz-texto);
+    .bolinha {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        min-width: 15px;
+        height: 15px;
+        padding: 0 3px;
+        box-sizing: border-box;
+        border-radius: 8px;
         background: var(--luz-texto);
         color: var(--luz-tinta);
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 15px;
+        text-align: center;
+    }
+    /* ha musica sem categoria (pendencia de arrumacao): pingo laranja no funil */
+    .pingo {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--luz-laranja);
+    }
+    .funil {
+        width: 16px;
+        height: 16px;
+        fill: var(--luz-texto);
+    }
+    .menuRaiz {
+        position: relative;
+    }
+    .sec {
+        padding: 6px 10px 2px;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--luz-mudo);
+    }
+    .ck {
+        display: inline-flex;
+        justify-content: center;
+        width: 16px;
+        margin-inline-end: 8px;
+    }
+    .n {
+        margin-inline-start: auto;
+        padding-inline-start: 10px;
+        font-size: 11px;
+        color: var(--luz-laranja);
     }
     .espaco {
         flex: 1;
     }
     .busca {
-        height: 32px;
+        height: 28px;
         width: 300px;
         box-sizing: border-box;
         border: 1px solid var(--luz-borda);
@@ -261,9 +318,6 @@
     .busca::placeholder {
         color: var(--luz-mudo);
     }
-    .novoRaiz {
-        position: relative;
-    }
     .pop {
         position: absolute;
         z-index: 40;
@@ -282,8 +336,10 @@
         animation: luz-surgir 120ms ease-out;
     }
     .item {
-        min-height: 36px;
-        padding: 6px 10px;
+        display: flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 4px 8px;
         border: none;
         border-radius: 8px;
         background: transparent;
