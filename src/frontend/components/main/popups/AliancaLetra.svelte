@@ -2,7 +2,7 @@
     // AliançaShow (Preparar F4): colar letra (com acordes em cima, estilo cifra) numa música nova ou numa que está "sem letra".
     // O texto colado fica guardado por música: fechar o popup (Esc, clique fora, X) e reabrir devolve o que estava escrito.
     import { onMount } from "svelte"
-    import { activePopup, activeShow, categories, popupData, shows, showsCache, textCache } from "../../../stores"
+    import { activePopup, activeShow, categories, popupData, quickTextCache, shows, showsCache, textCache } from "../../../stores"
     import { newToast } from "../../../utils/common"
     import { duplicadasDe } from "../../../utils/aliancaLista"
     import { prepararLetraColada, type ModoDeDivisao } from "../../../utils/aliancaLetra"
@@ -21,6 +21,14 @@
     let divisao: ModoDeDivisao = guardado?.modo || $ultimaDivisao.modo
     let n = guardado?.n || $ultimaDivisao.n
     let manter: number[] = guardado?.manter || []
+
+    // abre o Novo Show ja buscando o nome digitado na internet (o resultado volta para esta janela, com o texto)
+    function buscarNaInternet() {
+        if (!nome.trim()) return
+        quickTextCache.set({ name: nome.trim(), text: "" })
+        popupData.set({ buscarWeb: true })
+        activePopup.set("show")
+    }
 
     // o cantor da música a preencher vem do show (meta.artist), quando já estiver no cache
     $: nomeDaMusica = modo === "preencher" ? $shows[showId]?.name || "" : nome
@@ -121,7 +129,11 @@
                     <input type="text" bind:value={cantor} placeholder="Isaias Saad" />
                 </label>
             </div>
-            <button class="manter mais" on:click={() => activePopup.set("show")}>Mais opções (buscar a letra na web, modelos)</button>
+            <!-- 26/nov: antes um "Mais opções" discreto; agora a busca na internet e explicita e ja procura o nome digitado -->
+            <button class="buscarWeb" data-acao="letra-buscar-web" disabled={!nome.trim()} title={nome.trim() ? "" : "Digite o nome da música primeiro"} on:click={buscarNaInternet}>
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14" /></svg>
+                <span>{nome.trim() ? `Buscar "${nome.trim()}" na internet` : "Buscar a letra na internet"}</span>
+            </button>
             {#if avisos.length}
                 <div class="aviso" role="status">
                     {#each avisos as a (a.id + a.texto)}
@@ -290,6 +302,37 @@
     button.abrir:hover,
     button.manter:hover {
         background: var(--primary-lighter);
+    }
+    button.buscarWeb {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--primary-lighter);
+        background: var(--primary-darker);
+        color: var(--text);
+        font-size: 0.95em;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    button.buscarWeb svg {
+        fill: currentColor;
+        flex: none;
+    }
+    button.buscarWeb span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    button.buscarWeb:hover:not(:disabled) {
+        background: var(--primary-lighter);
+    }
+    button.buscarWeb:disabled {
+        opacity: 0.5;
+        cursor: default;
     }
     .divisao {
         border: none;

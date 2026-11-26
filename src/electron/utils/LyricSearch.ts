@@ -3,24 +3,50 @@ import { net } from "electron"
 import type { LyricSearchResult } from "../../types/Main"
 
 const lyricsSearchCache: Map<string, LyricSearchResult[]> = new Map()
+const LIMITE_MS = 8000
+const BUSCA_MS = 5000
 export class LyricSearch {
     static search = async (artist: string, title: string): Promise<LyricSearchResult[]> => {
         const cacheKey = artist + title
         if (lyricsSearchCache.has(cacheKey)) return lyricsSearchCache.get(cacheKey)!
 
-        const results = await Promise.all([LyricSearch.searchGenius(artist, title), LyricSearch.searchUltimateGuitar(artist, title), LyricSearch.searchLetras(title), LyricSearch.searchHymnary(title)])
+        // AliancaShow (26/nov): cada fonte tem ate BUSCA_MS para responder; a que passar disso fica de fora (antes uma fonte lenta
+        // segurava a busca inteira por ~28 s). Sem cache quando alguma estourou, para a proxima tentativa poder trazer tudo.
+        let estourou = false
+        const limitar = (p: Promise<LyricSearchResult[]>) =>
+            Promise.race([
+                p.catch(() => [] as LyricSearchResult[]),
+                new Promise<LyricSearchResult[]>((resolve) =>
+                    setTimeout(() => {
+                        estourou = true
+                        resolve([])
+                    }, BUSCA_MS)
+                )
+            ])
+        const fontes = [LyricSearch.searchGenius(artist, title), LyricSearch.searchUltimateGuitar(artist, title), LyricSearch.searchLetras(title), LyricSearch.searchHymnary(title)]
+        const results = await Promise.all(fontes.map(limitar))
         const joinedResults: LyricSearchResult[] = results.flat()
 
-        lyricsSearchCache.set(cacheKey, joinedResults)
+        if (!estourou) lyricsSearchCache.set(cacheKey, joinedResults)
         return joinedResults
     }
 
-    static get(song: LyricSearchResult) {
-        if (song.source === "Genius") return LyricSearch.getGenius(song)
-        else if (song.source === "Hymnary") return LyricSearch.getHymnary(song)
-        else if (song.source === "Letras") return LyricSearch.getLetras(song)
-        else if (song.source === "Ultimate Guitar") return LyricSearch.getUltimateGuitar(song)
-        return Promise.resolve("")
+    // AliancaShow (26/nov): a resposta sempre volta, em ate 8 s. Antes, uma fonte que recusava (Letras.mus.br
+    // respondendo 403) virava erro sem tratamento e a janela ficava carregando para sempre.
+    static get(song: LyricSearchResult): Promise<string> {
+        let pedido: Promise<string>
+        if (song.source === "Genius") pedido = LyricSearch.getGenius(song)
+        else if (song.source === "Hymnary") pedido = LyricSearch.getHymnary(song)
+        else if (song.source === "Letras") pedido = LyricSearch.getLetras(song)
+        else if (song.source === "Ultimate Guitar") pedido = LyricSearch.getUltimateGuitar(song)
+        else return Promise.resolve("")
+
+        const seguro = pedido.catch((err) => {
+            console.error("Lyric fetch error:", err)
+            return ""
+        })
+        const limite = new Promise<string>((resolve) => setTimeout(() => resolve(""), LIMITE_MS))
+        return Promise.race([seguro, limite])
     }
 
     // GENIUS
@@ -137,8 +163,7 @@ export class LyricSearch {
 
     private static getLetras = async (song: LyricSearchResult) => {
         const url = `https://www.letras.mus.br/${song.key}`
-        const response = await axios.get(url)
-        const html = await response.data
+        const html = await LyricSearch.ugFetch(url)
         if (typeof html !== "string") return ""
         return this.getLyricFromHtml(html, /<div class=\"lyric-original\">([\s\S]*?)<\/div>/g)
     }
@@ -184,7 +209,7 @@ export class LyricSearch {
     }
 
     private static ugFetch = async (url: string) => {
-        const response = await net.fetch(url, { headers: LyricSearch.ugHeaders })
+        const response = await net.fetch(url, { headers: LyricSearch.ugHeaders, signal: AbortSignal.timeout(LIMITE_MS) })
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return response.text()
     }
@@ -250,6 +275,10 @@ export class LyricSearch {
             ndash: "-",
             mdash: "-",
         }
+
+        // AliancaShow (26/nov): acentos (&iacute; &atilde; &ccedil; ...) = letra + acento combinante, normalizado
+        const acentos: Record<string, string> = { acute: "\u0301", grave: "\u0300", circ: "\u0302", tilde: "\u0303", uml: "\u0308", cedil: "\u0327" }
+        text = text.replace(/&([a-z])(acute|grave|circ|tilde|uml|cedil);/gi, (_, letra: string, acento: string) => (letra + acentos[acento.toLowerCase()]).normalize("NFC"))
 
         return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);?/gi, (_, entity: string) => {
             if (entity[0] === "#") {

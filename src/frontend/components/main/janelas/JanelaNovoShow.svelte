@@ -84,8 +84,20 @@
         } else if (id === "vazio") criarVazio()
     }
 
+    // clicou num resultado e a fonte nao entregou a letra (ex.: Letras.mus.br recusando): fica na lista, com aviso, para tentar outro
+    let abrindo = false
+    let fonteFalhou = false
+    function cliqueNaWeb(e: MouseEvent) {
+        const alvo = e.target as HTMLElement
+        if (alvo?.closest("tbody tr") && !alvo.closest("button")) ((abrindo = true), (fonteFalhou = false))
+    }
     function daWeb(e: CustomEvent) {
         const d = e.detail || {}
+        if (!d.lyrics && abrindo) {
+            abrindo = false
+            fonteFalhou = true
+            return
+        }
         if (!d.lyrics) {
             semResultado = nome.trim()
             buscando = false
@@ -127,12 +139,16 @@
             <span class="ic"><Icon id="song" size={1} white /></span>
         {/if}
         <!-- class "edit": sem ela os atalhos do app (espaco, Backspace, setas) agem nos slides enquanto se digita (shortcuts.ts) -->
-        <input class="edit" bind:this={campo} bind:value={nome} placeholder="Nome do show ou da música" spellcheck="false" on:input={() => ((buscando = false), (semResultado = ""))} />
+        <input class="edit" bind:this={campo} bind:value={nome} placeholder="Nome do show ou da música" spellcheck="false" on:input={() => ((buscando = false), (semResultado = ""), (fonteFalhou = false))} />
         <button class="fechar" data-title="Fechar [Esc]" on:click={() => activePopup.set(null)}><Icon id="close" size={0.9} white /></button>
     </div>
 
     {#if buscando}
-        <div class="web">
+        <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+        <div class="web" on:click={cliqueNaWeb}>
+            {#if fonteFalhou}
+                <p class="aviso" data-aviso="fonte-falhou">Essa fonte não abriu a letra. Escolha outro resultado ou cole a letra.</p>
+            {/if}
             <WebSearch query={nome.trim()} on:update={daWeb} />
         </div>
     {:else}
