@@ -191,6 +191,14 @@ export const EXCECOES = {
     "src/frontend/components/edit/scripts/autoPosition.ts": {
         "motivo": "editor-caixas (aprovado pelo André 25/nov, \"aprovo editor-caixas\"): o editor desenha, grava (Snaplines) e posiciona (autoPosition) as caixas pela tela principal (saidaDoEditor), a mesma do quadro do editor; antes era a 1a saida em ordem alfabetica (NDI 16:9) e o telao 896x320 recebia caixas achatadas. So roda no editor da janela principal; na janela de saida nada muda",
         "sha": "cd9f3e374d1a8fc5678d8d9024e6f3d207b11ec7f75b4b6782264934383fb9a4"
+    },
+    "src/electron/utils/LyricSearch.ts": {
+        "motivo": "letra-da-web (aprovado pelo André 26/nov, \"Aprovo os dois\"): Letras.mus.br pelo mesmo net.fetch do Ultimate Guitar (axios levava 403 sem tratamento e a janela girava para sempre); get() sempre responde em ate 8 s; cada fonte da busca tem ate 5 s; acentos &iacute; etc. decodificados. So roda no processo principal ao buscar letra; a saida nao usa",
+        "sha": "f6f1667f2159a1de699151f4e9e8d8603d50402ff1371b8a15d1775a8ba48df1"
+    },
+    "src/frontend/components/main/popups/AliancaLetra.svelte": {
+        "motivo": "letra-da-web (aprovado pelo André 26/nov, \"Aprovo os dois\"): o botao discreto \"Mais opcoes\" da Nova musica virou \"Buscar <nome> na internet\" (abre o Novo Show ja buscando). So na janela principal",
+        "sha": "b4d79dac8c200a0c3559a3d1911da5e31b2e69e58c4021a3539526224c0d171f"
     }
 }
 
@@ -265,7 +273,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "ee03cfdf8be690c45682094ef8a889478339c0e8442431d9244d11cc24db8917"
+export const SHA_EXCECOES = "4978a24042a6322062d109865e837dc8757c553fc6269a15ef72800129630463"
 export const SHA_NOVOS = "04241b465ab289c9143cc06bed1438f070c1de9f661990fcd7bb4a442fc88877"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
