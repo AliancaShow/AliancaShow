@@ -7,6 +7,13 @@
     import T from "../helpers/T.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import { EFFECTS_LIST } from "../../audio/effects/audioEffectsHelpers"
+    import JanelaAviso from "./janelas/JanelaAviso.svelte"
+    import JanelaConfirmar from "./janelas/JanelaConfirmar.svelte"
+    import JanelaImportar from "./janelas/JanelaImportar.svelte"
+    import JanelaModelos from "./janelas/JanelaModelos.svelte"
+    import JanelaMonitor from "./janelas/JanelaMonitor.svelte"
+    import JanelaNovoShow from "./janelas/JanelaNovoShow.svelte"
+    import JanelaSair from "./janelas/JanelaSair.svelte"
 
     function mousedown(e: any) {
         // same logic for Escape in shortcuts.ts
@@ -42,15 +49,24 @@
     // (420 / 560 / 960), cabecalho de 40 px, fundo preto 55% sem desfoque, botoes lado a lado a direita. O conteudo das janelas fica no fecho
     // da janela de saida e nao muda: os ajustes por janela sao CSS daqui, mirando `data-popup`.
     const PEQUENAS = ["unsaved", "confirm", "alert", "rename", "delete_show"]
-    const GRANDES = ["select_template", "choose_screen"]
-    $: tamanho = popupId && PEQUENAS.includes(popupId) ? "p" : popupId && GRANDES.includes(popupId) ? "g" : ""
+    const GRANDES: string[] = []
+    $: tamanho = popupId && PEQUENAS.includes(popupId) ? "p" : popupId && GRANDES.includes(popupId) ? "g" : popupId === "select_template" ? "m" : popupId === "choose_screen" ? "p2" : ""
+
+    // 26/nov ("ousar mais"): as janelas mais vistas deixam de ser o miolo do FreeShow vestido; viram janelas nossas (components/main/janelas),
+    // com a mesma logica. Os originais continuam no registro (utils/popup.ts, fecho) e nao mudam: so a moldura escolhe qual desenhar.
+    const NATIVAS: { [id: string]: any } = { unsaved: JanelaSair, confirm: JanelaConfirmar, alert: JanelaAviso, show: JanelaNovoShow, select_template: JanelaModelos, choose_screen: JanelaMonitor, import: JanelaImportar }
+    // perguntas curtas e a barra de comando nao tem faixa de titulo: o proprio conteudo diz o que e
+    const SEM_CABECALHO = ["unsaved", "confirm", "alert", "show", "choose_screen"]
+    $: nativa = popupId ? NATIVAS[popupId] || null : null
+    $: semCabecalho = !!popupId && SEM_CABECALHO.includes(popupId)
+    $: barraDeComando = popupId === "show"
 </script>
 
 {#if popupId !== null}
     {#key popupId}
-        <div class="popup luz-pele" class:isOptimized transition:fade={{ duration: isOptimized ? 20 : 100 }} on:mousedown={mousedown}>
-            <div class="card {tamanho}" data-popup={popupId} transition:scale={{ duration: isOptimized ? 50 : 150, start: 0.97 }}>
-                {#if popupId !== "alert"}
+        <div class="popup luz-pele" class:isOptimized class:topo={barraDeComando} transition:fade={{ duration: isOptimized ? 20 : 100 }} on:mousedown={mousedown}>
+            <div class="card {tamanho}" class:nativa={!!nativa} class:semCabecalho data-popup={popupId} transition:scale={{ duration: isOptimized ? 50 : 150, start: 0.97 }}>
+                {#if !semCabecalho}
                     <div class="headerContent" class:scrolled>
                         <div class="headerMargin">
                             {#key popupId}
@@ -77,7 +93,7 @@
                 {/if}
                 <div class="scroll" on:scroll={scroll}>
                     <div class="body">
-                        <svelte:component this={popups[popupId]} />
+                        <svelte:component this={nativa || popups[popupId]} />
                     </div>
                 </div>
             </div>
@@ -259,68 +275,6 @@
 
     /* ----- ajustes por janela (o conteudo e do fecho; aqui so a disposicao) ----- */
 
-    /* fechar o programa: Cancelar / Sair sem salvar / Salvar e sair numa linha, a direita, altura normal; a letra do atalho some (N/Q/Y continuam) */
-    .card[data-popup="unsaved"] .body :global(.list) {
-        flex-direction: row;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    .card[data-popup="unsaved"] .body :global(.list > button) {
-        width: auto !important;
-        margin-top: 0 !important;
-        height: 30px;
-        padding: 0 14px !important;
-        font-size: 13px;
-    }
-    .card[data-popup="unsaved"] .body :global(.list > button > span:not(.ripple)) {
-        display: none;
-    }
-    .card[data-popup="unsaved"] .body :global(.list > button > div) {
-        opacity: 1 !important;
-    }
-
-    /* confirmar (Sim / Nao): a direita, botoes compactos */
-    .card[data-popup="confirm"] .body :global(.row) {
-        justify-content: flex-end !important;
-        gap: 8px !important;
-    }
-    .card[data-popup="confirm"] .body :global(.row > button) {
-        min-width: 88px !important;
-        height: 30px;
-        padding: 0 14px !important;
-        font-size: 13px;
-    }
-    .card[data-popup="confirm"] .body :global(.row > button > svg) {
-        display: none;
-    }
-    /* "Sim" e a acao principal: botao claro */
-    .card[data-popup="confirm"] .body :global(.row > button:last-child) {
-        background: var(--luz-texto, #f8f8f0) !important;
-        color: #111 !important;
-        border-color: transparent !important;
-    }
-    .card[data-popup="confirm"] .body > :global(button) {
-        align-self: flex-end;
-        height: 30px;
-        padding: 0 14px !important;
-        margin-top: 16px !important;
-    }
-
-    /* aviso: o texto e o botao "ok" no canto, sem o <br> que empurrava */
-    .card[data-popup="alert"] .body {
-        margin-top: 18px;
-    }
-    .card[data-popup="alert"] .body > :global(br) {
-        display: none;
-    }
-    .card[data-popup="alert"] .body > :global(button) {
-        align-self: flex-end;
-        margin-top: 14px;
-        height: 30px;
-        padding: 0 18px !important;
-    }
-
     /* dicas (lampada + frase) em todas as janelas: texto pequeno cinza a esquerda, sem icone */
     .body :global(.tip) {
         justify-content: flex-start !important;
@@ -351,9 +305,113 @@
         display: none;
     }
 
-    /* escolher modelo: a grade usa a largura da janela, nao a da tela inteira */
-    .card[data-popup="select_template"] .body > :global(div[style*="overflow-y"]) {
-        width: 100% !important;
-        max-height: calc(100vh - 220px);
+    /* ----- janelas nossas (components/main/janelas) ----- */
+    .popup.topo {
+        align-items: flex-start;
+        padding-top: 14vh;
+    }
+    .card.p2 {
+        min-width: 0;
+        width: min(520px, 100%);
+    }
+    .card.p2 .body {
+        min-width: 0;
+    }
+    .card.m {
+        min-width: 0;
+        width: min(780px, 100%);
+    }
+    .card.m .body {
+        min-width: 0;
+    }
+    .card[data-popup="show"] {
+        min-width: 0;
+        width: min(560px, 100%);
+        overflow: hidden;
+    }
+    .card[data-popup="show"] .body {
+        margin: 0;
+        min-width: 0;
+    }
+    .card.semCabecalho .scroll {
+        max-height: calc(100vh - 72px);
+    }
+    .card :global(.pergunta) {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .card :global(.pergunta h3) {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--luz-texto);
+        white-space: initial;
+    }
+    .card :global(.pergunta > p) {
+        margin: 0;
+        font-size: 12px;
+        color: var(--luz-mudo);
+        white-space: initial;
+    }
+    .card :global(.pergunta .acoes) {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 14px;
+    }
+    .card :global(.jb) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 30px;
+        padding: 0 14px;
+        border: 1px solid var(--luz-borda);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--luz-texto);
+        font-family: inherit;
+        font-size: 13px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .card :global(.jb:hover) {
+        background: var(--luz-hover);
+    }
+    .card :global(.jb.fantasma) {
+        border-color: transparent;
+        color: var(--luz-mudo);
+    }
+    .card :global(.jb.fantasma:hover) {
+        color: var(--luz-texto);
+    }
+    .card :global(.jb.principal) {
+        background: var(--luz-texto);
+        border-color: transparent;
+        color: var(--luz-tinta);
+        font-weight: 600;
+    }
+    .card :global(.jb.principal:hover) {
+        background: #fff;
+    }
+    .card :global(.jb:focus-visible) {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--luz-halo-foco, rgba(248, 248, 240, 0.25));
+    }
+    .card :global(.jcampo) {
+        height: 30px;
+        margin-top: 8px;
+        padding: 0 10px;
+        border: 1px solid var(--luz-borda);
+        border-radius: 6px;
+        background: var(--luz-campo);
+        color: var(--luz-texto);
+        font-family: inherit;
+        font-size: 13px;
+        outline: none;
+    }
+    .card :global(.jcampo:focus) {
+        border-color: var(--luz-borda-forte);
     }
 </style>
