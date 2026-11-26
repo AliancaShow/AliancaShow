@@ -37,18 +37,24 @@
     }
 
     $: isOptimized = $special.optimizedMode
+
+    // AliancaShow (26/nov, "janelas feias"): moldura unica no visual do app (REVISAO-LAYOUT-FABLE.md, "Janela padrao"). Tres larguras fixas
+    // (420 / 560 / 960), cabecalho de 40 px, fundo preto 55% sem desfoque, botoes lado a lado a direita. O conteudo das janelas fica no fecho
+    // da janela de saida e nao muda: os ajustes por janela sao CSS daqui, mirando `data-popup`.
+    const PEQUENAS = ["unsaved", "confirm", "alert", "rename", "delete_show"]
+    const GRANDES = ["select_template", "choose_screen"]
+    $: tamanho = popupId && PEQUENAS.includes(popupId) ? "p" : popupId && GRANDES.includes(popupId) ? "g" : ""
 </script>
 
 {#if popupId !== null}
     {#key popupId}
         <div class="popup luz-pele" class:isOptimized transition:fade={{ duration: isOptimized ? 20 : 100 }} on:mousedown={mousedown}>
-            <div class="card" transition:scale={{ duration: isOptimized ? 50 : 200 }}>
+            <div class="card {tamanho}" data-popup={popupId} transition:scale={{ duration: isOptimized ? 50 : 150, start: 0.97 }}>
                 {#if popupId !== "alert"}
-                    <div class="headerContent" style="border-bottom: 1px solid var(--primary-lighter);{scrolled ? 'box-shadow: 2px 2px 4px 5px rgb(0 0 0 / 0.1);' : ''}">
+                    <div class="headerContent" class:scrolled>
                         <div class="headerMargin">
                             {#key popupId}
-                                <!-- margin-top: -5px; -->
-                                <h2 style="font-size: 1.3em;margin-top: -2px;">
+                                <h2>
                                     {#if popupId === "alianca_varias"}
                                         Adicionar várias músicas
                                     {:else if popupId === "alianca_letra"}
@@ -64,7 +70,7 @@
                             {/key}
 
                             {#if !disablePopupClose.includes(popupId)}
-                                <MaterialButton class="popup-close" icon="close" iconSize={1.3} title="actions.close [esc]" on:click={() => activePopup.set(null)} />
+                                <MaterialButton class="popup-close" icon="close" iconSize={1} title="actions.close [esc]" on:click={() => activePopup.set(null)} />
                             {/if}
                         </div>
                     </div>
@@ -82,6 +88,13 @@
 <style>
     h2 {
         color: var(--text);
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        padding-inline-end: 36px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .popup {
@@ -95,9 +108,8 @@
         /* tela inteira por cima do topo: sem isto a faixa de arrastar do topo vence por baixo e o X do cabecalho vira alca da janela */
         -webkit-app-region: no-drag;
 
-        backdrop-filter: blur(4px);
-
-        font-size: 1.2em;
+        /* sem desfoque: o que esta no ar continua legivel atras da janela */
+        font-size: 1em;
 
         display: flex;
         align-items: center;
@@ -120,23 +132,26 @@
 
     .card {
         position: relative;
-        background-color: var(--primary);
+        background-color: var(--luz-pop-opaco, var(--primary));
 
-        /* background-color: rgba(41, 44, 54, 0.8);
-        backdrop-filter: blur(4px); */
+        border-radius: 8px;
 
-        border-radius: 10px;
-
-        /* overflow-y: auto; */
-        /* overflow-x: hidden; */
-
-        min-width: 50%;
+        min-width: 560px;
         min-height: 50px;
         max-width: 100%;
         max-height: 100%;
 
-        border: 2px solid var(--primary-lighter);
-        box-shadow: 0 0 5px 5px rgb(0 0 0 / 0.2);
+        border: 1px solid var(--luz-borda, var(--primary-lighter));
+        box-shadow: 0 16px 48px rgb(0 0 0 / 0.5);
+    }
+    /* tres larguras: pequena (confirmacoes), padrao, grande (grades de modelos e mapa de telas) */
+    .card.p {
+        min-width: 0;
+        width: 420px;
+    }
+    .card.g {
+        min-width: 0;
+        width: min(960px, 100%);
     }
 
     .headerContent {
@@ -147,10 +162,14 @@
 
         transition: 0.2s box-shadow ease;
 
-        min-height: 56px;
+        height: 40px;
+        border-bottom: 1px solid var(--luz-borda, var(--primary-lighter));
+    }
+    .headerContent.scrolled {
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
     }
     .headerMargin {
-        margin: 10px 20px;
+        margin: 0 4px 0 16px;
         position: relative;
         width: 100%;
 
@@ -161,15 +180,20 @@
     .scroll {
         overflow: auto;
         overflow-x: hidden;
-        /* 40px(popup margin) - 4px(popup border) - 35.2px(popup header) - 20px(body padding) */
-        max-height: calc(100vh - 99.2px);
+        /* 40px(margem da janela) + 40px(cabecalho) + 32px(corpo) */
+        max-height: calc(100vh - 112px);
     }
 
     .body {
         display: flex;
         flex-direction: column;
-        margin: 20px;
-        min-width: 38vw;
+        margin: 16px;
+        min-width: min(38vw, 528px);
+        font-size: 13px;
+    }
+    .card.p .body,
+    .card.g .body {
+        min-width: 0;
     }
 
     .card :global(.popup-close),
@@ -177,34 +201,27 @@
     .card :global(.popup-options),
     .card :global(.popup-reset) {
         position: absolute;
-        inset-inline-end: -10px;
-        top: 0;
-        height: 100%;
-        padding: 0.4em !important;
+        inset-inline-end: 0;
+        top: 6px;
+        width: 28px;
+        height: 28px;
+        padding: 0 !important;
         border-radius: 4px;
-        aspect-ratio: 1;
         justify-content: center;
 
         z-index: 1;
     }
 
     .card :global(.popup-back) {
-        left: 0;
-
-        max-height: 35.2px;
-        margin-top: 10px;
-        margin-left: 10px;
+        left: 6px;
+        top: 6px;
     }
     .card:has(.popup-back) h2 {
-        margin-left: 35px;
+        margin-left: 28px;
     }
 
     .card :global(.popup-options) {
-        inset-inline-end: 42px;
-
-        max-height: 35.2px;
-        margin-top: 10px;
-        margin-right: 10px;
+        inset-inline-end: 34px;
 
         /* overflow: visible; */
     }
@@ -237,10 +254,106 @@
     }
 
     .card :global(.popup-reset) {
-        inset-inline-end: 85px;
+        inset-inline-end: 68px;
+    }
 
-        max-height: 35.2px;
-        margin-top: 10px;
-        margin-right: 10px;
+    /* ----- ajustes por janela (o conteudo e do fecho; aqui so a disposicao) ----- */
+
+    /* fechar o programa: Cancelar / Sair sem salvar / Salvar e sair numa linha, a direita, altura normal; a letra do atalho some (N/Q/Y continuam) */
+    .card[data-popup="unsaved"] .body :global(.list) {
+        flex-direction: row;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .card[data-popup="unsaved"] .body :global(.list > button) {
+        width: auto !important;
+        margin-top: 0 !important;
+        height: 30px;
+        padding: 0 14px !important;
+        font-size: 13px;
+    }
+    .card[data-popup="unsaved"] .body :global(.list > button > span:not(.ripple)) {
+        display: none;
+    }
+    .card[data-popup="unsaved"] .body :global(.list > button > div) {
+        opacity: 1 !important;
+    }
+
+    /* confirmar (Sim / Nao): a direita, botoes compactos */
+    .card[data-popup="confirm"] .body :global(.row) {
+        justify-content: flex-end !important;
+        gap: 8px !important;
+    }
+    .card[data-popup="confirm"] .body :global(.row > button) {
+        min-width: 88px !important;
+        height: 30px;
+        padding: 0 14px !important;
+        font-size: 13px;
+    }
+    .card[data-popup="confirm"] .body :global(.row > button > svg) {
+        display: none;
+    }
+    /* "Sim" e a acao principal: botao claro */
+    .card[data-popup="confirm"] .body :global(.row > button:last-child) {
+        background: var(--luz-texto, #f8f8f0) !important;
+        color: #111 !important;
+        border-color: transparent !important;
+    }
+    .card[data-popup="confirm"] .body > :global(button) {
+        align-self: flex-end;
+        height: 30px;
+        padding: 0 14px !important;
+        margin-top: 16px !important;
+    }
+
+    /* aviso: o texto e o botao "ok" no canto, sem o <br> que empurrava */
+    .card[data-popup="alert"] .body {
+        margin-top: 18px;
+    }
+    .card[data-popup="alert"] .body > :global(br) {
+        display: none;
+    }
+    .card[data-popup="alert"] .body > :global(button) {
+        align-self: flex-end;
+        margin-top: 14px;
+        height: 30px;
+        padding: 0 18px !important;
+    }
+
+    /* dicas (lampada + frase) em todas as janelas: texto pequeno cinza a esquerda, sem icone */
+    .body :global(.tip) {
+        justify-content: flex-start !important;
+        margin-bottom: 12px !important;
+    }
+    .body :global(.tip > svg) {
+        display: none;
+    }
+    .body :global(.tip p) {
+        font-size: 12px !important;
+        opacity: 0.6 !important;
+    }
+
+    /* escolher monitor: "Mudar valores de saida" vira botao discreto no tamanho do texto (antes largura toda, vazando a direita) */
+    .card[data-popup="choose_screen"] .body :global(main) {
+        min-width: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+    .card[data-popup="choose_screen"] .body :global(main > button.outlined) {
+        width: auto !important;
+        align-self: flex-start;
+        height: 28px;
+        padding: 0 12px !important;
+        font-size: 12px;
+    }
+    .card[data-popup="choose_screen"] .body :global(main > br) {
+        display: none;
+    }
+
+    /* escolher modelo: a grade usa a largura da janela, nao a da tela inteira */
+    .card[data-popup="select_template"] .body > :global(div[style*="overflow-y"]) {
+        width: 100% !important;
+        max-height: calc(100vh - 220px);
     }
 </style>
