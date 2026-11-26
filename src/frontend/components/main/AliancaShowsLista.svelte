@@ -7,7 +7,7 @@
     import { aplicarRecorte, recorteDeShows } from "../../utils/aliancaArvoreLogica"
     import { motivoSemCulto } from "../../utils/aliancaGaveta"
     import { porShowNoFim } from "../../utils/aliancaBiblioteca"
-    import { buscaDaBiblioteca, soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
+    import { buscaDaBiblioteca, soSemLetraNaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
     import { idsNoCulto, listarBiblioteca, textoVazio, type LinhaDaBiblioteca } from "../../utils/aliancaBibliotecaLogica"
     import { categoriasDeMusica, ehSemLetra } from "../../utils/aliancaSemLetraLogica"
     import { translateText } from "../../utils/language"
@@ -16,6 +16,7 @@
     import { openShow } from "../helpers/show"
     import { tela } from "../../utils/aliancaTela"
     import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
+    import { activePopup, popupData, quickTextCache } from "../../stores"
 
     export let firstMatch: null | { id: string } = null
 
@@ -27,19 +28,18 @@
     }
     // C6: a arvore tambem recorta a lista: o filtro "Sem categoria" e cada categoria valem nos DOIS tipos (a raiz Shows = "tudo", o que os chips dizem)
     $: recorte = recorteDeShows($drawerTabsData.shows?.activeSubTab, $categories)
-    $: base =
-        recorte.tipo === "chips"
-            ? listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: $tipoDaBiblioteca, soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe })
-            : aplicarRecorte(
-                  [...listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: "musicas", soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe }), ...listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: "apresentacoes", soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe })].sort((a, b) => a.nome.localeCompare(b.nome, "pt", { sensitivity: "base" }) || a.id.localeCompare(b.id)),
-                  recorte,
-                  $categories
-              )
+    // 26/nov (cabine): sem o "Musicas / Apresentacoes" do funil (repetia as categorias da arvore). "Todos" = os dois tipos; a categoria recorta;
+    // "Sem letra" e "Sem categoria" sao os filtros. Antes, com uma categoria aberta, o tipo do funil era ignorado e a lista parecia sem filtro.
+    $: base = aplicarRecorte(
+        [...listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: "musicas", soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe }), ...listarBiblioteca({ shows: $shows, categorias: $categories, acesso, tipo: "apresentacoes", soSemLetra: $soSemLetraNaBiblioteca, ehSemLetraDe })].sort((a, b) => a.nome.localeCompare(b.nome, "pt", { sensitivity: "base" }) || a.id.localeCompare(b.id)),
+        recorte,
+        $categories
+    )
     $: noCulto = idsNoCulto($projects, $activeProject, !!$editingProjectTemplate)
 
     let lista: LinhaDaBiblioteca[] = []
     let timer: ReturnType<typeof setTimeout> | undefined
-    $: filtrando = $buscaDaBiblioteca.trim().length > 1 || $soSemLetraNaBiblioteca
+    $: filtrando = $buscaDaBiblioteca.trim().length > 1 || $soSemLetraNaBiblioteca || recorte.tipo !== "chips"
     $: atualizar(base, $buscaDaBiblioteca)
     function atualizar(linhas: LinhaDaBiblioteca[], q: string) {
         clearTimeout(timer)
@@ -71,6 +71,13 @@
         if (motivo) return
         porShowNoFim(id)
     }
+    // cabine 26/nov: a busca sempre oferece procurar a letra na internet (achando ou nao na biblioteca)
+    $: termoWeb = $buscaDaBiblioteca.trim()
+    function procurarNaInternet() {
+        quickTextCache.set({ name: termoWeb, text: "" })
+        popupData.set({ buscarWeb: true })
+        activePopup.set("show")
+    }
     // ▶: entra no roteiro E o primeiro slide vai ao ar (so em Mostrar; em Editar a biblioteca nunca toca o telao)
     function tocar(id: string) {
         ;(document.activeElement as HTMLElement | null)?.blur?.()
@@ -97,7 +104,13 @@
         {/each}
     </div>
 {:else}
-    <p class="vazio">{textoVazio({ tipo: $tipoDaBiblioteca, filtrando })}</p>
+    <p class="vazio" data-acao="biblioteca-vazia">{textoVazio({ tipo: "musicas", filtrando })}</p>
+{/if}
+{#if termoWeb.length > 1}
+    <button class="web" data-acao="biblioteca-procurar-web" on:mousedown|preventDefault on:click={procurarNaInternet}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-2.9a15.7 15.7 0 0 0-1.4-3.6A8 8 0 0 1 18.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8.2 8.2 0 0 1 0-4h3.4a16.5 16.5 0 0 0 0 4H4.3zm.8 2h2.9c.3 1.3.8 2.5 1.4 3.6A8 8 0 0 1 5.1 16zM8 8H5.1a8 8 0 0 1 4.3-3.6C8.8 5.5 8.3 6.7 8 8zm4 12c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 0 1 0-4h4.6a14.7 14.7 0 0 1 0 4zm.3 5.6c.6-1.1 1.1-2.3 1.4-3.6h2.9a8 8 0 0 1-4.3 3.6zm1.7-5.6a16.5 16.5 0 0 0 0-4h3.4a8.2 8.2 0 0 1 0 4h-3.4z" /></svg>
+        Procurar a letra de "{termoWeb}" na internet
+    </button>
 {/if}
 
 <style>
@@ -193,6 +206,32 @@
     .mais[aria-disabled="true"] {
         opacity: 0.4;
         cursor: not-allowed;
+    }
+    .web {
+        align-self: flex-start;
+        width: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 30px;
+        margin: 8px;
+        padding: 0 12px;
+        border: 1px solid var(--luz-borda);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--luz-texto);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .web:hover {
+        background: var(--luz-hover);
+    }
+    .web svg {
+        width: 15px;
+        height: 15px;
+        fill: var(--luz-texto);
+        opacity: 0.8;
     }
     .vazio {
         margin: 12px 8px;

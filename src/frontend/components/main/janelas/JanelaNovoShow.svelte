@@ -17,7 +17,13 @@
 
     let nome = $quickTextCache?.name || ""
     let campo: HTMLInputElement
-    onMount(() => setTimeout(() => campo?.focus(), 30))
+    // a busca da biblioteca abre esta barra ja procurando na web ("Procurar na internet", 26/nov)
+    const jaBuscar = !!$popupData?.buscarWeb && !!nome.trim()
+    onMount(() => {
+        setTimeout(() => campo?.focus(), 30)
+        if (jaBuscar) buscando = true
+        if ($popupData?.buscarWeb) popupData.set({})
+    })
     $: quickTextCache.set({ name: nome, text: "" })
 
     // categoria do show vazio: a aba aberta, senao a do show ativo, senao "Cancoes", senao a primeira

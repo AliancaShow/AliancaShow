@@ -13,7 +13,9 @@
     //    SelectElem ja limpa sozinho; MORTOS aqui, sem perda de efeito (conferido: Delete so age com selecao e o clique fora limpa pelo SelectElem).
     import type { ProjectShowRef, Tree } from "../../../types/Projects"
     import { activeDrawerTab, activeProject, activeShow, categories, drawSettings, drawTool, drawerTabsData, editingProjectTemplate, folders, outputState, outputs, paintCache, playingAudio, projects, quickSearchActive, shows, sorted, special } from "../../stores"
-    import { avisoDoRoteiro, contarAvisos, ehAvisoDeMusica } from "../../utils/aliancaRoteiroAvisos"
+    import { avisoDoRoteiro, contarAvisos, ehAvisoDeMusica, showDoRascunho } from "../../utils/aliancaRoteiroAvisos"
+    import { abrirEditorDoShow } from "../../utils/aliancaBiblioteca"
+    import { loadShows } from "../helpers/setShow"
     import { CATEGORIA_NOVAS } from "../../utils/aliancaSirvoMusicas"
     import { soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
     import SirvoSelo from "../show/SirvoSelo.svelte"
@@ -141,6 +143,14 @@
     }
 
     // o clique faz o mesmo que o ShowButton de antes (utils/aliancaRoteiroClique.ts): leiaute do item, ultimo do culto, conferido, editor
+    // cabine 26/nov: clicar num rascunho (✎) abre a musica no Editar, com a faixa "Revisada"; falta criar/no PC so explica (dica)
+    async function abrirRascunho(item: ProjectShowRef) {
+        const id = showDoRascunho(item as any)
+        if (!id || !$shows[id]) return
+        await loadShows([id])
+        activeShow.set({ id, type: "show" } as any)
+        abrirEditorDoShow(id)
+    }
     function abrir(item: ProjectShowRef, index: number, e?: MouseEvent) {
         abrirItemDoRoteiro(item as any, index, { ctrl: !!(e?.ctrlKey || e?.metaKey), shift: !!e?.shiftKey })
     }
@@ -203,7 +213,7 @@
                         {#if av}
                             {@const travaAviso = !!(projeto?.sectionsLocked || cabecalhoTrancado(projeto, l.item))}
                             <SelectElem id="show" data={{ ...l.item, index: l.index }} {fileOver} borders="edges" trigger="column" draggable={!travaAviso} selectable={!travaAviso}>
-                                <button class="item aviso {projetoSoLeitura ? '' : 'context #project_section'}" data-indice={l.index} data-id={l.item.id} data-menu-titulo={av.nome} data-title={av.dica} tabindex="-1" on:click={(e) => abrir(l.item, l.index, e)}>
+                                <button class="item aviso {projetoSoLeitura ? '' : 'context #project_section'}" data-indice={l.index} data-id={l.item.id} data-menu-titulo={av.nome} data-title={av.dica} data-acao={av.tipo === "rascunho" ? "roteiro-rascunho" : null} tabindex="-1" on:click={(e) => (av.tipo === "rascunho" ? abrirRascunho(l.item) : abrir(l.item, l.index, e))}>
                                     <span class="tipo marca {av.tipo}">{av.marca}</span>
                                     <span class="nome">{av.nome}</span>
                                 </button>

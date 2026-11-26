@@ -11,7 +11,7 @@
     import { filtroSemCategoria } from "../../utils/aliancaArvoreLogica"
     import { getAccess } from "../../utils/profile"
     import { executarComandoNovo } from "../../utils/aliancaBiblioteca"
-    import { buscaDaBiblioteca, soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
+    import { buscaDaBiblioteca, soSemLetraNaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
     import { teclaIgnorada } from "../../utils/aliancaModo"
     import { escFechou } from "../../utils/aliancaToque"
     import { getLayoutRef } from "../helpers/show"
@@ -106,7 +106,7 @@
     ] as const
     let filtroAberto = false
     // quantos filtros fogem do padrao (Musicas, tudo): a bolinha do funil
-    $: nFiltros = ($tipoDaBiblioteca === "apresentacoes" ? 1 : 0) + ($soSemLetraNaBiblioteca ? 1 : 0) + (filtro.ativo ? 1 : 0)
+    $: nFiltros = ($soSemLetraNaBiblioteca ? 1 : 0) + (filtro.ativo ? 1 : 0)
     function novo(id: "musica" | "apresentacao" | "importar") {
         novoAberto = false
         executarComandoNovo(id)
@@ -132,11 +132,9 @@
                 </button>
                 {#if filtroAberto}
                     <div class="pop" role="menu">
-                        <div class="sec">Mostrar</div>
-                        <button class="item" role="menuitemradio" aria-checked={$tipoDaBiblioteca === "musicas"} tabindex="-1" on:mousedown|preventDefault on:click={() => tipoDaBiblioteca.set("musicas")}><span class="ck">{$tipoDaBiblioteca === "musicas" ? "✓" : ""}</span>Músicas</button>
-                        <button class="item" role="menuitemradio" aria-checked={$tipoDaBiblioteca === "apresentacoes"} tabindex="-1" on:mousedown|preventDefault on:click={() => (tipoDaBiblioteca.set("apresentacoes"), soSemLetraNaBiblioteca.set(false))}><span class="ck">{$tipoDaBiblioteca === "apresentacoes" ? "✓" : ""}</span>Apresentações</button>
-                        <div class="sec">Pendências</div>
-                        <button class="item" role="menuitemcheckbox" aria-checked={$soSemLetraNaBiblioteca} data-acao="filtro-sem-letra" tabindex="-1" on:mousedown|preventDefault on:click={() => (tipoDaBiblioteca.set("musicas"), soSemLetraNaBiblioteca.update((v) => !v))}><span class="ck">{$soSemLetraNaBiblioteca ? "✓" : ""}</span>Sem letra</button>
+                        <!-- 26/nov: musicas/apresentacoes saiu daqui (as categorias da arvore ja fazem isso); o funil so filtra pendencias -->
+                        <div class="sec">Mostrar só</div>
+                        <button class="item" role="menuitemcheckbox" aria-checked={$soSemLetraNaBiblioteca} data-acao="filtro-sem-letra" tabindex="-1" on:mousedown|preventDefault on:click={() => soSemLetraNaBiblioteca.update((v) => !v)}><span class="ck">{$soSemLetraNaBiblioteca ? "✓" : ""}</span>Sem letra</button>
                         {#if filtro.visivel}
                             <button class="item" role="menuitemcheckbox" aria-checked={filtro.ativo} data-acao="filtro-sem-categoria" tabindex="-1" on:mousedown|preventDefault on:click={alternarSemCategoria}><span class="ck">{filtro.ativo ? "✓" : ""}</span>Sem categoria<span class="n">{semCategoria}</span></button>
                         {/if}
@@ -144,7 +142,7 @@
                 {/if}
             </div>
             <div class="menuRaiz novoRaiz">
-                <button class="ico" data-acao="biblioteca-novo" data-title="Novo" aria-label="Novo" aria-haspopup="menu" aria-expanded={novoAberto} tabindex="-1" on:mousedown|preventDefault on:click={() => ((novoAberto = !novoAberto), (filtroAberto = false))}><Icon id="add" size={1.05} white /></button>
+                <button class="ico" data-acao="biblioteca-novo" data-title="Novo" aria-label="Novo" aria-haspopup="menu" aria-expanded={novoAberto} tabindex="-1" on:mousedown|preventDefault on:click={() => ((novoAberto = !novoAberto), (filtroAberto = false))}><svg class="mais" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z" /></svg></button>
                 {#if novoAberto}
                     <div class="pop" role="menu">
                         {#each NOVOS as n (n.id)}
@@ -249,7 +247,8 @@
         border-radius: 50%;
         background: var(--luz-laranja);
     }
-    .funil {
+    .funil,
+    .mais {
         width: 16px;
         height: 16px;
         fill: var(--luz-texto);

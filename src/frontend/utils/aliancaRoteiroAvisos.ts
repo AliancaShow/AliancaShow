@@ -2,6 +2,8 @@
 // "⚠ Falta no PC: X") são gravados como `section` com data.sirvoFalta (aliancaSirvoMusicas.itemDe). Na lista eles viram uma linha comum
 // dentro do bloco, com o nome da música e uma marca; a explicação vai para a dica ao passar o mouse. Só leitura: o item gravado não muda.
 
+import { idDoRascunho } from "./aliancaSirvoMusicas"
+
 export type TipoAviso = "rascunho" | "falta_criar" | "falta_pc"
 export type AvisoDoRoteiro = { tipo: TipoAviso; nome: string; marca: string; dica: string }
 
@@ -10,7 +12,7 @@ type ItemLike = { type?: string; name?: string; data?: any } | null | undefined
 export const ehAvisoDeMusica = (item: ItemLike): boolean => !!item && item.type === "section" && !!item.data?.sirvoFalta
 
 const DICAS: Record<TipoAviso, string> = {
-    rascunho: "Rascunho: a letra veio do Sirvo e ainda não foi revisada. Revise em Novas do Sirvo.",
+    rascunho: "Rascunho: a letra veio do Sirvo e ainda não foi revisada. Clique para revisar no Editar.",
     falta_criar: "Falta criar: esta música do Sirvo ainda não existe na biblioteca.",
     falta_pc: "Falta no PC: a música existe no Sirvo, mas não neste computador."
 }
@@ -25,6 +27,14 @@ export function avisoDoRoteiro(item: ItemLike): AvisoDoRoteiro | null {
     m = n.match(/^⚠\s*Falta criar:\s*(.*)$/)
     if (m) return { tipo: "falta_criar", nome: m[1] || "música", marca: "⚠", dica: DICAS.falta_criar }
     return { tipo: "falta_criar", nome: n || "música", marca: "⚠", dica: DICAS.falta_criar }
+}
+
+/** o show-rascunho que o aviso representa (o id fixo que a montagem do Sirvo cria: idDoRascunho da linha); null se nao for rascunho */
+export function showDoRascunho(item: ItemLike): string | null {
+    const a = avisoDoRoteiro(item)
+    const rm = item?.data?.sirvoMusica
+    if (!a || a.tipo !== "rascunho" || typeof rm !== "string" || !rm) return null
+    return idDoRascunho(rm)
 }
 
 export function contarAvisos(itens: ItemLike[]): { rascunhos: number; faltas: number } {
