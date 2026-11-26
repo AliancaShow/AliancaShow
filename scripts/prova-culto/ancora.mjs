@@ -179,6 +179,18 @@ export const EXCECOES = {
     "src/types/Show.ts": {
         "motivo": "ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): so tipos: AliancaPasta.ajuste opcional e o tipo AjusteMidia",
         "sha": "3dec292a0b5102fef26664ec30bb2d167e2c6371e4ebf3ab096e2be1ee20f050"
+    },
+    "src/frontend/components/edit/editbox/Editbox.svelte": {
+        "motivo": "editor-caixas (aprovado pelo André 25/nov, \"aprovo editor-caixas\"): o editor desenha, grava (Snaplines) e posiciona (autoPosition) as caixas pela tela principal (saidaDoEditor), a mesma do quadro do editor; antes era a 1a saida em ordem alfabetica (NDI 16:9) e o telao 896x320 recebia caixas achatadas. So roda no editor da janela principal; na janela de saida nada muda",
+        "sha": "cb258b1d4e406b59b78a018178efdc343d8574b87dcf7afbf4ec35348bc4465d"
+    },
+    "src/frontend/components/system/Snaplines.svelte": {
+        "motivo": "editor-caixas (aprovado pelo André 25/nov, \"aprovo editor-caixas\"): o editor desenha, grava (Snaplines) e posiciona (autoPosition) as caixas pela tela principal (saidaDoEditor), a mesma do quadro do editor; antes era a 1a saida em ordem alfabetica (NDI 16:9) e o telao 896x320 recebia caixas achatadas. So roda no editor da janela principal; na janela de saida nada muda",
+        "sha": "3593427ac823bfd34889429c790b66c43e92103e45bed00ff8bc115ef793d2eb"
+    },
+    "src/frontend/components/edit/scripts/autoPosition.ts": {
+        "motivo": "editor-caixas (aprovado pelo André 25/nov, \"aprovo editor-caixas\"): o editor desenha, grava (Snaplines) e posiciona (autoPosition) as caixas pela tela principal (saidaDoEditor), a mesma do quadro do editor; antes era a 1a saida em ordem alfabetica (NDI 16:9) e o telao 896x320 recebia caixas achatadas. So roda no editor da janela principal; na janela de saida nada muda",
+        "sha": "cd9f3e374d1a8fc5678d8d9024e6f3d207b11ec7f75b4b6782264934383fb9a4"
     }
 }
 
@@ -253,7 +265,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "f4034790063a54aa1f99111de2aa7bf58082f0775475ae799f9d40494626b72f"
+export const SHA_EXCECOES = "ee03cfdf8be690c45682094ef8a889478339c0e8442431d9244d11cc24db8917"
 export const SHA_NOVOS = "04241b465ab289c9143cc06bed1438f070c1de9f661990fcd7bb4a442fc88877"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
