@@ -1,10 +1,11 @@
 <script lang="ts">
     import { onDestroy } from "svelte"
-    import { outputs } from "../../stores"
+    import { outputs, special } from "../../stores"
     import { throttle } from "../../utils/common"
     import { stopResizing } from "../../utils/cursor"
     import { DEFAULT_BOUNDS, getActiveOutputs, getOutputResolution, getStageResolution } from "../helpers/output"
     import { getRadius, moveBox, resizeBox, rotateBox } from "./textbox"
+    import { saidaDoEditor } from "../../utils/aliancaSaidaDoEditorLogica"
 
     export let lines: [string, number][]
     export let mouse: any
@@ -70,7 +71,8 @@
         lines = [...xLines, ...yLines]
 
         // percentage scale
-        let outputId = isStage ? "" : getActiveOutputs($outputs, true, true, true)[0]
+        // AliancaShow (25/nov): a mesma tela do quadro do editor (a principal); ver Editbox.svelte
+        let outputId = isStage ? "" : saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal) || getActiveOutputs($outputs, true, true, true)[0]
         let outputResolution = isStage ? getStageResolution() : getOutputResolution(outputId, $outputs, true)
         const aspectRatio = outputResolution.width / outputResolution.height
         const width = DEFAULT_BOUNDS.width

@@ -10,6 +10,7 @@
     import { isCroppedItem } from "../../helpers/cropping"
     import { getExtension, getFileName, getMediaType } from "../../helpers/media"
     import { getFirstActiveOutput, getOutputResolution, percentageStylePos } from "../../helpers/output"
+    import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
     import { isSlideLocked } from "../../helpers/show"
     import { createCSSVariables } from "../../helpers/showActions"
     import { getItemStyle } from "../../helpers/style"
@@ -164,7 +165,10 @@
         })
     }
 
-    $: customOutputId = getFirstActiveOutput($outputs)?.id || ""
+    // AliancaShow (25/nov, telao 896x320): as caixas sao desenhadas e gravadas na proporcao da TELA PRINCIPAL, a mesma do quadro do editor e do
+    // Snaplines. Antes era a 1a saida em ordem alfabetica (NDI-Alpha 16:9): o quadro era 14:5, mas a caixa que enchia o quadro gravava 687 de
+    // altura em vez de 1080 e o telao a achatava.
+    $: customOutputId = saidaDoEditor($outputs, $special?.aliancaSaidaPrincipal) || getFirstActiveOutput($outputs)?.id || ""
     function getCustomStyle(style: string, outputId = "") {
         if (outputId) {
             let outputResolution = getOutputResolution(outputId, $outputs, true)

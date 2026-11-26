@@ -1,7 +1,8 @@
 import { get } from "svelte/store"
 import type { Item } from "../../../../types/Show"
 import type { StageItem } from "../../../../types/Stage"
-import { activePage, activeStage } from "../../../stores"
+import { activePage, activeStage, outputs, special } from "../../../stores"
+import { saidaDoEditor } from "../../../utils/aliancaSaidaDoEditorLogica"
 import { getFirstOutput, getOutputResolution } from "../../helpers/output"
 import { getStyles, removeText } from "../../helpers/style"
 
@@ -13,7 +14,7 @@ export function getLikelyPosition(currentItems: (Item | StageItem)[], defaultSty
     const margin = 20
     const step = 20
 
-    const outputId = (get(activePage) === "stage" ? get(activeStage).id : getFirstOutput()?.id) || ""
+    const outputId = (get(activePage) === "stage" ? get(activeStage).id : saidaDoEditor(get(outputs), get(special)?.aliancaSaidaPrincipal) || getFirstOutput()?.id) || ""
     const resolution = getOutputResolution(outputId)
     const SLIDE_WIDTH = resolution.width
     const SLIDE_HEIGHT = resolution.height
