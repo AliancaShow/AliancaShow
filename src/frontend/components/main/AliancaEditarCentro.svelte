@@ -16,6 +16,8 @@
     import { saidasDoEnvio } from "../../utils/aliancaEditarSaidas"
     import { getLayoutRef } from "../helpers/show"
     import { _show } from "../helpers/shows"
+    import { historyAwait } from "../helpers/history"
+    import { checkName } from "../helpers/show"
     import LazyLoad from "../helpers/LazyLoad.svelte"
     import AliancaDividir from "../show/AliancaDividir.svelte"
     import AliancaAdicionarItem from "./AliancaAdicionarItem.svelte"
@@ -35,6 +37,28 @@
     $: paiId = indice !== null && ref[indice] ? ref[indice].parent?.id || ref[indice].id : ""
     $: grupoGlobal = showId && paiId ? _show(showId).slides([paiId]).get()?.[0]?.globalGroup || "" : ""
     $: modeloId = slide?.settings?.template || $groups[grupoGlobal]?.template || show?.settings?.template || ""
+
+    // ----- titulo editavel (cabine 26/nov: "renomear a musica dentro do Editar") -----
+    // o mesmo SHOWS do ShowButton da biblioteca: Ctrl+Z desfaz. Enter confirma, Esc volta ao nome de antes.
+    let campoNome: HTMLInputElement
+    $: podeRenomear = ehShow && !!show && !show.locked && profile.global !== "read" && profile[show?.category || ""] !== "read"
+    function renomear() {
+        if (!podeRenomear || !showId) return
+        const novo = (campoNome?.value || "").trim()
+        if (!novo || novo === show?.name) {
+            if (campoNome) campoNome.value = show?.name || ""
+            return
+        }
+        historyAwait([showId], { id: "SHOWS", newData: { data: [{ id: showId, show: { name: checkName(novo, showId) } }], replace: true }, location: { page: "drawer" } })
+    }
+    function teclaNome(e: KeyboardEvent) {
+        e.stopPropagation()
+        if (e.key === "Enter") campoNome.blur()
+        else if (e.key === "Escape") {
+            campoNome.value = show?.name || ""
+            campoNome.blur()
+        }
+    }
 
     // ----- vistas -----
     const profile = getAccess("shows")
@@ -94,6 +118,10 @@
 <div class="cab" data-acao="editar-cabecalho">
     {#if $activeEdit.type === "template"}
         <AliancaModeloCabecalho />
+    {:else if ehShow && show}
+        {#key showId + (show.name || "")}
+            <input bind:this={campoNome} class="item nomeEditavel edit" value={show.name || ""} size={Math.max(8, (show.name || "").length + 1)} disabled={!podeRenomear} spellcheck="false" aria-label="Nome da música" data-acao="editar-titulo" data-title="Clique para renomear" on:change={renomear} on:keydown={teclaNome} />
+        {/key}
     {:else}
         <span class="item">{nomeFora}</span>
     {/if}
@@ -160,6 +188,29 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+    .nomeEditavel {
+        flex: 0 1 auto;
+        width: auto;
+        field-sizing: content;
+        min-width: 80px;
+        max-width: 40%;
+        height: 32px;
+        margin-inline-start: -8px;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--luz-texto);
+        font-family: inherit;
+        outline: none;
+    }
+    .nomeEditavel:hover:not(:disabled) {
+        border-color: var(--luz-borda);
+    }
+    .nomeEditavel:focus {
+        border-color: var(--luz-borda-forte);
+        background: var(--luz-campo);
     }
     .modelo {
         flex-shrink: 0;

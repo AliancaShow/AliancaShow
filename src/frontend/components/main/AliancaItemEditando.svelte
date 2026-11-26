@@ -18,6 +18,7 @@
     import { loadShows } from "../helpers/setShow"
     import Slides from "../edit/Slides.svelte"
     import AliancaModelosLista from "./AliancaModelosLista.svelte"
+    import AliancaFichaMusica from "./AliancaFichaMusica.svelte"
     import { TODOS, modelosDaLista } from "../../utils/aliancaModelosLogica"
 
     // ----- o item que esta em edicao -----
@@ -221,6 +222,9 @@
         {/if}
     </div>
 
+    {#if atual?.tipo === "show" && temShow}
+        <AliancaFichaMusica {showId} {travado} />
+    {/if}
     <div class="slides" data-acao="editando-slides">
         {#if atual?.tipo === "show"}
             {#key showId}
