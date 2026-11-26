@@ -40,7 +40,7 @@
     {#if inputType}
         <h3>{@html prompt || "Confirmar"}</h3>
         {#if message}<p>{@html message}</p>{/if}
-        <input class="jcampo" type={inputType} bind:this={campo} on:input={(e) => (texto = e.currentTarget.value)} />
+        <input class="jcampo edit" type={inputType} bind:this={campo} on:input={(e) => (texto = e.currentTarget.value)} />
         <div class="acoes">
             <button class="jb fantasma" on:click={fechar}>Cancelar</button>
             <button class="jb principal" bind:this={principal} on:click={confirmar}>Confirmar</button>

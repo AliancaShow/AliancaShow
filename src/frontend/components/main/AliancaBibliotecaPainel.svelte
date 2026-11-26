@@ -144,7 +144,13 @@
         {#if emMidia}
             <AliancaMidiaControles />
         {/if}
-        <input bind:this={campo} class="busca search edit drawer_search" type="text" placeholder="Buscar música, trecho da letra ou versículo" spellcheck="false" autocomplete="off" bind:value={searchValue} />
+        <!-- cabine 26/nov: um X para limpar a busca e voltar a mostrar tudo (aparece so com texto) -->
+        <div class="buscaCaixa">
+            <input bind:this={campo} class="busca search edit drawer_search" type="text" placeholder="Buscar música, trecho da letra ou versículo" spellcheck="false" autocomplete="off" bind:value={searchValue} />
+            {#if searchValue}
+                <button class="limpar" data-acao="limpar-busca" data-title="Limpar a busca" aria-label="Limpar a busca" tabindex="-1" on:mousedown|preventDefault on:click={() => ((searchValue = ""), campo?.focus())}>✕</button>
+            {/if}
+        </div>
     </div>
     <div class="corpo">
         <div class="arv" style="width: {esq}px"><AliancaArvore /></div>
@@ -227,6 +233,30 @@
         color: var(--luz-texto);
         font: inherit;
         font-size: 12px;
+    }
+    .buscaCaixa {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .buscaCaixa .busca {
+        padding-inline-end: 30px;
+    }
+    .limpar {
+        position: absolute;
+        right: 4px;
+        width: 24px;
+        height: 24px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--luz-mudo);
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .limpar:hover {
+        background: var(--luz-hover);
+        color: var(--luz-texto);
     }
     .busca::placeholder {
         color: var(--luz-mudo);

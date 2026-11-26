@@ -35,6 +35,8 @@
     }
 
     let buscando = false
+    // a busca na web sem resultado volta para a lista com um aviso na propria barra (antes so um toast rapido: parecia que nao fez nada)
+    let semResultado = ""
     $: opcoes = [
         { id: "letra", icone: "text", rotulo: "Colar letra", atalho: "Enter", dica: "Abre a Nova música para colar a letra (com ou sem cifra)" },
         { id: "web", icone: "search", rotulo: "Buscar letra na web", atalho: "Ctrl F", dica: nome.trim() ? `Procura "${nome.trim()}" na web` : "Digite o nome primeiro", desligada: !nome.trim() },
@@ -79,6 +81,7 @@
     function daWeb(e: CustomEvent) {
         const d = e.detail || {}
         if (!d.lyrics) {
+            semResultado = nome.trim()
             buscando = false
             return
         }
@@ -117,7 +120,8 @@
         {:else}
             <span class="ic"><Icon id="song" size={1} white /></span>
         {/if}
-        <input bind:this={campo} bind:value={nome} placeholder="Nome do show ou da música" spellcheck="false" on:input={() => (buscando = false)} />
+        <!-- class "edit": sem ela os atalhos do app (espaco, Backspace, setas) agem nos slides enquanto se digita (shortcuts.ts) -->
+        <input class="edit" bind:this={campo} bind:value={nome} placeholder="Nome do show ou da música" spellcheck="false" on:input={() => ((buscando = false), (semResultado = ""))} />
         <button class="fechar" data-title="Fechar [Esc]" on:click={() => activePopup.set(null)}><Icon id="close" size={0.9} white /></button>
     </div>
 
@@ -134,6 +138,9 @@
                     <kbd>{o.atalho}</kbd>
                 </button>
             {/each}
+            {#if semResultado}
+                <p class="aviso">Nada encontrado na web para "{semResultado}". Tente outro nome ou cole a letra.</p>
+            {/if}
         </div>
     {/if}
 </div>
@@ -223,6 +230,11 @@
         font-family: inherit;
         font-size: 11px;
         color: var(--luz-fraco);
+    }
+    .aviso {
+        margin: 4px 10px 6px;
+        color: var(--luz-laranja);
+        font-size: 12px;
     }
     .web {
         padding: 12px 14px;

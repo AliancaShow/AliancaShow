@@ -18,11 +18,13 @@
     import { activeProfile, activeTimers, closeAd, currentWindow, disabledServers, events, language, loaded, localeDirection, outputDisplay, outputs, profiles, theme, themes, timers } from "./stores"
     import { focusArea, logerror, mainClick, toggleRemoteStream } from "./utils/common"
     import { iniciarMarcaDeTecla } from "./utils/aliancaModo"
+    import { iniciarSegueTeclado } from "./utils/aliancaSegueTeclado"
     import { keydown } from "./utils/shortcuts"
     import { startup } from "./utils/startup"
 
     startup()
     iniciarMarcaDeTecla()
+    iniciarSegueTeclado()
 
     ///// UPDATERS /////
 

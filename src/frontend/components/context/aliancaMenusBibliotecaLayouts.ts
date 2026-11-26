@@ -11,7 +11,7 @@ const SEM_MARCA = "a lista nova nao mostra essa marca"
 /** layout -> o menu novo */
 export const NOVOS: Layout = {
     // biblioteca
-    show_drawer: ["alianca_editar", "alianca_roteiro", "alianca_agora"],
+    show_drawer: ["alianca_editar", "alianca_roteiro", "alianca_agora", "SEPARATOR", "alianca_apagar_show"],
     media_card: ["edit", "alianca_roteiro", "SEPARATOR", "play_no_audio", "play_no_filters", "createSlideshow", "SEPARATOR", "favourite", "SEPARATOR", "alianca_mover", "alianca_fim", "alianca_camada", "alianca_ajuste", "SEPARATOR", "media_tag_set", "media_tag_filter", "sort_media_by", "SEPARATOR", "system_open", "SEPARATOR", "alianca_tirar_bib", "alianca_apagar_pc"],
     audio_button: ["edit", "alianca_roteiro", "alianca_agora", "SEPARATOR", "effects_library_add", "favourite", "SEPARATOR", "alianca_mover", "SEPARATOR", "system_open"],
     audio_button_playlist: ["edit", "alianca_agora", "SEPARATOR", "remove"],

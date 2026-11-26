@@ -103,7 +103,7 @@
         <label class="busca">
             <Icon id="search" size={0.85} white />
             <!-- svelte-ignore a11y-autofocus -->
-            <input bind:value={busca} placeholder="Buscar modelo" spellcheck="false" autofocus />
+            <input class="edit" bind:value={busca} placeholder="Buscar modelo" spellcheck="false" autofocus />
         </label>
         {#if variosTipos}
             <div class="tipos" data-title="Quantas traduções aparecem juntas">

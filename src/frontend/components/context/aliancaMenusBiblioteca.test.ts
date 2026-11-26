@@ -22,7 +22,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         expect(reg).toMatch(/semDestinoPorLayout\(antigos\)[\s\S]*falhaAlta\("menu-biblioteca"/)
     })
     it("todo item do menu novo existe em contextMenuItems (ou e separador/grupo)", () => {
-        const itensDaFatia = ["alianca_roteiro", "alianca_agora", "alianca_agora_item", "alianca_subir", "alianca_descer", "alianca_tirar", "alianca_titulo", "alianca_novo_bloco", "alianca_tirar_bib", "alianca_apagar_pc"]
+        const itensDaFatia = ["alianca_roteiro", "alianca_agora", "alianca_agora_item", "alianca_subir", "alianca_descer", "alianca_tirar", "alianca_titulo", "alianca_novo_bloco", "alianca_tirar_bib", "alianca_apagar_pc", "alianca_apagar_show"]
         const registrados = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8") + readFileSync(join(__dirname, "aliancaMenusEditar.ts"), "utf8")
         for (const [layout, itens] of Object.entries(NOVOS))
             for (const i of itens) {

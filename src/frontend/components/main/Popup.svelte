@@ -7,6 +7,7 @@
     import T from "../helpers/T.svelte"
     import MaterialButton from "../inputs/MaterialButton.svelte"
     import { EFFECTS_LIST } from "../../audio/effects/audioEffectsHelpers"
+    import JanelaApagarShow from "./janelas/JanelaApagarShow.svelte"
     import JanelaAviso from "./janelas/JanelaAviso.svelte"
     import JanelaConfirmar from "./janelas/JanelaConfirmar.svelte"
     import JanelaImportar from "./janelas/JanelaImportar.svelte"
@@ -54,9 +55,9 @@
 
     // 26/nov ("ousar mais"): as janelas mais vistas deixam de ser o miolo do FreeShow vestido; viram janelas nossas (components/main/janelas),
     // com a mesma logica. Os originais continuam no registro (utils/popup.ts, fecho) e nao mudam: so a moldura escolhe qual desenhar.
-    const NATIVAS: { [id: string]: any } = { unsaved: JanelaSair, confirm: JanelaConfirmar, alert: JanelaAviso, show: JanelaNovoShow, select_template: JanelaModelos, choose_screen: JanelaMonitor, import: JanelaImportar }
+    const NATIVAS: { [id: string]: any } = { unsaved: JanelaSair, confirm: JanelaConfirmar, alert: JanelaAviso, show: JanelaNovoShow, select_template: JanelaModelos, choose_screen: JanelaMonitor, import: JanelaImportar, delete_show: JanelaApagarShow }
     // perguntas curtas e a barra de comando nao tem faixa de titulo: o proprio conteudo diz o que e
-    const SEM_CABECALHO = ["unsaved", "confirm", "alert", "show", "choose_screen"]
+    const SEM_CABECALHO = ["unsaved", "confirm", "alert", "show", "choose_screen", "delete_show"]
     $: nativa = popupId ? NATIVAS[popupId] || null : null
     $: semCabecalho = !!popupId && SEM_CABECALHO.includes(popupId)
     $: barraDeComando = popupId === "show"

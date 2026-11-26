@@ -9,7 +9,7 @@ import { get } from "svelte/store"
 import { addProjectItem } from "../../converters/project"
 import { AudioPlayer } from "../../audio/audioPlayer"
 import { playScripture } from "../drawer/bible/scripture"
-import { activeProject, contextActive, editingProjectTemplate, outLocked, overlays, projects, showsCache } from "../../stores"
+import { activePopup, activeProject, contextActive, editingProjectTemplate, outLocked, overlays, projects, selected, showsCache } from "../../stores"
 import { newToast } from "../../utils/common"
 import { falhaAlta } from "../../utils/aliancaFalha"
 import { porShowNoFim } from "../../utils/aliancaBiblioteca"
@@ -46,7 +46,9 @@ const ITENS: { [id: string]: ContextMenuItem } = {
     // cabine-5: some do programa; o arquivo fica no computador (Ctrl+Z desfaz). "Apagar do computador" espera o aprovo do fecho (IPC da Lixeira)
     alianca_tirar_bib: { label: "Tirar da biblioteca", icon: "remove", iconColor: "#ff6b54", translate: false },
     // cabine-5 (aprovado 19/nov): Lixeira do Windows, com a caixa de confirmacao nativa
-    alianca_apagar_pc: { label: "Apagar do computador", icon: "delete", iconColor: "#ff6b54", translate: false }
+    alianca_apagar_pc: { label: "Apagar do computador", icon: "delete", iconColor: "#ff6b54", translate: false },
+    // cabine 26/nov ("achei uma musica sem letra, queria apagar o show assim como apago midia"): pergunta antes (JanelaApagarShow); Ctrl+Z desfaz
+    alianca_apagar_show: { label: "Apagar da biblioteca", icon: "delete", iconColor: "#ff6b54", translate: false }
 }
 
 import { NOVOS, REMOVIDOS, semDestinoPorLayout, type Layout } from "./aliancaMenusBibliotecaLayouts"
@@ -267,6 +269,12 @@ const ACOES: { [id: string]: (c: Chamada) => void } = {
     alianca_tirar: ({ contextElem }) => tirar(contextElem),
     alianca_tirar_bib: ({ sel }) => void tirarDaBiblioteca(alvosDoMenu((sel?.data || []) as any)),
     alianca_apagar_pc: ({ sel }) => void apagarDoComputador(alvosDoMenu((sel?.data || []) as any)),
+    alianca_apagar_show: ({ contextElem }) => {
+        const id = marca(contextElem, "data-show")
+        if (!id) return falhaAlta("menu-biblioteca", "a linha de show nao tem data-show")
+        selected.set({ id: "show_drawer", data: [{ id }] })
+        activePopup.set("delete_show")
+    },
     alianca_titulo: ({ contextElem }) => {
         const r = itemDoRoteiro(contextElem)
         if (!r) return
