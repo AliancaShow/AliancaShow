@@ -1,5 +1,14 @@
+<script context="module" lang="ts">
+    import { writable } from "svelte/store"
+    // roteiro enxuto (26/nov): o selo do Sirvo no cabecalho do roteiro (SirvoSelo.svelte) pede o "Desligar?" aqui
+    export const pedirDesligarSirvo = writable(false)
+</script>
+
 <script lang="ts">
     // Faixa do Sirvo no topo do projeto aberto (F0b, passos 4 e 6).
+    // Roteiro enxuto (26/nov, pedido do André): parado e ligado, a faixa some. "Ligado a um culto do Sirvo" e "cabeçalhos trancados"
+    // viram a bolinha verde do cabeçalho (SirvoSelo), com a explicação na dica; o clique nela pede o "Desligar?" que continua aqui.
+    // A faixa só aparece quando há algo a fazer: ordem pendente, sugestão de avanço, "é esta?", "você tirou", erro ou o próprio Desligar.
     //
     // Fica FORA da área que rola (#projectArea, antes do Autoscroll): não rola
     // com a lista e não muda de altura.
@@ -47,6 +56,10 @@
         vistoProjeto = projetoId
         erro = ""
         confirmando = false
+    }
+    $: if ($pedirDesligarSirvo) {
+        pedirDesligarSirvo.set(false)
+        if (ligado) confirmando = true
     }
 
     const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`
@@ -197,19 +210,21 @@
                         <span class="texto titulo" data-title={dicaSegura(`A saída já está em ${tituloDestino}. Avançar encerra no Sirvo ${sugestao.pulados === 1 ? "o bloco no ar" : `os ${sugestao.pulados} blocos antes dele`}.`)}>Na saída: {tituloDestino}{sugestao.pulados > 1 ? ` · pula ${sugestao.pulados - 1}` : ""}</span>
                         <button tabindex="-1" disabled={sugestaoInerte || avancando || $sirvo.enviando} on:mousedown|preventDefault on:click={avancar}>Avançar</button>
                     </div>
-                {:else}
-                    <div class="linha" class:aviso={pendente}>
+                {:else if pendente}
+                    <div class="linha aviso">
                         <span class="ponto" />
                         <span class="texto titulo" data-title={dicaSegura(linha.titulo)}>{linha.titulo}</span>
                     </div>
                 {/if}
-                <div class="linha botoes" class:aviso={pendente}>
-                    <span class="texto detalhe" data-title={dicaSegura(linha.detalhe)}>{linha.detalhe}</span>
-                    {#if linha.aplicar}
-                        <button tabindex="-1" disabled={aplicarBloqueado} data-title={linha.dicaAplicar} on:click={aplicar}>Aplicar</button>
-                    {/if}
-                    <button class="fraco" tabindex="-1" data-title="Desligar do Sirvo: os cabeçalhos viram seções comuns" on:click={desligar}>{pendente ? "Desligar" : "Desligar do Sirvo"}</button>
-                </div>
+                {#if pendente}
+                    <div class="linha botoes aviso">
+                        <span class="texto detalhe" data-title={dicaSegura(linha.detalhe)}>{linha.detalhe}</span>
+                        {#if linha.aplicar}
+                            <button tabindex="-1" disabled={aplicarBloqueado} data-title={linha.dicaAplicar} on:click={aplicar}>Aplicar</button>
+                        {/if}
+                        <button class="fraco" tabindex="-1" data-title="Desligar do Sirvo: os cabeçalhos viram seções comuns" on:click={desligar}>Desligar</button>
+                    </div>
+                {/if}
                 {#if desteCulto}
                     <!-- F2: só com a chave que conduz; uma linha a mais, de altura fixa -->
                     <SirvoConduzir />
@@ -259,6 +274,10 @@
         border-bottom: 1px solid var(--primary-lighter);
         font-size: 12px;
         user-select: none;
+    }
+    /* parado e ligado: nada a fazer, a faixa some (o estado fica na bolinha do cabecalho) */
+    .faixa:not(:has(*)) {
+        display: none;
     }
 
     .linha {

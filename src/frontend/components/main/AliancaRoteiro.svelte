@@ -12,7 +12,11 @@
     //  - ProjectContentList: `mousedown` (limpar a selecao ao clicar fora) e `keydown|capture` (Esc/Delete na lista) tratam `selected`, que o
     //    SelectElem ja limpa sozinho; MORTOS aqui, sem perda de efeito (conferido: Delete so age com selecao e o clique fora limpa pelo SelectElem).
     import type { ProjectShowRef, Tree } from "../../../types/Projects"
-    import { activeProject, activeShow, categories, drawSettings, drawTool, editingProjectTemplate, folders, outputState, outputs, paintCache, playingAudio, projects, quickSearchActive, shows, sorted, special } from "../../stores"
+    import { activeDrawerTab, activeProject, activeShow, categories, drawSettings, drawTool, drawerTabsData, editingProjectTemplate, folders, outputState, outputs, paintCache, playingAudio, projects, quickSearchActive, shows, sorted, special } from "../../stores"
+    import { avisoDoRoteiro, contarAvisos, ehAvisoDeMusica } from "../../utils/aliancaRoteiroAvisos"
+    import { CATEGORIA_NOVAS } from "../../utils/aliancaSirvoMusicas"
+    import { soSemLetraNaBiblioteca, tipoDaBiblioteca } from "../../utils/aliancaBibliotecaEstado"
+    import SirvoSelo from "../show/SirvoSelo.svelte"
     import { algoNoArEm, faixaAoVivo, telaoLigadoEm } from "../../utils/aliancaAoVivoLogica"
     import { desenhoAtivo } from "../../utils/aliancaPilulaLogica"
     import { noAr } from "../../utils/aliancaModo"
@@ -61,7 +65,7 @@
     $: projeto = projetoId ? $projects[projetoId] : null
     $: if ($activeProject && !projeto) activeProject.set(null)
     $: itens = (projeto?.shows || []).filter((a) => typeof a === "object") as ProjectShowRef[]
-    $: totalItens = itens.filter((a) => a.type !== "section").length
+    $: totalItens = itens.filter((a) => a.type !== "section" || ehAvisoDeMusica(a)).length
     $: projetoSoLeitura = readOnly || profile[projeto?.parent || ""] === "read" || !!tree.find((a) => a.id === projeto?.parent)?.readOnly
     $: podeTirar = !projetoSoLeitura
 
@@ -81,7 +85,8 @@
     $: blocos = ((): Bloco[] => {
         const saida: Bloco[] = []
         itens.forEach((item, index) => {
-            if (item.type === "section") saida.push({ chave: item.id, cabecalho: { item, index }, linhas: [] })
+            // roteiro enxuto (26/nov): o aviso de musica do Sirvo e gravado como section, mas na lista e uma linha do bloco, nao abre bloco
+            if (item.type === "section" && !ehAvisoDeMusica(item)) saida.push({ chave: item.id, cabecalho: { item, index }, linhas: [] })
             else {
                 if (!saida.length) saida.push({ chave: "sem-bloco", cabecalho: null, linhas: [] })
                 saida[saida.length - 1].linhas.push({ item, index })
@@ -123,6 +128,18 @@
     const contextoDe = (t: string | undefined) => ((t || "show") === "show" ? "show" : t === "video" || t === "image" ? "media" : t)
     const noArDe = (item: ProjectShowRef) => telaoLigado && (item.type || "show") === "show" && noArIds.has(item.id)
 
+    // ----- roteiro enxuto (26/nov): avisos do Sirvo agrupados num selo do cabecalho -----
+    $: avisos = contarAvisos(itens)
+    function irParaNovas() {
+        tipoDaBiblioteca.set("musicas")
+        soSemLetraNaBiblioteca.set(false)
+        activeDrawerTab.set("shows")
+        drawerTabsData.update((a) => {
+            a.shows = { ...a.shows, activeSubTab: CATEGORIA_NOVAS, enabled: a.shows?.enabled !== false }
+            return a
+        })
+    }
+
     // o clique faz o mesmo que o ShowButton de antes (utils/aliancaRoteiroClique.ts): leiaute do item, ultimo do culto, conferido, editor
     function abrir(item: ProjectShowRef, index: number, e?: MouseEvent) {
         abrirItemDoRoteiro(item as any, index, { ctrl: !!(e?.ctrlKey || e?.metaKey), shift: !!e?.shiftKey })
@@ -136,7 +153,16 @@
 
 <div class="cab">
     <span class="rot">ROTEIRO</span>
-    <span class="cont">{totalItens} {totalItens === 1 ? "item" : "itens"}</span>
+    <span class="selos">
+        {#if avisos.rascunhos}
+            <button class="selo rasc" data-acao="selo-rascunhos" data-title="{avisos.rascunhos} {avisos.rascunhos === 1 ? 'música é rascunho' : 'músicas são rascunho'}: a letra veio do Sirvo e ainda não foi revisada. Clique para abrir Novas do Sirvo." tabindex="-1" on:mousedown|preventDefault on:click={irParaNovas}>✎ {avisos.rascunhos}</button>
+        {/if}
+        {#if avisos.faltas}
+            <span class="selo falta" data-title="{avisos.faltas} {avisos.faltas === 1 ? 'música do Sirvo ainda não existe' : 'músicas do Sirvo ainda não existem'} na biblioteca deste computador.">⚠ {avisos.faltas}</span>
+        {/if}
+        <SirvoSelo />
+        <span class="cont">{totalItens} {totalItens === 1 ? "item" : "itens"}</span>
+    </span>
 </div>
 
 <div class="seletor" data-acao="seletor-culto">
@@ -173,6 +199,16 @@
                     {/if}
                     {#each b.linhas as l (l.item.id + ":" + l.index)}
                         {@const trava = projeto?.sectionsLocked}
+                        {@const av = avisoDoRoteiro(l.item)}
+                        {#if av}
+                            {@const travaAviso = !!(projeto?.sectionsLocked || cabecalhoTrancado(projeto, l.item))}
+                            <SelectElem id="show" data={{ ...l.item, index: l.index }} {fileOver} borders="edges" trigger="column" draggable={!travaAviso} selectable={!travaAviso}>
+                                <button class="item aviso {projetoSoLeitura ? '' : 'context #project_section'}" data-indice={l.index} data-id={l.item.id} data-menu-titulo={av.nome} data-title={av.dica} tabindex="-1" on:click={(e) => abrir(l.item, l.index, e)}>
+                                    <span class="tipo marca {av.tipo}">{av.marca}</span>
+                                    <span class="nome">{av.nome}</span>
+                                </button>
+                            </SelectElem>
+                        {:else}
                         <SelectElem id="show" dropAbove={false} triggerOnHover data={{ ...l.item, name: nomeDe(l.item, $shows), index: l.index }} {fileOver} borders={l.item.type === "show_placeholder" ? "all" : "edges"} trigger="column" draggable={!trava} selectable={!trava}>
                             <button class="item {projetoSoLeitura ? '' : `context #project_${contextoDe(l.item.type)}`}" data-indice={l.index} data-id={l.item.id} data-show={(l.item.type || "show") === "show" ? l.item.id : undefined} data-menu-titulo={nomeDe(l.item, $shows)} class:sel={$activeShow?.index === l.index && $activeShow?.id === l.item.id} tabindex="-1" on:click={(e) => abrir(l.item, l.index, e)}>
                                 <span class="tipo">{tipoDe(l.item, [$shows, musicas])}</span>
@@ -181,6 +217,7 @@
                                 {#if podeTirar}<span class="x" role="none" />{/if}
                             </button>
                         </SelectElem>
+                        {/if}
                         {#each rastrosPorPos.get(l.index + 1) || [] as t (t.chave)}
                             <div class="tirado" role="listitem">
                                 <span class="tn">{t.nome}</span><span class="tr">tirado{t.nota ? ` · ${t.nota}` : ""}</span>
@@ -271,31 +308,52 @@
     .lista :global(.scroll) {
         min-height: 0;
     }
+    /* roteiro enxuto (26/nov): o bloco e uma faixa de largura toda (fundo um tom acima, maiusculas pequenas, tempo a direita);
+       os itens sao linhas de 30 px, recuadas, texto normal. A diferenca vem do fundo e do tamanho, nao de icones */
     .bloco {
         width: 100%;
-        padding: 10px 8px 4px;
+        height: 24px;
+        margin-top: 8px;
+        padding: 0 8px;
         display: flex;
+        align-items: center;
         justify-content: space-between;
+        gap: 8px;
         font: inherit;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
-        color: var(--luz-texto);
-        background: transparent;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--luz-texto-80, var(--luz-texto));
+        background: var(--luz-campo);
         border: none;
+        border-radius: 4px;
         cursor: pointer;
         text-align: left;
     }
+    .bloco > span:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .bloco:hover {
+        background: var(--luz-hover);
+    }
     .tempo {
+        flex: none;
         color: var(--luz-mudo);
         font-weight: 400;
+        letter-spacing: 0;
+        text-transform: none;
     }
     .item {
         width: 100%;
-        min-height: 40px;
+        min-height: 30px;
         display: flex;
         align-items: center;
         gap: 6px;
-        padding: 0 8px;
+        padding: 0 8px 0 12px;
         border: none;
         border-radius: 6px;
         text-align: left;
@@ -314,9 +372,52 @@
         font-weight: 600;
     }
     .tipo {
-        width: 22px;
+        flex: none;
+        width: 16px;
         color: var(--luz-mudo);
-        font-size: 12px;
+        font-size: 11px;
+        opacity: 0.7;
+    }
+    .item.aviso .nome {
+        color: var(--luz-texto-80, var(--luz-texto));
+    }
+    .marca {
+        opacity: 1;
+        color: #ffb066;
+    }
+    .marca.falta_criar,
+    .marca.falta_pc {
+        color: #ff8f97;
+    }
+    .selos {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .selo {
+        display: inline-flex;
+        align-items: center;
+        height: 20px;
+        padding: 0 6px;
+        border: 0;
+        border-radius: 4px;
+        font: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        background: transparent;
+    }
+    .selo.rasc {
+        color: #ffb066;
+        background: rgb(255 128 0 / 0.14);
+        cursor: pointer;
+    }
+    .selo.rasc:hover {
+        background: rgb(255 128 0 / 0.28);
+    }
+    .selo.falta {
+        color: #ff8f97;
+        background: rgb(255 80 90 / 0.12);
+        cursor: default;
     }
     .nome {
         flex-grow: 1;
