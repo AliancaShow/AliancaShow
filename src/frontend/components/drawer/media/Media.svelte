@@ -39,6 +39,8 @@
     import CLogo from "./CLogo.svelte"
     import Canva from "./Canva.svelte"
     import ContentLibraryBrowser from "./ContentLibraryBrowser.svelte"
+    import AliancaMidiaListaCab from "./AliancaMidiaListaCab.svelte"
+    import { compararPorData, infoDeMidia, pedirVarios } from "../../../utils/aliancaMidiaInfo"
     import AliancaPastaCfg from "./AliancaPastaCfg.svelte"
     import Folder from "./Folder.svelte"
     import Media from "./MediaCard.svelte"
@@ -429,8 +431,17 @@
         // sort
         let sortType = $sorted.media?.type || "name"
         if (sortType === "name") localFilteredFiles = sortFilenames(localFilteredFiles)
-        else if (sortType === "name_des") localFilteredFiles = localFilteredFiles.reverse()
-        else if (sortType === "created") localFilteredFiles = localFilteredFiles.sort((a, b) => (a.isFolder || b.isFolder ? 1 : b.stats.birthtimeMs - a.stats.birthtimeMs))
+        // cabine 26/nov: Z-A de verdade (antes so invertia a ordem em que os arquivos vieram)
+        else if (sortType === "name_des") localFilteredFiles = sortFilenames(localFilteredFiles).reverse()
+        else if (sortType === "created" || sortType === "created_asc") {
+            // cabine 26/nov (coluna "Adicionado" do modo Lista): a biblioteca por categorias nao traz o stat; vem do aliancaMidiaInfo.
+            // Faltando data de algum arquivo, pede todas e ordena de novo quando chegarem (uma vez: as que chegaram nao sao pedidas de novo)
+            const infos = get(infoDeMidia)
+            const semData = localFilteredFiles.filter((a) => !a.isFolder && !a.stats?.birthtimeMs && !(a.path in infos)).map((a) => a.path)
+            if (semData.length) pedirVarios(semData).then(() => filterFiles())
+            const dataDe = (a: FileFolder) => a.stats?.birthtimeMs || infos[a.path]?.criado || 0
+            localFilteredFiles = localFilteredFiles.sort((a, b) => (a.isFolder || b.isFolder ? 1 : compararPorData(dataDe(a), dataDe(b), sortType === "created")))
+        }
         else if (sortType === "modified") localFilteredFiles = localFilteredFiles.sort((a, b) => (a.isFolder || b.isFolder ? 1 : b.stats.mtimeMs - a.stats.mtimeMs))
 
         // append folders
@@ -737,6 +748,7 @@
                             {/if}
                         </MediaGrid>
                     {:else}
+                        <AliancaMidiaListaCab />
                         <VirtualList items={searchedFiles} let:item={file}>
                             {#if file.isFolder}
                                 <Folder name={file.name} path={file.path} mode={$mediaOptions.mode} on:open={(e) => (path = e.detail)} />

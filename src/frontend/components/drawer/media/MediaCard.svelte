@@ -27,6 +27,7 @@
     import { motivoSemCulto } from "../../../utils/aliancaGaveta"
     import { newToast } from "../../../utils/common"
     import { avisarOffline, conferirNaBiblioteca, decidirAntesDoAr, midiasOffline } from "../../../utils/aliancaMidiaSumida"
+    import { formatarData, formatarTamanho, infoDeMidia, pedirInfo } from "../../../utils/aliancaMidiaInfo"
     import MediaLoader from "./MediaLoader.svelte"
 
     export let name: string
@@ -57,7 +58,7 @@
 
     // C1: duracao no canto do thumb, lida uma vez por arquivo (cache da sessao); imagem nao tem selo
     let duracaoLida = 0
-    $: if (type === "video" && thumbnail && path && !contentProvider) lerDuracao(path)
+    $: if (type === "video" && (thumbnail || lista) && path && !contentProvider) lerDuracao(path)
     async function lerDuracao(p: string) {
         const d = await duracaoDeMidia.pedir(p)
         if (p === path) duracaoLida = d
@@ -74,6 +75,11 @@
         travaTimer = setTimeout(() => (trava = false), TRAVA_CARTAO_MS)
     }
     $: gridCartao = $mediaOptions.mode === "grid" && thumbnail
+    // modo Lista (cabine 26/nov): colunas Duracao / Resolucao / Tamanho / Adicionado
+    $: lista = $mediaOptions.mode === "list" && !contentProvider
+    $: if (lista && path) pedirInfo(path)
+    $: info = lista ? $infoDeMidia[path] : null
+    $: resolucaoTxt = $resolucoesDeMidia[path] ? `${$resolucoesDeMidia[path].largura}×${$resolucoesDeMidia[path].altura}` : ""
     // C1: "ja esta no roteiro" (a mesma midia no roteiro aberto): o ＋ vira ✓ verde; clicar de novo adiciona outra vez
     $: jaNoRoteiro = !!($projects[$activeProject || ""]?.shows || []).some((s: any) => s?.id === path)
 
@@ -297,7 +303,7 @@
 
     // chips da pasta (so nas vistas "pasta:*"): o que o video faz ao terminar e em qual camada; borda = ajuste proprio da midia
     $: pastaId = pastaDaMidia($media[path]?.tags, $mediaTags)
-    $: mostraChips = !!pastaId && ehAbaDePasta(active) && type === "video"
+    $: mostraChips = !lista && !!pastaId && ehAbaDePasta(active) && type === "video"
     $: fimEf = resolverFim({ midia: $media[path], mediaTags: $mediaTags })
     $: camadaEf = camadaNaHora($media[path], $mediaTags)
     // C1: video em repeticao ganha o ↻ ao lado da duracao (o mesmo criterio do clique: fundo e sem fim de pasta que pare)
@@ -333,7 +339,7 @@
 </script>
 
 <SelectElem id="media" class="context #media_card" data={{ name, path, type, contentProvider }} {shiftRange} draggable fill>
-    <div class="mc" class:cartao={gridCartao} class:ar={gridCartao && estado === "ar"} class:falta={gridCartao && estado === "falta"} class:trava={gridCartao && estado === "trava"} data-acao="midia-cartao" data-estado={gridCartao ? estado : ""}>
+    <div class="mc" class:lista class:cartao={gridCartao} class:ar={gridCartao && estado === "ar"} class:falta={gridCartao && estado === "falta"} class:trava={gridCartao && estado === "trava"} data-acao="midia-cartao" data-estado={gridCartao ? estado : ""}>
     <Card
         resolution={{ width: 16, height: 9 }}
         loaded={(loaded && ($mediaOptions.mode === "grid" ? thumbnailPath !== "" || loadFullImage : true)) || failed}
@@ -445,13 +451,56 @@
             </button>
         </div>
     {/if}
+    {#if lista}
+        <!-- modo Lista (cabine 26/nov): colunas que ajudam a achar/distinguir; os titulos ficam no AliancaMidiaListaCab -->
+        <span class="lc lc-dur" data-acao="midia-col-duracao">{duracaoTxt || (type === "image" ? "—" : "")}</span>
+        <span class="lc lc-res" class:alta={!!alta} title={alta?.dica || ""}>{resolucaoTxt}</span>
+        <span class="lc lc-tam">{info ? formatarTamanho(info.tamanho) : ""}</span>
+        <span class="lc lc-data" data-acao="midia-col-data" title={info?.criado ? "Chegou a este computador em " + new Date(info.criado).toLocaleString("pt-BR") : ""}>{info ? formatarData(info.criado) : ""}</span>
+    {/if}
     </div>
 </SelectElem>
 
 <style>
     /* ---- C1 (cabine 18/nov): o cartao de midia. Thumb = unico gatilho de "ao ar"; faixa do nome = zona segura (seleciona e arrasta). Medidas do board. ---- */
-    .mc:not(.cartao) {
+    .mc:not(.cartao):not(.lista) {
         display: contents;
+    }
+    /* modo Lista: a linha do Card estica e as colunas ficam a direita, com as larguras do AliancaMidiaListaCab */
+    .mc.lista {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        padding-right: 8px;
+    }
+    .mc.lista :global(.main) {
+        flex: 1;
+        min-width: 0;
+        width: auto !important;
+    }
+    .lc {
+        flex: none;
+        text-align: right;
+        font-size: var(--luz-fs-nome);
+        color: var(--luz-mudo);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+    .lc.lc-dur {
+        width: 64px;
+        color: var(--luz-texto);
+    }
+    .lc.lc-res {
+        width: 92px;
+    }
+    .lc.lc-res.alta {
+        color: var(--luz-laranja);
+    }
+    .lc.lc-tam {
+        width: 76px;
+    }
+    .lc.lc-data {
+        width: 100px;
     }
     .mc.cartao {
         position: relative;
