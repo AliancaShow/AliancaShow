@@ -11,6 +11,7 @@
     import { marcarBiblia } from "../../../utils/aliancaGaveta"
     import { teclaIgnorada } from "../../../utils/aliancaModo"
     import { bibliaNoRoteiro } from "../../../utils/aliancaBibliaNoCulto"
+    import { registrarAndarDaBiblia } from "../../../utils/aliancaBibliaSetas"
     import { gavetaNaoToca, podeMarcar } from "../../../utils/aliancaGavetaToque"
     import { cliqueVaiSerEngolido } from "../../../utils/aliancaToque"
     import { wait } from "../../../utils/common"
@@ -199,7 +200,16 @@
     }
     onMount(() => {
         window.addEventListener("keydown", teclaComBibliaNoAr, true)
-        return () => window.removeEventListener("keydown", teclaComBibliaNoAr, true)
+        // o avancar que vem do OutputHelper (botoes, remoto, ou a seta com esta aba fechada: aliancaBibliaSetas reabre a aba e chama aqui)
+        const tirar = registrarAndarDaBiblia((anterior) => {
+            if (!isActiveInOutput || !activeReference.book || !activeReference.verses?.[0]?.length) return false
+            _moveSelection(anterior, naoEMostrar())
+            return true
+        })
+        return () => {
+            window.removeEventListener("keydown", teclaComBibliaNoAr, true)
+            tirar()
+        }
     })
 
     type Reference = {

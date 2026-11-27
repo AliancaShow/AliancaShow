@@ -69,8 +69,8 @@ export const EXCECOES = {
         "sha": "723d6107e9e8e01133a07e7ed0701a497a09849034055200618bc0c5fb0e6a2f"
     },
     "src/frontend/components/helpers/OutputHelper.ts": {
-        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): setas leem a posicao do retorno no modo; automacao roda na janela propria. Modo desligado: identico",
-        "sha": "fd6a3a23df26a58c5975b013524df739cc31fce0c5d0fc6a803c1877dedc3d4b"
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): setas leem a posicao do retorno no modo; automacao roda na janela propria. Modo desligado: identico | biblia-setas (aprovado pelo André 27/nov, \"Aprovo as duas\"): com a Biblia no ar (slide temp), advanceOutputs nao avanca a musica aberta; dispara o evento alianca:biblia-seta e quem anda o versiculo e a Biblia (janela principal). Sem Biblia no ar: identico",
+        "sha": "211921364ebc57e0bd5b51386bce19e9646b7d6e6f84617aeeec592bad7817d9"
     },
     "src/frontend/components/helpers/showActions.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): updateOut/checkActionTrigger retornam cedo no modo; playPdf recusa antes de limpar o fundo. Modo desligado: identico",
@@ -85,8 +85,8 @@ export const EXCECOES = {
         "sha": "ee4ba33f1e44e552cc1dddc3ad87a26ff35796ef6ab5395cedebf86f4a54fb78"
     },
     "src/frontend/components/context/menuClick.ts": {
-        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): midia nao limpa o telao antes de enviar no modo. Modo desligado: identico | ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): acao nova alianca_ajuste (grava o fit proprio pelo ajusteProprio, so fora de Mostrar); nenhuma acao existente muda",
-        "sha": "dabfdfa6465a0d72495d29e0e5ccb24906ccd04dc97fec705908d046e325863b"
+        "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): midia nao limpa o telao antes de enviar no modo. Modo desligado: identico | ajuste-pasta (aprovado pelo André 25/nov, \"aprovo ajuste-pasta\"): acao nova alianca_ajuste (grava o fit proprio pelo ajusteProprio, so fora de Mostrar); nenhuma acao existente muda | ajuste-foto (aprovado pelo André 27/nov, \"Aprovo as duas\"): alianca_ajuste grava o fit proprio tambem em fotos (antes so video)",
+        "sha": "5e3617fc792a2748fed3ce97f7f8a5c0620d160a0355dec08ac689666ca1337e"
     },
     "src/frontend/utils/shortcuts.ts": {
         "motivo": "fatia 8b (so retorno, aprovada pelo André 18/nov): togglePlayingMedia recusa no modo (Espaco/seta nao mexem no video do telao); playFolder herda a janela de automacao. Modo desligado: identico",
@@ -273,7 +273,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "fded571cfe79d1b0830168277ebf97ff42d03d9258b427fba36f31552e27a7cf"
+export const SHA_EXCECOES = "0f710a82abf3cfdec047e146679313a553fdf17774bb5d46bebdd782fa8fca08"
 export const SHA_NOVOS = "04241b465ab289c9143cc06bed1438f070c1de9f661990fcd7bb4a442fc88877"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")

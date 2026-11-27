@@ -21,6 +21,13 @@ type Options = { isSpace: boolean; slideLayers: boolean; playNext: boolean }
 
 export class OutputHelper {
     static advanceOutputs(e: KeyboardEvent | "next" | "previous" = "next") {
+        // AliancaShow (cabine 27/nov, "aprovo", Andre): com a Biblia no ar (slide "temp"), avancar anda o versiculo e nunca cai na musica aberta.
+        // Quem anda e a Biblia (aliancaBibliaSetas, so na janela principal), por um evento: nenhum import novo entra no fecho.
+        if (getAllActiveOutputIds().some((id) => get(outputs)[id]?.out?.slide?.id === "temp")) {
+            const tecla = typeof e === "string" ? (e === "next" ? "ArrowRight" : "ArrowLeft") : e.key
+            if (!get(outLocked) && ["ArrowRight", "ArrowLeft", "PageDown", "PageUp", " "].includes(tecla)) window.dispatchEvent(new CustomEvent("alianca:biblia-seta", { detail: { anterior: tecla === "ArrowLeft" || tecla === "PageUp" } }))
+            return
+        }
         getAllActiveOutputIds().forEach((id) => {
             if (typeof e === "string") this.advanceOutput(id, e === "next" ? "ArrowRight" : "ArrowLeft")
             else this.advanceOutput(id, e.key, { slideLayers: !e.altKey })

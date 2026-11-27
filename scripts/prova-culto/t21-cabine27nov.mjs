@@ -55,6 +55,22 @@ try {
     ok("A seta para a esquerda volta um versiculo", ativo2 === 2 && (await slideNoAr())?.id === "temp", "ativo=" + ativo2)
     await foto("a-biblia-setas")
 
+    // A2 ("aprovo", 27/nov): com a aba Biblia FECHADA, a seta continua andando o versiculo e a biblioteca volta para a Biblia
+    ok("A2 aba Shows abre (Biblia ainda no ar)", (await aba("Shows")) && (await slideNoAr())?.id === "temp")
+    await j.ev(`document.activeElement?.blur?.(); return 1`)
+    await tecla(j, "ArrowRight")
+    await esperar(2500)
+    s = await slideNoAr()
+    const abaDepois = await j.ev(`return get(S.activeDrawerTab)`)
+    const ativo3 = await j.ev(`return [...document.querySelectorAll('[data-regiao=biblioteca] .verse')].findIndex(e=>e.classList.contains("isActive"))`)
+    ok("A2 a seta com a aba fechada nao volta a musica", s?.id === "temp", JSON.stringify(s))
+    ok("A2 a biblioteca volta para a Biblia", abaDepois === "scripture", abaDepois)
+    ok("A2 e o versiculo andou", ativo3 === 3, "ativo=" + ativo3)
+    // o botao de avancar (OutputHelper.advanceOutputs("next")) tambem anda a Biblia
+    await j.ev(`const m=await import(U("components/helpers/OutputHelper")); m.OutputHelper.advanceOutputs("next"); await esp(1500); return 1`)
+    const ativo4 = await j.ev(`return [...document.querySelectorAll('[data-regiao=biblioteca] .verse')].findIndex(e=>e.classList.contains("isActive"))`)
+    ok("A2 o avancar sem tecla tambem anda o versiculo", ativo4 === 4 && (await slideNoAr())?.id === "temp", "ativo=" + ativo4)
+
     // ---- B: "＋ roteiro" da Biblia ----
     const antes = await j.ev(`const p=get(S.projects)[get(S.activeProject)]; return p?.shows?.length ?? -1`)
     const btn = await localizar(j, `document.querySelector('[data-acao=biblia-no-roteiro]')`)
@@ -96,6 +112,18 @@ try {
     await j.ev(`S.mediaOptions.update(a=>({...a, mode:"grid"})); return 1`)
     const cat = await j.ev(`return [...document.querySelectorAll('[data-aba^="pasta:"]')].map(e=>e.dataset.aba+"="+(e.className.includes("#alianca_categoria")?"menu":"-")).join(" ")`)
     ok("E categorias da Midia com menu proprio", /pasta:(?!raiz|sirvo)[^=]+=menu/.test(cat), cat)
+
+    // ---- E2 ("aprovo", 27/nov): ajuste na tela proprio numa FOTO ----
+    const foto1 = await j.ev(`return Object.keys(get(S.media)).find(p=>/\.(png|jpe?g|webp)$/i.test(p)) || ""`)
+    if (foto1) {
+        const antes = await j.ev(`return get(S.media)[${JSON.stringify(foto1)}]?.fit || ""`)
+        await j.ev(`MODO("preparar"); await esp(500); const mc=await import(U("components/context/menuClick")); mc.menuClick("alianca_ajuste", true, {id:"cover"}, null, null, {id:"media", data:[{path:${JSON.stringify(foto1)}}]}); await esp(600); return 1`)
+        const depois = await j.ev(`return get(S.media)[${JSON.stringify(foto1)}]?.fit || ""`)
+        ok("E2 ajuste proprio grava numa foto", depois === "cover", "antes=" + antes + " depois=" + depois)
+        await j.ev(`const mc=await import(U("components/context/menuClick")); mc.menuClick("alianca_ajuste", true, {id:"seguir"}, null, null, {id:"media", data:[{path:${JSON.stringify(foto1)}}]}); await esp(400); MODO("culto"); await esp(500); return 1`)
+        const volta = await j.ev(`return get(S.media)[${JSON.stringify(foto1)}]?.fit || ""`)
+        ok("E2 'Seguir a pasta' tira o ajuste da foto", volta === "", volta)
+    } else console.log("     (sem foto no perfil para E2)")
 
     // ---- F: roteiro sem o vao de 36 px (sem aviso do Sirvo) ----
     const vao = await j.ev(`return document.querySelectorAll('.avisoLugar').length`)

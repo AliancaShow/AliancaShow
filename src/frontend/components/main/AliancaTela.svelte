@@ -25,6 +25,7 @@
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
     import { iniciarAudioParaSpotify } from "../../utils/aliancaSpotifyParaAudio"
+    import { iniciarSetasDaBiblia } from "../../utils/aliancaBibliaSetas"
     import { ligarQuedasNosAvisos } from "../../utils/aliancaQuedaAvisos"
     import { ligarMonitoresDasSaidas } from "../../utils/aliancaMonitorVigia"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
@@ -122,6 +123,8 @@
         iniciarSpotifyParaComSom()
         // cabine 27/nov: e o contrario: o Spotify comecar a tocar limpa o audio de arquivo (nunca os dois juntos)
         iniciarAudioParaSpotify()
+        // cabine 27/nov: com a Biblia no ar, avancar anda o versiculo mesmo com a aba Biblia fechada
+        iniciarSetasDaBiblia()
         // dado salvo antigo ou fora dos limites: preso na carga
         try {
             aliancaTela.set(prender($aliancaTela, { w, h }))

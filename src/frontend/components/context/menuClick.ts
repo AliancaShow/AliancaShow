@@ -278,7 +278,9 @@ const clickActions = {
     alianca_ajuste: (obj: ObjData) => {
         if (!naoEMostrar() || !obj.sel) return
         const id = obj.menu.id || ""
-        ajusteProprio(alvosDoMenu(obj.sel.data, "video"), { fit: ["contain", "cover", "fill", "blur"].includes(id) ? id : null })
+        // cabine 27/nov ("aprovo", Andre): o ajuste na tela vale para foto tambem (Ao terminar e Camada continuam so para video)
+        const alvos = alvosDoMenu(obj.sel.data).filter((c) => ["video", "image"].includes(getMediaType(getExtension(c))))
+        ajusteProprio(alvos, { fit: ["contain", "cover", "fill", "blur"].includes(id) ? id : null })
     },
     alianca_camada: (obj: ObjData) => {
         if (!naoEMostrar() || !obj.sel) return
