@@ -33,29 +33,32 @@ Branch `feat/cabine-6`, HEAD `56b86bc` (enviado ao GitHub). O instalador mais no
 - **Fecho:** confira com `fechoDoRef("src/frontend/MainOutput.svelte","HEAD")` num `_tmp-*.mjs` dentro de `scripts/prova-culto/`, e apague o script depois.
 - **Estado dos testes:** vitest passa, exceto o RTMP de integração (precisa de ffmpeg). svelte-check mostra 129 erros, todos anteriores a esta rodada.
 
+## Rodada da tarde de 27/nov (depois da 1.9.9, ainda sem versão)
+Corrigido e provado no perfil de teste (`scripts/prova-culto/t21-cabine27nov.mjs`):
+- **Setas depois da Bíblia:** com o versículo no ar, seta, PageUp/PageDown e espaço andam o versículo. Antes voltavam para a última música aberta (o slide "temp" da Bíblia era tratado como show no OutputHelper). O listener fica em `Scripture.svelte`, por isso só vale com a aba Bíblia aberta.
+- **"＋ roteiro" na Bíblia:** põe a seleção (capítulo inteiro com o botão direito no capítulo, série com Shift+clique) no fim do roteiro, sem abrir e sem ir ao ar (`utils/aliancaBibliaNoCulto.ts`).
+- **Outras telas:** prévias lado a lado, sem abas. O `{#key}` com transições globais segurava a prévia antiga montada.
+- **Propriedades da categoria de mídia:** botão direito na categoria → "Propriedades da categoria…". O resumo do cabeçalho é clicável e mostra também o ajuste. "Ajuste na tela" do arquivo só aparece onde grava (vídeo, fora do Mostrar). O check considera todos os alvos.
+- **Seletor de cor no Editar:** abre ancorado na pastilha (só CSS em `public/global.css`, o MaterialColorInput é do fecho).
+- **Roteiro:** o lugar de 36 px do aviso do Sirvo só existe com aviso.
+- **Mídia em Lista:** a resolução acima do recomendado aparecia como faixa laranja (herdava o selo "4K" da grade); agora é texto laranja.
+- **Shows:** cantor discreto ao lado do nome (`quickAccess.artista`, lido no Electron em `trimShow`; cache antigo é relido uma vez) e "Lista com detalhes" (Nome, Cantor, Categoria, Último uso, Criada; ordena pelo cabeçalho).
+- **Spotify:** dar play no Spotify agora limpa o áudio de arquivo (`utils/aliancaSpotifyParaAudio.ts`). O outro sentido já existia. Volume já existe nos dois cartões.
+
 ## Pendências
 
-### Bugs relatados pelo André, ainda não corrigidos
-1. Outras telas: as prévias ficam empilhadas. A proposta é mostrar as 3 lado a lado, sem abas.
-2. As setas do teclado param de passar slide depois de usar a Bíblia.
-3. "Ajuste na tela".
-4. Menu de propriedades da pasta.
-5. Seletor de cor abre fora do lugar. A proposta é um componente só para seletor de cor, menus e listas suspensas: ancorado no botão, a 6 px dele, virando de lado quando falta espaço e desenhado por cima de tudo.
-
 ### Pequenos
-- Como pôr um capítulo ou versículos da Bíblia no roteiro.
-- Espaço vazio de 36 px (`.avisoLugar`) abaixo do seletor de culto no roteiro.
-- Artista e metadados das músicas: o André disse "por enquanto vamos deixar".
+- Artista e metadados das músicas além do cantor: o André disse "por enquanto vamos deixar".
+- Alertas rápidos: o ajuste da caixa de texto não fica idêntico no telão ("bom o suficiente para usar").
+- Setas da Bíblia com a aba Bíblia fechada ainda caem na música: a correção robusta é no `OutputHelper.ts` (fecho, precisa de aprovo).
+- "Ajuste na tela" por arquivo para fotos: o clique grava só vídeo (`menuClick.ts`, fecho); hoje o item fica escondido para foto.
 
 ### Pendências antigas (de antes de 25/nov; confira se ainda valem)
 - Alertas rápidos por cima da letra ("placa XXX-XXXX", "pais da criança X").
-- No modo só retorno, o áudio da gaveta não é barrado.
-- O fundo do slide não acompanha no retorno.
+- Modo só retorno: o André respondeu que o retorno não precisa de áudio nem de fundo do slide; não há o que fazer.
 - "Pré-visualizar" está sem substituto.
 - Ajustes baixos não feitos da revisão do PR #42: 6, 13, 14, 15 e 16 (`revisoes/revisao-cabine4-codigo.md`).
-- Perguntas ao André:
-  - o cartão do Spotify na faixa de vídeo precisa de volume?
-  - no modo só retorno, o item de palco "saída atual" mostra o telão ou o que foi para o retorno?
+- Respostas do André (27/nov): o Spotify é um áudio como outro, com volume (já existe); "saída atual" no palco mostra o telão (como já é).
 
 ### Roadmap (`plano-cabine-6.md`)
 - **Vídeo liso:** os espelhos não decodificam (quadro parado com o tempo restante). Antes disso, rodar na cabine (RX 580) o POC "decodifica uma vez, mostra N vezes".

@@ -454,7 +454,7 @@
     {#if lista}
         <!-- modo Lista (cabine 26/nov): colunas que ajudam a achar/distinguir; os titulos ficam no AliancaMidiaListaCab -->
         <span class="lc lc-dur" data-acao="midia-col-duracao">{duracaoTxt || (type === "image" ? "—" : "")}</span>
-        <span class="lc lc-res" class:alta={!!alta} title={alta?.dica || ""}>{resolucaoTxt}</span>
+        <span class="lc lc-res" class:acima={!!alta} title={alta?.dica || ""}>{resolucaoTxt}</span>
         <span class="lc lc-tam">{info ? formatarTamanho(info.tamanho) : ""}</span>
         <span class="lc lc-data" data-acao="midia-col-data" title={info?.criado ? "Chegou a este computador em " + new Date(info.criado).toLocaleString("pt-BR") : ""}>{info ? formatarData(info.criado) : ""}</span>
     {/if}
@@ -493,7 +493,7 @@
     .lc.lc-res {
         width: 92px;
     }
-    .lc.lc-res.alta {
+    .lc.lc-res.acima {
         color: var(--luz-laranja);
     }
     .lc.lc-tam {

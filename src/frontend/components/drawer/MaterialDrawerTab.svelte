@@ -65,8 +65,10 @@
     const defaultFolders = ["all", "unlabeled", "number", "favourites", "effects_library", "effects", "online", "inputs", "metronome"]
     const tabsWithCategories = ["shows", "media", "audio", "overlays", "templates", "scripture"]
 
+    // cabine 27/nov ("botao direito na categoria so mostra NOVO DIRETORIO"): a categoria de midia (pasta:<id>) ganha o proprio menu, com as propriedades
+    $: ehCategoriaDeMidia = drawerId === "media" && String(id).startsWith("pasta:") && id !== "pasta:raiz" && id !== "pasta:sirvo"
     $: noEdit = !tabsWithCategories.includes(drawerId) || defaultFolders.includes(id) || String(id).startsWith("pasta:")
-    $: className = noEdit ? "" : $audioPlaylists[id] ? "context #playlist" : `context #category_${drawerId}_button${readOnly ? "_readonly" : ""}`
+    $: className = ehCategoriaDeMidia ? "context #alianca_categoria" : noEdit ? "" : $audioPlaylists[id] ? "context #playlist" : `context #category_${drawerId}_button${readOnly ? "_readonly" : ""}`
 
     // drag and drop audio playlists
     $: draggable = !!(drawerId === "audio" && $audioPlaylists[id])

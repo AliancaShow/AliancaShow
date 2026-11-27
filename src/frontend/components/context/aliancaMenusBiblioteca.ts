@@ -26,6 +26,10 @@ import { getExtension, getMediaType } from "../helpers/media"
 import { alvosDoMenu } from "../../utils/aliancaPastasMidia"
 import { apagarDoComputador, tirarDaBiblioteca } from "../../utils/aliancaBibliotecaMidia"
 import { contextMenuItems, contextMenuLayouts, type ContextMenuItem } from "./contextMenus"
+import { drawerTabsData } from "../../stores"
+import { pastaParaConfigurar } from "../../utils/aliancaPastasMidiaEstado"
+import { idDaAba } from "../../utils/aliancaPastasMidiaLogica"
+import { tela } from "../../utils/aliancaTela"
 import { menuClick } from "./menuClick"
 
 const VERMELHO = "#f21a27"
@@ -48,7 +52,9 @@ const ITENS: { [id: string]: ContextMenuItem } = {
     // cabine-5 (aprovado 19/nov): Lixeira do Windows, com a caixa de confirmacao nativa
     alianca_apagar_pc: { label: "Apagar do computador", icon: "delete", iconColor: "#ff6b54", translate: false },
     // cabine 26/nov ("achei uma musica sem letra, queria apagar o show assim como apago midia"): pergunta antes (JanelaApagarShow); Ctrl+Z desfaz
-    alianca_apagar_show: { label: "Apagar da biblioteca", icon: "delete", iconColor: "#ff6b54", translate: false }
+    alianca_apagar_show: { label: "Apagar da biblioteca", icon: "delete", iconColor: "#ff6b54", translate: false },
+    // cabine 27/nov: nome, ao terminar, camada e ajuste na tela da categoria (o mesmo painel do ⚙ do cabecalho)
+    alianca_cat_props: { label: "Propriedades da categoria…", icon: "settings", translate: false }
 }
 
 import { NOVOS, REMOVIDOS, semDestinoPorLayout, type Layout } from "./aliancaMenusBibliotecaLayouts"
@@ -261,6 +267,15 @@ function tirar(contextElem: HTMLElement | null) {
 }
 
 const ACOES: { [id: string]: (c: Chamada) => void } = {
+    alianca_cat_props: ({ contextElem }) => {
+        const aba = (contextElem?.closest?.("[data-aba]") as HTMLElement | null)?.dataset.aba || ""
+        const id = idDaAba(aba)
+        if (!id) return falhaAlta("menu-biblioteca", "a linha da categoria nao tem data-aba")
+        // no Mostrar a biblioteca nao muda (decisao do Andre): avisa onde fica, em vez de nao fazer nada
+        if (get(tela) === "mostrar") return void newToast("as propriedades da categoria mudam no Editar")
+        drawerTabsData.update((a) => ({ ...a, media: { ...a.media, activeSubTab: aba } }))
+        pastaParaConfigurar.set(id)
+    },
     alianca_roteiro: ({ contextElem, sel }) => paraORoteiro(classeDoMenu(contextElem), contextElem, sel),
     alianca_agora: ({ contextElem }) => mostrarAgora(classeDoMenu(contextElem), contextElem),
     alianca_agora_item: ({ contextElem, sel }) => mostrarAgoraDoItem(contextElem, sel),

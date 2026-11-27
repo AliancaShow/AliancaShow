@@ -12,72 +12,46 @@
 
     export let ids: string[] = []
 
-    let escolhida = ""
-    $: if (!ids.includes(escolhida)) escolhida = ids[0] || ""
+    // cabine 27/nov: as outras telas lado a lado, sem abas. Com abas, trocar a escolhida passava por um {#key} cujas transicoes internas
+    // (OutputTransition, globais no Svelte 3) seguravam a previa antiga montada: as telas "somavam" e encolhiam uma ao lado da outra.
+    // Agora cada saida monta uma vez e fica; recolher a secao continua parando todas as capturas.
     $: nome = (id: string) => $outputs[id]?.name || "Saída"
-    $: res = escolhida ? getResolution(null, [$outputs, $styles], false, escolhida) : { width: 1920, height: 1080 }
-    $: prop = proporcaoDaSaida(res.width, res.height)
+    $: resDe = (id: string, ..._deps: unknown[]) => getResolution(null, [$outputs, $styles], false, id) || { width: 1920, height: 1080 }
 </script>
 
 {#if ids.length}
     <AliancaSecaoNoAr titulo="OUTRAS TELAS" chave={CHAVE_OUTRAS} padrao={OUTRAS_ABERTA_PADRAO} conta={ids.length} acao="outras-telas">
-        <div class="abas" role="tablist" aria-label="Outras telas">
-            {#each ids as id (id)}
-                <button role="tab" class="aba" class:on={id === escolhida} aria-selected={id === escolhida} tabindex="-1" on:mousedown|preventDefault on:click={() => (escolhida = id)} title={nome(id)}>{nome(id)}</button>
-            {/each}
-        </div>
-        {#if escolhida}
-            <div class="tela">
-                <div class="prev">
-                    {#key escolhida}<AliancaCaptura outputId={escolhida} proporcao="{res.width}/{res.height}"><AliancaPreviaDesenhada outputId={escolhida} /></AliancaCaptura>{/key}
-                    <span class="estado">{nome(escolhida)} · {prop}{$outputDisplay ? "" : " · desligado"}</span>
-                </div>
-                <div class="espaco" aria-hidden="true"></div>
+        <div class="tela">
+            <div class="grade" style="--n: {Math.min(ids.length, 3)}" data-acao="outras-telas-grade">
+                {#each ids as id (id)}
+                    {@const r = resDe(id, $outputs, $styles)}
+                    <div class="prev" data-saida={id} title={nome(id)}>
+                        <AliancaCaptura outputId={id} proporcao="{r.width}/{r.height}"><AliancaPreviaDesenhada outputId={id} /></AliancaCaptura>
+                        <span class="estado">{nome(id)} · {proporcaoDaSaida(r.width, r.height)}{$outputDisplay ? "" : " · desligado"}</span>
+                    </div>
+                {/each}
             </div>
-        {/if}
+            <div class="espaco" aria-hidden="true"></div>
+        </div>
     </AliancaSecaoNoAr>
 {/if}
 
 <style>
-    .abas {
-        flex-grow: 1;
-        min-width: 0;
-        display: flex;
-        gap: 2px;
-        padding: 2px;
-        background: var(--luz-trilho);
-        border-radius: 7px;
-    }
-    .aba {
-        flex: 1 1 0;
-        min-width: 0;
-        height: 26px;
-        border: none;
-        border-radius: 5px;
-        font: inherit;
-        font-size: 11px;
-        font-weight: 600;
-        cursor: pointer;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        background: transparent;
-        color: var(--luz-mudo);
-        transition: background 120ms;
-    }
-    .aba.on {
-        background: var(--luz-texto);
-        color: var(--luz-tinta);
-    }
     .tela {
         display: flex;
         gap: 4px;
         animation: luz-descer 140ms ease-out;
     }
-    .prev {
+    .grade {
         flex-grow: 1;
         min-width: 0;
-        min-height: 168px;
+        display: grid;
+        grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+        gap: 4px;
+    }
+    .prev {
+        min-width: 0;
+        min-height: 96px;
         max-height: 168px;
         display: flex;
         align-items: center;

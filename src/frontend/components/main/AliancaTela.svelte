@@ -24,6 +24,7 @@
     import AliancaValoresDinamicos from "./AliancaValoresDinamicos.svelte"
     import { ligarTravasDeToque } from "../../utils/aliancaToque"
     import { iniciarSpotifyParaComSom } from "../../utils/aliancaSpotifyComSom"
+    import { iniciarAudioParaSpotify } from "../../utils/aliancaSpotifyParaAudio"
     import { ligarQuedasNosAvisos } from "../../utils/aliancaQuedaAvisos"
     import { ligarMonitoresDasSaidas } from "../../utils/aliancaMonitorVigia"
     import { aliancaTela } from "../../utils/aliancaTelaEstado"
@@ -119,6 +120,8 @@
     onMount(() => {
         // Cabine 4: o Spotify para sozinho quando midia com som entra no ar (AliancaTela so existe na janela principal; idempotente, vale em todas as paginas)
         iniciarSpotifyParaComSom()
+        // cabine 27/nov: e o contrario: o Spotify comecar a tocar limpa o audio de arquivo (nunca os dois juntos)
+        iniciarAudioParaSpotify()
         // dado salvo antigo ou fora dos limites: preso na carga
         try {
             aliancaTela.set(prender($aliancaTela, { w, h }))

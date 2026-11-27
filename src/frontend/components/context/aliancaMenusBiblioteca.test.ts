@@ -22,7 +22,7 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
         expect(reg).toMatch(/semDestinoPorLayout\(antigos\)[\s\S]*falhaAlta\("menu-biblioteca"/)
     })
     it("todo item do menu novo existe em contextMenuItems (ou e separador/grupo)", () => {
-        const itensDaFatia = ["alianca_roteiro", "alianca_agora", "alianca_agora_item", "alianca_subir", "alianca_descer", "alianca_tirar", "alianca_titulo", "alianca_novo_bloco", "alianca_tirar_bib", "alianca_apagar_pc", "alianca_apagar_show"]
+        const itensDaFatia = ["alianca_roteiro", "alianca_agora", "alianca_agora_item", "alianca_subir", "alianca_descer", "alianca_tirar", "alianca_titulo", "alianca_novo_bloco", "alianca_tirar_bib", "alianca_apagar_pc", "alianca_apagar_show", "alianca_cat_props"]
         const registrados = readFileSync(join(__dirname, "aliancaMenusBiblioteca.ts"), "utf8") + readFileSync(join(__dirname, "aliancaMenusEditar.ts"), "utf8")
         for (const [layout, itens] of Object.entries(NOVOS))
             for (const i of itens) {
@@ -37,12 +37,12 @@ describe("menus da biblioteca e do roteiro (fatia 6)", () => {
             const a = antigoDe(k)
             if (a) antigos[k] = a
         }
-        // show_drawer e project_effect nasceram aqui (o FreeShow nao tinha menu para eles)
+        // show_drawer e project_effect nasceram aqui (o FreeShow nao tinha menu para eles); alianca_categoria e a categoria de midia (cabine 27/nov)
         expect(
             Object.keys(NOVOS)
                 .filter((k) => !antigos[k])
                 .sort()
-        ).toEqual(["project_effect", "show_drawer", "stream_card"])
+        ).toEqual(["alianca_categoria", "project_effect", "show_drawer", "stream_card"])
         expect(semDestinoPorLayout(antigos)).toEqual({})
         for (const [layout, declarados] of Object.entries(REMOVIDOS)) for (const [item, destino] of Object.entries(declarados)) expect(destino.length, `${layout}.${item}`).toBeGreaterThan(5)
     })

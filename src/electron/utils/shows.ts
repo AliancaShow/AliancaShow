@@ -31,7 +31,9 @@ export function trimShow(showCache: Show) {
         name: showCache.name,
         category: showCache.category,
         timestamps: showCache.timestamps,
-        quickAccess: showCache.quickAccess || {}
+        // AliancaShow (cabine 27/nov): o cantor vai na lista leve para a biblioteca mostrar "Nome · Cantor" sem abrir cada show. A chave
+        // existe mesmo vazia: e assim que files.ts sabe que esta entrada do cache ja foi lida com o cantor.
+        quickAccess: { ...(showCache.quickAccess || {}), artista: String((showCache.meta as any)?.artist || "").trim() }
     }
     if (showCache.origin) show.origin = showCache.origin
     if (showCache.private) show.private = true

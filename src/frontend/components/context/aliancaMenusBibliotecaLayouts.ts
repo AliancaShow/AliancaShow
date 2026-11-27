@@ -4,7 +4,7 @@ import { semDestino } from "../../utils/aliancaMenusBibliotecaLogica"
 
 export type Layout = { [id: string]: string[] }
 /** layouts que o FreeShow nao tinha (a linha de show usava o menu `default`, com a busca rapida): nascem aqui */
-export const CRIADOS = ["show_drawer", "project_effect", "stream_card"]
+export const CRIADOS = ["show_drawer", "project_effect", "stream_card", "alianca_categoria"]
 export const SO_O_LUGAR = "SEM SUBSTITUTO da previa: o clique simples so seleciona e nao abre no centro (decisao do Andre: restaurar `preview` ou aceitar)"
 const SEM_MARCA = "a lista nova nao mostra essa marca"
 
@@ -32,6 +32,8 @@ export const NOVOS: Layout = {
     audio_effect_button: ["alianca_agora", "SEPARATOR", "GROUP_rename_only", "remove", "SEPARATOR", "system_open"],
     audio_stream: ["alianca_agora", "SEPARATOR", "GROUP_edit", "delete"],
     // cabine-5: os 3 tipos da pasta de midia saem do submenu "Tipo" para a raiz (o menu e curto)
+    // cabine 27/nov: botao direito numa categoria da Midia (antes caia no "Novo diretorio" da raiz)
+    alianca_categoria: ["alianca_cat_props"],
     category_media_button: ["GROUP_rename_only", "delete_remove", "SEPARATOR", "type_default", "type_background", "type_foreground", "SEPARATOR", "system_open"],
     // cabine-5: a arvore da Biblia nao tem mais Colecoes (decisao do Andre, 19/nov)
     category_scripture: ["newScripture"],

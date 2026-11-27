@@ -1260,7 +1260,8 @@ export function loadShows(returnShows = false, reCacheNames: string[] = []) {
     // create a map for quick lookup of cached shows by name
     const cachedShowNames = new Map<string, string>()
     for (const [id, show] of Object.entries(cachedShows)) {
-        if (show?.name && !reCacheNames.includes(show.name)) cachedShowNames.set(show.name, id)
+        // AliancaShow: entrada do cache sem `quickAccess.artista` (de antes de 27/nov) e relida uma vez do arquivo para trazer o cantor
+        if (show?.name && !reCacheNames.includes(show.name) && (show as any).quickAccess?.artista !== undefined) cachedShowNames.set(show.name, id)
     }
 
     filesInFolder = filesInFolder
@@ -1338,7 +1339,8 @@ export async function loadShowsAsync(returnShows = false, reCacheNames: string[]
     // create a map for quick lookup of cached shows by name
     const cachedShowNames = new Map<string, string>()
     for (const [id, show] of Object.entries(cachedShows)) {
-        if (show?.name && !reCacheNames.includes(show.name)) cachedShowNames.set(show.name, id)
+        // AliancaShow: entrada do cache sem `quickAccess.artista` (de antes de 27/nov) e relida uma vez do arquivo para trazer o cantor
+        if (show?.name && !reCacheNames.includes(show.name) && (show as any).quickAccess?.artista !== undefined) cachedShowNames.set(show.name, id)
     }
 
     const BATCH_SIZE = 50

@@ -978,6 +978,16 @@ body[data-tema="luz"] .luz-pele .textfield > .color-display {
     border-radius: var(--luz-raio-selo);
     box-sizing: border-box;
 }
+/* cabine 27/nov ("quando clica na cor, ela fica fora de posicao"): a pastilha mora na DIREITA do campo, mas o popover do MaterialColorInput
+   (fecho: so muda por CSS) abria ancorado na esquerda ou no meio do campo. Agora abre 6 px abaixo, alinhado a direita da pastilha, crescendo para a esquerda. */
+body[data-tema="luz"] .luz-pele .textfield > .picker:not(.alwaysVisible) {
+    top: calc(100% + 6px);
+    left: auto !important;
+    right: 0;
+    transform: none !important;
+    max-width: calc(100vw - 24px);
+    z-index: 30;
+}
 body[data-tema="luz"] .luz-pele .textfield > .color-display[style*="background:transparent"] {
     background-image: linear-gradient(135deg, transparent 46%, var(--luz-mudo) 46% 54%, transparent 54%) !important;
 }

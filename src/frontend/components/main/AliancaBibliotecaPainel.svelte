@@ -28,6 +28,7 @@
     import AliancaMidiaBarra from "./AliancaMidiaBarra.svelte"
     import AliancaMidiaControles from "./AliancaMidiaControles.svelte"
     import AliancaShowsLista from "./AliancaShowsLista.svelte"
+    import AliancaShowsControles from "./AliancaShowsControles.svelte"
     import AliancaModeloBiblia from "./AliancaModeloBiblia.svelte"
 
     export let esq = 280
@@ -161,6 +162,9 @@
         <span class="espaco"></span>
         {#if emMidia}
             <AliancaMidiaControles />
+        {/if}
+        {#if emShows}
+            <AliancaShowsControles />
         {/if}
         <!-- cabine 26/nov: um X para limpar a busca e voltar a mostrar tudo (aparece so com texto) -->
         <div class="buscaCaixa">

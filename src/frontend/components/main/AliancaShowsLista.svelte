@@ -17,6 +17,7 @@
     import { tela } from "../../utils/aliancaTela"
     import { MOTIVO_TRAVADA, tocarShowNoAr } from "../../utils/aliancaTocarNoAr"
     import { activePopup, popupData, quickTextCache } from "../../stores"
+    import { artistaDoShow, criadoEm, ordenarShows, proximaOrdem, quandoFoi, usadoEm, type ColunaDosShows, type OrdemDosShows } from "../../utils/aliancaShowsInfo"
 
     export let firstMatch: null | { id: string } = null
 
@@ -58,7 +59,25 @@
         if (linhas.length > 300) timer = setTimeout(executar, 100)
         else executar()
     }
-    $: firstMatch = lista[0] ? { id: lista[0].id } : null
+    // cabine 27/nov: o cantor discreto ao lado do nome (distingue musicas de mesmo nome) e o modo "Lista com detalhes" (AliancaShowsControles)
+    $: cantorDe = (id: string) => artistaDoShow($shows[id] as any, $showsCache[id] as any)
+    $: modoLista = ($drawerTabsData.shows as any)?.aliancaExibicao === "lista"
+    $: ordem = (($drawerTabsData.shows as any)?.aliancaOrdem || "nome") as OrdemDosShows
+    function ordenarPor(coluna: ColunaDosShows) {
+        const nova = proximaOrdem(ordem, coluna)
+        drawerTabsData.update((a) => {
+            a.shows = { ...(a.shows || { enabled: true, activeSubTab: "all" }), aliancaOrdem: nova } as any
+            return a
+        })
+    }
+    $: detalhadas = modoLista ? lista.map((l) => ({ ...l, cantor: cantorDe(l.id), usado: usadoEm($shows[l.id] as any, $showsCache[l.id] as any), criado: criadoEm($shows[l.id] as any, $showsCache[l.id] as any) })) : []
+    // buscando, a ordem por nome cede a vez a relevancia da busca; as outras ordens valem sempre
+    $: ordenadas = modoLista ? ($buscaDaBiblioteca.trim().length > 1 && ordem === "nome" ? detalhadas : ordenarShows(detalhadas, ordem)) : []
+    $: seta = (col: ColunaDosShows) => {
+        const m: { [k in OrdemDosShows]: [ColunaDosShows, string] } = { nome: ["nome", "▲"], nome_des: ["nome", "▼"], cantor: ["cantor", "▲"], cantor_des: ["cantor", "▼"], usado: ["usado", "▼"], usado_asc: ["usado", "▲"], criado: ["criado", "▼"], criado_asc: ["criado", "▲"] }
+        return m[ordem]?.[0] === col ? m[ordem][1] : ""
+    }
+    $: firstMatch = modoLista ? (ordenadas[0] ? { id: ordenadas[0].id } : null) : lista[0] ? { id: lista[0].id } : null
     onDestroy(() => clearTimeout(timer))
 
     const calcularMotivo = (..._deps: unknown[]) => motivoSemCulto()
@@ -85,7 +104,34 @@
     }
 </script>
 
-{#if lista.length}
+{#if lista.length && modoLista}
+    <div class="tabela" data-acao="shows-lista-detalhes">
+        <div class="cabT">
+            <button type="button" class="c c-nome" class:ativa={!!seta("nome")} data-acao="shows-ordenar-nome" tabindex="-1" on:mousedown|preventDefault on:click={() => ordenarPor("nome")}>Nome <i>{seta("nome")}</i></button>
+            <button type="button" class="c c-cantor" class:ativa={!!seta("cantor")} data-acao="shows-ordenar-cantor" tabindex="-1" on:mousedown|preventDefault on:click={() => ordenarPor("cantor")}>Cantor <i>{seta("cantor")}</i></button>
+            <span class="c c-cat">Categoria</span>
+            <button type="button" class="c c-usado" class:ativa={!!seta("usado")} data-acao="shows-ordenar-usado" title="Última vez que foi ao ar" tabindex="-1" on:mousedown|preventDefault on:click={() => ordenarPor("usado")}>Último uso <i>{seta("usado")}</i></button>
+            <button type="button" class="c c-criado" class:ativa={!!seta("criado")} data-acao="shows-ordenar-criado" tabindex="-1" on:mousedown|preventDefault on:click={() => ordenarPor("criado")}>Criada <i>{seta("criado")}</i></button>
+            <span class="c c-acoes" />
+        </div>
+        {#each ordenadas as linha (linha.id)}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div class="linha lin context #show_drawer" class:on={aberto === linha.id} role="button" tabindex="-1" data-show={linha.id} data-menu-titulo={linha.nome} data-title="Botão direito: editar, mostrar agora…" on:click={() => openShow(linha.id)}>
+                <span class="c c-nome"><span class="t">{linha.nome}</span>{#if linha.semLetra}<span class="selo aviso">sem letra</span>{/if}{#if noCulto.has(linha.id)}<span class="selo">no roteiro</span>{/if}</span>
+                <span class="c c-cantor" data-acao="shows-col-cantor">{linha.cantor}</span>
+                <span class="c c-cat">{nomeDaCategoria(linha.categoria)}</span>
+                <span class="c c-usado" data-acao="shows-col-usado" title={linha.usado ? new Date(linha.usado).toLocaleString("pt-BR") : "Nunca foi ao ar"}>{quandoFoi(linha.usado) || "—"}</span>
+                <span class="c c-criado" title={linha.criado ? new Date(linha.criado).toLocaleString("pt-BR") : ""}>{quandoFoi(linha.criado)}</span>
+                <span class="c c-acoes">
+                    <button class="mais" aria-disabled={!!motivo} aria-label="Adicionar ao roteiro" data-title={motivo || "Adicionar ao fim do roteiro"} tabindex="-1" on:mousedown|preventDefault on:click|stopPropagation={() => mais(linha.id)}>＋ roteiro</button>
+                    {#if $tela === "mostrar"}
+                        <button class="tocar" class:travada={$outLocked} aria-disabled={$outLocked} aria-label="Adicionar ao roteiro e mandar ao ar" data-acao="biblioteca-tocar" data-title={$outLocked ? MOTIVO_TRAVADA : "Adicionar ao roteiro e mandar o primeiro slide ao ar"} tabindex="-1" on:mousedown|preventDefault on:click|stopPropagation={() => tocar(linha.id)}>▶</button>
+                    {/if}
+                </span>
+            </div>
+        {/each}
+    </div>
+{:else if lista.length}
     <div class="grade">
         {#each lista as linha (linha.id)}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -93,6 +139,7 @@
                 <!-- 26/nov: sem a categoria repetida embaixo de cada nome (a arvore ja diz qual e); passar o mouse mostra -->
                 <div class="nome" title={nomeDaCategoria(linha.categoria)}>
                     <span class="t">{linha.nome}</span>
+                    {#if cantorDe(linha.id)}<span class="cantor" data-acao="biblioteca-cantor">{cantorDe(linha.id)}</span>{/if}
                 </div>
                 {#if linha.semLetra}<span class="selo aviso">sem letra</span>{/if}
                 {#if noCulto.has(linha.id)}<span class="selo">no roteiro</span>{/if}
@@ -150,7 +197,103 @@
         flex-grow: 1;
         min-width: 0;
         display: flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+    /* o nome tem prioridade: so encolhe (com reticencias) quando sozinho ja nao cabe; o cantor some antes */
+    .nome .t {
+        flex: 0 0 auto;
+        max-width: 100%;
+    }
+    /* cabine 27/nov: o cantor ao lado, discreto (menor e apagado); quando falta espaco, ele encolhe antes do nome */
+    .cantor {
+        flex: 0 100 auto;
+        min-width: 0;
+        font-size: var(--luz-fs-selo);
+        color: var(--luz-mudo);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    /* modo "Lista com detalhes" */
+    .tabela {
+        display: flex;
         flex-direction: column;
+        padding: 0 0 4px;
+    }
+    .cabT {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 26px;
+        padding: 0 4px 0 8px;
+        background: var(--luz-fundo, var(--primary-darkest));
+        border-bottom: 1px solid var(--luz-linha);
+        font-size: var(--luz-fs-selo);
+        color: var(--luz-mudo);
+    }
+    .cabT button.c {
+        border: none;
+        background: transparent;
+        padding: 0;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .cabT button.c:hover,
+    .cabT .ativa {
+        color: var(--luz-texto);
+    }
+    .cabT i {
+        font-style: normal;
+        font-size: var(--luz-fs-micro);
+    }
+    .lin {
+        gap: 8px;
+    }
+    .c {
+        flex: none;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .lin .c {
+        font-size: var(--luz-fs-nome);
+        color: var(--luz-mudo);
+    }
+    .c-nome {
+        flex: 3 1 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .lin .c-nome {
+        color: var(--luz-texto);
+    }
+    .c-nome .t {
+        min-width: 0;
+    }
+    .c-cantor {
+        flex: 2 1 0;
+    }
+    .c-cat {
+        flex: 1.4 1 0;
+    }
+    .c-usado,
+    .c-criado {
+        width: 92px;
+    }
+    .c-acoes {
+        width: 118px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+        overflow: visible;
     }
     .t {
         font-size: 13px;

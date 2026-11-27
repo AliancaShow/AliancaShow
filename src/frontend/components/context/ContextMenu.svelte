@@ -164,7 +164,8 @@
         if (id === "alianca_tirar_bib" || id === "alianca_apagar_pc") return $tela !== "mostrar"
         // Editar: "Mandar so para" so com duas telas ou mais (com uma, seria o mesmo que "Mandar pro ar")
         if (id === "alianca_so") return mostrarMandarSo(saidasDoMenu())
-        if (id === "alianca_fim" || id === "alianca_camada") return $tela !== "mostrar" && getMediaType(getExtension($selected.data?.[0]?.path || $selected.data?.[0]?.id || "")) === "video"
+        // cabine 27/nov: o "Ajuste na tela" do arquivo segue a mesma regra (no Mostrar e em foto o clique nao gravava nada e o check ficava em "Seguir a pasta")
+        if (id === "alianca_fim" || id === "alianca_camada" || id === "alianca_ajuste") return $tela !== "mostrar" && getMediaType(getExtension($selected.data?.[0]?.path || $selected.data?.[0]?.id || "")) === "video"
         if (id === "player_tag_filter") return $contextData.player_tags
         if (id === "action_tag_filter") return $contextData.action_tags
         if (id === "variable_tag_filter") return $contextData.variable_tags

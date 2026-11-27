@@ -10,6 +10,7 @@
     import { naoEMostrar, tela } from "../../../utils/aliancaTela"
     import { marcarBiblia } from "../../../utils/aliancaGaveta"
     import { teclaIgnorada } from "../../../utils/aliancaModo"
+    import { bibliaNoRoteiro } from "../../../utils/aliancaBibliaNoCulto"
     import { gavetaNaoToca, podeMarcar } from "../../../utils/aliancaGavetaToque"
     import { cliqueVaiSerEngolido } from "../../../utils/aliancaToque"
     import { wait } from "../../../utils/common"
@@ -182,6 +183,24 @@
         if (podeMarcar() || e.ctrlKey || e.metaKey || e.shiftKey) return
         playScripture()
     }
+
+    // Cabine 27/nov: com a Biblia no ar, setas/PageUp/PageDown/espaco andam o versiculo. Antes caiam no atalho geral (OutputHelper), que
+    // trata o slide "temp" da Biblia como show e mandava ao ar o proximo slide da ULTIMA MUSICA aberta. Captura no window: chega antes do
+    // Preview e do shortcuts.ts. Campo de texto em foco (busca, editor) fica com a tecla.
+    const TECLAS_DA_BIBLIA = ["ArrowRight", "ArrowLeft", "PageDown", "PageUp", " "]
+    function teclaComBibliaNoAr(e: KeyboardEvent) {
+        if (!TECLAS_DA_BIBLIA.includes(e.key) || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return
+        if (!isActiveInOutput || !activeReference.book || $activeEdit.items.length) return
+        const foco = document.activeElement as HTMLElement | null
+        if (foco?.closest?.('input, textarea, select, [contenteditable="true"], .edit')) return
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        _moveSelection(e.key === "ArrowLeft" || e.key === "PageUp", teclaIgnorada(e))
+    }
+    onMount(() => {
+        window.addEventListener("keydown", teclaComBibliaNoAr, true)
+        return () => window.removeEventListener("keydown", teclaComBibliaNoAr, true)
+    })
 
     type Reference = {
         book: number | string | null
@@ -1270,6 +1289,11 @@
 
         <MaterialButton disabled={$outLocked} title={isActiveInOutput ? "preview._update [Ctrl+R]" : "menu._title_display"} on:click={playScripture}>
             <Icon size={isActiveInOutput ? 1.1 : 1.3} id={isActiveInOutput ? "refresh" : "play"} white={!isActiveInOutput} />
+        </MaterialButton>
+
+        <!-- cabine 27/nov: poe a selecao (um capitulo inteiro, uma serie com Shift+clique) no fim do roteiro, sem abrir e sem ir ao ar -->
+        <MaterialButton disabled={!activeReference?.verses?.[0]?.length} title="Pôr os versículos selecionados no fim do roteiro (botão direito no capítulo seleciona todos; Shift+clique seleciona uma série)" on:click={bibliaNoRoteiro}>
+            <span class="noRoteiro" data-acao="biblia-no-roteiro">＋ roteiro</span>
         </MaterialButton>
 
         {#if $tela !== "mostrar"}

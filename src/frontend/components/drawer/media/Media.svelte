@@ -75,7 +75,9 @@
     $: ehTodos = active === "all" || active === PASTA_RAIZ
     $: pastaId = idDaAba(active)
     $: tagDaPasta = pastaId ? $mediaTags[pastaId] : null
-    $: resumoDaPasta = tagDaPasta?.aliancaPasta ? (tagDaPasta.aliancaPasta.fim === "repetir" ? "repete" : "para no último quadro") + " · " + (tagDaPasta.aliancaPasta.camada === "frente" ? "frente" : "fundo") : ""
+    // cabine 27/nov: o resumo diz tambem o ajuste na tela (quando a categoria pede um)
+    const NOME_DO_AJUSTE: { [k: string]: string } = { contain: "encaixar", cover: "preencher", fill: "esticar", blur: "fundo desfocado" }
+    $: resumoDaPasta = tagDaPasta?.aliancaPasta ? (tagDaPasta.aliancaPasta.fim === "repetir" ? "repete" : "para no último quadro") + " · " + (tagDaPasta.aliancaPasta.camada === "frente" ? "frente" : "fundo") + (tagDaPasta.aliancaPasta.ajuste && NOME_DO_AJUSTE[tagDaPasta.aliancaPasta.ajuste] ? " · " + NOME_DO_AJUSTE[tagDaPasta.aliancaPasta.ajuste] : "") : ""
     let audiosDaPasta: { path: string; name: string }[] = []
     let cfgAberta = false
     let cfgDe = ""
@@ -667,7 +669,12 @@
 {#if ehPastaView && active !== PASTA_RAIZ}
     <div class="pastaTopo" data-pasta-topo>
         <span class="pastaNome">{active === PASTA_SIRVO ? "Do Sirvo" : tagDaPasta?.name || "Pasta"}</span>
-        <span class="pastaResumo">{active === PASTA_SIRVO ? "só para ver" : resumoDaPasta}</span>
+        {#if $tela !== "mostrar" && pastaId && tagDaPasta}
+            <!-- cabine 27/nov: clicar no resumo abre as propriedades (o mesmo do ⚙) -->
+            <button type="button" class="pastaResumo clicavel" data-acao="pasta-resumo" title="Propriedades da categoria" on:click={() => (cfgAberta = !cfgAberta)}>{resumoDaPasta}</button>
+        {:else}
+            <span class="pastaResumo" title={active === PASTA_SIRVO ? "" : "As propriedades da categoria mudam no Editar"}>{active === PASTA_SIRVO ? "só para ver" : resumoDaPasta}</span>
+        {/if}
         {#if $tela !== "mostrar" && pastaId && tagDaPasta}
             <button type="button" class="pastaGear" class:ligado={cfgAberta} data-pasta-gear title="Comportamento da pasta" on:click={() => (cfgAberta = !cfgAberta)}>
                 <Icon id="settings" size={1.1} white />
@@ -875,6 +882,19 @@
     .pastaResumo {
         opacity: 0.6;
         font-size: 0.85em;
+    }
+    .pastaResumo.clicavel {
+        border: none;
+        background: transparent;
+        padding: 0;
+        font-family: inherit;
+        color: inherit;
+        cursor: pointer;
+        text-decoration: underline dotted;
+        text-underline-offset: 3px;
+    }
+    .pastaResumo.clicavel:hover {
+        opacity: 1;
     }
     .pastaGear {
         margin-inline-start: auto;

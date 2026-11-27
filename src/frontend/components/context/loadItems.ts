@@ -4,6 +4,14 @@ import { actions, actionTags, activeActionTagFilter, activeEdit, activeMediaTagF
 import { saidasDoMenu } from "../../utils/aliancaEditarAcoes"
 import { mediaTagsComuns, pastas as pastasDaGaveta } from "../../utils/aliancaPastasMidiaEstado"
 import { PASTA_RAIZ, abaDaPasta, pastaDaMidia } from "../../utils/aliancaPastasMidiaLogica"
+import { alvosDoMenu } from "../../utils/aliancaPastasMidia"
+
+// cabine 27/nov: o check dos ajustes vale para TODOS os alvos do menu (selecao ou marcadas), nao so o primeiro; valores diferentes = nenhum marcado
+const MISTO = "__misto__"
+function valorComum(ler: (m: any) => string): string {
+    const vals = new Set(alvosDoMenu(get(selected).data || []).map((c) => ler(get(media)[c]) || ""))
+    return vals.size === 1 ? [...vals][0] : vals.size ? MISTO : ""
+}
 import { translateText } from "../../utils/language"
 import { isGroupHidden } from "../../utils/profile"
 import { drawerTabs } from "../../values/tabs"
@@ -103,8 +111,7 @@ const loadActions = {
         return [{ label: "Mídias", icon: "media", id: PASTA_RAIZ, enabled: !atual, translate: false }, ...get(pastasDaGaveta).map((p) => ({ label: p.tag.name, icon: "folder", id: abaDaPasta(p.id), enabled: atual === p.id, translate: false }))]
     },
     alianca_fim: () => {
-        const m = get(media)[get(selected).data[0]?.path || ""]
-        const proprio = m?.aliancaFim || (typeof m?.loop === "boolean" ? (m.loop ? "repetir" : "parar") : "")
+        const proprio = valorComum((m) => m?.aliancaFim || (typeof m?.loop === "boolean" ? (m.loop ? "repetir" : "parar") : ""))
         return [
             { label: "Seguir a pasta", id: "seguir", enabled: !proprio, translate: false },
             { label: "Repetir", id: "repetir", enabled: proprio === "repetir", translate: false },
@@ -113,7 +120,7 @@ const loadActions = {
     },
     alianca_so: () => saidasDoMenu().map((s) => ({ label: s.nome, icon: "play", id: s.id, translate: false })),
     alianca_ajuste: () => {
-        const fit = get(media)[get(selected).data[0]?.path || ""]?.fit || ""
+        const fit = valorComum((m) => m?.fit)
         return [
             { label: "Seguir a pasta", id: "seguir", enabled: !fit, translate: false },
             { label: "Encaixar (imagem inteira)", id: "contain", enabled: fit === "contain", translate: false },
@@ -123,7 +130,7 @@ const loadActions = {
         ]
     },
     alianca_camada: () => {
-        const vt = get(media)[get(selected).data[0]?.path || ""]?.videoType || ""
+        const vt = valorComum((m) => m?.videoType)
         return [
             { label: "Seguir a pasta", id: "seguir", enabled: !vt, translate: false },
             { label: "Fundo (sem som)", id: "fundo", enabled: vt === "background", translate: false },

@@ -24,7 +24,7 @@
     import { noAr } from "../../utils/aliancaModo"
     import { abrirItemDoRoteiro } from "../../utils/aliancaRoteiroClique"
     import { ABAS, CHAVE_ABA, montarArvoreDeCultos } from "../../utils/aliancaRoteiroLogica"
-    import { sirvoRoteiro } from "../../utils/aliancaSirvo"
+    import { sirvoAvisos, sirvoRoteiro } from "../../utils/aliancaSirvo"
     import { cabecalhoTrancado } from "../../utils/aliancaSirvoProjeto"
     import { desfazerTirado, desfazerTiradoDoSirvo, rastrosParaLista, tirados, type RastroNaLista } from "../../utils/aliancaTirados"
     import { lerDispensas } from "../../utils/aliancaSirvoDispensar"
@@ -179,8 +179,10 @@
     <SeletorDeCulto {tree} abas={ABAS} {agendaAtiva} on:agenda={(e) => escolherAba(e.detail)} />
 </div>
 
-<!-- lugar reservado (36 px) para o aviso do Sirvo: a chegada de um aviso nao empurra os itens debaixo do mouse -->
-<div class="avisoLugar"><SirvoAviso /></div>
+<!-- lugar (36 px) do aviso do Sirvo. Cabine 27/nov: so existe enquanto ha aviso; antes ficava sempre reservado e virava um vao vazio -->
+{#if $sirvoAvisos.linhas.length > 0 || $sirvoAvisos.anteriores}
+    <div class="avisoLugar"><SirvoAviso /></div>
+{/if}
 
 {#if projetoId && projeto}
     <div class="lista" data-acao="lista-roteiro">
