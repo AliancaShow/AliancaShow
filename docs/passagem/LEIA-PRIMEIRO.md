@@ -1,4 +1,6 @@
-# AliançaShow: passagem entre computadores (atualizado em 22/nov)
+# AliançaShow: passagem entre computadores (atualizado em 27/nov)
+
+> **Atualização 27/nov: leia primeiro `referencia/passagem-27nov.md`** — versões 1.9.2 a 1.9.9 (HEAD `56b86bc`, enviado), o perfil de teste `C:perfil-teste-igreja`, as exceções de fecho aprovadas e a lista atual de pendências e roadmap.
 
 > **Atualização 25/nov (madrugada): leia primeiro `referencia/passagem-25nov.md`** — versão 1.9.1 (Chamadas, Valores dinâmicos em português, Bíblia 2+ versões no modelo), a bateria da madrugada e os 3 aprovos de fecho que esperam o André (branch `fecho/aguarda-aprovo`).
 
@@ -13,7 +15,7 @@ Este arquivo é para o Claude Code que vai continuar o trabalho, seja no PC da p
 ## O que é
 O AliançaShow é um fork do FreeShow (Svelte 3 + Electron) e vai substituir o ProPresenter na Igreja Aliança. É o "leiaute v2" (tema Luz). Não existe modo clássico nem versão de reserva. O André (dono) testa aqui na cabine, em 1920×1080, escala 100%.
 
-Repo: `https://github.com/AliancaShow/AliancaShow`. A pilha de PRs rascunho é **#38 → #39 → #40 → #41 → #42 → #43**. Trabalhe a partir de **`feat/cabine-5`** (PR #43; HEAD `612e3d8` ou mais novo). A `feat/cabine-5` parte da `feat/cabine-4` (`7e7dd1b`). O instalador que está na cabine é o `fd8b5c6`.
+Repo: `https://github.com/AliancaShow/AliancaShow`. A pilha de PRs rascunho é **#38 → #39 → #40 → #41 → #42 → #43**. Trabalhe na **`feat/cabine-6`** (HEAD `56b86bc` ou mais novo, versão 1.9.9). A `feat/cabine-5` parte da `feat/cabine-4` (`7e7dd1b`). O instalador que está na cabine é o `fd8b5c6`.
 
 O que a cabine 5 já fez está nos commits da `feat/cabine-5` e nas anotações `referencia/desenho-midia-cabine5.md` e `referencia/aprovo-fecho-midia-cabine5.md`. Isso inclui a biblioteca de mídia, Apagar do computador (Lixeira), a prévia escondida sem vídeo por saída e escolher/editar o modelo da Bíblia.
 
@@ -22,7 +24,7 @@ O que a cabine 5 já fez está nos commits da `feat/cabine-5` e nas anotações 
 2. Clone o repo em `C:\AliancaShow-dev`, ou em outra pasta FORA de Documentos\AliancaShow:
    ```
    git clone https://github.com/AliancaShow/AliancaShow.git
-   git checkout feat/cabine-5
+   git checkout feat/cabine-6
    npm install
    ```
 3. Copie a pasta `bundled-bibles\` (ARA e NVI) para a raiz do clone. Ela NÃO está no Git: leve por pendrive/nuvem a partir de `C:\AliancaShow-dev\bundled-bibles` do PC da cabine. Os `.fsb` são gitignored; sem eles o instalador sai sem Bíblia.
@@ -58,7 +60,7 @@ O que a cabine 5 já fez está nos commits da `feat/cabine-5` e nas anotações 
   - fumaças t2, t4, t6, t7-menus, t8, t9, t9-palco, t10, t11, t12, t13, t14 e vivo.
 
 ## Instalador
-**Versão (regra desde 23/nov):** todo instalador que vai para a cabine sobe a versão em `package.json` e `package-lock.json` ANTES do build. Função nova (cabine nova, Visual, Modelos) = sobe o meio (1.8.0 → 1.9.0); só correção = sobe o fim (1.8.0 → 1.8.1). A versão aparece na abertura (Splash) e em Sobre, e vai no nome do `.exe`. Histórico: 1.7.2 = instalador `fd8b5c6` (cabine-3); 1.8.0 = `feat/cabine-6` (cabines 4–6, Visual V1).
+**Versão (regra desde 23/nov):** todo instalador que vai para a cabine sobe a versão em `package.json` e `package-lock.json` ANTES do build. Função nova (cabine nova, Visual, Modelos) = sobe o meio (1.8.0 → 1.9.0); só correção = sobe o fim (1.8.0 → 1.8.1). A versão aparece na abertura (Splash) e em Sobre, e vai no nome do `.exe`. Histórico: 1.7.2 = instalador `fd8b5c6` (cabine-3); 1.8.0 = `feat/cabine-6` (cabines 4–6, Visual V1); 1.9.1 a 1.9.9 = `feat/cabine-6` (tabela em `referencia/passagem-27nov.md`).
 
 Rode com o clone limpo e `bundled-bibles\` presente:
 ```
@@ -68,13 +70,10 @@ $env:CSC_IDENTITY_AUTO_DISCOVERY='false'; npx electron-builder --config config/b
 O `.exe` sai em `dist\`. Confira que `dist\win-unpacked\resources\bibles` tem os 2 `.fsb`.
 
 ## Onde paramos (pendências)
-- Perguntas abertas ao André:
-  1. o cartão do Spotify na faixa de vídeo precisa de volume?
-  2. com o "só retorno" ligado e o item de palco "saída atual" apontando de propósito para o telão: mostra o telão (como hoje) ou o que foi para o retorno?
-- Baixos não feitos da revisão do PR #42: 6, 13, 14, 15 e 16 (`referencia/revisoes/revisao-cabine4-codigo.md`).
-- Abertos de antes:
-  - o áudio da gaveta não é barrado no modo só retorno;
-  - o fundo do slide não acompanha no retorno;
-  - "Pré-visualizar" está sem substituto;
-  - falta o recurso de alertas rápidos por cima da letra ("placa XXX-XXXX", "pais da criança X").
-- O que foi decidido nesta rodada: `referencia/rodada-cabine-18nov.md`. O board aprovado é `referencia/leiaute-v2-prototipos/Rodada-cabine-C1-C5.html`.
+A lista atual (27/nov) está em `referencia/passagem-27nov.md`, seção Pendências:
+- 5 bugs relatados e ainda não corrigidos: Outras telas empilhadas, setas depois da Bíblia, Ajuste na tela, menu de propriedades da pasta, seletor de cor fora do lugar;
+- pequenos: capítulo da Bíblia no roteiro, espaço de 36 px no roteiro;
+- antigos a conferir: alertas rápidos por cima da letra, pendências do modo só retorno, "Pré-visualizar", baixos do PR #42 e duas perguntas ao André;
+- roadmap do `plano-cabine-6.md`: vídeo liso (espelhos sem decodificar), D10 (modelo por saída), D20 ("Reaplicar modelo").
+
+O que foi decidido na rodada de 18/nov: `referencia/rodada-cabine-18nov.md`. O board aprovado é `referencia/leiaute-v2-prototipos/Rodada-cabine-C1-C5.html`.
