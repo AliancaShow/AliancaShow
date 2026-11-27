@@ -122,11 +122,11 @@
             <div class="campos">
                 <label class="campo">
                     <span>Nome da música</span>
-                    <input type="text" bind:value={nome} placeholder="Ousado Amor" />
+                    <input type="text" class="edit" bind:value={nome} placeholder="Ousado Amor" />
                 </label>
                 <label class="campo">
                     <span>Cantor (opcional)</span>
-                    <input type="text" bind:value={cantor} placeholder="Isaias Saad" />
+                    <input type="text" class="edit" bind:value={cantor} placeholder="Isaias Saad" />
                 </label>
             </div>
             <!-- 26/nov: antes um "Mais opções" discreto; agora a busca na internet e explicita e ja procura o nome digitado -->
@@ -152,7 +152,8 @@
         {/if}
 
         <label for="alianca-letra-texto" class="titulo">Cole a letra (pode ter os acordes em cima)</label>
-        <textarea id="alianca-letra-texto" bind:this={campo} bind:value={texto} rows="14" spellcheck="false" placeholder={"[Refrão]\nSanto, santo, santo\n\nVerso 1\nG       D\nAos teus pés eu venho"}></textarea>
+        <!-- class "edit" (26/nov): sem ela espaco e Backspace viravam atalhos do app (avancar slide / apagar) em vez de digitar -->
+        <textarea id="alianca-letra-texto" class="edit" bind:this={campo} bind:value={texto} rows="14" spellcheck="false" placeholder={"[Refrão]\nSanto, santo, santo\n\nVerso 1\nG       D\nAos teus pés eu venho"}></textarea>
 
         <fieldset class="divisao">
             <legend class="titulo">Como dividir?</legend>
@@ -160,7 +161,7 @@
                 <label class="opcao"><input type="radio" bind:group={divisao} value={m.id} /> {m.rotulo}</label>
             {/each}
             {#if divisao === "n"}
-                <label class="opcao nlinhas">A cada <input type="number" min="1" max="8" bind:value={n} /> linhas</label>
+                <label class="opcao nlinhas">A cada <input type="number" class="edit" min="1" max="8" bind:value={n} /> linhas</label>
             {/if}
         </fieldset>
     </div>
