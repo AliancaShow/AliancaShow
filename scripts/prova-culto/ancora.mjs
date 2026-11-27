@@ -197,8 +197,8 @@ export const EXCECOES = {
         "sha": "f6f1667f2159a1de699151f4e9e8d8603d50402ff1371b8a15d1775a8ba48df1"
     },
     "src/frontend/components/main/popups/AliancaLetra.svelte": {
-        "motivo": "letra-da-web (aprovado pelo André 26/nov, \"Aprovo os dois\"): o botao discreto \"Mais opcoes\" da Nova musica virou \"Buscar <nome> na internet\" (abre o Novo Show ja buscando). So na janela principal",
-        "sha": "b4d79dac8c200a0c3559a3d1911da5e31b2e69e58c4021a3539526224c0d171f"
+        "motivo": "letra-da-web (aprovado pelo André 26/nov, \"Aprovo os dois\"): o botao discreto \"Mais opcoes\" da Nova musica virou \"Buscar <nome> na internet\" (abre o Novo Show ja buscando). So na janela principal | Nova musica (aprovado pelo André 26/nov, \"Aprovo\"): Nome, Cantor, letra e \"a cada N\" com class \"edit\" (espaco e Backspace digitam em vez de avancar slide / apagar)",
+        "sha": "5cd0b69959005405da1b78ada71f7a1599905d2ffe336792d0cd4a5a27b8f9cf"
     }
 }
 
@@ -273,7 +273,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "4978a24042a6322062d109865e837dc8757c553fc6269a15ef72800129630463"
+export const SHA_EXCECOES = "fded571cfe79d1b0830168277ebf97ff42d03d9258b427fba36f31552e27a7cf"
 export const SHA_NOVOS = "04241b465ab289c9143cc06bed1438f070c1de9f661990fcd7bb4a442fc88877"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
