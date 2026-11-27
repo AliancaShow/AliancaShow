@@ -21,11 +21,11 @@
     import { updateOut } from "../helpers/showActions"
     import { shouldOpenReplace } from "../../utils/shortcuts"
     import Content from "../drawer/Content.svelte"
-    import AliancaFiltros from "../drawer/media/AliancaFiltros.svelte"
     import { drawerTabsData } from "../../stores"
     import AliancaArvore from "./AliancaArvore.svelte"
     import AliancaBibliotecaAbas from "./AliancaBibliotecaAbas.svelte"
     import Icon from "../helpers/Icon.svelte"
+    import AliancaMidiaBarra from "./AliancaMidiaBarra.svelte"
     import AliancaMidiaControles from "./AliancaMidiaControles.svelte"
     import AliancaShowsLista from "./AliancaShowsLista.svelte"
     import AliancaModeloBiblia from "./AliancaModeloBiblia.svelte"
@@ -49,7 +49,7 @@
             return a
         })
     }
-    // chips Video/Foto/Audio e zoom/modo da pasta Midia (nao valem nas abas online e de entradas)
+    // funil/＋ (AliancaMidiaBarra) e exibicao (AliancaMidiaControles) da pasta Midia (nao valem nas abas online e de entradas)
     $: emMidia = $activeDrawerTab === "media" && !["online", "inputs"].includes($drawerTabsData.media?.activeSubTab || "")
     // a busca de Shows e a mesma `buscaDaBiblioteca` da lista; nas outras pastas vale o `searchValue` do Content
     $: if (emShows) buscaDaBiblioteca.set(searchValue)
@@ -153,7 +153,7 @@
             </div>
         {/if}
         {#if emMidia}
-            <AliancaFiltros />
+            <AliancaMidiaBarra />
         {/if}
         {#if $activeDrawerTab === "scripture"}
             <AliancaModeloBiblia />
@@ -199,8 +199,8 @@
         padding: 0 12px;
         border-bottom: 1px solid var(--luz-linha);
     }
-    /* funil e ＋: botoes de icone de 28 px; o funil ligado fica claro, com a bolinha do numero de filtros */
-    .ico {
+    /* funil e ＋ (tambem na Midia e na Biblia: por isso :global sob .cab): botoes de icone de 28 px; o funil ligado fica claro, com a bolinha do numero de filtros */
+    .cab :global(.ico) {
         position: relative;
         width: 28px;
         height: 28px;
@@ -213,15 +213,15 @@
         background: transparent;
         cursor: pointer;
     }
-    .ico:hover,
-    .ico[aria-expanded="true"] {
+    .cab :global(.ico:hover),
+    .cab :global(.ico[aria-expanded="true"]) {
         background: var(--luz-hover);
     }
-    .ico.ligado {
+    .cab :global(.ico.ligado) {
         border-color: var(--luz-borda-forte);
         background: var(--luz-hover);
     }
-    .bolinha {
+    .cab :global(.bolinha) {
         position: absolute;
         top: -5px;
         right: -5px;
@@ -238,7 +238,7 @@
         text-align: center;
     }
     /* ha musica sem categoria (pendencia de arrumacao): pingo laranja no funil */
-    .pingo {
+    .cab :global(.pingo) {
         position: absolute;
         top: -3px;
         right: -3px;
@@ -247,29 +247,29 @@
         border-radius: 50%;
         background: var(--luz-laranja);
     }
-    .funil,
-    .mais {
+    .cab :global(.funil),
+    .cab :global(.mais) {
         width: 16px;
         height: 16px;
         fill: var(--luz-texto);
     }
-    .menuRaiz {
+    .cab :global(.menuRaiz) {
         position: relative;
     }
-    .sec {
+    .cab :global(.sec) {
         padding: 6px 10px 2px;
         font-size: 10px;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         color: var(--luz-mudo);
     }
-    .ck {
+    .cab :global(.ck) {
         display: inline-flex;
         justify-content: center;
         width: 16px;
         margin-inline-end: 8px;
     }
-    .n {
+    .cab :global(.n) {
         margin-inline-start: auto;
         padding-inline-start: 10px;
         font-size: 11px;
@@ -317,7 +317,7 @@
     .busca::placeholder {
         color: var(--luz-mudo);
     }
-    .pop {
+    .cab :global(.pop) {
         position: absolute;
         z-index: 40;
         /* cabine-5: abre PARA BAIXO, sobre a lista. Para cima saia do painel (overflow: hidden) e sumia atras dos slides */
@@ -334,7 +334,7 @@
         box-shadow: inset 0 0 0 1px var(--luz-borda), var(--luz-sombra-pop);
         animation: luz-surgir 120ms ease-out;
     }
-    .item {
+    .cab :global(.item) {
         display: flex;
         align-items: center;
         min-height: 30px;
@@ -348,8 +348,16 @@
         color: var(--luz-texto);
         cursor: pointer;
     }
-    .item:hover {
+    .cab :global(.item:hover) {
         background: var(--luz-hover);
+    }
+    .cab :global(.pop.direita) {
+        left: auto;
+        right: 0;
+    }
+    .cab :global(.ico:disabled) {
+        opacity: 0.4;
+        cursor: default;
     }
     .corpo {
         flex: 1;

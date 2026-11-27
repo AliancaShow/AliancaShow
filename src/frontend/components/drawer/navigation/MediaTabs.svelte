@@ -1,19 +1,14 @@
 <script lang="ts">
-    import { onDestroy } from "svelte"
-    import { uid } from "uid"
     import type { ContentProviderId } from "../../../../electron/contentProviders/base/types"
     import { Main } from "../../../../types/IPC/Main"
-    import { ToMain } from "../../../../types/IPC/ToMain"
-    import { destroyMain, receiveToMain, requestMain, sendMain } from "../../../IPC/main"
+    import { requestMain } from "../../../IPC/main"
     import { activeDrawerTab, activePage, drawerTabsData, media, providerConnections, special } from "../../../stores"
     import { tela } from "../../../utils/aliancaTela"
-    import { newToast } from "../../../utils/common"
     import { criarPasta } from "../../../utils/aliancaPastasMidia"
     import { membros, pastas } from "../../../utils/aliancaPastasMidiaEstado"
     import { PASTA_SIRVO, abaDaPasta, idDaAba } from "../../../utils/aliancaPastasMidiaLogica"
-    import { importarCaminhos, importarSoltos, migrarPastasDoDisco } from "../../../utils/aliancaBibliotecaMidia"
+    import { importarSoltos, migrarPastasDoDisco } from "../../../utils/aliancaBibliotecaMidia"
     import { getAccess } from "../../../utils/profile"
-    import { mediaExtensions } from "../../../values/extensions"
     import AliancaLinhaAdd from "./AliancaLinhaAdd.svelte"
     import NavigationSections from "./NavigationSections.svelte"
 
@@ -55,18 +50,6 @@
     let sections: any[] = []
     $: sections = [secaoPastas, [{ id: "favourites", label: "category.favourites", icon: "star", count: favoritesListLength, hidden: !favoritesListLength && activeSubTab !== "favourites" }], ...(curriculumProviders.length ? [[{ id: "TITLE", label: "Curriculum" }, ...curriculumProviders.map((a) => ({ id: a.providerId, label: a.displayName, icon: "web" }))]] : [])]
 
-    // cabine-5: "＋ importar mídia" — escolhe arquivos; eles entram na RAIZ (nunca copiados: o app só registra onde estão)
-    const PICK_ID = uid()
-    function importar() {
-        sendMain(Main.OPEN_FILE, { channel: "ALIANCA_BIB", id: PICK_ID, title: "Importar mídia", filter: { name: "Vídeos e imagens", extensions: mediaExtensions }, multiple: true })
-    }
-    let listenerId = receiveToMain(ToMain.OPEN_FILE2, (data) => {
-        if (data.channel !== "ALIANCA_BIB" || data.id !== PICK_ID || !data.files?.length) return
-        const n = importarCaminhos(data.files, null)
-        newToast(n ? `${n} ${n === 1 ? "mídia importada" : "mídias importadas"} para Mídia (os arquivos ficam onde estão)` : "nenhum vídeo ou imagem escolhido")
-    })
-    onDestroy(() => destroyMain(listenerId))
-
     // cabine-5: arquivo/pasta solto do Explorer na árvore: na categoria sob o cursor, ou na raiz. Pasta vira categoria.
     // Pára aqui (o DropArea "navigation" criaria uma pasta do disco escondida)
     function arrastando(e: DragEvent) {
@@ -94,6 +77,5 @@
             {/if}
         </div>
     </NavigationSections>
-    <!-- cabine-5: no lugar do "＋ pasta" do computador -->
-    <AliancaLinhaAdd rotulo="importar mídia" titulo="Escolher vídeos e imagens (ficam onde estão; o app só registra)" desligada={readOnly} on:click={importar} />
+    <!-- barra uniforme (26/nov): "importar mídia" saiu daqui para o ＋ do cabecalho (AliancaMidiaBarra) -->
 </div>

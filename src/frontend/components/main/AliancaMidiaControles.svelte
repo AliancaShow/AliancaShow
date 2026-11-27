@@ -1,48 +1,65 @@
 <script lang="ts">
-    // Leiaute v2, cabecalho da biblioteca na pasta Midia: zoom (cartoes maiores/menores) e modo grade/lista. Antes eram botoes flutuantes sobre a
-    // grade (Media.svelte); agora moram aqui e escrevem em `mediaOptions`, o mesmo store (a roda do mouse com Ctrl continua no MaterialZoom escondido).
+    // Leiaute v2, cabecalho da biblioteca na pasta Midia: modo grade/lista e tamanho dos cartoes, em `mediaOptions` (a roda do mouse com Ctrl
+    // continua no MaterialZoom escondido do Media.svelte). Barra uniforme (26/nov): os tres botoes − ＋ ☰ viraram UM icone de exibicao com menu.
     import { mediaOptions } from "../../stores"
 
+    // colunas: 10 = cartoes pequenos, 2 = grandes. O controle mostra "tamanho" (maior para a direita), entao inverte
     const MIN = 2
     const MAX = 10
     $: colunas = $mediaOptions.columns
-    function zoom(delta: number) {
-        const novo = Math.max(MIN, Math.min(MAX, colunas + delta))
+    $: tamanho = MAX + MIN - colunas
+    function mudarTamanho(e: Event) {
+        const novo = MAX + MIN - Number((e.target as HTMLInputElement).value)
         if (novo !== colunas) mediaOptions.set({ ...$mediaOptions, columns: novo })
     }
-    function modo() {
-        mediaOptions.update((a) => ({ ...a, mode: a.mode === "grid" ? "list" : "grid" }))
+    function modo(m: "grid" | "list") {
+        mediaOptions.update((a) => ({ ...a, mode: m }))
+    }
+
+    let aberto = false
+    function fora(e: MouseEvent) {
+        if (aberto && !(e.target as HTMLElement).closest?.(".exibicaoRaiz")) aberto = false
     }
 </script>
 
-<div class="ctl" role="group" aria-label="Zoom e modo da mídia" data-acao="midia-controles">
-    <button type="button" tabindex="-1" aria-label="Cartões menores" title="Cartões menores" disabled={colunas >= MAX} on:mousedown|preventDefault on:click={() => zoom(1)}>−</button>
-    <button type="button" tabindex="-1" aria-label="Cartões maiores" title="Cartões maiores" disabled={colunas <= MIN} on:mousedown|preventDefault on:click={() => zoom(-1)}>＋</button>
-    <button type="button" tabindex="-1" aria-label="Alternar grade e lista" title={$mediaOptions.mode === "grid" ? "Ver em lista" : "Ver em grade"} on:mousedown|preventDefault on:click={modo}>{$mediaOptions.mode === "grid" ? "☰" : "▦"}</button>
+<svelte:window on:mousedown={fora} />
+
+<div class="menuRaiz exibicaoRaiz" data-acao="midia-controles">
+    <button class="ico" data-acao="midia-exibicao" data-title="Exibição" aria-label="Exibição" aria-haspopup="menu" aria-expanded={aberto} tabindex="-1" on:mousedown|preventDefault on:click={() => (aberto = !aberto)}>
+        {#if $mediaOptions.mode === "list"}
+            <svg class="funil" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z" /></svg>
+        {:else}
+            <svg class="funil" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z" /></svg>
+        {/if}
+    </button>
+    {#if aberto}
+        <div class="pop direita" role="menu">
+            <div class="sec">Ver como</div>
+            <button class="item" role="menuitemradio" aria-checked={$mediaOptions.mode !== "list"} data-acao="midia-grade" tabindex="-1" on:mousedown|preventDefault on:click={() => modo("grid")}><span class="ck">{$mediaOptions.mode !== "list" ? "✓" : ""}</span>Grade</button>
+            <button class="item" role="menuitemradio" aria-checked={$mediaOptions.mode === "list"} data-acao="midia-lista" tabindex="-1" on:mousedown|preventDefault on:click={() => modo("list")}><span class="ck">{$mediaOptions.mode === "list" ? "✓" : ""}</span>Lista</button>
+            {#if $mediaOptions.mode !== "list"}
+                <div class="sec">Tamanho</div>
+                <label class="tamanho">
+                    <span aria-hidden="true">▫</span>
+                    <input type="range" class="edit" min={MIN} max={MAX} step="1" value={tamanho} aria-label="Tamanho dos cartões" data-acao="midia-tamanho" on:input={mudarTamanho} />
+                    <span aria-hidden="true">◻</span>
+                </label>
+            {/if}
+        </div>
+    {/if}
 </div>
 
 <style>
-    .ctl {
+    .tamanho {
         display: flex;
-        gap: 4px;
-    }
-    button {
-        width: 32px;
-        height: 28px;
-        border: 1px solid var(--luz-borda, rgb(248 248 240 / 0.13));
-        border-radius: 6px;
-        background: var(--luz-campo, rgb(248 248 240 / 0.06));
-        color: var(--luz-texto, #f8f8f0);
-        font: inherit;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 10px 8px;
+        color: var(--luz-mudo);
         font-size: 14px;
-        line-height: 1;
-        cursor: pointer;
     }
-    button:hover:not(:disabled) {
-        background: var(--luz-hover, rgb(248 248 240 / 0.1));
-    }
-    button:disabled {
-        opacity: 0.35;
-        cursor: default;
+    .tamanho input {
+        flex: 1;
+        accent-color: var(--luz-texto);
     }
 </style>

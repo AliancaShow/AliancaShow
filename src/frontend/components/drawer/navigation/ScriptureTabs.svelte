@@ -1,13 +1,8 @@
 <script lang="ts">
-    import { activePopup, activeScripture, drawerTabsData, openScripture, scriptures } from "../../../stores"
+    import { activeScripture, drawerTabsData, openScripture, scriptures } from "../../../stores"
     import { gavetaNaoToca } from "../../../utils/aliancaGavetaToque"
-    import { getAccess } from "../../../utils/profile"
     import { keysToID } from "../../helpers/array"
-    import AliancaLinhaAdd from "./AliancaLinhaAdd.svelte"
     import NavigationSections from "./NavigationSections.svelte"
-
-    const profile = getAccess("scripture")
-    $: readOnly = profile.global === "read"
 
     $: activeSubTab = $drawerTabsData.scripture?.activeSubTab || ""
 
@@ -36,10 +31,6 @@
         openScripture.set({ play: !gavetaNaoToca(), book: Number($activeScripture.reference?.book || 1), chapter: $activeScripture.reference?.chapters[0], verses: $activeScripture.reference?.verses })
     }
 
-    function newScripture() {
-        activePopup.set("import_scripture")
-    }
-
     function updateName(e: any) {
         const { id, value } = e.detail
         scriptures.update((a) => {
@@ -50,4 +41,4 @@
 </script>
 
 <NavigationSections {sections} active={activeSubTab} on:rename={updateName} />
-<AliancaLinhaAdd rotulo="bíblia" titulo="Importar uma Bíblia" desligada={readOnly} on:click={newScripture} />
+<!-- barra uniforme (26/nov): "＋ bíblia" saiu daqui para o ＋ do cabecalho (AliancaModeloBiblia) -->
