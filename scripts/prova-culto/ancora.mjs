@@ -117,8 +117,12 @@ export const EXCECOES = {
         "sha": "34deed63a1dc16ae1a01542894e36a7ec664f64f2cda4236387f214bad885818"
     },
     "src/electron/utils/files.ts": {
-        "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): bundledBiblesFolder() exportado (resources/bibles ou bundled-bibles/); a copia na partida ja existia",
-        "sha": "bd969066fda1caaaae933a3e8d593ecca8b21bbb8e628d6b153d4a79e99cbeda"
+        "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): bundledBiblesFolder() exportado (resources/bibles ou bundled-bibles/); a copia na partida ja existia | cantor-na-lista (aprovado pelo André 27/nov, \"Aprovo o cantor\"): entrada do cache de shows sem quickAccess.artista e relida uma vez do arquivo (para trazer o cantor); o resto da leitura e identico",
+        "sha": "63c66e839bb522a240fcb2a53dae7303a24c53d8d9b7cdf6ec50e59d83119060"
+    },
+    "src/electron/utils/shows.ts": {
+        "motivo": "cantor-na-lista (aprovado pelo André 27/nov, \"Aprovo o cantor\"): trimShow poe o cantor (meta.artist) em quickAccess.artista na lista leve de shows, para a biblioteca mostrar Nome · Cantor. A janela de saida nao le essa chave",
+        "sha": "3dc50f8a3ac1ab539b55431a0a2cb5d58fa46b4d94cd4d064b9bf586bb631b74"
     },
     "src/frontend/utils/bibliasEmbutidas.ts": {
         "motivo": "Biblias embutidas (aprovado pelo André 19/nov; revisao bancada/revisao-biblias-fecho.md): registra cada .fsb embutida sem duplicar NVI/ARA, corrige registro antigo e alerta alto quando falta arquivo; so roda na janela principal (updateSyncedSettings)",
@@ -273,7 +277,7 @@ export const NOVOS_NO_FECHO = {
     }
 }
 
-export const SHA_EXCECOES = "0f710a82abf3cfdec047e146679313a553fdf17774bb5d46bebdd782fa8fca08"
+export const SHA_EXCECOES = "2b7295e555bb50691610a154d612cd4ddfa71fe44c33d7cb07012fcdb2118fda"
 export const SHA_NOVOS = "04241b465ab289c9143cc06bed1438f070c1de9f661990fcd7bb4a442fc88877"
 export const shaDasExcecoes = () => createHash("sha256").update(JSON.stringify(EXCECOES), "utf8").digest("hex")
 export const shaDosNovos = () => createHash("sha256").update(JSON.stringify(NOVOS_NO_FECHO), "utf8").digest("hex")
